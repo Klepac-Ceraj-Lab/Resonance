@@ -3,5 +3,14 @@ uuid = "4cd67c38-a7de-4831-b40f-984a6a588dec"
 authors = ["Kevin Bonham", "PhD <kbonham@wellesley.edu> and contributors"]
 version = "0.1.0"
 
+[deps]
+Airtable = "96f7d883-6668-4fbe-bb01-b60427b16035"
+BiobakeryUtils = "fa5322f5-bd84-5069-834a-abf3230fb8f8"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+FilePaths = "8fc22ac5-c921-52a6-82fd-178b2807b824"
+Microbiome = "3bd8f0ae-a0f2-5238-a5af-e1b399a4940c"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
+
 [compat]
 julia = "1.6"
