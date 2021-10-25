@@ -1,0 +1,7 @@
+name = "Resonance"
+uuid = "4cd67c38-a7de-4831-b40f-984a6a588dec"
+authors = ["Kevin Bonham", "PhD <kbonham@wellesley.edu> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.6"
