@@ -28,9 +28,6 @@ end
     
 # ## Metadata stored in filemaker pro database
 
-using XLSX
-using DataFrames
-
 fmp_sample = DataFrame(XLSX.readtable("data/Sample_Centric_10252021.xlsx", "Sheet1")...)
 fmp_subject = DataFrame(XLSX.readtable("data/Subject_Centric_10252021.xlsx", "Sheet1")...)
 fmp_timepoint = DataFrame(XLSX.readtable("data/Timepoint_Centric_10252021.xlsx", "Sheet1")...)
