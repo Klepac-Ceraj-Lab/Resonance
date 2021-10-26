@@ -1,6 +1,7 @@
 module Resonance
 
-export airtable_metadata
+export airtable_metadata,
+       brain_ingest
 
 using Reexport
 using Airtable
@@ -11,5 +12,6 @@ using Airtable
 @reexport using XLSX
 
 include("airtable.jl")
+include("wrangle.jl")
 
 end
