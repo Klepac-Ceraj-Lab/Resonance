@@ -10,9 +10,10 @@ function split_tp(id)
     return (subject=sub, timepoint=tp)
 end
 
-function brain_ingest(file)
+function brain_ingest(file; label=nothing)
     df = CSV.read(file, DataFrame)
     df = hcat(df, DataFrame(split_tp.(df[!, 1])))
 
+    !isnothing(label) && (df[:, "has_$label"] = fill(true, nrow(df)))
     return df
 end

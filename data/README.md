@@ -12,3 +12,11 @@ $ ❯ ls -al data/
 .rw------- 227k kevin 25 Oct 17:09 Subject_Centric_10252021.xlsx
 .rw------- 903k kevin 25 Oct 17:09 Timepoint_Centric_10252021.xlsx
 ```
+
+## Metadata issues identified
+
+1. for `ageLabel`, the only values are "1 and under", "prenatal", or missing.
+   Let's just leave that column out of future exports
+2. "simple_race" still has mix of `missing`, "Unknown", and "Decline to answer",
+   also both "Mixed" and "Mixed Race"
+3. `everBreastFed` is totally wrong. Only 18 non-missing values, all 0
