@@ -9,7 +9,8 @@ end
 
 function upset_dots!(ax, colsets, nsets=maximum(Iterators.flatten(colsets)))
     xlims!(ax, (0, length(colsets) + 1))
-    hidedecorations!(ax)
+    hidexdecorations!(ax)
+    hideydecorations!(ax, ticklabels=false)
     hidespines!(ax)
 
     for (x, p) in enumerate(colsets)

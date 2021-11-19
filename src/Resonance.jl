@@ -8,11 +8,14 @@ export airtable_metadata,
 using Reexport
 using Airtable
 using CairoMakie
+using AlgebraOfGraphics
 
-@reexport using Microbiome
+@reexport using BiobakeryUtils
 @reexport using DataFrames
 @reexport using CSV
 @reexport using XLSX
+@reexport using Chain
+@reexport using DataFramesMeta
 
 include("airtable.jl")
 include("wrangle.jl")

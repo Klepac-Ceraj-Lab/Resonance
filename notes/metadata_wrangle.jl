@@ -5,10 +5,9 @@
 using Resonance
 
 samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
-
 # Now to add important metadata to samples
 
-samples = MicrobiomeSample[]
+stools = MicrobiomeSample[]
 
 let fields = [
     "timepoint",
@@ -16,15 +15,28 @@ let fields = [
     "sid_old",
     "CovidCollectionNumber",
     "Mgx_batch",
+    "Metabolomics_batch",
     "MaternalID"]
 
     for row in eachrow(samplemeta)
-        startswith(row.sample, "FE") && continue # skip ethanol samples
         s = MicrobiomeSample(row.sample)
         set!(s, NamedTuple(Symbol(k) => v for (k, v) in pairs(row[Not(:sample)]) if !ismissing(v)))
-        push!(samples, s)
+        push!(stools, s)
     end
 end
+
+stool_all = DataFrame()
+for stool in stools
+    push!(stool_all, NamedTuple(pairs(metadata(stool))), cols=:union)
+end
+
+
+stool_all = @chain stool_all begin
+    groupby([:subject, :timepoint])
+    transform(:has_metabolomics = any(!ismissing, :Metabolomics_batch))
+end
+
+##
 
 # ## Metadata stored in filemaker pro database
 #
@@ -34,7 +46,7 @@ end
 
 fmp_sample = DataFrame(XLSX.readtable("data/Sample_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_sample, Dict(:SampleID=> :sample, :studyID=>:subject, :collectionNum=> :timepoint))
-subset!(fmp_sample, :sample=> ByRow(s-> !startswith(s, "FE")))
+@subset!(fmp_sample, @byrow !startswith(:sample, "FE"))
 
 # Then, subject-specific data
 
@@ -54,7 +66,7 @@ rename!(fmp_covid, Dict(:studyID=>:subject))
 # ## Getting data joined together
 
 fmp_timed = outerjoin(fmp_timepoint,
-                      subset(fmp_sample, :timepoint=> ByRow(!ismissing)), # filter out covid samples
+                      @subset(fmp_sample, @byrow !ismissing(:timepoint)), # filter out covid samples
                       on=[:subject, :timepoint])
 
 fmp_alltp = leftjoin(fmp_timed, fmp_subject, on=[:subject])
@@ -79,6 +91,8 @@ for row in eachrow(brain)
 end
 
 fmp_alltp = leftjoin(fmp_alltp, brain, on=[:subject, :timepoint])
+fmp_alltp = leftjoin(fmp_alltp, stool_all, on=[:subject, :timepoint], makeunique=true)
+
 sort!(fmp_alltp, [:subject, :timepoint])
 
 # ## Getting values for presence of data types
@@ -133,90 +147,23 @@ end)=> [:has_stool, :has_prevstool])
 
 fmp_alltp.has_everbreast = .!ismissing.(fmp_alltp."everBreastFed")
 fmp_alltp.has_bfperc = .!ismissing.(fmp_alltp."breastFedPercent")
-
-# ## Plotting set intersections
-
-
-##
-
-using CairoMakie
-
-ys = ["scan", "segmentation", "previous stool", "stool", "breastfeeding"]
-ycols = [:has_curvature_leftHemi, :has_segmentation, :has_prevstool, :has_stool, :has_bfperc]
-
-##
-
-fig = Figure()
-
-intersection_ax = Axis(fig[1,1], ylabel="intersection size")
-dot_ax = Axis(fig[2,1])
-set_ax = Axis(fig[2,2], xlabel="set size")
-
-intersects = [
-    [1],        # 1. scan only    
-    [4],        # 2. stool only
-    [1,4],      # 3. scan & stool
-    [1,2,4],    # 4. segmentation & stool
-    [1,2,3],    # 5. segmentation & prior stool
-    [1,2,3,4],  # 6. segmentation & stool & prior stool
-    [1,4,5],    # 7. scan & stool & bf
-    [1,2,4,5],  # 8. segmentation & stool & bf
-    [1,2,3,5],  # 9. segmentation & prior stool & bf
-    [1,2,3,4,5] #10. segmentation & stool & prior stool & bf
-]
-
-barplot!(intersection_ax, 1:10, [count_set(df, ycols, i) for i in intersects],
-         bar_labels=:y, flip_labels_at=400)
-
-barplot!(set_ax, 1:5, [
-    count(x-> !ismissing(x) && x, fmp_alltp[!, col]) for col in ycols
-], direction=:x, bar_labels=:y, flip_labels_at=1000)
-
-upset_dots!(dot_ax, [[1,], [4,], [1,4], [1,2,4], [1,2,3], [1,2,3,4], [1,4,5], [1,2,4,5], [1,2,3,5], [1,2,3,4,5]])
-
-for i in 1:2:length(ycols)
-    poly!(dot_ax,
-     BBox(0, length(intersects) + 1, i-0.5, i+0.5),
-     color = :gray95
-    )
- end
-
-hidexdecorations!(count_ax)
-hideydecorations!(setsize_ax)
-
-save("figures/upset.pdf", fig)
-fig
+fmp_alltp.has_everbreast = .!ismissing.(fmp_alltp."Metabolomics_batch")
 
 
-##
+# ## Dealing with ages
 
-ycols = [:a,:b,:c,:d]
-df = DataFrame(rand(Bool, 1000, 4), ycols)
+fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
+    if ismissing(row.scanAgeMonths)
+        (row.assessmentAgeDays ./ 365 .* 12) .+ row.assessmentAgeMonths
+    else
+        (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
+    end
+end
 
-fig = Figure()
-intersection_ax = Axis(fig[1,1], ylabel="intersection size")
-dot_ax = Axis(fig[2,1])
-set_ax = Axis(fig[2,2], xlabel="set size")
+fmp_alltp.age0to3mo   = map(a-> !ismissing(a) && a < 3,       fmp_alltp.ageMonths)
+fmp_alltp.age3to6mo   = map(a-> !ismissing(a) && 3 <= a < 6,  fmp_alltp.ageMonths)
+fmp_alltp.age6to12mo  = map(a-> !ismissing(a) && 6 <= a < 12, fmp_alltp.ageMonths)
+fmp_alltp.age12moplus = map(a-> !ismissing(a) && 12 <= a,     fmp_alltp.ageMonths)
 
-intersects = [
-    [1],       # 1. a only    
-    [2],       # 2. b only
-    [3],       # 3. c only
-    [4],       # 4. d only
-    [1,2],     # 5. a and b only
-    [1,3],     # 6. a and c only
-    [1,2,3],   # 7. a, b, and c only
-    [1,2,3,4], # 8. a, b, c, and d
-]
+CSV.write("data/wrangled.csv", fmp_alltp)
 
-barplot!(intersection_ax, 1:length(intersects),
-                          [count_set(df, ycols, i) for i in intersects],
-         bar_labels=:y)
-
-barplot!(set_ax, 1:4, [count(df[!, col]) for col in ycols], 
-                 direction=:x, bar_labels=:y)
-
-upset_dots!(dot_ax, intersects)
-hidexdecorations!(intersection_ax)
-hideydecorations!(set_ax)
-fig
