@@ -6,11 +6,18 @@ $ ❯ ls -al data/
 .rw------- 237k kevin 26 Oct 09:23 freesurfer_curvature_rightHemi_oct2021.csv
 .rw------- 245k kevin 26 Oct 09:23 freesurfer_thickness_leftHemi_oct2021.csv
 .rw------- 245k kevin 26 Oct 09:23 freesurfer_thickness_rightHemi_oct2021.csv
-.rw-rw-r--  327 kevin 25 Oct 17:10 README.md
+.rw------- 146k kevin 19 Nov 12:38 read_counts.csv
+.rw-rw-r-- 1.1k kevin 26 Oct 16:06 README.md
 .rw------- 122k kevin 25 Oct 17:09 Sample_Centric_10252021.xlsx
 .rw------- 585k kevin 26 Oct 09:23 segmentationVolumeMeasurements_oct2021.csv
 .rw------- 227k kevin 25 Oct 17:09 Subject_Centric_10252021.xlsx
+.rw-rw-r-- 426k kevin 26 Oct 13:50 Subject_Centric_10262021.xlsx
 .rw------- 903k kevin 25 Oct 17:09 Timepoint_Centric_10252021.xlsx
+.rw-rw-r-- 3.8k kevin  1 Oct 14:42 VKC.DATA.MI.csv
+.rwxrwxrw- 1.3M kevin 15 Jul 14:23 VKC_ASVTAB.csv
+.rwxrwxrw-  52k kevin 15 Jul 14:29 VKC_METATAB.csv
+.rwxrwxrw-  81k kevin 15 Jul 14:23 VKC_TAXTAB.csv
+.rw------- 5.9M kevin 17 Nov 13:10 wrangled.csv
 ```
 
 ## Metadata issues identified
