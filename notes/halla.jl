@@ -2,14 +2,14 @@ using Resonance
 
 metadata = CSV.read("data/wrangled.csv", DataFrame)
 @rsubset!(metadata, !ismissing(:subject), 
-                    !ismissing(:sample))
-
+                    !ismissing(:sample),
+                    )
 @rsubset!(metadata, !startswith(:sample, "C"),
-                    !startswith(:sample, "z"))
-
+                    !startswith(:sample, "z"),
+                    )
 
 volumes = metadata[:, r"^(left|right|sample)"i][:, 2:end]
-@rsubset!(volumes, !ismissing(Symbol("Left-Lateral-Ventricle")))
+dropmissing!(volumes)
 
 met = metaphlan_profiles(filter(f-> contains(f, "profile"), readdir("/grace/echo/analysis/biobakery3/links/metaphlan", join=true)), :species)
 
@@ -32,6 +32,8 @@ volumes = @chain volumes begin
     @orderby(:sample)
 end
 
+permutedims(volumes, "sample")
 
-CSV.write("data/halla_volumes.tsv", volumes, delim='\t')
+CSV.write("data/halla_volumes.tsv", permutedims(volumes, :sample), delim='\t')
 CSV.write("data/halla_species.tsv", met, delim='\t')
+
