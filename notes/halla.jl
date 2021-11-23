@@ -37,6 +37,8 @@ permutedims(volumes, "sample")
 CSV.write("data/halla_volumes.tsv", permutedims(volumes, :sample), delim='\t')
 CSV.write("data/halla_species.tsv", brainmet, delim='\t')
 
+run(`halla -x data/halla_species.tsv -y data/halla_volumes.tsv --alla -o data/brain_test/`)
+
 ##
 
 # Note: had to delete empty "C1162_3E_1A" "M1162_3E_1A" columns from C8-pos (they were duplicated)
@@ -65,3 +67,5 @@ sample_meta = airtable_metadata()
 rename!(metabs, [row.sid_old=> row.sample for row in eachrow(sample_meta)])
 CSV.write("data/halla_metabolites.tsv", select(metabs, ["Metabolite", sample_meta.sample...]), delim='\t')
 CSV.write("data/halla_metab_species.tsv", met[:, sample_meta.sample], delim='\t')
+
+run(`halla -x data/halla_metab_species.tsv -y data/halla_metabolites.tsv --alla -o data/metab_test/`)
