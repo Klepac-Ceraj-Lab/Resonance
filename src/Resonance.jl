@@ -3,7 +3,8 @@ module Resonance
 export airtable_metadata,
        brain_ingest,
        count_set,
-       upset_dots!
+       upset_dots!,
+       load_metabolites
 
 using Reexport
 using Airtable
@@ -19,6 +20,7 @@ using AlgebraOfGraphics
 
 include("airtable.jl")
 include("wrangle.jl")
+include("metabolites.jl")
 include("plotting.jl")
 
 end
