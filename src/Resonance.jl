@@ -4,7 +4,8 @@ export airtable_metadata,
        brain_ingest,
        count_set,
        upset_dots!,
-       load_metabolites
+       load_metabolites,
+       pull_row
 
 using Reexport
 using Airtable
@@ -22,5 +23,6 @@ include("airtable.jl")
 include("wrangle.jl")
 include("metabolites.jl")
 include("plotting.jl")
+include("brain.jl")
 
 end
