@@ -3,8 +3,8 @@ using CodecZlib
 using DataFramesMeta
 
 
-if isfile("/home/kevin/Desktop/read_counts.csv")
-    df = CSV.read("/home/kevin/Desktop/read_counts.csv", DataFrame)
+if isfile("data/read_counts.csv")
+    df = CSV.read("data/read_counts.csv", DataFrame)
 else
     df = DataFrame()
 
@@ -18,7 +18,7 @@ else
     end
 
     @transform!(df, @byrow :sample = first(split(basename(:file), "_")))
-    CSV.write("/home/kevin/Desktop/read_counts.csv", df)
+    CSV.write("data/read_counts.csv", df)
 end
 
 ##

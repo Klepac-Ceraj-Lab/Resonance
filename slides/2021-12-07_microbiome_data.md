@@ -2,11 +2,15 @@
 title: Microbiome data types and analyses
 author: Kevin Bonham, PhD
 date: "2021-12-07"
+notes: "For presenation to Khula team meeting"
 ---
 
-## Sample collections
+# Samples and primary data
 
 - Stool samples (~500mg) put in buffer as quickly as possible
+
+. . .
+
 - 2 (or 3??) collection types:
   - Zymo DNA/RNA protect - proprietary buffer to stabilize nucleic acids (for sequencing)
   - Ethanol - for metabolomics
@@ -14,41 +18,81 @@ date: "2021-12-07"
 
 ## Primary Data types
 
-- Shotgun metagenomic sequencing
+- Shotgun metagenomic sequencing: FASTQ files (sequences + quality scores)
   - paired-end reads, 2x150 bp
   - ~10M reads / sample
-  - FASTQ files (sequences + quality scores)
+
+. . .
+
 - Metabolomics (LCMS)
   - 4 column types that target different molecule types
-  - chromatograph with peaks with Mz / ellution time
+  - chromatograph with peaks with $m / z$ & retention time
 
-## Derived data types
+## Reads per sample
+
+<p class="stretch"><img src="../assets/kneaddatacounts.png"></p>
+
+
+# Derived data types
 
 - Shotgun metagenomics
   - Taxonomic profiles: relative abundance of taxa (eg species, genera) in each sample
-  - Functional profiles: relatie abundance of genes (some stratified by species)
-- Metabolomic profile
+  - Functional profiles: relativ abundance of genes (some stratified by species)
+
+. . .
+
+- Metabolomic profiles
   - relative abundance of metabolites, ~5% known
+
+## Pipeline
+
+<p class="stretch"><img src="../assets/pipeline.png"></p>
 
 ## Shotgun metagenomics profiles
 
-<!-- TODO: insert from Microbiome.jl -->
+- Reads are aligned to reference database to identify "marker genes" for taxa
+- Reduced gene database for identified taxa is generated
+  - Reads aligned to reduced database
+  - unexplained reads are aligned to all-gene database (translated search)
 
-### Expected taxonomic diversity
+## Shotgun metagenomics profiles
 
-<!-- TODO: some charts about taxonomy from ECHO -->
+<p class="stretch"><img src="../assets/comm_profile.png"></p>
 
-### Expected functional diversity
+## Expected taxonomic diversity
+
+<p class="stretch"><img src="../assets/echo_richness.png"></p>
+
+## Expected taxonomic diversity - by age
+
+<p class="stretch"><img src="../assets/echo_richness_byage.png"></p>
+
+## Expected taxonomic diversity - by age
+
+<p class="stretch"><img src="https://i.imgur.com/PgA5D73.png"></p>
+
+## Expected functional diversity
 
 <!-- TODO: some charts about functions from ECHO -->
 
-## Metabolomics
+## Expected functional diversity - by age
 
-<!-- TODO: some charts about metabolomics from ECHO -->
+<p class="stretch"><img src="https://i.imgur.com/V2HqYEY.png"></p>
 
-## Limitations
+# Metabolomics
 
-- Sparsity
-- Heteroschedasticity
-- Compositionality
-- High dimensionality
+<p class="stretch"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/7/71/Liquid_chromatography_MS_spectrum_3D_analysis.png/1920px-Liquid_chromatography_MS_spectrum_3D_analysis.png" alt="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry"></p>
+
+## Table of integrated areas
+
+
+
+# Limitations
+
+## Sparsity
+
+## Heteroschedasticity
+
+## Compositionality
+
+## High dimensionality
