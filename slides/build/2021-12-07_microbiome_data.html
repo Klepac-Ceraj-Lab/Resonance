@@ -23,7 +23,7 @@
     ul.task-list{list-style: none;}
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
-  <link rel="stylesheet" href="https://unpkg.com/reveal.js@^4//dist/theme/solarized.css" id="theme">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@^4//dist/theme/moon.css" id="theme">
 </head>
 <body>
   <div class="reveal">
@@ -35,9 +35,8 @@
   <p class="date">2021-12-07</p>
 </section>
 
-<section>
-<section id="samples-and-primary-data" class="title-slide slide level1">
-<h1>Samples and primary data</h1>
+<section id="samples-and-primary-data" class="slide level2">
+<h2>Samples and primary data</h2>
 <ul>
 <li>Stool samples (~500mg) put in buffer as quickly as possible</li>
 </ul>
@@ -76,20 +75,19 @@
 <p class="stretch">
 <img src="../assets/kneaddatacounts.png">
 </p>
-</section></section>
-<section>
-<section id="derived-data-types" class="title-slide slide level1">
-<h1>Derived data types</h1>
+</section>
+<section id="derived-data-types" class="slide level2">
+<h2>Derived data types</h2>
 <ul>
 <li>Shotgun metagenomics
 <ul>
-<li>Taxonomic profiles: relative abundance of taxa (eg species, genera) in each sample</li>
-<li>Functional profiles: relativ abundance of genes (some stratified by species)</li>
+<li>Taxonomic profiles: “Who’s there?” - relative abundance of taxa (eg species, genera) in each sample</li>
+<li>Functional profiles: “What can they do?” - relative abundance of genes (some stratified by species)</li>
 </ul></li>
 </ul>
 <div class="fragment">
 <ul>
-<li>Metabolomic profiles
+<li>Metabolomic profiles: “What have they (and we) done?”
 <ul>
 <li>relative abundance of metabolites, ~5% known</li>
 </ul></li>
@@ -137,44 +135,53 @@
 <img src="https://i.imgur.com/PgA5D73.png">
 </p>
 </section>
-<section id="expected-functional-diversity" class="slide level2">
-<h2>Expected functional diversity</h2>
-<!-- TODO: some charts about functions from ECHO -->
-</section>
 <section id="expected-functional-diversity---by-age" class="slide level2">
 <h2>Expected functional diversity - by age</h2>
 <p class="stretch">
 <img src="https://i.imgur.com/V2HqYEY.png">
 </p>
-</section></section>
-<section>
-<section id="metabolomics" class="title-slide slide level1">
-<h1>Metabolomics</h1>
+</section>
+<section id="metabolomics" class="slide level2">
+<h2>Metabolomics</h2>
 <p class="stretch">
 <img src="https://upload.wikimedia.org/wikipedia/en/thumb/7/71/Liquid_chromatography_MS_spectrum_3D_analysis.png/1920px-Liquid_chromatography_MS_spectrum_3D_analysis.png" alt="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry">
 </p>
-<p><a href="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry">click for source</a></p>
 </section>
 <section id="table-of-integrated-areas" class="slide level2">
 <h2>Table of integrated areas</h2>
-</section></section>
-<section>
-<section id="limitations" class="title-slide slide level1">
-<h1>Limitations</h1>
-
 </section>
-<section id="sparsity" class="slide level2">
-<h2>Sparsity</h2>
+<section id="limitations" class="slide level2">
+<h2>Limitations</h2>
+<ul>
+<li>Sparsity: most features are not in most samples, most samples don’t have most features</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Heteroskedasticity: variances of features are not uniform</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Compositionality: features sum to 1 (so all features are dependent on all others)</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>High dimensionality
+<ul>
+<li>hundreds to thousands in taxonomic profiles</li>
+<li>tens of thousands to millions of genes in functional profiles</li>
+<li>tens of thousands of metabolites</li>
+</ul></li>
+</ul>
+</div>
 </section>
-<section id="heteroschedasticity" class="slide level2">
-<h2>Heteroschedasticity</h2>
+<section id="extra-limitations-in-kids" class="slide level2">
+<h2>Extra limitations in kids</h2>
+<p class="stretch">
+<img src="../assets/age_taxon_ratios.png">
+</p>
 </section>
-<section id="compositionality" class="slide level2">
-<h2>Compositionality</h2>
-</section>
-<section id="high-dimensionality" class="slide level2">
-<h2>High dimensionality</h2>
-</section></section>
     </div>
   </div>
 

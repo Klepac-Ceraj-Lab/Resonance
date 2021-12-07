@@ -73,7 +73,9 @@ for row in eachrow(metabs)
     end
 end
     
+CSV.write("data/metabolites.csv", select(metabs, [:uid, Cols(:)]))
 
+##
 
 sample_meta = airtable_metadata()
 @rsubset!(sample_meta, in(:sid_old, names(metabs)))

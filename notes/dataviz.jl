@@ -31,9 +31,7 @@ end
 
 idx = unique([findfirst(==(x), sns) for x in sns])
 
-spec = CommunityProfile(abundances(spec)[:, idx], features(spec), map(samplenames(spec)[idx]) do s
-    MicrobiomeSample(replace(s, r"_S\d+_profile"=>""))
-end)
+spec = CommunityProfile(abundances(spec)[:, idx], features(spec), MicrobiomeSample.(sns[idx]))
 
 set!(spec, md)
 
@@ -65,17 +63,56 @@ axislegend(ax)
 save("slides/assets/echo_richness_byage.png", fig)
 fig
 
+##
+
+yidx = [any(col-> get(spec, s, col, false), [:age0to3mo]) for s in samplenames(spec)]
+oidx = [any(col-> get(spec, s, col, false), [:age12moplus]) for s in samplenames(spec)]
+
+ratios = map(featurenames(spec)) do feature
+    log(mean(abundances(spec[feature,oidx])) / mean(abundances(spec[feature, yidx])))
+end
+
+onlyyoung = count(isnan, ratios)
+onlyold = count(isinf, ratios)
+
+filter!(x-> !isinf(x) && !isnan(x), ratios)
+
+#
+
+fig = Figure(resolution=(1200, 800))
+yngax = Axis(fig[1,1], title="Only in <3 mo", ylabel="# of species")
+bothax = Axis(fig[1, 2:3], title="Present in both", xlabel="Log ratio abundances")
+oldax = Axis(fig[1,4], title="Only in >12 mo")
+
+barplot!(yngax, [1], [onlyyoung])
+hist!(bothax, ratios)
+barplot!(oldax, [1], [onlyold])
+
+hidexdecorations!.([yngax, oldax])
+bothax.ygridvisible = true
+oldax.ygridvisible = true
+
+tightlimits!(yngax, Bottom())
+tightlimits!(bothax, Left(), Right(), Bottom())
+tightlimits!(oldax, Bottom())
+
+linkyaxes!(yngax, bothax, oldax)
+save("slides/assets/age_taxon_ratios.png", fig)
+fig
 ## 
 
 metabs = CSV.read("data/metabolites.csv", DataFrame)
 
-aw
+
+
 
 ##
 
-func = humann_profile.(filter(f-> contains(f, "genefamilies.tsv") && any(s-> contains(f, s), md.sample), 
-    readdir("/grace/echo/analysis/biobakery3/links/humann/genefamilies", join=true)), stratified=false)
-func = commjoin(func...)
+humann_join("/grace/echo/analysis/biobakery3/links/humann/genefamilies", 
+            "/grace/echo/analysis/biobakery3/links/humann/all_genefamilies.tsv"; 
+            file_name="genefamilies")
+
+func = humann_profiles("/grace/echo/analysis/biobakery3/links/humann/all_genefamilies.tsv", stratified=false)
 
 sns = map(samplenames(func)) do s
     replace(s, r"_S\d+_genefamilies"=>"")
@@ -83,9 +120,7 @@ end
 
 idx = unique([findfirst(==(x), sns) for x in sns])
 
-func = CommunityProfile(abundances(func)[:, idx], features(func), map(samplenames(func)[idx]) do s
-    MicrobiomeSample(replace(s, r"_S\d+_genefamilies"=>""))
-end)
+func = CommunityProfile(abundances(func)[:, idx], features(func), sns[idx])
 
 set!(func, md)
 
