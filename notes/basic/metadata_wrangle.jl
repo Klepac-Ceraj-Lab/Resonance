@@ -3,6 +3,7 @@
 # ## Get sample-specific metadata from airtable database
 
 using Resonance
+using DataFramesMeta
 
 samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
 # Now to add important metadata to samples
@@ -33,7 +34,7 @@ end
 
 stool_all = @chain stool_all begin
     groupby([:subject, :timepoint])
-    transform(:has_metabolomics = any(!ismissing, :Metabolomics_batch))
+    @transform(:has_metabolomics = any(!ismissing, :Metabolomics_batch))
 end
 
 ##
@@ -46,7 +47,6 @@ end
 
 fmp_sample = DataFrame(XLSX.readtable("data/Sample_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_sample, Dict(:SampleID=> :sample, :studyID=>:subject, :collectionNum=> :timepoint))
-@subset!(fmp_sample, @byrow !startswith(:sample, "FE"))
 
 # Then, subject-specific data
 
@@ -70,7 +70,9 @@ fmp_timed = outerjoin(fmp_timepoint,
                       on=[:subject, :timepoint])
 
 fmp_alltp = leftjoin(fmp_timed, fmp_subject, on=[:subject])
-unique!(fmp_alltp, [:subject, :timepoint])
+# unique!(fmp_alltp, [:subject, :timepoint])
+
+
 
 # Add info about brain data (just if it's there)
 
@@ -93,6 +95,10 @@ end
 fmp_alltp = leftjoin(fmp_alltp, brain, on=[:subject, :timepoint])
 fmp_alltp = leftjoin(fmp_alltp, stool_all, on=[:subject, :timepoint], makeunique=true)
 
+# transform!(fmp_alltp, :sid_old => ByRow(id-> ismissing(id) ? id : replace(id, r"_(\d+)F_"=>s"_\1E_")) => :sid_old_etoh)
+# etoh_map = Dict((old=>new for (old, new) in zip(samplemeta.sid_old, samplemeta.sample)))
+# transform!(fmp_alltp, :sid_old_etoh => ByRow(id-> (ismissing(id) || !haskey(etoh_map, id)) ? missing : etoh_map[id]) => :sample_etoh)
+
 sort!(fmp_alltp, [:subject, :timepoint])
 
 # ## Getting values for presence of data types
@@ -108,7 +114,7 @@ fmp_alltp.simple_race = map(fmp_alltp.simple_race) do r
     return r
 end
 
-unique!(fmp_alltp, [:subject, :timepoint])
+# unique!(fmp_alltp, [:subject, :timepoint])
 
 fmp_alltp.has_race = .!ismissing.(fmp_alltp."simple_race")
 

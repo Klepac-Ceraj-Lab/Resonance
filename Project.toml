@@ -15,6 +15,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
 FilePaths = "8fc22ac5-c921-52a6-82fd-178b2807b824"
 Microbiome = "3bd8f0ae-a0f2-5238-a5af-e1b399a4940c"
+ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 

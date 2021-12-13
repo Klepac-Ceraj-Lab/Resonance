@@ -1,9 +1,13 @@
 ---
-title: Microbiome data types and analyses
+title: Microbiome data types
 author: Kevin Bonham, PhD
 date: "2021-12-07"
 notes: "For presenation to Khula team meeting"
 ---
+
+## Sample collection design
+
+<p class="stretch"><img src="../assets/study-design.png"></p>
 
 ## Samples and primary data
 
@@ -82,7 +86,10 @@ notes: "For presenation to Khula team meeting"
 
 ## Table of integrated areas
 
+<p class="stretch"><img src="https://i.imgur.com/kehk1hD.png"></p>
 
+- ~500 named metabolites
+- ~70,000 unnamed metabolites
 
 ## Limitations
 

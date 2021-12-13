@@ -43,37 +43,7 @@ run(`halla -x data/halla_species.tsv -y data/halla_volumes.tsv --alla -o data/ha
 
 ##
 
-# Note: had to delete empty "C1162_3E_1A" "M1162_3E_1A" columns from C8-pos (they were duplicated)
-#
-# Note: "M0855_1E_1A" missing from HILIC pos and neg
-
-c18neg = load_metabolites("data/21_0924_VKC_C18-neg_results.xlsx")
-c8pos = load_metabolites("data/21_0924_VKC_C8-pos_results.xlsx")
-hneg = load_metabolites("data/21_0924_VKC_HILIC-neg_results.xlsx")
-hpos = load_metabolites("data/21_0924_VKC_HILIC-pos_results.xlsx")
-
-for df in [c18neg, c8pos, hneg, hpos]
-    select!(df, Not(r"^PREF"))
-end
-
-c8pos = c8pos[:, names(c18neg)]
-hneg = hneg[:, names(c18neg)]
-hpos = hpos[:, names(c18neg)]
-
-metabs = vcat(c18neg, c8pos, hneg, hpos)
-metabs[!, :uid] = [join(p, "_") for p in zip(metabs.Method, metabs.Compound_ID)]
-
-
-for row in eachrow(metabs)
-    window = @view row[8:end-1]
-    misscols = findall(ismissing, window)
-    if !isempty(misscols)
-        default = floor(Int, minimum(skipmissing(window)) / 2)
-        window[misscols] .= default
-    end
-end
-    
-CSV.write("data/metabolites.csv", select(metabs, [:uid, Cols(:)]))
+metabs = CSV.read("data/metabolites.csv", DataFrame)
 
 ##
 
