@@ -3,14 +3,30 @@ title: Microbiome data types
 author: Kevin Bonham, PhD
 date: "2021-12-07"
 notes: "For presenation to Khula team meeting"
+institute: "Wellesley College"
+theme: "Frankfurt"
+colortheme: "beaver"
+fonttheme: "professionalfonts"
+mainfont: "Hack Nerd Font"
+fontsize: 12pt
+urlcolor: red
+linkstyle: bold
+aspectratio: 169
+# titlegraphic: img/aleph0.png
+# logo: img/aleph0-small.png
+date: "2021-12-17"
+lang: en-US
+section-titles: false
+toc: true
 ---
+
+# Design and primary data
 
 ## Sample collection design
 
-<p class="stretch"><img src="../assets/study-design.png"></p>
+![](https://i.imgur.com/ESDSLTw.png){ height=90% width=90% }
 
-## Samples and primary data
-
+## Samples
 - Stool samples (~500mg) put in buffer as quickly as possible
 
 . . .
@@ -30,14 +46,16 @@ notes: "For presenation to Khula team meeting"
 
 - Metabolomics (LCMS)
   - 4 column types that target different molecule types
-  - chromatograph with peaks with $m / z$ & retention time
+  - chromatograph with peaks with m / z & retention time
 
 ## Reads per sample
 
-<p class="stretch"><img src="../assets/kneaddatacounts.png"></p>
+![](https://i.imgur.com/TsCPuUg.png){ height=90% width=90% }
 
 
-## Derived data types
+# Derived data types
+
+## Feature Profiles
 
 - Shotgun metagenomics
   - Taxonomic profiles: "Who's there?" - relative abundance of taxa (eg species, genera) in each sample
@@ -50,7 +68,7 @@ notes: "For presenation to Khula team meeting"
 
 ## Pipeline
 
-<p class="stretch"><img src="../assets/pipeline.png"></p>
+![](slides/assets/pipeline.png){ height=90% width=90% }
 
 ## Shotgun metagenomics profiles
 
@@ -61,32 +79,34 @@ notes: "For presenation to Khula team meeting"
 
 ## Shotgun metagenomics profiles
 
-<p class="stretch"><img src="../assets/comm_profile.png"></p>
+![](slides/assets/comm_profile.png){ height=90% width=90% }
 
 ## Expected taxonomic diversity
 
-<p class="stretch"><img src="../assets/echo_richness.png"></p>
+![](https://i.imgur.com/UQqFd4C.png){ height=90% width=90% }
 
 
 ## Expected taxonomic diversity - by age
 
-<p class="stretch"><img src="../assets/echo_richness_byage.png"></p>
+![](https://i.imgur.com/uN9336C.png){ height=90% width=90% }
 
 ## Expected taxonomic diversity - by age
 
-<p class="stretch"><img src="https://i.imgur.com/PgA5D73.png"></p>
+![](https://i.imgur.com/PgA5D73.png){ height=90% width=90% }
 
 ## Expected functional diversity - by age
 
-<p class="stretch"><img src="https://i.imgur.com/V2HqYEY.png"></p>
+![](https://i.imgur.com/V2HqYEY.png){ height=90% width=90% }
 
 ## Metabolomics
 
-<p class="stretch"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/7/71/Liquid_chromatography_MS_spectrum_3D_analysis.png/1920px-Liquid_chromatography_MS_spectrum_3D_analysis.png" alt="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry"></p>
+![](slides/assets/lcms.png){ height=90% width=90% }
+
+<!-- https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry -->
 
 ## Table of integrated areas
 
-<p class="stretch"><img src="https://i.imgur.com/kehk1hD.png"></p>
+![](https://i.imgur.com/kehk1hD.png){ height=90% width=90% }
 
 - ~500 named metabolites
 - ~70,000 unnamed metabolites
@@ -112,4 +132,4 @@ notes: "For presenation to Khula team meeting"
 
 ## Extra limitations in kids
 
-<p class="stretch"><img src="../assets/age_taxon_ratios.png"></p>
+![](https://i.imgur.com/1A4KEFU.png){ height=90% width=90% }

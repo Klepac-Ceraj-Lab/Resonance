@@ -19,3 +19,11 @@ function upset_dots!(ax, colsets, nsets=maximum(Iterators.flatten(colsets)))
         length(p) > 1 && lines!(ax, [x,x], [extrema(p)...], color=:black, linewidth=3)
     end
 end
+
+# https://github.com/JuliaStats/MultivariateStats.jl/pull/162
+function loadings(M::MultivariateStats.MDS)
+    ev = eigvals(M)
+    ev' .* projection(M)[:, 1:length(ev)]
+end
+
+varexplained(M::MultivariateStats.MDS) = eigvals(M) ./ sum(eigvals(M))

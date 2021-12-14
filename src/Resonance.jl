@@ -5,12 +5,17 @@ export airtable_metadata,
        count_set,
        upset_dots!,
        load_metabolites,
-       pull_row
+       pull_row,
+       loadings,
+       varexplained
 
 using Reexport
 using Airtable
 using CairoMakie
 using AlgebraOfGraphics
+using MultivariateStats
+using Dictionaries
+using CodecZlib
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
@@ -22,6 +27,7 @@ using AlgebraOfGraphics
 include("airtable.jl")
 include("wrangle.jl")
 include("metabolites.jl")
+include("genefamilies.jl")
 include("plotting.jl")
 include("brain.jl")
 
