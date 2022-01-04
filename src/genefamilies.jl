@@ -26,7 +26,7 @@ function load_genefamilies()
     featuredict = Dict(f => i for (i, f) in enumerate((f for f in features)))
     sampledict = Dict(f => i for (i, f) in enumerate(samples))
 
-    @info "getting features"
+    @info "Filling community profile"
     Threads.@threads for s in samples
         file = allfiles[findfirst(f-> contains(f,s), allfiles)]
 

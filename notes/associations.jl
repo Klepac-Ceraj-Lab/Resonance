@@ -89,8 +89,8 @@ fig
 
 ##
 
-gaba = findfirst(f-> commonname(f) == "gamma-Aminobutyric acid", features(metabolites))
-glutamate = findfirst(f-> commonname(f) == "Glutamic acid", features(metabolites))
+gaba = findfirst(f-> commonname(f) === "gamma-Aminobutyric acid", features(metabolites))
+glutamate = findfirst(f-> commonname(f) === "Glutamic acid", features(metabolites))
 
 momsidx = get(metabolites, :Mother_Child) .=== "M"
 kidsidx = get(metabolites, :Mother_Child) .=== "C"
@@ -147,6 +147,141 @@ fig
 
 
 unirefs = Resonance.load_genefamilies()
+set!(unirefs, allmeta)
+
 neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs)))
 
-featurenames(unirefs)
+metagrp = groupby(allmeta, [:subject, :timepoint])
+esmap = Dict()
+for grp in metagrp
+    ss = unique(skipmissing(grp.sample))
+    nrow(grp) > 1 || continue
+    any(s-> contains(s, "FE"), ss) || continue
+    for s in ss
+        contains(s, "FE") || continue
+        fgs = filter(s2-> contains(s2, "FG"), ss)
+        isempty(fgs) && @info ss
+        esmap[s] = isempty(fgs) ? missing : first(fgs)
+    end
+end
+
+metagrp[(; subject=774, timepoint=2)]
+
+for s in samples(metabolites)
+    @show s.subject, s.timepoint
+    break
+end
+
+metaboverlap = metabolites[:, findall(s-> haskey(esmap, s) && esmap[s] ∈ samplenames(unirefs), samplenames(metabolites))]
+##
+
+using GLM
+using MixedModels
+using AlgebraOfGraphics
+
+genemetab = DataFrame(
+    gabasynth = map(sum, eachcol(abundances(unirefs[neuroactive["GABA synthesis"], [esmap[s] for s in samplenames(metaboverlap)]]))),
+    gabadegr  = map(sum, eachcol(abundances(unirefs[neuroactive["GABA degradation"], [esmap[s] for s in samplenames(metaboverlap)]]))),
+    gabagut   = log.(vec(abundances(metaboverlap[gaba, :]))),
+    glutsynth = map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate synthesis"], [esmap[s] for s in samplenames(metaboverlap)]]))),
+    glutdegr  = map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate degradation"], [esmap[s] for s in samplenames(metaboverlap)]]))),
+    glutgut   = log.(vec(abundances(metaboverlap[glutamate, :]))),
+    mc        = get(metaboverlap, :Mother_Child))
+
+gabasynthlm = lm(@formula(gabagut ~ gabasynth + mc), genemetab)
+gabadegrlm = lm(@formula(gabagut ~ gabadegr + mc), genemetab)
+glutsynthlm = lm(@formula(glutgut ~ glutsynth + mc), genemetab)
+glutdegrlm = lm(@formula(glutgut ~ glutdegr + mc), genemetab)
+
+##
+
+
+pred = DataFrame(gabasynth = repeat(range(extrema(genemetab.gabasynth)..., length=50), outer=2),
+                 gabadegr  = repeat(range(extrema(genemetab.gabadegr)..., length=50), outer=2),
+                 gabagut   = zeros(100),
+                 glutsynth = repeat(range(extrema(genemetab.glutsynth)..., length=50), outer=2),
+                 glutdegr  = repeat(range(extrema(genemetab.glutdegr)..., length=50), outer=2),
+                 glutgut   = zeros(100),
+                 mc        = repeat(["M", "C"], inner=50))
+
+pred.gabasynth_pred = predict(gabasynthlm, pred)
+pred.gabadegr_pred  = predict(gabadegrlm, pred)
+pred.glutsynth_pred = predict(glutsynthlm, pred)
+pred.glutdegr_pred  = predict(glutdegrlm, pred)
+
+predgrp = groupby(pred, :mc)
+
+##
+
+fig = Figure(resolution=(800,800))
+ax1 = Axis(fig[1,1], xlabel="GABA Synthesis (RPKM)", ylabel="GABA (log abundance)")
+ax2 = Axis(fig[2,1], xlabel="GABA Degradation (RPKM)", ylabel="GABA (log abundance)")
+
+scatter!(ax1, genemetab.gabasynth, genemetab.gabagut,
+              color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
+              
+for grp in groupby(pred, :mc)
+    c = first(grp.mc) == "M" ? :dodgerblue : :orange
+    lines!(ax1, grp.gabasynth, grp.gabasynth_pred, color=c)
+end
+            
+
+scatter!(ax2, genemetab.gabadegr, genemetab.gabagut,
+              color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
+
+
+for grp in groupby(pred, :mc)
+    c = first(grp.mc) == "M" ? :dodgerblue : :orange
+    lines!(ax2, grp.gabadegr, grp.gabadegr_pred, color=c)
+end  
+
+##
+
+m1 = MarkerElement(color=:dodgerblue, marker=:circle)
+l1 = LineElement(color=:dodgerblue)
+m2 = MarkerElement(color=:orange, marker=:circle)
+l2 = LineElement(color=:orange)
+Legend(fig[1:2, 2], [[m1, l1], [m2, l2]], ["moms", "kids"])
+
+save("figures/gaba_genes_metabolites.png", fig)
+fig
+
+##
+
+##
+
+fig = Figure(resolution=(800,800))
+ax1 = Axis(fig[1,1], xlabel="Glutamate Synthesis (RPKM)", ylabel="Glutamate (log abundance)")
+ax2 = Axis(fig[2,1], xlabel="Glutamate Degradation (RPKM)", ylabel="Glutamate (log abundance)")
+
+scatter!(ax1, genemetab.glutsynth, genemetab.glutgut,
+              color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
+              
+for grp in groupby(pred, :mc)
+    c = first(grp.mc) == "M" ? :dodgerblue : :orange
+    lines!(ax1, grp.glutsynth, grp.glutsynth_pred, color=c)
+end
+            
+
+scatter!(ax2, genemetab.glutdegr, genemetab.glutgut,
+              color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
+
+
+for grp in groupby(pred, :mc)
+    c = first(grp.mc) == "M" ? :dodgerblue : :orange
+    lines!(ax2, grp.glutdegr, grp.glutdegr_pred, color=c)
+end  
+
+##
+
+m1 = MarkerElement(color=:dodgerblue, marker=:circle)
+l1 = LineElement(color=:dodgerblue)
+m2 = MarkerElement(color=:orange, marker=:circle)
+l2 = LineElement(color=:orange)
+Legend(fig[1:2, 2], [[m1, l1], [m2, l2]], ["moms", "kids"])
+
+save("figures/glutamate_genes_metabolites.png", fig)
+fig
+
+##
+

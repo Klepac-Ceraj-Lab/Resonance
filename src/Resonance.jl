@@ -7,7 +7,8 @@ export airtable_metadata,
        load_metabolites,
        pull_row,
        loadings,
-       varexplained
+       varexplained,
+       commonname
 
 using Reexport
 using Airtable
