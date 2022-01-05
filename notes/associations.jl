@@ -13,7 +13,6 @@ species = CommunityProfile(Matrix(species[!, 2:end]), Taxon.(species[!, 1]), Mic
 set!(species, allmeta)
 
 
-
 ## 
 
 
@@ -92,8 +91,8 @@ fig
 gaba = findfirst(f-> commonname(f) === "gamma-Aminobutyric acid", features(metabolites))
 glutamate = findfirst(f-> commonname(f) === "Glutamic acid", features(metabolites))
 
-momsidx = get(metabolites, :Mother_Child) .=== "M"
-kidsidx = get(metabolites, :Mother_Child) .=== "C"
+momsidx = string.(get(metabolites, :Mother_Child)) .=== "M"
+kidsidx = string.(get(metabolites, :Mother_Child)) .=== "C"
 
 ##
 
@@ -103,15 +102,16 @@ ax2 = Axis(fig[0,1:2], height=200)
 ax3 = Axis(fig[2:3, 3], width=200)
 
 
-scmom = scatter!(ax1, vec(metabolites[gaba, momsidx]), vec(metabolites[glutamate,momsidx]))
-hist!(ax2, vec(metabolites[gaba, momsidx]))
-hist!(ax3, vec(metabolites[glutamate,momsidx]), direction=:x)
+scmom = scatter!(ax1, log.(vec(abundances(metabolites[gaba, momsidx]))), log.(vec(abundances(metabolites[glutamate,momsidx]))))
+hist!(ax2, log.(vec(metabolites[gaba, momsidx] |> abundances)))
+hist!(ax3, log.(vec(metabolites[glutamate, momsidx] |> abundances)), direction=:x)
 
-sckid = scatter!(ax1, vec(metabolites[gaba,kidsidx]), vec(metabolites[glutamate, kidsidx]))
-hist!(ax2, gaba[kidsidx])
-hist!(ax3, vec(metabolites[glutamate, kidsidx]), direction=:x)
+sckid = scatter!(ax1, log.(vec(metabolites[gaba,kidsidx] |> abundances)), log.(vec(metabolites[glutamate, kidsidx] |> abundances)))
+hist!(ax2, log.(vec(metabolites[gaba, kidsidx] |> abundances)))
+hist!(ax3, log.(vec(metabolites[glutamate, kidsidx] |> abundances)), direction=:x)
 
 
+leg = Legend(fig[1,3], [scmom, sckid], ["Moms", "Kids"], tellwidth = false, tellheight = false)
 
 save("figures/gaba-glutamate.png", fig)
 fig
@@ -125,22 +125,25 @@ ax2 = Axis(fig[0,1:2], height=200)
 ax3 = Axis(fig[2:3, 3], width=200)
 
 
-scmom = scatter!(ax1, vec(metabolites[gaba,momsidx], vec(metabolites[glutamate, momsidx]), color=:gray))
-histmom = hist!(ax2, vec(metabolites[gaba,momsidx], color=:gray))
-hist!(ax3, vec(metabolites[glutamate, momsidx]), direction=:x, color=:gray)
+scmom = scatter!(ax1, log.(vec(abundances(metabolites[gaba,momsidx]))), 
+                      log.(vec(abundances(metabolites[glutamate, momsidx]))), color=:gray)
+histmom = hist!(ax2, log.(vec(abundances(metabolites[gaba,momsidx]))), color=:gray)
+hist!(ax3, log.(vec(abundances(metabolites[glutamate, momsidx]))), direction=:x, color=:gray)
 
 
-sckid = scatter!(ax1, vec(metabolites[gaba,kidsidx]), vec(metabolites[glutamate, kidsidx]), color = getcolors(allmeta[kidsidx, :ageMonths], (0,25)),
-                 strokewidth=1)
-histkid = hist!(ax2, vec(metabolites[gaba,kidsidx]))
-hist!(ax3, vec(metabolites[glutamate, kidsidx]), direction=:x)
+sckid = scatter!(ax1, log.(vec(abundances(metabolites[gaba,kidsidx]))), 
+                      log.(vec(abundances(metabolites[glutamate, kidsidx]))),
+                      color = getcolors(get(metabolites[:, kidsidx], :ageMonths), (0,25)),
+                      strokewidth=1)
+histkid = hist!(ax2, log.(vec(abundances(metabolites[gaba,kidsidx]))))
+hist!(ax3, log.(vec(abundances(metabolites[glutamate,kidsidx]))), direction=:x)
 
 
 
 cleg = Colorbar(fig[2:3, 4], limits=(0.1, 25), colormap=:plasma, highclip=:white, lowclip=:black, label="Age in Months")
 leg = Legend(fig[1,3], [histmom, histkid], ["Moms", "Kids"], tellwidth = false, tellheight = false)
 
-save("figures/gaba-glutamate.png", fig)
+save("figures/gaba-glutamate_age.png", fig)
 fig
 
 ##
@@ -173,11 +176,14 @@ for s in samples(metabolites)
 end
 
 metaboverlap = metabolites[:, findall(s-> haskey(esmap, s) && esmap[s] ∈ samplenames(unirefs), samplenames(metabolites))]
+
 ##
 
 using GLM
 using MixedModels
 using AlgebraOfGraphics
+
+
 
 genemetab = DataFrame(
     gabasynth = map(sum, eachcol(abundances(unirefs[neuroactive["GABA synthesis"], [esmap[s] for s in samplenames(metaboverlap)]]))),
@@ -194,7 +200,6 @@ glutsynthlm = lm(@formula(glutgut ~ glutsynth + mc), genemetab)
 glutdegrlm = lm(@formula(glutgut ~ glutdegr + mc), genemetab)
 
 ##
-
 
 pred = DataFrame(gabasynth = repeat(range(extrema(genemetab.gabasynth)..., length=50), outer=2),
                  gabadegr  = repeat(range(extrema(genemetab.gabadegr)..., length=50), outer=2),
@@ -250,9 +255,11 @@ fig
 
 ##
 
-fig = Figure(resolution=(800,800))
+fig = Figure(resolution=(850, 1100))
 ax1 = Axis(fig[1,1], xlabel="Glutamate Synthesis (RPKM)", ylabel="Glutamate (log abundance)")
 ax2 = Axis(fig[2,1], xlabel="Glutamate Degradation (RPKM)", ylabel="Glutamate (log abundance)")
+ax3 = Axis(fig[3,1], xlabel="Glutamate Degradation (RPKM)", ylabel="Glutamate Glutamate Synthesis (RPKM)")
+
 
 scatter!(ax1, genemetab.glutsynth, genemetab.glutgut,
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
@@ -272,16 +279,20 @@ for grp in groupby(pred, :mc)
     lines!(ax2, grp.glutdegr, grp.glutdegr_pred, color=c)
 end  
 
+scatter!(ax3, log.(1 .+ genemetab.glutdegr), log.(1 .+ genemetab.glutsynth),
+              color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
 ##
 
 m1 = MarkerElement(color=:dodgerblue, marker=:circle)
 l1 = LineElement(color=:dodgerblue)
 m2 = MarkerElement(color=:orange, marker=:circle)
 l2 = LineElement(color=:orange)
-Legend(fig[1:2, 2], [[m1, l1], [m2, l2]], ["moms", "kids"])
+Legend(fig[4, 1], [[m1, l1], [m2, l2]], ["moms", "kids"], orientation=:horizontal, tellheight=true, tellwidth=false)
 
 save("figures/glutamate_genes_metabolites.png", fig)
 fig
 
 ##
 
+scatter(log.(1 .+ genemetab.glutdegr), log.(1 .+ genemetab.glutsynth), genemetab.glutgut,
+    axis=(; xlabel="degradataion", ylabel="synthesis", zlabel="concentration"))
