@@ -294,5 +294,8 @@ fig
 
 ##
 
+
+
 scatter(log.(1 .+ genemetab.glutdegr), log.(1 .+ genemetab.glutsynth), genemetab.glutgut,
     axis=(; xlabel="degradataion", ylabel="synthesis", zlabel="concentration"))
+
