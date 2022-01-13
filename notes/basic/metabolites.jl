@@ -2,7 +2,7 @@ using Resonance
 using DataFramesMeta
 using CairoMakie
 
-samplemeta = airtable_metadata()
+samplemeta = airtable_metadata() # need to get ethanol samples
 allmeta = CSV.read("data/wrangled.csv", DataFrame)
 
 subset!(allmeta, :sample=>ByRow(!ismissing))
@@ -56,6 +56,8 @@ metabs = metabs[:, [(1:8)..., (sortperm(names(metabs)[9:end]) .+ 8)...]]
 
 
 # normalize
+using Statistics
+
 fill_vals = select(metabs, AsTable(propertynames(metabs)[9:end]) => ByRow(minimum∘skipmissing) => :fill_vals).fill_vals .÷ 2
 metabs[!, 9:end] .= coalesce.(metabs[!, 9:end], fill_vals)
 
@@ -67,21 +69,3 @@ for i in 9:size(metabs, 2)
 end
 
 CSV.write("data/metabolites.csv", metabs)
-
-## 
-
-fig = Figure()
-ax1 = Axis(fig[1,1])
-hist!(ax1, meds)
-vlines!(ax1, [globmed])
-
-fig
-
-
-##
-
-
-##
-
-hist(collect(skipmissing(allmeta.ageMonths)))
-metabs.Metabolite[findall(m-> !ismissing(m) && contains(m, r"sero|dopa|glut|buty|epine|anand|trypto|aspart|olea|kynu"i), metabs.Metabolite)] |> sort
