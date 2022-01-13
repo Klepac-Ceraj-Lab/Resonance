@@ -45,22 +45,22 @@ end
 # then normalize certain columns.
 # First, samples
 
-fmp_sample = DataFrame(XLSX.readtable("data/Sample_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_sample = DataFrame(XLSX.readtable("data/resonance_fmp/Sample_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_sample, Dict(:SampleID=> :sample, :studyID=>:subject, :collectionNum=> :timepoint))
 
 # Then, subject-specific data
 
-fmp_subject = DataFrame(XLSX.readtable("data/Subject_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_subject = DataFrame(XLSX.readtable("data/resonance_fmp/Subject_Centric_10262021.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_subject, Dict(:studyID=>:subject))
 
 # Then, timepoint-specific data
 
-fmp_timepoint = DataFrame(XLSX.readtable("data/Timepoint_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_timepoint = DataFrame(XLSX.readtable("data/resonance_fmp/Timepoint_Centric_122321.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_timepoint, Dict(:studyID=>:subject))
 
 # and COVID-specific samples
 
-fmp_covid = DataFrame(XLSX.readtable("data/COVID_Fecal_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_covid = DataFrame(XLSX.readtable("data/resonance_fmp/COVID_Fecal_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_covid, Dict(:studyID=>:subject))
 
 # ## Getting data joined together
@@ -77,11 +77,11 @@ fmp_alltp = leftjoin(fmp_timed, fmp_subject, on=[:subject])
 # Add info about brain data (just if it's there)
 
 brain = let 
-    fcleft = brain_ingest("data/freesurfer_curvature_leftHemi_oct2021.csv"; label="curvature_leftHemi")
-    fcright = brain_ingest("data/freesurfer_curvature_rightHemi_oct2021.csv"; label="curvature_rightHemi")
-    ftleft = brain_ingest("data/freesurfer_thickness_leftHemi_oct2021.csv"; label="thickness_leftHemi")
-    ftright = brain_ingest("data/freesurfer_thickness_rightHemi_oct2021.csv"; label="thickness_rightHemi")
-    seg = brain_ingest("/home/kevin/Repos/Resonance/data/segmentationVolumeMeasurements_oct2021.csv"; label="segmentation")
+    fcleft = brain_ingest("data/brain/freesurfer_curvature_leftHemi_oct2021.csv"; label="curvature_leftHemi")
+    fcright = brain_ingest("data/brain/freesurfer_curvature_rightHemi_oct2021.csv"; label="curvature_rightHemi")
+    ftleft = brain_ingest("data/brain/freesurfer_thickness_leftHemi_oct2021.csv"; label="thickness_leftHemi")
+    ftright = brain_ingest("data/brain/freesurfer_thickness_rightHemi_oct2021.csv"; label="thickness_rightHemi")
+    seg = brain_ingest("data/brain/segmentationVolumeMeasurements_oct2021.csv"; label="segmentation")
 
     outerjoin(fcleft, fcright, ftleft, ftright, seg, on=[:subject, :timepoint], makeunique=true)
 end

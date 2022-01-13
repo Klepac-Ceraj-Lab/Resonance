@@ -13,10 +13,10 @@ subset!(allmeta, :sample=>ByRow(!ismissing))
 #
 # Note: "M0855_1E_1A" missing from HILIC pos and neg
 
-c18neg = load_metabolites("data/21_0924_VKC_C18-neg_results.xlsx")
-c8pos = load_metabolites("data/21_0924_VKC_C8-pos_results.xlsx")
-hneg = load_metabolites("data/21_0924_VKC_HILIC-neg_results.xlsx")
-hpos = load_metabolites("data/21_0924_VKC_HILIC-pos_results.xlsx")
+c18neg = load_metabolites("data/metabolites/21_0924_VKC_C18-neg_results.xlsx")
+c8pos = load_metabolites("data/metabolites/21_0924_VKC_C8-pos_results.xlsx")
+hneg = load_metabolites("data/metabolites/21_0924_VKC_HILIC-neg_results.xlsx")
+hpos = load_metabolites("data/metabolites/21_0924_VKC_HILIC-pos_results.xlsx")
 
 for df in [c18neg, c8pos, hneg, hpos]
     select!(df, Not(r"^PREF"))
