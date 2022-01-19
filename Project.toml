@@ -21,6 +21,7 @@ MixedModels = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
 MultivariateStats = "6f286f6a-111f-5878-ab1e-185364afe411"
 ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]

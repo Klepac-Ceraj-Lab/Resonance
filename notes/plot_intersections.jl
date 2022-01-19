@@ -1,8 +1,11 @@
 using Resonance
+using DataFramesMeta
 
 wrangled = CSV.read("data/wrangled.csv", DataFrame)
+unique(wrangled, [:subject, :timepoint])
 
 subj = groupby(wrangled, :subject)
+
 transform!(subj, nrow => :n_samples; ungroup=false)
 
 transform!(subj, AsTable(r"subject|breast"i) => (s -> begin
@@ -14,22 +17,11 @@ transform!(subj, AsTable(r"subject|breast"i) => (s -> begin
     fill(0, length(s[1]))
 end) => :has_bfperc_subj; ungroup=false)
 
-transform!(subj, AsTable(r"subject|breast"i) => (s -> begin
-    if any(!ismissing, s.breastFedPercent)
-        return fill(true, length(s[1]))
-    else
-        return fill(false, length(s[1]))
-    end
-    fill(0, length(s[1]))
-end) => :has_bfperc_subj; ungroup=false)
-
-
 # ## Plotting set intersections
 # 
 # Load CairoMakie
 
 using CairoMakie
-
 
 # ### Intersections between stool and brain scans
 
@@ -42,7 +34,7 @@ fig = Figure()
 
 intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
 dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:4, ys))
-set_ax = Axis(fig[2,3], xlabel="set size",
+set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
                  xautolimitmargin = (0, 0.25),  xgridvisible = false)
 
 intersects = [
@@ -87,57 +79,6 @@ save("figures/upset_scan_stool.pdf", fig)
 fig
 
 ##
-
-ys = ["scan",  "stool", "prev stool", "breastfeeding"]
-ycols = [:has_segmentation, :has_stool, :has_prevstool, :has_bfperc]
-
-fig = Figure()
-
-intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
-dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:4, ys))
-set_ax = Axis(fig[2,3], xlabel="set size",
-                 xautolimitmargin = (0, 0.25),  xgridvisible = false)
-
-intersects = [
-    [1],        # 1. scan only    
-    [2],        # 2. stool only
-    [1,2],      # 3. scan & stool
-    [1,3],      # 4. scan & prior stool
-    [2,3],      # 5. stool & prior stool
-    [1,2,3],    # 5. scan & stool & prior stool
-    [1,2,4],    # 6. scan & stool & bf
-    [1,2,3,4]   # 7. scan & stool & prior stool && bf
-]
-
-barplot!(intersection_ax, 1:8, [count_set(wrangled, ycols, i) for i in intersects],
-            bar_labels=:y, color = :gray20,
-            label_size = 14, label_formatter = x -> string(Int(x)))
-
-barplot!(set_ax, 1:4, [count(x-> !ismissing(x) && x, wrangled[!, col]) for col in ycols], 
-            direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
-            label_formatter = x -> string(Int(x)))
-
-            
-for i in 1:2:length(ycols)
-    poly!(dot_ax,
-    BBox(0, length(intersects) + 1, i-0.5, i+0.5),
-    color = :gray95
-    )
-end
-
-upset_dots!(dot_ax, intersects)
-
-hidexdecorations!(intersection_ax)
-hideydecorations!(set_ax)
-
-rowgap!(fig.layout, 0)
-linkyaxes!(dot_ax, set_ax)
-linkxaxes!(dot_ax, intersection_ax)
-hidespines!(intersection_ax, :t, :r, :b)
-hidespines!(set_ax, :t, :r, :l)
-
-save("figures/upset_scan_stool.pdf", fig)
-fig
 
 # ### Age distributions
 #
@@ -178,75 +119,25 @@ hist!(scan_age_young, subset(wrangled, AsTable([:ageMonths, :has_segmentation]) 
                                 ).ageMonths |> skipmissing |> collect,
                                 color=:gray20)
 
+Label(fig[1, 0], text = "All kids", tellheight=false)
+Label(fig[2, 1], text = "Young kids", tellheight=false)
 
-stools_bydate = Axis(fig[3, 1:2], title="samples collected by date",
+stools_bydate = Axis(fig[3, 1:3], title="samples collected by date",
                         xticks=(1:4:length(drange), string.(drange[1:4:end])),
                         xticklabelrotation=π/4)
 barplot!(stools_bydate, 1:length(drange), colldatecount, color=:gray20)
 vlines!(stools_bydate, [33], linestyle=:dash, color=:gray20)
 tightlimits!(stools_bydate, Left(), Right(), Bottom())
 
+
 save("figures/age_hists.pdf")
 fig
 
 ##
 
-count(c-> Year(c) == Year(2019), colldates)
-count(c-> Year(c) == Year(2020), colldates)
-count(c-> Year(c) == Year(2021), colldates)
-
-##
-
-ys = ["scan",  "stool", "prev stool", "breastfeeding"]
-ycols = [:has_segmentation, :has_stool, :has_prevstool, :has_bfperc]
-
-intersects = [
-    [1],        # 1. scan only    
-    [2],        # 2. stool only
-    [1,2],      # 3. scan & stool
-    [1,3],      # 4. scan & prior stool
-    [2,3],      # 5. stool & prior stool
-    [1,2,3],    # 5. scan & stool & prior stool
-    [1,2,4],    # 6. scan & stool & bf
-    [1,2,3,4]   # 7. scan & stool & prior stool && bf
-]
-
-fig = Figure()
-
-intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
-dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:4, ys))
-set_ax = Axis(fig[2,3], xlabel="set size",
-                 xautolimitmargin = (0, 0.25),  xgridvisible = false)
-
-barplot!(intersection_ax, 1:8, [count_set(wrangled, ycols, i) for i in intersects],
-            bar_labels=:y, color = :gray20,
-            label_size = 14, label_formatter = x -> string(Int(x)))
-
-barplot!(set_ax, 1:4, [count(x-> !ismissing(x) && x, wrangled[!, col]) for col in ycols], 
-            direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
-            label_formatter = x -> string(Int(x)))
-
-            
-for i in 1:2:length(ycols)
-    poly!(dot_ax,
-    BBox(0, length(intersects) + 1, i-0.5, i+0.5),
-    color = :gray95
-    )
-end
-
-upset_dots!(dot_ax, intersects)
-
-hidexdecorations!(intersection_ax)
-hideydecorations!(set_ax)
-
-rowgap!(fig.layout, 0)
-linkyaxes!(dot_ax, set_ax)
-linkxaxes!(dot_ax, intersection_ax)
-hidespines!(intersection_ax, :t, :r, :b)
-hidespines!(set_ax, :t, :r, :l)
-
-save("figures/upset_scan_stool.pdf", fig)
-fig
+@info "Collected in 2019: $(count(c-> Year(c) == Year(2019), colldates))"
+@info "Collected in 2020: $(count(c-> Year(c) == Year(2020), colldates))"
+@info "Collected in 2021: $(count(c-> Year(c) == Year(2021), colldates))"
 
 ##
 
@@ -273,7 +164,7 @@ fig = Figure()
 
 intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15), title="By subject")
 dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:3, ys))
-set_ax = Axis(fig[2,3], xlabel="set size",
+set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
                  xautolimitmargin = (0, 0.25),  xgridvisible = false)
 
 barplot!(intersection_ax, 1:5, [count_set(on_subj, ycols, i) for i in intersects],
@@ -308,22 +199,25 @@ fig
 
 ##
 
-srs2 = CSV.read("data/VKC.DATA.MI.csv", DataFrame)
+# slope charts
 
-transform!(srs2, :MBL_ID => ByRow(id-> begin
-    m = match(r"C(\d+)_(\d+)F_", id)
-    isnothing(m) && error(id)
-    sid = parse(Int, m[1])
-    tp = parse(Int, m[2])
-    (subject=sid, timepoint=tp)
+fig = Figure(resolution=(800, 1800))
+ax = Axis(fig[1,1], xlabel="age (years)", ydectorations=false)
+
+let y = 1
+    df = sort(wrangled, :n_samples)
+    gdf = groupby(df, :subject)
+    for sub in gdf
+        age = sub.ageMonths ./ 12
+        col = map(s-> s ? :royalblue4 : :darkgray, sub.has_stool)
+        idx = .!ismissing.(age)
+        xs = collect(skipmissing(age))
+        scatter!(ax, xs, fill(y, sum(idx)), color=col[idx])
+        length(xs) > 1 && lines!(ax, [extrema(xs)...], [y, y], color=:black, linewidth=0.5)
+        y += 1
+    end
 end
-)=> [:subject, :timepoint])
 
-srs2 = leftjoin(srs2, wrangled, on=[:subject, :timepoint])
+fig
 
-extrema(skipmissing(srs2.ageMonths))
-
-names(wrangled, r"srs"i)
-
-count(!ismissing, wrangled."PreschoolSRS::preschoolTotalTScore")
-count(!ismissing, wrangled."SchoolageSRS::schoolAgeTotalTScore")
+plot(rand(10), rand(10))

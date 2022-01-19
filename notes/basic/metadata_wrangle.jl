@@ -171,5 +171,7 @@ fmp_alltp.age3to6mo   = map(a-> !ismissing(a) && 3 <= a < 6,  fmp_alltp.ageMonth
 fmp_alltp.age6to12mo  = map(a-> !ismissing(a) && 6 <= a < 12, fmp_alltp.ageMonths)
 fmp_alltp.age12moplus = map(a-> !ismissing(a) && 12 <= a,     fmp_alltp.ageMonths)
 
+@rsubset!(fmp_alltp, !ismissing(:subject), !ismissing(:timepoint), (!ismissing(:sample) && startswith(:sample, "FG")), :Fecal_EtOH == "F")
+
 CSV.write("data/wrangled.csv", fmp_alltp)
 
