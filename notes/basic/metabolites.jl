@@ -1,13 +1,7 @@
 using Resonance
-using DataFramesMeta
 using CairoMakie
 
-samplemeta = airtable_metadata() # need to get ethanol samples
-allmeta = CSV.read("data/wrangled.csv", DataFrame)
-
-subset!(allmeta, :sample=>ByRow(!ismissing))
-# transform!(allmeta, :sid_old => ByRow(id-> ismissing(id) ? id : replace(id, r"_(\d+)F_"=>s"_\1E_")) => :sid_old_etoh)
-# select(allmeta, r"sid_old")
+allsamplemeta = CSV.read("data/wrangled/samples.csv", DataFrame, stringtype=String)
 
 # Note: had to delete empty "C1162_3E_1A" "M1162_3E_1A" columns from C8-pos (they were duplicated)
 #
@@ -34,7 +28,7 @@ select!(metabs, :uid, Cols(:))
 
 # rename to new sample ids
 metab_samples = names(metabs)[9:end]
-rename_dict = Dict((old=>new for (old, new) in zip(samplemeta.sid_old, samplemeta.sample)))
+rename_dict = Dict((old=>new for (old, new) in zip(allsamplemeta.sid_old, allsamplemeta.sample)))
 rename_dict["C1162_3E_1A"] = "FE01852" # should have been 4E
 rename_dict["C1227_3E_1A"] = "FE01922" # should have been 4E
 rename_dict["M0932_7E_1A"] = "FE01759" # should have been C0932
@@ -43,17 +37,12 @@ rename_dict = Dict(k => rename_dict[k] for k in keys(rename_dict) if k in metab_
 rename!(metabs, rename_dict)
 metab_samples = names(metabs)[9:end]
 
-
-
-subset!(samplemeta, :sample => ByRow(!ismissing) )
-subset!(samplemeta, :sample => ByRow(s-> s in metab_samples))
-subset!(allmeta, :sample => ByRow(s-> s in metab_samples))
-unique!(allmeta, :sample)
-sort!(allmeta, :sample)
+metabsamplesmeta = @rsubset samplemeta begin
+    !ismissing(:sample)
+    :sample in metab_samples
+end
 
 metabs = metabs[:, [(1:8)..., (sortperm(names(metabs)[9:end]) .+ 8)...]]
-@assert names(metabs)[9:end] == allmeta.sample
-
 
 # normalize
 using Statistics
@@ -68,4 +57,4 @@ for i in 9:size(metabs, 2)
     metabs[!, i] ./= (meds[i-8] / globmed)
 end
 
-CSV.write("data/metabolites.csv", metabs)
+CSV.write("data/wrangled/metabolites.csv", metabs)

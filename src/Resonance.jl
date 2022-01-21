@@ -22,7 +22,6 @@ using CodecZlib
 @reexport using DataFrames
 @reexport using CSV
 @reexport using XLSX
-@reexport using Chain
 @reexport using DataFramesMeta
 
 include("airtable.jl")
