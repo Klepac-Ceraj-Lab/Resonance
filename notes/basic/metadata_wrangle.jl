@@ -31,8 +31,9 @@ rename!(fmp_timepoint, Dict(:studyID=>:subject))
 
 # # and COVID-specific samples
 
-# fmp_covid = DataFrame(XLSX.readtable("data/resonance_fmp/COVID_Fecal_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
-# rename!(fmp_covid, Dict(:studyID=>:subject))
+fmp_covid = DataFrame(XLSX.readtable("data/resonance_fmp/COVID_Fecal_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+rename!(fmp_covid, Dict(:studyID=>:subject))
+fmp_covid = leftjoin(fmp_covid, fmp_subject, on=:subject)
 
 # ## Getting data joined together
 
@@ -142,5 +143,7 @@ for n in names(fmp_alltp)
 end
 
 CSV.write("data/wrangled/timepoints.csv", fmp_alltp)
-CSV.write("data/wrangled/samples.csv", samplemeta)
+CSV.write("data/wrangled/omnisamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "F"), Not(:Notes)))
+CSV.write("data/wrangled/etohsamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "E"), Not(:Notes)))
+CSV.write("data/wrangled/covid.csv", fmp_covid)
 
