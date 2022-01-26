@@ -59,4 +59,25 @@ https://static-content.springer.com/esm/art%3A10.1038%2Fs41564-018-0337-x/MediaO
 ## Files transferred to Guilherme
 
 - `metadata/` 
-  - `species`
+  - `covid.csv`: covid-specific sample metadata
+  - `etohsamples.csv`: metadata for samples collected in ethanol,
+    mostly needed for metabolomics.
+    These are the samples that start with `FE`
+  - `metabolites.csv`: normalized metabolomics data
+  - `omnisamples.csv`: metadata for samples collected in genotek omnigene,
+    which is mostly what's used for metagenomics.
+    These are the samples that start with `FG`
+  - `species.csv`: combined taxonomic profiles (see `notes/basic/species.jl`)
+  - `timepoints.csv`: time-point specific metadata for all subjects
+  - `volumes.csv`: combined, but not normalized brain volume data
+- `batchXXX/output`
+  - `humann/`
+    - `main/`
+      - `XXX_genefamilies.tsv`: stratified gene function profiles (UniRef90)
+      - `XXX_pathabundance.tsv`: metabolic pathways relative abundance
+      - `XXX_pathcoverage.tsv`: metabolic pathway coverage (see `humann` docs for explanation)
+    - `regroup/`: regrouping genefamiles into `ko`, `pfam` etc
+    - `rename/`: adding human-readable names to contents of `regroup/`
+  - `metaphlan`
+    - `XXX_profile.tsv`: taxonomic profile
+- `links/`: symlinks to `_genefamilies.tsv` and `_profile.tsv` files for all batches
