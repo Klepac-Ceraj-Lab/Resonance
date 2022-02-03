@@ -20,13 +20,13 @@ end
 # then normalize certain columns.
 # First, subject-specific data
 
-fmp_subject = DataFrame(XLSX.readtable("data/resonance_fmp/Subject_Centric_10262021.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_subject = DataFrame(XLSX.readtable("data/resonance_fmp/Subject_Centric_012522.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_subject, Dict(:studyID=>:subject))
 @rsubset! fmp_subject :subject in samplemeta.subject
 
 # Then, timepoint-specific data
 
-fmp_timepoint = DataFrame(XLSX.readtable("data/resonance_fmp/Timepoint_Centric_122321.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_timepoint = DataFrame(XLSX.readtable("data/resonance_fmp/Timepoint_Centric_012522.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_timepoint, Dict(:studyID=>:subject))
 
 # # and COVID-specific samples
@@ -39,6 +39,10 @@ fmp_covid = leftjoin(fmp_covid, fmp_subject, on=:subject)
 
 fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=[:subject])
 
+codebreastfeeding!(fmp_alltp)
+
+count(!ismissing, fmp_alltp.bfcalculated)
+
 # Add info about brain data (just if it's there)
 
 brain = let 
@@ -50,6 +54,7 @@ brain = let
 
     outerjoin(fcleft, fcright, ftleft, ftright, seg, on=[:subject, :timepoint], makeunique=true)
 end
+brain.has_segmentation .= true
 
 ## Validation
 
@@ -58,6 +63,7 @@ for row in eachrow(brain)
 end
 
 fmp_alltp = leftjoin(fmp_alltp, brain, on=[:subject, :timepoint])
+fmp_alltp.has_segmentation = [ismissing(x) ? false : x for x in fmp_alltp.has_segmentation]
 
 # transform!(fmp_alltp, :sid_old => ByRow(id-> ismissing(id) ? id : replace(id, r"_(\d+)F_"=>s"_\1E_")) => :sid_old_etoh)
 # etoh_map = Dict((old=>new for (old, new) in zip(samplemeta.sid_old, samplemeta.sample)))

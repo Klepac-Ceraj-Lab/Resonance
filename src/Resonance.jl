@@ -2,13 +2,16 @@ module Resonance
 
 export airtable_metadata,
        brain_ingest,
+       findprevstool,
        count_set,
        upset_dots!,
        load_metabolites,
        pull_row,
        loadings,
        varexplained,
-       commonname
+       commonname,
+       countmap,
+       codebreastfeeding!
 
 using Reexport
 using Airtable
@@ -17,6 +20,7 @@ using AlgebraOfGraphics
 using MultivariateStats
 using Dictionaries
 using CodecZlib
+using Statistics
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames

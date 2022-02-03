@@ -1,21 +1,35 @@
 using Resonance
-using DataFramesMeta
 
-wrangled = CSV.read("data/wrangled.csv", DataFrame)
-unique(wrangled, [:subject, :timepoint])
+tps = CSV.read("data/tps/timepoints.csv", DataFrame)
+fss = CSV.read("data/tps/omnisamples.csv", DataFrame)
+subtpset = collect(zip(fss.subject, fss.timepoint))
 
-subj = groupby(wrangled, :subject)
 
-transform!(subj, nrow => :n_samples; ungroup=false)
+subj = @chain tps begin
+    groupby(:subject)
+    transform!(
+        nrow => :n_timepoints,
+        AsTable(r"subject|breast"i) => (s -> begin
+            if any(!ismissing, s.breastFedPercent)
+                return fill(true, length(s[1]))
+            else
+                return fill(false, length(s[1]))
+            end
+            fill(0, length(s[1]))
+        end) => :has_bfperc_subj,
+        AsTable(r"subject|timepoint"i) => ByRow(s -> begin
+            (s.subject, s.timepoint) in subtpset
+        end) => :has_stool;
+        ungroup=false
+    )
+    transform!(AsTable(r"timepoint|has_stool") => (s-> begin
+        findprevstool(s.timepoint, s.has_stool)
+    end) => :has_prevstool,
+               AsTable(r"timepoint|has_stool") => (s-> begin
+        findprevstool(s.timepoint, s.has_stool; rev=true)
+    end) => :has_futstool; ungroup=false)
+end
 
-transform!(subj, AsTable(r"subject|breast"i) => (s -> begin
-    if any(!ismissing, s.breastFedPercent)
-        return fill(true, length(s[1]))
-    else
-        return fill(false, length(s[1]))
-    end
-    fill(0, length(s[1]))
-end) => :has_bfperc_subj; ungroup=false)
 
 # ## Plotting set intersections
 # 
@@ -27,13 +41,13 @@ using CairoMakie
 
 ##
 
-ys = ["scan",  "stool", "prev stool", "breastfeeding"]
-ycols = [:has_segmentation, :has_stool, :has_prevstool, :has_bfperc]
+ys = ["scan",  "stool", "prev stool", "later stool", "breastfeeding"]
+ycols = [:has_segmentation, :has_stool, :has_prevstool, :has_futstool, :has_bfperc]
 
 fig = Figure()
 
 intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
-dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:4, ys))
+dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:5, ys))
 set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
                  xautolimitmargin = (0, 0.25),  xgridvisible = false)
 
@@ -43,16 +57,17 @@ intersects = [
     [1,2],      # 3. scan & stool
     [1,3],      # 4. scan & prior stool
     [2,3],      # 5. stool & prior stool
+    [2,4],      # 5. stool & future stool
     [1,2,3],    # 5. scan & stool & prior stool
-    [1,2,4],    # 6. scan & stool & bf
-    [1,2,3,4]   # 7. scan & stool & prior stool && bf
+    [1,2,5],    # 6. scan & stool & bf
+    [1,2,3,5]   # 7. scan & stool & prior stool && bf
 ]
 
-barplot!(intersection_ax, 1:8, [count_set(wrangled, ycols, i) for i in intersects],
+barplot!(intersection_ax, 1:9, [count_set(tps, ycols, i) for i in intersects],
             bar_labels=:y, color = :gray20,
             label_size = 14, label_formatter = x -> string(Int(x)))
 
-barplot!(set_ax, 1:4, [count(x-> !ismissing(x) && x, wrangled[!, col]) for col in ycols], 
+barplot!(set_ax, 1:5, [count(x-> !ismissing(x) && x, tps[!, col]) for col in ycols], 
             direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
             label_formatter = x -> string(Int(x)))
 
@@ -86,7 +101,7 @@ fig
 
 using Dates
 
-colldates = sort(wrangled.collectionDate |> skipmissing |> collect)
+colldates = sort(tps.collectionDate |> skipmissing |> collect)
 
 drange = range(Date(2017,07,01), today(), step=Month(1))
 
@@ -105,16 +120,16 @@ for ax in [stool_age, scan_age, stool_age_young, scan_age_young]
     tightlimits!(ax, Left(), Right(), Bottom())
 end
 
-hist!(stool_age, collect(skipmissing(subset(wrangled, :has_stool=> ByRow(x-> !ismissing(x) && x)).ageMonths)) ./ 12, color=:gray20)
-hist!(scan_age, collect(skipmissing(subset(wrangled, :has_segmentation=> ByRow(x-> !ismissing(x) && x)).ageMonths)) ./ 12, color=:gray20)
+hist!(stool_age, collect(skipmissing(subset(tps, :has_stool=> ByRow(x-> !ismissing(x) && x)).ageMonths)) ./ 12, color=:gray20)
+hist!(scan_age, collect(skipmissing(subset(tps, :has_segmentation=> ByRow(x-> !ismissing(x) && x)).ageMonths)) ./ 12, color=:gray20)
 
-hist!(stool_age_young, subset(wrangled, AsTable([:ageMonths, :has_stool]) => ByRow(
+hist!(stool_age_young, subset(tps, AsTable([:ageMonths, :has_stool]) => ByRow(
                                 row -> !ismissing(row.ageMonths) && row.ageMonths < 24 && !ismissing(row.has_stool) && row.has_stool)
                                 ).ageMonths |> skipmissing |> collect,
                                 color=:gray20)
 
 
-hist!(scan_age_young, subset(wrangled, AsTable([:ageMonths, :has_segmentation]) => ByRow(
+hist!(scan_age_young, subset(tps, AsTable([:ageMonths, :has_segmentation]) => ByRow(
                                 row -> !ismissing(row.ageMonths) && row.ageMonths < 24 && !ismissing(row.has_segmentation) && row.has_segmentation)
                                 ).ageMonths |> skipmissing |> collect,
                                 color=:gray20)
@@ -205,7 +220,7 @@ fig = Figure(resolution=(800, 1800))
 ax = Axis(fig[1,1], xlabel="age (years)", ydectorations=false)
 
 let y = 1
-    df = sort(wrangled, :n_samples)
+    df = sort(tps, :n_samples)
     gdf = groupby(df, :subject)
     for sub in gdf
         age = sub.ageMonths ./ 12
@@ -221,3 +236,184 @@ end
 fig
 
 plot(rand(10), rand(10))
+
+
+##
+
+tps.has_cogScore = .!ismissing.(tps.cogScore)
+ys = ["cogScore",  "stool", "prev stool"]
+ycols = [:has_segmentation, :has_stool, :has_prevstool]
+
+fig = Figure()
+
+intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
+dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:length(ys), ys))
+set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
+                 xautolimitmargin = (0, 0.25),  xgridvisible = false)
+
+intersects = [
+    [1],        # 1. score only    
+    [2],        # 2. stool only
+    [1,2],      # 3. score & stool
+    [1,3],      # 4. score & prior stool
+]
+
+barplot!(intersection_ax, 1:length(intersects), [count_set(tps, ycols, i) for i in intersects],
+            bar_labels=:y, color = :gray20,
+            label_size = 14, label_formatter = x -> string(Int(x)))
+
+barplot!(set_ax, 1:length(ycols), [count(x-> !ismissing(x) && x, tps[!, col]) for col in ycols], 
+            direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
+            label_formatter = x -> string(Int(x)))
+
+            
+for i in 1:2:length(ycols)
+    poly!(dot_ax,
+    BBox(0, length(intersects) + 1, i-0.5, i+0.5),
+    color = :gray95
+    )
+end
+
+upset_dots!(dot_ax, intersects)
+
+hidexdecorations!(intersection_ax)
+hideydecorations!(set_ax)
+
+rowgap!(fig.layout, 0)
+linkyaxes!(dot_ax, set_ax)
+linkxaxes!(dot_ax, intersection_ax)
+hidespines!(intersection_ax, :t, :r, :b)
+hidespines!(set_ax, :t, :r, :l)
+
+save("figures/upset_score_stool.pdf", fig)
+fig
+
+##
+
+
+fig, ax, plt = hist(collect(skipmissing(tps.cogScore)))
+plt2 = hist!(ax, collect(skipmissing(tps.cogScore[tps.has_stool .|| tps.has_prevstool])))
+Legend(fig[1,2], [plt, plt2], ["All scores", "Scores with stool"])
+fig
+
+##
+
+tps.under3 = tps.ageMonths .< 36
+tps.under5 = tps.ageMonths .< 60
+
+ys = ["cogScore",  "stool", "prev stool", "under 3"]
+ycols = [:has_segmentation, :has_stool, :has_prevstool, :under3]
+
+fig = Figure()
+
+intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
+dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:length(ys), ys))
+set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
+                 xautolimitmargin = (0, 0.25),  xgridvisible = false)
+
+intersects = [
+    [1],          # 1. score only    
+    [2],          # 2. stool only
+    [1,2],        # 3. score & stool
+    [1,2,4],      # 4. score & stool & under 3
+    [1,3,4],      # 4. score & prior stool & under 3
+]
+
+barplot!(intersection_ax, 1:length(intersects), [count_set(tps, ycols, i) for i in intersects],
+            bar_labels=:y, color = :gray20,
+            label_size = 14, label_formatter = x -> string(Int(x)))
+
+barplot!(set_ax, 1:length(ycols), [count(x-> !ismissing(x) && x, tps[!, col]) for col in ycols], 
+            direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
+            label_formatter = x -> string(Int(x)))
+
+            
+for i in 1:2:length(ycols)
+    poly!(dot_ax,
+    BBox(0, length(intersects) + 1, i-0.5, i+0.5),
+    color = :gray95
+    )
+end
+
+upset_dots!(dot_ax, intersects)
+
+hidexdecorations!(intersection_ax)
+hideydecorations!(set_ax)
+
+rowgap!(fig.layout, 0)
+linkyaxes!(dot_ax, set_ax)
+linkxaxes!(dot_ax, intersection_ax)
+hidespines!(intersection_ax, :t, :r, :b)
+hidespines!(set_ax, :t, :r, :l)
+
+save("figures/upset_score_stool_under3.pdf", fig)
+fig
+
+##
+
+tps.under5 = tps.ageMonths .< 60
+
+ys = ["cogScore",  "stool", "prev stool", "under 5"]
+ycols = [:has_segmentation, :has_stool, :has_prevstool, :under5]
+
+fig = Figure()
+
+intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
+dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:length(ys), ys))
+set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
+                 xautolimitmargin = (0, 0.25),  xgridvisible = false)
+
+intersects = [
+    [1],          # 1. score only    
+    [2],          # 2. stool only
+    [1,2],        # 3. score & stool
+    [1,2,4],      # 4. score & stool & under 5
+    [1,3,4],      # 4. score & prior stool & under 5
+]
+
+barplot!(intersection_ax, 1:length(intersects), [count_set(tps, ycols, i) for i in intersects],
+            bar_labels=:y, color = :gray20,
+            label_size = 14, label_formatter = x -> string(Int(x)))
+
+barplot!(set_ax, 1:length(ycols), [count(x-> !ismissing(x) && x, tps[!, col]) for col in ycols], 
+            direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
+            label_formatter = x -> string(Int(x)))
+
+            
+for i in 1:2:length(ycols)
+    poly!(dot_ax,
+    BBox(0, length(intersects) + 1, i-0.5, i+0.5),
+    color = :gray95
+    )
+end
+
+upset_dots!(dot_ax, intersects)
+
+hidexdecorations!(intersection_ax)
+hideydecorations!(set_ax)
+
+rowgap!(fig.layout, 0)
+linkyaxes!(dot_ax, set_ax)
+linkxaxes!(dot_ax, intersection_ax)
+hidespines!(intersection_ax, :t, :r, :b)
+hidespines!(set_ax, :t, :r, :l)
+
+save("figures/upset_score_stool_under5.pdf", fig)
+fig
+
+## 
+
+tps.under6mo = tps.ageMonths .<= 6
+
+fig, ax, hst = hist(@rsubset(tps, :under6mo).ageMonths, axis=(; xlabel = "Age (months)"))
+
+ax2, hst2 = hist(fig[1,2], @rsubset(tps, :under6mo, :breastfeeding=="exclusive formula").ageMonths)
+hist!(ax2, @rsubset(tps, :under6mo, :breastfeeding=="exclusive breast").ageMonths)
+fig
+
+##
+
+(@chain tps begin
+    groupby(:subject)
+    @combine(:breastfeeding = unique(:breastfeeding))
+end).breastfeeding |> countmap
