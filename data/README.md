@@ -81,3 +81,19 @@ https://static-content.springer.com/esm/art%3A10.1038%2Fs41564-018-0337-x/MediaO
   - `metaphlan`
     - `XXX_profile.tsv`: taxonomic profile
 - `links/`: symlinks to `_genefamilies.tsv` and `_profile.tsv` files for all batches
+
+
+## Relevant REDCAP coding
+
+- `Redcap_Ess_CHB_IFP::ifp_b01` : ever breastmilk
+  - 1: yes
+  - 2: no
+  - -8: don't know
+- `Redcap_Ess_CHB_IFP::ifp_b08_1`: past 7 days mom's breastmilk
+  - 1: yes
+  - 2: no
+  - -8: don't know
+- `Redcap_Ess_CHB_IFP::ifp_b09_1`: past 7 days other's breastmilk
+  - 1: yes
+  - 2: no
+  - -8: don't know

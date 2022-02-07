@@ -99,8 +99,12 @@ function _codebreastfeeding(dfg)
         @warn "$(only(unique(dfg.subject))) has odd breastfeeding information"
         bfe = fill("mixed", n)
     elseif !ismissing(eff) && eff
-        any(x->!ismissing(x) && x, (ebf, en)) && @warn "$(only(unique(dfg.subject))) has contradictory breastfeeding information"
-        bfe = fill("formula", n)
+        if any(x->!ismissing(x) && x, (ebf, en))
+            @warn "$(only(unique(dfg.subject))) has contradictory breastfeeding information"
+            bfe = fill("mixed", n)
+        else
+            bfe = fill("formula", n)
+        end
     else
         bfe = fill("breastmilk", n)
     end

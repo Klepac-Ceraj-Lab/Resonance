@@ -26,7 +26,7 @@ rename!(fmp_subject, Dict(:studyID=>:subject))
 
 # Then, timepoint-specific data
 
-fmp_timepoint = DataFrame(XLSX.readtable("data/resonance_fmp/Timepoint_Centric_012522.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_timepoint = DataFrame(XLSX.readtable("data/resonance_fmp/Timepoint_Centric_020422.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_timepoint, Dict(:studyID=>:subject))
 
 # # and COVID-specific samples
@@ -152,4 +152,3 @@ CSV.write("data/wrangled/timepoints.csv", fmp_alltp)
 CSV.write("data/wrangled/omnisamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "F"), Not(:Notes)))
 CSV.write("data/wrangled/etohsamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "E"), Not(:Notes)))
 CSV.write("data/wrangled/covid.csv", fmp_covid)
-
