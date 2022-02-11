@@ -11,7 +11,8 @@ export airtable_metadata,
        varexplained,
        commonname,
        countmap,
-       codebreastfeeding!
+       codebreastfeeding!,
+       stp_overlap
 
 using Reexport
 using Airtable
