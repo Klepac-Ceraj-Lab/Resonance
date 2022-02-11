@@ -1,27 +1,112 @@
 using Resonance
-using DataFramesMeta
-using CairoMakie
+using AlgebraOfGraphics
 
-allmeta = CSV.read("data/wrangled.csv", DataFrame)
-metabolites = CSV.read("data/metabolites.csv", DataFrame)
+omni = CSV.read("data/wrangled/omnisamples.csv", DataFrame)
+etoh = CSV.read("data/wrangled/etohsamples.csv", DataFrame)
+
+##
+
+tps  = CSV.read("data/wrangled/timepoints.csv", DataFrame)
+tps."Left-Thalamus" = map(eachrow(tps)) do row
+    (t, p) = (row."Left-Thalamus", row."Left-Thalamus-Proper")
+    all(ismissing, (t,p)) && return missing
+    return max(coalesce(t, 0), coalesce(p, 0))
+end
+
+tps."Right-Thalamus" = map(eachrow(tps)) do row
+    (t, p) = (row."Right-Thalamus", row."Right-Thalamus-Proper")
+    all(ismissing, (t,p)) && return missing
+    return max(coalesce(t, 0), coalesce(p, 0))
+end
+
+mainmeta = [
+    "ageMonths",
+    "age0to3mo",
+    "age3to6mo",
+    "age6to12mo",
+    "age12moplus",
+    "mother_HHS_Education",
+    "simple_race",
+    "cogScore",
+    "has_segmentation"
+]
+
+brainmeta = ["CortexVol",
+            #  "CorticalWhiteMatterVol",
+             "SubCortGrayVol",
+             "TotalGrayVol",
+             "BrainSegVol-to-eTIV",
+            #  "CerebralWhiteMatterVol",
+             "EstimatedTotalIntraCranialVol",
+            #  "lhCorticalWhiteMatterVol",
+            #  "lhCerebralWhiteMatterVol",
+             "lhCortexVol",
+             "Left-Thalamus",
+             "Left-Lateral-Ventricle",
+             "Left-Cerebellum-White-Matter",
+             "Left-Cerebellum-Cortex",
+             "Left-Caudate",
+             "Left-Putamen",
+             "Left-Pallidum",
+             "Left-Hippocampus",
+             "Left-Amygdala",
+             "Left-Accumbens-area",
+             "Left-VentralDC",
+             "Left-choroid-plexus",
+            #  "rhCorticalWhiteMatterVol",
+            #  "rhCerebralWhiteMatterVol",
+             "rhCortexVol",
+             "Right-Thalamus",
+             "Right-Lateral-Ventricle",
+             "Right-Cerebellum-White-Matter",
+             "Right-Cerebellum-Cortex",
+             "Right-Caudate",
+             "Right-Putamen",
+             "Right-Pallidum",
+             "Right-Hippocampus",
+             "Right-Amygdala",
+             "Right-Accumbens-area",
+             "Right-VentralDC",
+             "Right-choroid-plexus",
+             "Brain-Stem",
+             "CSF"
+]
+
+
+select!(tps, ["subject", "timepoint", mainmeta..., brainmeta...])
+rename!(tps, Dict(k=> replace(k, "-"=>"_") for k in brainmeta))
+foreach(i-> (brainmeta[i] = replace(brainmeta[i], "-"=>"_")), eachindex(brainmeta))
+
+for m in brainmeta
+    c = count(x-> !ismissing(x) && x != 0, tps[!, m])
+    @info "Not missing or 0 `$m`: $c"
+end
+
+##
+
+metabolites = CSV.read("data/wrangled/metabolites.csv", DataFrame)
 ms = [Resonance.Metabolite(row[:uid], row[:Metabolite], row[:MZ], row[:RT]) for row in eachrow(metabolites)]
 metabolites = CommunityProfile(Matrix(metabolites[!, 9:end]), ms, MicrobiomeSample.(names(metabolites)[9:end]))
-set!(metabolites, allmeta)
+set!(metabolites, leftjoin(etoh, tps, on=[:subject, :timepoint], makeunique=true))
 
-species = CSV.read("data/species.csv", DataFrame)
+species = CSV.read("data/wrangled/species.csv", DataFrame)
 species = CommunityProfile(Matrix(species[!, 2:end]), Taxon.(species[!, 1]), MicrobiomeSample.(names(species)[2:end]))
-set!(species, allmeta)
+set!(species, leftjoin(omni, tps, on=[:subject, :timepoint], makeunique=true))
 
 
 ## 
-
+using Microbiome.Distances
+using Microbiome.MultivariateStats
 
 met_pcoa = pcoa(metabolites)
 spec_pcoa = pcoa(species)
 
+brain_dm = pairwise(Euclidean(), Matrix(tps[completecases(tps[:, brainmeta]), brainmeta]), dims=1)
+brain_pcoa = fit(MDS, brain_dm, distances=true)
+
 ## 
-function getcolors(vals, clip=(0.1, 30); highclip=Makie.to_color(:white), lowclip=Makie.to_color(:black))
-    kidscolor = Makie.to_colormap(:plasma)
+function getcolors(vals, clip=(0.1, 30); highclip=Makie.to_color(:white), lowclip=Makie.to_color(:black), colormap=:plasma)
+    kidscolor = Makie.to_colormap(colormap)
 
     map(vals) do val
         if ismissing(val)
@@ -40,9 +125,9 @@ end
 
 fig = Figure(resolution=(800, 800))
 ax1 = Axis(fig[1,1], xlabel="MDS1 ($(round(varexplained(met_pcoa)[1] * 100, digits=2))%)",
-                     ylabel="MDS1 ($(round(varexplained(met_pcoa)[2] * 100, digits=2))%)")
+                     ylabel="MDS2 ($(round(varexplained(met_pcoa)[2] * 100, digits=2))%)")
 
-scatter!(ax1, loadings(met_pcoa)[:,1], loadings(met_pcoa)[:,2],
+scatter!(ax1, Resonance.loadings(met_pcoa)[:,1], Resonance.loadings(met_pcoa)[:,2],
         color=[ismissing(x) ? :grey : x == "M" ? :dodgerblue : :orange for x in get(metabolites, :Mother_Child)])
 
 leg = Legend(fig[1,2], [MarkerElement(color=:orange, marker=:circle),
@@ -51,10 +136,10 @@ leg = Legend(fig[1,2], [MarkerElement(color=:orange, marker=:circle),
 
 ax2 = Axis(fig[2,1],
             xlabel="MDS1 ($(round(varexplained(met_pcoa)[1] * 100, digits=2))%)",
-            ylabel="MDS1 ($(round(varexplained(met_pcoa)[2] * 100, digits=2))%)"
+            ylabel="MDS2 ($(round(varexplained(met_pcoa)[2] * 100, digits=2))%)"
 )
 
-scatter!(ax2, loadings(met_pcoa)[:,1], loadings(met_pcoa)[:,2],
+scatter!(ax2, Resonance.loadings(met_pcoa)[:,1], Resonance.loadings(met_pcoa)[:,2],
          color = getcolors(get(metabolites, :ageMonths), (0,25)))
 cleg = Colorbar(fig[2, 2], limits=(0.1, 25), colormap=:plasma, highclip=:white, lowclip=:black, label="Age in Months")
 save("figures/metabolites_pcoa.png", fig)
@@ -65,27 +150,70 @@ fig
 
 fig = Figure(resolution=(800, 800))
 ax1 = Axis(fig[1,1], xlabel="MDS1 ($(round(varexplained(spec_pcoa)[1] * 100, digits=2))%)",
-                     ylabel="MDS1 ($(round(varexplained(spec_pcoa)[2] * 100, digits=2))%)")
-scatter!(ax1, loadings(spec_pcoa)[:,1], loadings(spec_pcoa)[:,2],
-        color=[ismissing(x) ? :grey : x == "M" ? :dodgerblue : :orange for x in get(species, :Mother_Child)])
+                     ylabel="MDS2 ($(round(varexplained(spec_pcoa)[2] * 100, digits=2))%)")
+scatter!(ax1, Resonance.loadings(spec_pcoa)[:,1], Resonance.loadings(spec_pcoa)[:,2],
+        color=[ismissing(x) ? :grey : x == "M" ? :dodgerblue : :orange for x in get(species, :Mother_Child)],
+        strokewidth=0.5
+)
 
-leg = Legend(fig[1,2], [MarkerElement(color=:orange, marker=:circle),
-                        MarkerElement(color=:dodgerblue, marker=:circle)],
+leg = Legend(fig[1,2], [MarkerElement(color=:orange, marker=:circle, strokewidth=0.5),
+                        MarkerElement(color=:dodgerblue, marker=:circle, strokewidth=0.5)],
                         ["Kids", "Moms"])
 
 ax2 = Axis(fig[2,1],
             xlabel="MDS1 ($(round(varexplained(spec_pcoa)[1] * 100, digits=2))%)",
-            ylabel="MDS1 ($(round(varexplained(spec_pcoa)[2] * 100, digits=2))%)"
+            ylabel="MDS2 ($(round(varexplained(spec_pcoa)[2] * 100, digits=2))%)"
 )
 
-scatter!(ax2, loadings(spec_pcoa)[:,1], loadings(spec_pcoa)[:,2],
-         color = getcolors(get(species, :ageMonths) ./ 12, (0,10))
+scatter!(ax2, Resonance.loadings(spec_pcoa)[:,1], Resonance.loadings(spec_pcoa)[:,2],
+         color = getcolors(get(species, :ageMonths) ./ 12, (0,10)),
+         strokewidth=0.5
 )
 cleg = Colorbar(fig[2, 2], limits=(0.1, 10), colormap=:plasma, highclip=:white, lowclip=:black, label="Age in Years")
 save("figures/species_pcoa.png", fig)
 
 fig
 
+##
+
+fig = Figure(resolution=(800, 800))
+ax1 = Axis(fig[1,1],
+            xlabel="PCA1 ($(round(varexplained(brain_pcoa)[1] * 100, digits=2))%)",
+            ylabel="PCA2 ($(round(varexplained(brain_pcoa)[2] * 100, digits=2))%)"
+)
+
+scatter!(ax1, Resonance.loadings(brain_pcoa)[:,1], Resonance.loadings(brain_pcoa)[:,2],
+         color = getcolors(tps[completecases(tps[:, brainmeta]), :ageMonths] ./ 12, (0,10)),
+         strokewidth=0.5
+)
+cleg = Colorbar(fig[1, 2], limits=(0.1, 10), colormap=:plasma, highclip=:white, lowclip=:black, label="Age in Years")
+
+ax2 = Axis(fig[2,1],
+        xlabel="PCA1 ($(round(varexplained(brain_pcoa)[1] * 100, digits=2))%)",
+        ylabel="Age in Years"
+)
+
+scatter!(ax2, Resonance.loadings(brain_pcoa)[:,1], tps[completecases(tps[:, brainmeta]), :ageMonths] ./ 12,
+        color = getcolors(tps[completecases(tps[:, brainmeta]), :cogScore], (65,135), colormap=:viridis),
+        strokewidth=0.5
+)
+
+cleg = Colorbar(fig[2, 2], limits=(65, 135), colormap=:viridis, highclip=:white, lowclip=:black, label="Cognitive function score")
+
+save("figures/brain_pcoa.png", fig)
+
+fig
+
+##
+
+overlap = zip(get(metabolites, :subject), get(metabolites, :timepoint)) ∩
+          zip(get(species, :subject), get(species, :timepoint))
+
+sort!(overlap, lt=(x,y)-> x[1] == y[1] ? x[2] < y[2] : x < y)
+
+keepetoh = [x ∈ overlap for x in zip(get(metabolites, :subject), get(metabolites, :timepoint))]
+keepomni = [!any(ismissing, x) && x ∈ overlap for x in zip(get(species, :subject), get(species, :timepoint))]
+sum(keepomni)
 ##
 
 gaba = findfirst(f-> commonname(f) === "gamma-Aminobutyric acid", features(metabolites))

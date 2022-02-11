@@ -1,7 +1,7 @@
 using Resonance
 using CairoMakie
 
-allsamplemeta = CSV.read("data/wrangled/samples.csv", DataFrame, stringtype=String)
+etohsamples = CSV.read("data/wrangled/etohsamples.csv", DataFrame, stringtype=String)
 
 # Note: had to delete empty "C1162_3E_1A" "M1162_3E_1A" columns from C8-pos (they were duplicated)
 #
@@ -28,7 +28,7 @@ select!(metabs, :uid, Cols(:))
 
 # rename to new sample ids
 metab_samples = names(metabs)[9:end]
-rename_dict = Dict((old=>new for (old, new) in zip(allsamplemeta.sid_old, allsamplemeta.sample)))
+rename_dict = Dict((old=>new for (old, new) in zip(etohsamples.sid_old, etohsamples.sample)))
 rename_dict["C1162_3E_1A"] = "FE01852" # should have been 4E
 rename_dict["C1227_3E_1A"] = "FE01922" # should have been 4E
 rename_dict["M0932_7E_1A"] = "FE01759" # should have been C0932
