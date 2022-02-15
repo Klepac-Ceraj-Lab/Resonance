@@ -31,16 +31,16 @@ mainmeta = [
     "has_segmentation"
 ]
 
-brainmeta = ["CortexVol",
+brainmeta = [
+            #  "CortexVol",
             #  "CorticalWhiteMatterVol",
-             "SubCortGrayVol",
-             "TotalGrayVol",
-             "BrainSegVol-to-eTIV",
+            #  "SubCortGrayVol",
+            #  "TotalGrayVol",
+            #  "BrainSegVol-to-eTIV",
             #  "CerebralWhiteMatterVol",
-             "EstimatedTotalIntraCranialVol",
             #  "lhCorticalWhiteMatterVol",
             #  "lhCerebralWhiteMatterVol",
-             "lhCortexVol",
+            #  "lhCortexVol",
              "Left-Thalamus",
              "Left-Lateral-Ventricle",
              "Left-Cerebellum-White-Matter",
@@ -55,7 +55,7 @@ brainmeta = ["CortexVol",
              "Left-choroid-plexus",
             #  "rhCorticalWhiteMatterVol",
             #  "rhCerebralWhiteMatterVol",
-             "rhCortexVol",
+            #  "rhCortexVol",
              "Right-Thalamus",
              "Right-Lateral-Ventricle",
              "Right-Cerebellum-White-Matter",
@@ -72,15 +72,14 @@ brainmeta = ["CortexVol",
              "CSF"
 ]
 
+for m in brainmeta
+    tps[!, m] .= tps[!, m] ./ map(x-> ismissing(x) || x == 0 ? missing : x, tps."EstimatedTotalIntraCranialVol")
+end
 
 select!(tps, ["subject", "timepoint", mainmeta..., brainmeta...])
 rename!(tps, Dict(k=> replace(k, "-"=>"_") for k in brainmeta))
 foreach(i-> (brainmeta[i] = replace(brainmeta[i], "-"=>"_")), eachindex(brainmeta))
 
-for m in brainmeta
-    c = count(x-> !ismissing(x) && x != 0, tps[!, m])
-    @info "Not missing or 0 `$m`: $c"
-end
 
 complete_brain = completecases(tps[:, brainmeta])
 
@@ -89,9 +88,9 @@ complete_brain = completecases(tps[:, brainmeta])
 metabolites = CSV.read("data/wrangled/metabolites.csv", DataFrame)
 ms = [Resonance.Metabolite(row[:uid], row[:Metabolite], row[:MZ], row[:RT]) for row in eachrow(metabolites)]
 metabolites = CommunityProfile(Matrix(metabolites[!, 9:end]), ms, MicrobiomeSample.(names(metabolites)[9:end]))
-set!(metabolites, leftjoin(etoh, tps, on=[:subject, :timepoint], makeunique=true))
+set!(metabolites, leftjoin(etoh, tps[!, ["subject",  "timepoint", mainmeta...]], on=[:subject, :timepoint], makeunique=true))
 
 species = CSV.read("data/wrangled/species.csv", DataFrame)
 species = CommunityProfile(Matrix(species[!, 2:end]), Taxon.(species[!, 1]), MicrobiomeSample.(names(species)[2:end]))
-set!(species, leftjoin(omni, tps, on=[:subject, :timepoint], makeunique=true))
+set!(species, leftjoin(omni, tps[!, ["subject", "timepoint", mainmeta...]], on=[:subject, :timepoint], makeunique=true))
 species = species[:, map(!ismissing, get(species, :subject)) .& map(!ismissing, get(species, :timepoint))]
