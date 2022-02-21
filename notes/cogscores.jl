@@ -35,8 +35,8 @@ lm_results = DataFrame()
 
 ##
 
-for spc in featurenames(testcomm)
-    @info spc
+for spc in features(testcomm)
+    @info name(spc)
     ab = vec(abundances(testcomm[spc, :]))
     over0 = ab .> 0
 
@@ -49,13 +49,13 @@ for spc in featurenames(testcomm)
 
     mod = lm(@formula(bug ~ age + cogScore), df)
     ct = DataFrame(coeftable(mod))
-    ct.species .= spc
+    ct.species .= name(spc)
     ct.testvar .= "cogScore"
     append!(lm_results, ct)
     
     mod = lm(@formula(bug ~ age + levelcode(cogQuartile)), df)
     ct = DataFrame(coeftable(mod))
-    ct.species .= spc
+    ct.species .= name(spc)
     ct.testvar .= "cogQuartile"
     append!(lm_results, ct)
 
@@ -151,10 +151,6 @@ sort!(tps, [:subject, :timepoint])
 grps = groupby(tps, :subject)
 fecals = Set(zip(get(species, :subject), get(species, :timepoint)))
 
-for grp in grps
-
-end
-
 ##
 
 fig = Figure()
@@ -210,14 +206,18 @@ for grp in grps
     if !isnothing(firstyoung)
         laterscores = map(((i, s),) -> i > firstyoung && !ismissing(s), enumerate(grp.cogScore))
         if sum(laterscores) > 0
-            youngfecal[subject] = (;fecal = grp[firstyoung, :sample], cogscores = collect(skipmissing(grp[laterscores, :cogScore])))
+            lscr = grp[laterscores, :cogScore]
+            ages = grp[laterscores, :ageMonths]
+            youngfecal[subject] = (;fecal = grp[firstyoung, :sample], cogscores = collect(skipmissing(lscr[.!ismissing.(lscr)])), ages = collect(skipmissing(ages[.!ismissing.(lscr)])))
         end
     end
 
     if !isnothing(firstold)
         laterscores = map(((i, s),) -> i > firstold && !ismissing(s), enumerate(grp.cogScore))
         if sum(laterscores) > 0
-            oldfecal[subject] = (;fecal = grp[firstold, :sample], cogscores = collect(skipmissing(grp[laterscores, :cogScore])))
+            lscr = grp[laterscores, :cogScore]
+            ages = grp[laterscores, :ageMonths]
+            oldfecal[subject] = (;fecal = grp[firstold, :sample], cogscores = collect(skipmissing(lscr[.!ismissing.(lscr)])), ages = collect(skipmissing(ages[.!ismissing.(lscr)])))
         end
     end
 end
@@ -226,8 +226,11 @@ end
 
 yfdf = DataFrame(sample = [youngfecal[k][:fecal] for k in keys(youngfecal)])
 yfdf.age = [get(species, s, :ageMonths) for s in yfdf.sample]
+yfdf.hhs = [get(species, s, :mother_HHS_Education) for s in yfdf.sample]
 yfdf.firstscore = [first(youngfecal[k][:cogscores]) for k in keys(youngfecal)]
 yfdf.meanscore = [mean(youngfecal[k][:cogscores]) for k in keys(youngfecal)]
+yfdf.allscores = [youngfecal[k][:cogscores] for k in keys(youngfecal)]
+yfdf.allages = [youngfecal[k][:ages] for k in keys(youngfecal)]
 
 
 ##
@@ -240,6 +243,10 @@ youngcomm = species[youngprev, youngsamples]
 for sp in features(youngcomm)
     yfdf[!, Microbiome.name(sp)] = collect(vec(abundances(species[sp, yfdf.sample])))
 end
+
+CSV.write("data/lm_results/under12m_cogScores_taxa.csv", yfdf)
+
+##
 
 lm_results = DataFrame()
 
@@ -286,13 +293,16 @@ CSV.write("data/lm_results/young_species_predict_cogscore.csv", lm_results)
 
 ofdf = DataFrame(sample = [oldfecal[k][:fecal] for k in keys(oldfecal)])
 ofdf.age = [get(species, s, :ageMonths) for s in ofdf.sample]
+ofdf.hhs = [get(species, s, :mother_HHS_Education) for s in ofdf.sample]
 ofdf.firstscore = [first(oldfecal[k][:cogscores]) for k in keys(oldfecal)]
 ofdf.meanscore = [mean(oldfecal[k][:cogscores]) for k in keys(oldfecal)]
+ofdf.allscores = [oldfecal[k][:cogscores] for k in keys(oldfecal)]
+ofdf.allages = [oldfecal[k][:ages] for k in keys(oldfecal)]
 
 
 ##
 
-oldsamples = map(a-> !ismissing(a) && a >= 12, get(species, :ageMonths))
+oldsamples = map(a-> !ismissing(a) && a > 12, get(species, :ageMonths))
 oldprev = vec((prevalence(species[:, oldsamples]) .> 0.1))
 
 oldcomm = species[oldprev, oldsamples]
@@ -300,6 +310,10 @@ oldcomm = species[oldprev, oldsamples]
 for sp in features(oldcomm)
     ofdf[!, Microbiome.name(sp)] = collect(vec(abundances(species[sp, ofdf.sample])))
 end
+
+CSV.write("data/lm_results/over12m_cogScores_taxa.csv", ofdf)
+
+##
 
 lm_results = DataFrame()
 

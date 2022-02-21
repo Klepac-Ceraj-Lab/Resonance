@@ -91,6 +91,6 @@ metabolites = CommunityProfile(Matrix(metabolites[!, 9:end]), ms, MicrobiomeSamp
 set!(metabolites, leftjoin(etoh, tps[!, ["subject",  "timepoint", mainmeta...]], on=[:subject, :timepoint], makeunique=true))
 
 species = CSV.read("data/wrangled/species.csv", DataFrame)
-species = CommunityProfile(Matrix(species[!, 2:end]), Taxon.(species[!, 1]), MicrobiomeSample.(names(species)[2:end]))
+species = CommunityProfile(Matrix(species[!, 2:end]), taxon.(species[!, 1]), MicrobiomeSample.(names(species)[2:end]))
 set!(species, leftjoin(omni, tps[!, ["subject", "timepoint", mainmeta...]], on=[:subject, :timepoint], makeunique=true))
 species = species[:, map(!ismissing, get(species, :subject)) .& map(!ismissing, get(species, :timepoint))]
