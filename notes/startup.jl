@@ -28,7 +28,8 @@ mainmeta = [
     "mother_HHS_Education",
     "simple_race",
     "cogScore",
-    "has_segmentation"
+    "has_segmentation",
+    "ECHOTPCoded"
 ]
 
 brainmeta = [

@@ -7,6 +7,14 @@ using Microbiome.MultivariateStats
 met_pcoa = pcoa(metabolites)
 spec_pcoa = pcoa(species)
 
+kidsidx = get(species, :Mother_Child) .== "C"
+kidsspecies = species[:, kidsidx]
+kidsspecies = kidsspecies[vec(prevalence(kidsspecies) .> 0), :]
+ginisimpson!(kidsspecies)
+shannon!(kidsspecies)
+
+kids_pcoa = pcoa(kidsspecies)
+
 brain_dm = pairwise(Euclidean(), Matrix(tps[complete_brain, brainmeta]), dims=1)
 brain_pcoa = fit(MDS, brain_dm, distances=true)
 
@@ -80,6 +88,24 @@ save("figures/species_pcoa.png", fig)
 
 fig
 
+##
+
+fig = Figure(resolution=(600, 600))
+ax1 = Axis(fig[1,1], xlabel="Age (years)",
+                     ylabel="MDS1 ($(round(varexplained(kids_pcoa)[1] * 100, digits=2))%)"
+)
+
+sc = scatter!(ax1, get(kidsspecies, :ageMonths) ./12, Resonance.loadings(kids_pcoa)[:,1],
+        color = get(kidsspecies, :shannon),
+        strokewidth=0.5
+)
+
+lb = Label(fig[1,2], "α diveristy (Shannon)", rotation=π/2, tellheight=false, padding=(-10,-10,0,0))
+cleg = Colorbar(fig[1, 3], sc)
+
+save("figures/species_pcoa_kids_age.png", fig)
+
+fig
 ##
 
 fig = Figure(resolution=(800, 800))
