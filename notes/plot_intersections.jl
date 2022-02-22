@@ -1,7 +1,7 @@
 using Resonance
 
-tps = CSV.read("data/tps/timepoints.csv", DataFrame)
-fss = CSV.read("data/tps/omnisamples.csv", DataFrame)
+tps = CSV.read("data/wrangled/timepoints.csv", DataFrame)
+fss = CSV.read("data/wrangled/omnisamples.csv", DataFrame)
 subtpset = collect(zip(fss.subject, fss.timepoint))
 
 
@@ -9,6 +9,7 @@ subj = @chain tps begin
     groupby(:subject)
     transform!(
         nrow => :n_timepoints,
+        :cogScore => ByRow(!ismissing) => :has_cogScore,
         AsTable(r"subject|breast"i) => (s -> begin
             if any(!ismissing, s.breastFedPercent)
                 return fill(true, length(s[1]))
@@ -41,13 +42,13 @@ using CairoMakie
 
 ##
 
-ys = ["scan",  "stool", "prev stool", "later stool", "breastfeeding"]
-ycols = [:has_segmentation, :has_stool, :has_prevstool, :has_futstool, :has_bfperc]
+ys = ["scan",  "stool", "prev stool"]
+ycols = [:has_segmentation, :has_stool, :has_prevstool]
 
 fig = Figure()
 
 intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
-dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:5, ys))
+dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:length(ys), ys))
 set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
                  xautolimitmargin = (0, 0.25),  xgridvisible = false)
 
@@ -57,17 +58,17 @@ intersects = [
     [1,2],      # 3. scan & stool
     [1,3],      # 4. scan & prior stool
     [2,3],      # 5. stool & prior stool
-    [2,4],      # 5. stool & future stool
+    # [2,4],      # 5. stool & future stool
     [1,2,3],    # 5. scan & stool & prior stool
-    [1,2,5],    # 6. scan & stool & bf
-    [1,2,3,5]   # 7. scan & stool & prior stool && bf
+    # [1,2,5],    # 6. scan & stool & bf
+    # [1,2,3,5]   # 7. scan & stool & prior stool && bf
 ]
 
-barplot!(intersection_ax, 1:9, [count_set(tps, ycols, i) for i in intersects],
+barplot!(intersection_ax, 1:length(intersects), [count_set(tps, ycols, i) for i in intersects],
             bar_labels=:y, color = :gray20,
             label_size = 14, label_formatter = x -> string(Int(x)))
 
-barplot!(set_ax, 1:5, [count(x-> !ismissing(x) && x, tps[!, col]) for col in ycols], 
+barplot!(set_ax, 1:length(ys), [count(x-> !ismissing(x) && x, tps[!, col]) for col in ycols], 
             direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
             label_formatter = x -> string(Int(x)))
 
@@ -101,12 +102,19 @@ fig
 
 using Dates
 
-colldates = sort(tps.collectionDate |> skipmissing |> collect)
+fss.collectionDate = [ismissing(d) ? missing : Date(d) for d in fss.collectionDate]
+colldates = sort(fss.collectionDate |> skipmissing |> collect)
 
 drange = range(Date(2017,07,01), today(), step=Month(1))
 
 colldatecount = map(drange) do dt
     count(cd-> dt <= cd < dt+Month(1), colldates)
+end
+
+assdates = sort(tps.assessmentDate |> skipmissing |> collect)
+
+assdatecount = map(drange) do dt
+    count(cd-> dt <= cd < dt+Month(1), assdates)
 end
 
 ##
@@ -137,17 +145,29 @@ hist!(scan_age_young, subset(tps, AsTable([:ageMonths, :has_segmentation]) => By
 Label(fig[1, 0], text = "All kids", tellheight=false)
 Label(fig[2, 1], text = "Young kids", tellheight=false)
 
-stools_bydate = Axis(fig[3, 1:3], title="samples collected by date",
+save("figures/age_hists.pdf")
+fig
+
+##
+fig = Figure()
+
+stools_bydate = Axis(fig[1, 1], title="Stool samples collected by date",
                         xticks=(1:4:length(drange), string.(drange[1:4:end])),
                         xticklabelrotation=π/4)
 barplot!(stools_bydate, 1:length(drange), colldatecount, color=:gray20)
 vlines!(stools_bydate, [33], linestyle=:dash, color=:gray20)
 tightlimits!(stools_bydate, Left(), Right(), Bottom())
 
+ass_bydate = Axis(fig[2, 1], title="Assessments by date",
+                        xticks=(1:4:length(drange), string.(drange[1:4:end])),
+                        xticklabelrotation=π/4)
+barplot!(ass_bydate, 1:length(drange), assdatecount, color=:gray20)
+vlines!(ass_bydate, [33], linestyle=:dash, color=:gray20)
+tightlimits!(ass_bydate, Left(), Right(), Bottom())
 
-save("figures/age_hists.pdf")
+linkyaxes!(stools_bydate, ass_bydate)
+
 fig
-
 ##
 
 @info "Collected in 2019: $(count(c-> Year(c) == Year(2019), colldates))"
@@ -256,6 +276,7 @@ intersects = [
     [2],        # 2. stool only
     [1,2],      # 3. score & stool
     [1,3],      # 4. score & prior stool
+    [1,2,3],      # 4. score & prior stool
 ]
 
 barplot!(intersection_ax, 1:length(intersects), [count_set(tps, ycols, i) for i in intersects],

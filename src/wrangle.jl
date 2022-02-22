@@ -29,10 +29,10 @@ function findprevstool(timepoints, has_stool; rev=false)
     srt = sortperm(timepoints; rev)
     fs = findfirst(has_stool[srt])
     isnothing(fs) && return fill(false, length(timepoints))
-    return timepoints .> fs
+    return (timepoints .> fs) .& has_stool
 end
 
-countmap(v) = Dict(k=> count(==(k), v) for k in unique(v))
+countmap(v) = Dict(k=> count(x -> x === k, v) for k in unique(v))
 
 ## Breastfeeding
 

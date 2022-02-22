@@ -12,6 +12,17 @@ samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
     sort!([:subject, :timepoint])
 end
 
+
+fmp_samples = DataFrame(XLSX.readtable("data/resonance_fmp/Sample_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+rename!(fmp_samples, Dict(:studyID=>:subject, :collectionNum=> :timepoint))
+@rsubset! fmp_samples begin
+    :subject in samplemeta.subject 
+    !ismissing(:timepoint)
+end
+
+samplemeta = leftjoin(samplemeta, select(fmp_samples, [:subject, :timepoint, :collectionDate]), on=[:subject, :timepoint])
+unique!(samplemeta)
+
 ##
 
 # ## Metadata stored in filemaker pro database

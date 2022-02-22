@@ -29,7 +29,7 @@ mainmeta = [
     "simple_race",
     "cogScore",
     "has_segmentation",
-    "ECHOTPCoded"
+    "ECHOTPCoded",
 ]
 
 brainmeta = [
