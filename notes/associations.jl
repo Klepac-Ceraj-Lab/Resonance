@@ -4,6 +4,13 @@ include("startup.jl")
 using Microbiome.Distances
 using Microbiome.MultivariateStats
 
+@chain DataFrame(subject=get(species, :subject), timepoint = get(species, :timepoint), age = get(species, :ageMonths)) begin
+    groupby(:subject)
+    combine(:age => (a-> all(ismissing, a) ? 0 : maximum(skipmissing(a))) => :maxage)
+    subset(:maxage => ByRow(a-> a > 24))
+end
+metabolites
+
 met_pcoa = pcoa(metabolites)
 spec_pcoa = pcoa(species)
 
@@ -14,6 +21,9 @@ ginisimpson!(kidsspecies)
 shannon!(kidsspecies)
 
 kids_pcoa = pcoa(kidsspecies)
+
+using Microbiome.Distances
+using MultivariateStats
 
 brain_dm = pairwise(Euclidean(), Matrix(tps[complete_brain, brainmeta]), dims=1)
 brain_pcoa = fit(MDS, brain_dm, distances=true)
@@ -218,10 +228,10 @@ kidsidx = string.(get(metabolites, :Mother_Child)) .=== "C"
 
 ##
 
-fig = Figure(resolution=(1200,1200))
-ax1 = Axis(fig[1:2,1:2], xlabel="GABA (log)", ylabel="Glutamate (log)")
-ax2 = Axis(fig[0,1:2], height=200)
-ax3 = Axis(fig[2:3, 3], width=200)
+fig = Figure(resolution=(800,800))
+ax1 = Axis(fig[1:4,1:4], xlabel="GABA (log abundance)", ylabel="Glutamate (log abundance)")
+ax2 = Axis(fig[0,1:4], height=200, xlabels=false, xticklabelsvisible=false)
+ax3 = Axis(fig[2:5, 5], width=200, ylabels=false, yticklabelsvisible=false)
 
 
 scmom = scatter!(ax1, log.(vec(abundances(metabolites[gaba, momsidx]))), log.(vec(abundances(metabolites[glutamate,momsidx]))))
@@ -233,7 +243,7 @@ hist!(ax2, log.(vec(metabolites[gaba, kidsidx] |> abundances)))
 hist!(ax3, log.(vec(metabolites[glutamate, kidsidx] |> abundances)), direction=:x)
 
 
-leg = Legend(fig[1,3], [scmom, sckid], ["Moms", "Kids"], tellwidth = false, tellheight = false)
+leg = Legend(fig[1,5], [scmom, sckid], ["Moms", "Kids"], tellwidth = false, tellheight = false)
 
 save("figures/gaba-glutamate.png", fig)
 fig
@@ -308,11 +318,11 @@ using AlgebraOfGraphics
 
 
 genemetab = DataFrame(
-    gabasynth = map(sum, eachcol(abundances(unirefs[neuroactive["GABA synthesis"], [esmap[s] for s in samplenames(metaboverlap)]]))),
-    gabadegr  = map(sum, eachcol(abundances(unirefs[neuroactive["GABA degradation"], [esmap[s] for s in samplenames(metaboverlap)]]))),
+    gabasynth = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["GABA synthesis"], [esmap[s] for s in samplenames(metaboverlap)]])))),
+    gabadegr  = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["GABA degradation"], [esmap[s] for s in samplenames(metaboverlap)]])))),
     gabagut   = log.(vec(abundances(metaboverlap[gaba, :]))),
-    glutsynth = map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate synthesis"], [esmap[s] for s in samplenames(metaboverlap)]]))),
-    glutdegr  = map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate degradation"], [esmap[s] for s in samplenames(metaboverlap)]]))),
+    glutsynth = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate synthesis"], [esmap[s] for s in samplenames(metaboverlap)]])))),
+    glutdegr  = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate degradation"], [esmap[s] for s in samplenames(metaboverlap)]])))),
     glutgut   = log.(vec(abundances(metaboverlap[glutamate, :]))),
     mc        = get(metaboverlap, :Mother_Child))
 
@@ -341,8 +351,8 @@ predgrp = groupby(pred, :mc)
 ##
 
 fig = Figure(resolution=(800,800))
-ax1 = Axis(fig[1,1], xlabel="GABA Synthesis (RPKM)", ylabel="GABA (log abundance)")
-ax2 = Axis(fig[2,1], xlabel="GABA Degradation (RPKM)", ylabel="GABA (log abundance)")
+ax1 = Axis(fig[1,1], xlabel="GABA Synthesis log(RPKM)", ylabel="GABA (log abundance)")
+ax2 = Axis(fig[2,1], xlabel="GABA Degradation log(RPKM)", ylabel="GABA (log abundance)")
 
 scatter!(ax1, genemetab.gabasynth, genemetab.gabagut,
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])

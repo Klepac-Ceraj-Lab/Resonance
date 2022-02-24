@@ -66,6 +66,8 @@ rename!(lm_results, "Pr(>|t|)"=>"pvalue")
 
 ##
 
+adjust = MultipleTesting.adjust
+
 @chain lm_results begin
     groupby(:testvar)
     transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
@@ -89,12 +91,11 @@ save("figures/cogScore_quartiles.png", out)
 
 
 bugs = [
-    "s__Coprococcus_eutactus",
+    "s__Bifidobacterium_catenulatum",
+    "s__Coprococcus_eutactus", # butyrate producer
+    "s__Streptococcus_thermophilus",
     "s__Eubacterium_eligens",
     "s__Ruminococcus_gnavus",
-    "s__Bifidobacterium_catenulatum",
-    "s__Streptococcus_thermophilus",
-    "s__Streptococcus_thermophilus",
     "s__Veillonella_parvula"
 ]
 
@@ -139,6 +140,58 @@ draw!(fig[1,2],
 )
                    
 save("figures/lms.png", fig)
+fig
+
+##
+
+##
+
+fig = Figure(resolution=(900,500))
+draw!(fig[1,1], 
+      data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[1:3], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
+      mapping(:cogQuartile=>"Quartile",
+              :bug=> "Log(relative abundance)";
+              color=:cogQuartile, row=:bugname
+              ) * 
+      (visual(BoxPlot) + visual(Scatter, strokewidth=0.5)),
+      palettes= (; color=cl),
+      axis = (; titlevisible=false, xticklabelsize=14)
+)
+
+
+draw!(fig[1,2], 
+      data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[1:3], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
+      mapping(:cogScore=>"Cognitive Function Score",
+              :bug=> "Log(relative abundance)";
+              color=:cogQuartile, row=:bugname
+              );
+      palettes= (; color=cl),
+      axis=(; ylabel="", yticklabelsvisible=false, xticklabelsize=14)
+)
+                   
+draw!(fig[1,3], 
+      data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[4:6], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
+      mapping(:cogQuartile=>"Quartile",
+              :bug=> "Log(relative abundance)";
+              color=:cogQuartile, row=:bugname
+              ) * 
+      (visual(BoxPlot) + visual(Scatter, strokewidth=0.5)),
+      palettes= (; color=cl),
+      axis = (; titlevisible=false, yticklabelsvisible=false, xticklabelsize=14)
+)
+
+
+draw!(fig[1,4], 
+      data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[4:6], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
+      mapping(:cogScore=>"Cognitive Function Score",
+              :bug=> "Log(relative abundance)";
+              color=:cogQuartile, row=:bugname
+              );
+      palettes= (; color=cl),
+      axis=(; ylabel="", yticklabelsvisible=false, xticklabelsize=14)
+)
+                   
+save("figures/lms-split-2.png", fig)
 fig
 
 ##
