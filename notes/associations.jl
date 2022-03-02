@@ -1,6 +1,9 @@
 include("startup.jl")
 
 ## 
+
+using CairoMakie
+using AlgebraOfGraphics
 using Microbiome.Distances
 using Microbiome.MultivariateStats
 
@@ -280,34 +283,16 @@ fig
 
 ##
 
-
+allmeta = leftjoin(tps, select(omni, [:subject, :timepoint, :sample]), on=[:subject, :timepoint])
 unirefs = Resonance.load_genefamilies()
 set!(unirefs, allmeta)
+##
 
 neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs)))
 
-metagrp = groupby(allmeta, [:subject, :timepoint])
-esmap = Dict()
-for grp in metagrp
-    ss = unique(skipmissing(grp.sample))
-    nrow(grp) > 1 || continue
-    any(s-> contains(s, "FE"), ss) || continue
-    for s in ss
-        contains(s, "FE") || continue
-        fgs = filter(s2-> contains(s2, "FG"), ss)
-        isempty(fgs) && @info ss
-        esmap[s] = isempty(fgs) ? missing : first(fgs)
-    end
-end
+overlap = intersect(Set(zip(get(unirefs, :subject), get(unirefs, :timepoint))), Set(zip(get(metabolites, :subject), get(metabolites, :timepoint))))
 
-metagrp[(; subject=774, timepoint=2)]
-
-for s in samples(metabolites)
-    @show s.subject, s.timepoint
-    break
-end
-
-metaboverlap = metabolites[:, findall(s-> haskey(esmap, s) && esmap[s] ∈ samplenames(unirefs), samplenames(metabolites))]
+metaboverlap = metabolites[:, map(s-> (s.subject, s.timepoint) in overlap, samples(metabolites))]
 
 ##
 
@@ -354,7 +339,7 @@ fig = Figure(resolution=(800,800))
 ax1 = Axis(fig[1,1], xlabel="GABA Synthesis log(RPKM)", ylabel="GABA (log abundance)")
 ax2 = Axis(fig[2,1], xlabel="GABA Degradation log(RPKM)", ylabel="GABA (log abundance)")
 
-scatter!(ax1, genemetab.gabasynth, genemetab.gabagut,
+scatter!(ax1, log.(1+genemetab.gabasynth), log.(1+genemetab.gabagut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
               
 for grp in groupby(pred, :mc)
@@ -363,7 +348,7 @@ for grp in groupby(pred, :mc)
 end
             
 
-scatter!(ax2, genemetab.gabadegr, genemetab.gabagut,
+scatter!(ax2, log.(1+genemetab.gabadegr), log.(1+genemetab.gabagut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
 
 
@@ -388,12 +373,11 @@ fig
 ##
 
 fig = Figure(resolution=(850, 1100))
-ax1 = Axis(fig[1,1], xlabel="Glutamate Synthesis (RPKM)", ylabel="Glutamate (log abundance)")
-ax2 = Axis(fig[2,1], xlabel="Glutamate Degradation (RPKM)", ylabel="Glutamate (log abundance)")
-ax3 = Axis(fig[3,1], xlabel="Glutamate Degradation (RPKM)", ylabel="Glutamate Glutamate Synthesis (RPKM)")
+ax1 = Axis(fig[1,1], xlabel="Glutamate Synthesis log(RPKM)", ylabel="Glutamate (log abundance)")
+ax2 = Axis(fig[2,1], xlabel="Glutamate Degradation log(RPKM)", ylabel="Glutamate (log abundance)")
 
 
-scatter!(ax1, genemetab.glutsynth, genemetab.glutgut,
+scatter!(ax1, log.(1+genemetab.glutsynth), log.(1+genemetab.glutgut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
               
 for grp in groupby(pred, :mc)
@@ -402,7 +386,7 @@ for grp in groupby(pred, :mc)
 end
             
 
-scatter!(ax2, genemetab.glutdegr, genemetab.glutgut,
+scatter!(ax2, log.(1+genemetab.glutdegr), log.(1+genemetab.glutgut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
 
 
@@ -411,8 +395,6 @@ for grp in groupby(pred, :mc)
     lines!(ax2, grp.glutdegr, grp.glutdegr_pred, color=c)
 end  
 
-scatter!(ax3, log.(1 .+ genemetab.glutdegr), log.(1 .+ genemetab.glutsynth),
-              color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
 ##
 
 m1 = MarkerElement(color=:dodgerblue, marker=:circle)

@@ -107,7 +107,8 @@ for bug in bugs
         age = get(testcomm, :ageMonths)[over0],
         cogScore = get(testcomm, :cogScore)[over0],
         cogQuartile = categorical(get(testcomm, :cogQuartile)[over0], levels=["lower", "middle", "upper"]),
-        bug = log.(collect(ab[over0]))
+        bug = log.(collect(ab[over0])),
+        regbug = collect(ab[over0])
     )
     
     df.bugname .= replace(bug, r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")
@@ -146,49 +147,56 @@ fig
 
 ##
 
-fig = Figure(resolution=(900,500))
+fig = Figure(resolution=(900,600))
+# draw!(fig[1,1], 
+#       data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[1:3], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
+#       mapping(:cogQuartile=>"Quartile",
+#               :bug=> "Log(relative abundance)";
+#               color=:cogQuartile, row=:bugname
+#               ) * 
+#       (visual(BoxPlot) + visual(Scatter, strokewidth=0.5)),
+#       palettes= (; color=cl),
+#       axis = (; titlevisible=false, xticklabelsize=14)
+# )
+
+
 draw!(fig[1,1], 
       data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[1:3], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
-      mapping(:cogQuartile=>"Quartile",
+      (mapping(:cogScore=>"Cognitive Function Score",
               :bug=> "Log(relative abundance)";
               color=:cogQuartile, row=:bugname
-              ) * 
-      (visual(BoxPlot) + visual(Scatter, strokewidth=0.5)),
+              ) +
+       mapping(:cogScore=>"Cognitive Function Score",
+              :bug=> "Log(relative abundance)";
+              row=:bugname
+              ) * linear());
       palettes= (; color=cl),
-      axis = (; titlevisible=false, xticklabelsize=14)
+      axis=(; xticklabelsize=14)
 )
+                   
+# draw!(fig[1,3], 
+#       data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[4:6], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
+#       mapping(:cogQuartile=>"Quartile",
+#               :bug=> "Log(relative abundance)";
+#               color=:cogQuartile, row=:bugname
+#               ) * 
+#       (visual(BoxPlot) + visual(Scatter, strokewidth=0.5)),
+#       palettes= (; color=cl),
+#       axis = (; titlevisible=false, ylabelvisible = false, yticklabelsvisible=false, xticklabelsize=14)
+# )
 
 
 draw!(fig[1,2], 
-      data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[1:3], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
-      mapping(:cogScore=>"Cognitive Function Score",
-              :bug=> "Log(relative abundance)";
-              color=:cogQuartile, row=:bugname
-              );
-      palettes= (; color=cl),
-      axis=(; ylabel="", yticklabelsvisible=false, xticklabelsize=14)
-)
-                   
-draw!(fig[1,3], 
       data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[4:6], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
-      mapping(:cogQuartile=>"Quartile",
+      (mapping(:cogScore=>"Cognitive Function Score",
               :bug=> "Log(relative abundance)";
               color=:cogQuartile, row=:bugname
-              ) * 
-      (visual(BoxPlot) + visual(Scatter, strokewidth=0.5)),
-      palettes= (; color=cl),
-      axis = (; titlevisible=false, yticklabelsvisible=false, xticklabelsize=14)
-)
-
-
-draw!(fig[1,4], 
-      data(subset(bugdf, :bugname => ByRow(b-> b in replace.(bugs[4:6], r"s__([A-Z])(\w+)_(\w+)"=> s"\1. \3")))) *
-      mapping(:cogScore=>"Cognitive Function Score",
+              ) +
+       mapping(:cogScore=>"Cognitive Function Score",
               :bug=> "Log(relative abundance)";
-              color=:cogQuartile, row=:bugname
-              );
+              row=:bugname
+              ) * linear());
       palettes= (; color=cl),
-      axis=(; ylabel="", yticklabelsvisible=false, xticklabelsize=14)
 )
                    
 save("figures/lms-split-2.png", fig)
@@ -422,7 +430,7 @@ fprs = Float64[]
 tprs = Float64[]
 
 for _ in 1:100
-    res = evaluate(tree, X, y,
+    res = MLJ.evaluate(tree, X, y,
         resampling=Holdout(; fraction_train=0.9, shuffle=true),
                 measures=[Accuracy(), MulticlassTruePositiveRate(), MulticlassFalsePositiveRate()],
                 verbosity=2
