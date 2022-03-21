@@ -22,6 +22,7 @@ using MultivariateStats
 using Dictionaries
 using CodecZlib
 using Statistics
+using Term
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames

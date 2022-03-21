@@ -490,4 +490,3 @@ Legend(fig[1,2], [[sc3, ln3], [sc5, ln5], [sc8, ln8], [sc10, ln10], noinf],
 
 fig
 
-##

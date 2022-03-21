@@ -160,6 +160,24 @@ for n in names(fmp_alltp)
 end
 
 CSV.write("data/wrangled/timepoints.csv", fmp_alltp)
-CSV.write("data/wrangled/omnisamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "F"), Not(:Notes)))
-CSV.write("data/wrangled/etohsamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "E"), Not(:Notes)))
+CSV.write("data/wrangled/omnisamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "F")))
+CSV.write("data/wrangled/etohsamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "E")))
 CSV.write("data/wrangled/covid.csv", fmp_covid)
+
+##
+
+using Airtable
+using Term
+
+base = AirBase("appSWOVVdqAi5aT5u")
+tab = AirTable("Samples", base)
+joinedsamples = leftjoin(select(samplemeta, [:airtable_id, :subject, :timepoint, :sample, :childAgeMonths]), 
+                         select(fmp_alltp, [:subject, :timepoint, :ageMonths]), 
+                         on=[:subject, :timepoint]
+)
+
+for row in Term.track(eachrow(joinedsamples); description="Updating airtable")
+    ismissing(row[:childAgeMonths]) || continue
+    ismissing(row[:ageMonths]) && continue
+    Airtable.patch!(AirRecord(; id = row[:id], table=tab), (; childAgeMonths=row[:ageMonths]))
+end
