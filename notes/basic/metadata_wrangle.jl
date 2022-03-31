@@ -6,6 +6,7 @@ using Resonance
 
 samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
 # Now to add important metadata to samples
+
 @chain samplemeta begin
     groupby([:subject, :timepoint])
     @transform!(:has_metabolomics = any(!ismissing, :Metabolomics_batch))
@@ -179,5 +180,5 @@ joinedsamples = leftjoin(select(samplemeta, [:airtable_id, :subject, :timepoint,
 for row in Term.track(eachrow(joinedsamples); description="Updating airtable")
     ismissing(row[:childAgeMonths]) || continue
     ismissing(row[:ageMonths]) && continue
-    Airtable.patch!(AirRecord(; id = row[:id], table=tab), (; childAgeMonths=row[:ageMonths]))
+    Airtable.patch!(AirRecord(; id = row[:airtable_id], table=tab), (; childAgeMonths=row[:ageMonths]))
 end
