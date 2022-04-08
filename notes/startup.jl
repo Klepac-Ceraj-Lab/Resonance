@@ -1,5 +1,4 @@
 using Resonance
-using AlgebraOfGraphics
 
 omni = CSV.read("data/wrangled/omnisamples.csv", DataFrame)
 etoh = CSV.read("data/wrangled/etohsamples.csv", DataFrame)

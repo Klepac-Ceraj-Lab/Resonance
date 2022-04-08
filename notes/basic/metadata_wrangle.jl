@@ -14,7 +14,7 @@ samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
 end
 
 
-fmp_samples = DataFrame(XLSX.readtable("data/resonance_fmp/Sample_Centric_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_samples = DataFrame(XLSX.readtable("data/resonance_fmp/Fecal_All_033022.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_samples, Dict(:studyID=>:subject, :collectionNum=> :timepoint))
 @rsubset! fmp_samples begin
     :subject in samplemeta.subject 
@@ -32,24 +32,25 @@ unique!(samplemeta)
 # then normalize certain columns.
 # First, subject-specific data
 
-fmp_subject = DataFrame(XLSX.readtable("data/resonance_fmp/Subject_Centric_012522.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_subject = DataFrame(XLSX.readtable("data/resonance_fmp/Subject_Centric_040122.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_subject, Dict(:studyID=>:subject))
 @rsubset! fmp_subject :subject in samplemeta.subject
 
 # Then, timepoint-specific data
 
-fmp_timepoint = DataFrame(XLSX.readtable("data/resonance_fmp/Timepoint_Centric_020422.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_timepoint = DataFrame(XLSX.readtable("data/resonance_fmp/Timepoint_Centric_033122.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_timepoint, Dict(:studyID=>:subject))
 
 # # and COVID-specific samples
 
-fmp_covid = DataFrame(XLSX.readtable("data/resonance_fmp/COVID_Fecal_10252021.xlsx", "Sheet1", infer_eltypes=true)...)
+fmp_covid = DataFrame(XLSX.readtable("data/resonance_fmp/COVID_Fecal_040122.xlsx", "Sheet1", infer_eltypes=true)...)
 rename!(fmp_covid, Dict(:studyID=>:subject))
 fmp_covid = leftjoin(fmp_covid, fmp_subject, on=:subject)
 
 # ## Getting data joined together
-
+@rsubset!(fmp_timepoint, !ismissing(:subject))
 fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=[:subject])
+
 
 codebreastfeeding!(fmp_alltp)
 
@@ -161,8 +162,8 @@ for n in names(fmp_alltp)
 end
 
 CSV.write("data/wrangled/timepoints.csv", fmp_alltp)
-CSV.write("data/wrangled/omnisamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "F")))
-CSV.write("data/wrangled/etohsamples.csv", select(@rsubset(samplemeta, :Fecal_EtOH == "E")))
+CSV.write("data/wrangled/omnisamples.csv", @rsubset(samplemeta, :Fecal_EtOH == "F"))
+CSV.write("data/wrangled/etohsamples.csv", @rsubset(samplemeta, :Fecal_EtOH == "E"))
 CSV.write("data/wrangled/covid.csv", fmp_covid)
 
 ##

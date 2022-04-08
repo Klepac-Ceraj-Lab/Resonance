@@ -1,8 +1,14 @@
 using Resonance
 
-species = metaphlan_profiles(filter(f-> contains(f, "profile"), 
-                                        readdir("/grace/echo/analysis/biobakery3/links/metaphlan", join=true)),
-                                        :species)
+profiles = String[]
+for (root, dirs, files) in walkdir("/grace/echo/analysis/biobakery3/")
+    contains(root, "metaphlan") || continue
+    contains(root, "links") && continue
+    filter!(f-> contains(f, r"^FG.+profile"), files)
+    append!(profiles, joinpath.(Ref(root), files))
+end
+
+species = metaphlan_profiles(profiles, :species)
                                         
 sns = map(samplenames(species)) do s
     replace(s, r"_S\d+_profile"=>"")
