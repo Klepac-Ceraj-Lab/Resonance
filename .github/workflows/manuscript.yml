@@ -15,3 +15,9 @@ jobs:
         uses: xu-cheng/latex-action@v2
         with:
           root_file: manuscript/main.tex
+          work_in_root_file_dir: true
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: PDF
+          path: manuscript/main.pdf
