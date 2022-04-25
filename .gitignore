@@ -6,3 +6,5 @@
 .envrc
 data/*
 figures/
+manuscript/main.*
+!manuscript/main.tex
