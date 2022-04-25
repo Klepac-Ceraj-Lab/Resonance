@@ -1,5 +1,10 @@
 name: Build LaTeX document
-on: [push]
+on:
+  push:
+    branches:
+      - main
+    tags: '*'
+  pull_request:
 jobs:
   build_latex:
     runs-on: ubuntu-latest
@@ -10,8 +15,3 @@ jobs:
         uses: xu-cheng/latex-action@v2
         with:
           root_file: manuscript/main.tex
-     - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: PDF
-          path: manuscript/main.pdf
