@@ -1,0 +1,168 @@
+%%%%%%%%%%TO FORMAT A PREPRINT FOR A PCI%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4paper]{article}
+%%%%%%%%%   CHOOSE A PCI   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newcommand{\PCI}{Peer Community In Zoology}
+%\newcommand{\PCI}{Peer Community In Ecology}
+%\newcommand{\PCI}{Peer Community In Evolutionary Biology}
+%\newcommand{\PCI}{Peer Community In Paleontology}
+%\newcommand{\PCI}{Peer Community In Archaeology}
+%\newcommand{\PCI}{Peer Community In Animal Science}
+\newcommand{\PCI}{Peer Community In Genomics}
+%\newcommand{\PCI}{Peer Community In Neuroscience}
+%\newcommand{\PCI}{Peer Community In Mathematical and Computational Biology}
+%\newcommand{\PCI}{Peer Community In Forest and Wood Sciences}
+%\newcommand{\PCI}{Peer Community In Ecotoxicology and Environmental Chemistry}
+%\newcommand{\PCI}{Peer Community In Infections}
+%\newcommand{\PCI}{Peer Community In Registered Reports}
+%\newcommand{\PCI}{Peer Community In Network Science}
+%\newcommand{\PCI}{Peer Community In Microbiology}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{preambule.tex}
+
+%%%%%%%%%   CHOOSE A BADGE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Comment lines 131 and/or 133 in preambule.tex if you don't use data and/or code in your preprint
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%   SET THE TITLE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\preprinttitle}{This is the title of the preprint}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%   SET THE version of the preprint. Replace X by a number %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\version}{X}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%  SET THE LIST OF AUTHORS WITH CORRESPONDING AFFILIATIONS  use \& before last author %%%%%%%%%%%%%%%%%%%%
+\newcommand{\listauthors}{\raggedright 
+FirstnameOne FamilynameOne\textsuperscript{1}, \space
+FirstnameTwo FamilynameTwo\textsuperscript{1}, \&
+FirstnameThree FamilynameThree\textsuperscript{2}
+%\fourthauthor \textsuperscript{i}
+%etc...
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE LIST OF AFFILIATIONS  %%%%%%%%%%%%%%%%%%%%
+\newcommand{\listinstitutions}{
+\textsuperscript{1} DeptOne, InstitutionOne -- TownOne, CountryOne 
+\\
+\textsuperscript{2} DeptTwo, InstitutionTwo -- TownTwo, CoutryTwo
+%\\
+%\textsuperscript{3} \thirdinstitution
+%etc
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE DATE OF UPLOAD on the preprint server %%%%%%%%%%%%%%
+\newcommand{\datepub}{ddth Month yyyy}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE RECOMMENDER(s) NAME(s) %%%%%%%%%%%%%%
+\newcommand{\recommender}{FirstName FamilyName}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE DOI of the RECOMMENDATION %%%%%%%%%%%%%%
+\newcommand{\DOIrecommendation}{xxx/xxx}
+%%%%%%%%%%%%% for example 10.24072/pci.mcb.100003 %%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE REVIEWERS' NAMES IF KNOWN and/or X anonymous reviewers %%%%%%%%%%%%%%
+\newcommand{\reviewers}{FirstName FamilyName and two anonymous reviewer}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%  SET THE 'CITE AS' OF YOUR PREPRINT. paste the line we sent you by Email (XXX the "cite as") in place of the xxx %%%%%%%%%%%%
+\newcommand{\citeas}{xxx}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE 'CORRESPONDENCE TO' %%%%%%%%%%%%%%%%%
+\newcommand{\email}{mail.mail@mail.xx}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE ABSTRACT %%%%%%%%%%%%%%%%%
+\newcommand{\preprintabstract}{This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract. This is the abstract.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  SET THE KEYWORDS %%%%%%%%%%%%%%%%%
+\newcommand{\preprintkeywords}{KeywordOne; KeywordTwo; KeywordThree; KeywordFour; KeywordFive}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+\beginingpreprint
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Text of the preprint %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% use \emph{} for italics and \parencite{} to cite a reference and \ref{XX} to cite the \label{XX}
+% use \\ and a blank line to mark the end of paragraph and starting of a new one
+
+\section*{\centering Introduction}
+
+This is an example of text. This realization is especially important because it can flip around our expectations about which species expand fast, and how to manage them. We tend to think of initial colonization and long-term abundance as two independent axes of variation among species or indeed as two ends of a spectrum, in the classic competition-colonization tradeoff \parencite{levins1971regional}. When both play into invasion speed, good dispersers might not outrun good competitors. This is useful knowledge, whether we want to contain an invasion or secure a reintroduction. \\ 
+
+In their study "When higher carrying capacities lead to faster propagation", \textcite{levins1971regional} combine mathematical analysis, Individual-Based simulations and experiments to show that various mechanisms can cause pushed fronts, whose speed increases with the carrying capacity K of the species. Rather than focus on one particular angle, the authors endeavor to demonstrate that this qualitative effect appears again and again in a variety of settings. \\
+
+It is perhaps surprising that this notable and general connection between K and invasion speed has managed to garner so little fame in ecology. A large fraction of the literature employs the venerable Fisher-KPP reaction-diffusion model, which combines local logistic growth with linear diffusion in space. This model has prompted both considerable mathematical developments \parencite{crooks2004spatial} and many applications to modelling real invasions \parencite{shigesada1997biological}. But it only allows pulled fronts, driven by the small populations at the edge of a species range, with a speed that depends only on their initial growth rate r.\\
+
+\section*{\centering Material and methods}
+
+This classic setup is, however, singular in many ways. \textcite{levins1971regional} use it as a null model, and introduce three mechanisms or factors that each ensure a 1 role of K in invasion speed, while giving less importance to the pioneers at the border. \\ 
+
+Two factors, the Allee effect and demographic stochasticity, make small edge populations slower to grow or less likely to survive. These two factors are studied theoretically, and to make their claims stronger, the authors stack the deck against K. When generalizing equations or simulations beyond the null case, it is easy to obtain functional forms where the parameter K does not only play the role of equilibrium carrying capacity, but also affects dynamical properties such as the maximum or mean growth rate. In that case, it can trivially change the propagation speed, without it meaning anything about the role of established populations behind the front. \textcite{levins1971regional} avoid this pitfall by disentangling these effects, at the cost of slightly more peculiar expressions, and show that varying essentially nothing but the carrying capacity can still impact the speed of the invasion front. \\ 
+
+\section*{\centering Results}
+The third factor, density-dependent dispersal, makes small populations less prone to disperse. It is well established empirically (see Fig~\ref{Fig1}) and theoretically that various biological mechanisms, from collective organization to behavioral switches, can prompt organisms in denser populations to disperse more, e.g. in such a way as to escape competition \parencite{matthysen2005density}. The authors demonstrate how this effect induces a link between carrying capacity and invasion speed, both theoretically and in a dispersal experiment on the parasitoid wasp, \emph{Trichogramma chilonis}.\\ 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%  EXAMPLE OF A FIGURE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[h]
+  \captionsetup{justification=centering}
+  \caption{A nice picture of bidule.}
+  \centering
+  \includegraphics[scale=0.5]{fig.png}
+  \label{Fig1}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{\centering Discussion}
+Overall, this study carries a simple and clear message, supported by valuable contributions from different angles. Although some sections are clearly written for the theoretical ecology crowd, this article has something for everyone, from the stray physicist to the open-minded manager. The collaboration between theoreticians and experimentalists, while not central, is worthy of note. Because the narrative of this study is the variety of mechanisms that can lead to the same qualitative effect, the inclusion of various approaches is not a gimmick, but helps drive home its main message. The work is fairly self-contained, although one could always wish for further developments, especially in the direction of more quantitative testing of these mechanisms. \\ 
+
+In conclusion, \textcite{levins1971regional} effectively convey the widely relevant message that, for some species, invading is not just about the destination, it is about the many offspring one makes along the way. \\ 
+
+
+\section*{\centering Acknowledgements}
+This is your acknowledgments. Version \version~ of this article has been peer-reviewed and recommended by 
+\emph{\PCI} (\DOIrecommendationlink)
+
+\section*{\centering Conflict of interest disclosure}
+The authors of this preprint declare that they have no financial conflict of interest with the content of this article. XXX and XXX are recommenders for PCI XXX
+
+\section*{\centering Data, script and code availability}
+Data are available online: link or DOI of the webpage hosting the data
+
+\section*{\centering Supplementary information availability}
+Script and codes are available online: link or DOI of the webpage hosting the script and codes
+
+\titleformat*{\section}{\bfseries\Large\centering}
+
+\printbibliography[notcategory=ignore]
+
+\section*{Annexes or Supplementary Information}
+This is your annex 1 
+
+This is your annex 2 
+
+\end{document}
