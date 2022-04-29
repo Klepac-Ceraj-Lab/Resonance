@@ -50,7 +50,7 @@ fig, ax, p = pie(demo, color = colors, axis=(;aspect=1))
 hidedecorations!(ax)
 hidespines!(ax)
 
-Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in colors,
+Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in colors],
                 labels, "Race",
         orientation=:horizontal,
         tellheight=true, tellwidth=false, nbanks=3
@@ -75,4 +75,27 @@ Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in Makie.to_color
         tellheight=true, tellwidth=false, nbanks=3
 )
 
+fig
+
+##
+
+unique!(omni, :sample)  
+
+dyads = @chain omni begin
+    groupby(:subject)
+    combine(:Mother_Child => (mc-> length(unique(mc)) == 2) => :hasdyad)
+    @rsubset!(:hasdyad)
+end
+
+toplot = @chain omni begin
+    @rsubset(:subject in dyads.subject)
+    groupby(:subject)
+    combine(:Mother_Child=> (mc-> count(==("C"), mc))=> :nchild, :Mother_Child=> (mc -> count(==("M"), mc)) => :nmother)
+end
+
+fig, ax1, h1 = hist(toplot.nchild, axis=(; xlabel="number of child samples", ylabel="number of dyads"))
+ax2 = Axis(fig[1,2], xlabel="number of mother samples")
+h2 = hist!(ax2, toplot.nmother)
+
+linkyaxes!(ax1, ax2)
 fig
