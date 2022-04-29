@@ -12,7 +12,8 @@ export airtable_metadata,
        commonname,
        countmap,
        codebreastfeeding!,
-       stp_overlap
+       stp_overlap,
+       startup
 
 using Reexport
 using Airtable
@@ -36,5 +37,6 @@ include("metabolites.jl")
 include("genefamilies.jl")
 include("plotting.jl")
 include("brain.jl")
+include("startup.jl")
 
 end

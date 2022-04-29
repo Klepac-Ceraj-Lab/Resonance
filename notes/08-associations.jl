@@ -1,4 +1,4 @@
-include("startup.jl")
+omni, etoh, tps, complete_brain, metabolites, species = startup()
 
 ## 
 
