@@ -24,6 +24,9 @@ using Dictionaries
 using CodecZlib
 using Statistics
 using Term
+using Arrow
+using Tables
+using SparseArrays
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames

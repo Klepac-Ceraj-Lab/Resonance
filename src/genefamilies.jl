@@ -1,5 +1,4 @@
-function load_genefamilies()
-
+function write_gfs_arrow()
     allfiles = String[]
 
     @info "getting files"
@@ -9,37 +8,72 @@ function load_genefamilies()
         append!(allfiles, joinpath.(Ref(root), files))
     end
 
-    samples = unique(map(f-> first(split(basename(f), '_')) |> String, allfiles))
     unique!(allfiles) do f
         first(split(basename(f), '_')) |> String
     end
 
-    features = Set{String}()
-    @info "getting features"
-    for f in allfiles
-        @debug f
-        union!(features, Iterators.filter(x-> !contains(x, "|"), Iterators.map(x-> x[1], CSV.File(f))))
+    samples = Set(Iterators.map(f-> first(split(basename(f), '_')) |> String, allfiles))
+    sdic = Dictionary((s for s in samples), 1:length(samples))
+    features = Set(String[])
+    
+    scratch = get(ENV, "SCRATCH_SPACE", "./scratch")
+    isdir(scratch) || mkpath(scratch)
+
+    tmp = tempname(scratch)
+
+    @info "writing temporary arrow file"
+    open(tmp, "w") do io
+        tbls = Tables.partitioner(allfiles) do f
+            samplename = replace(splitext(basename(f))[1], r"_S\d+_genefamilies" => "")
+
+            sdf = CSV.read(f, DataFrame; header=["feature", "value"], skipto=2)
+            subset!(sdf, "feature"=> ByRow(f-> !contains(f, '|'))) # skip stratified features
+            sdf.sample .= samplename
+            sdf.sidx .= sdic[samplename]
+
+            union!(features, sdf.feature)
+
+            sdf
+        end
+
+        Arrow.write(io, tbls)
     end
 
-    abunds = zeros(length(features), length(samples))
+    @info "Making feature dictionary"
+    fdic = Dictionary((f for f in features), 1:length(features))
 
-    featuredict = Dict(f => i for (i, f) in enumerate((f for f in features)))
-    sampledict = Dict(f => i for (i, f) in enumerate(samples))
+    @info "building new table"
+    df = DataFrame(Arrow.Table(tmp))
+    df.fidx = [fdic[f] for f in df.feature]
 
-    @info "Filling community profile"
-    Threads.@threads for s in samples
-        file = allfiles[findfirst(f-> contains(f,s), allfiles)]
-
-        sidx = sampledict[first(split(basename(file), '_')) |> String]
-        for row in CSV.File(file)
-            contains(row[1], "|") && continue
-            fidx = featuredict[row[1]]
-            @inbounds abunds[fidx, sidx] = row[2]
+    @info "Writing table"
+    Arrow.write(joinpath(scratch, "genefamilies.arrow"), df)
+    open(joinpath(scratch, "features.txt"), "w") do io
+        for f in keys(fdic)
+            println(io, f)
         end
     end
-
-    return CommunityProfile(abunds, GeneFunction.(features), MicrobiomeSample.(samples))
+    open(joinpath(scratch, "samples.txt"), "w") do io
+        for s in keys(sdic)
+            println(io, s)
+        end
+    end
+    return nothing
 end
+
+function read_gfs_arrow()
+    scratch = get(ENV, "SCRATCH_SPACE", "./scratch")
+    @info "reading table"
+    tbl = Arrow.Table(joinpath(scratch, "genefamilies.arrow"))
+    @info "building sparse mat"
+    mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
+    @info "getting features"
+    fs = [GeneFunction(line) for line in eachline(joinpath(scratch, "features.txt"))]
+    @info "getting samples"
+    ss = [MicrobiomeSample(line) for line in eachline(joinpath(scratch, "samples.txt"))]
+    return CommunityProfile(mat, fs, ss)
+end
+
 
 function get_neuroactive_kos(neuroactivepath="data/gbm.txt")
     neuroactive = Dictionary{String, Vector{String}}()
