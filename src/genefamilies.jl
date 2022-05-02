@@ -125,11 +125,11 @@ function fsea(cors, allfeatures::AbstractVector, searchset::Set)
 end
 
 function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos::AbstractVector{<:Int})
-    let notmissing = map(!ismissing, metadatum)
+    cors = let notmissing = map(!ismissing, metadatum)
         occ = occ[:, notmissing]
         metadatum = metadatum[notmissing]
+        cor(metadatum, occ, dims=2)'
     end
 
-    cors = cor(metadatum, occ, dims=2)'
     return fsea(cors, pos)
 end

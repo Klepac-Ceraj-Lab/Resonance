@@ -284,7 +284,7 @@ fig
 ##
 
 allmeta = leftjoin(tps, select(omni, [:subject, :timepoint, :sample]), on=[:subject, :timepoint])
-unirefs = Resonance.load_genefamilies()
+unirefs = Resonance.read_gfs_arrow()
 set!(unirefs, allmeta)
 ##
 
