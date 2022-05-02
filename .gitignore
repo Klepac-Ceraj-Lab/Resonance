@@ -1,10 +1,11 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
-/Manifest.toml
 /docs/build/
 .envrc
 data/*
 figures/
 manuscript/main.*
 !manuscript/main.tex
+*scratch*
+/LocalPreferences.toml
