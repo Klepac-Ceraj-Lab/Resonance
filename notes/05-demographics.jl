@@ -1,5 +1,5 @@
 using Resonance
-omni, etoh, tps, complete_brain, metabolites, species = startup()
+omni, tps = startup([:omni, :tps])
 
 using CairoMakie
 using AlgebraOfGraphics
@@ -47,7 +47,7 @@ colors = [
     :dimgray
 ]
 
-fig, ax, p = pie(demo, color = colors, axis=(;aspect=1))
+fig, ax, p = pie(counts, color = colors, axis=(;aspect=1))
 hidedecorations!(ax)
 hidespines!(ax)
 
@@ -60,27 +60,40 @@ Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in colors],
 fig
 ##
 
-fig, ax, p = pie(demo, color = Makie.to_colormap(:viridis, 6), axis=(;aspect=1))
+using CategoricalArrays
+
+ed = skipmissing(unique(tps, [:subject, :mother_HHS_Education]).mother_HHS_Education) |> collect
+filter!(!=(-8), ed)
+ed = categorical(sort(ed); ordered=true)
+ed = recode(ed, 
+     2 => "Junior high school",
+     3 => "Some high school",
+     4 => "High school grad",
+     5 => "Some college",
+     6 => "College grad",
+     7 => "Grad/professional school")
+
+fig, ax, p = pie(map(levels(ed)) do lev
+        count(==(lev), ed)
+    end;
+    color = Makie.to_colormap(:viridis, 6), axis=(;aspect=1)
+)
 hidedecorations!(ax)
 hidespines!(ax)
 
-Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in Makie.to_colormap(:viridis, 6)],
-                ["Junior high school",
-                 "Some high school",
-                 "High school grad",
-                 "Some college",
-                 "College grad",
-                 "Grad/professional school"
-                ], "Maternal Education",
-        orientation=:horizontal,
-        tellheight=true, tellwidth=false, nbanks=3
+Legend(fig[2,1],
+    [MarkerElement(color=c, marker=:circle) for c in Makie.to_colormap(:viridis, 6)],
+    levels(ed),
+    "Maternal Education";
+    orientation=:horizontal,
+    tellheight=true, tellwidth=false, nbanks=3
 )
 
 fig
 
 ##
 
-unique!(omni, :sample)  
+unique!(omni, :sample)
 
 dyads = @chain omni begin
     groupby(:subject)
