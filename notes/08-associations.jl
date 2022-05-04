@@ -1,3 +1,4 @@
+using Resonance
 omni, etoh, tps, complete_brain, metabolites, species = startup()
 
 ## 
@@ -12,7 +13,6 @@ using Microbiome.MultivariateStats
     combine(:age => (a-> all(ismissing, a) ? 0 : maximum(skipmissing(a))) => :maxage)
     subset(:maxage => ByRow(a-> a > 24))
 end
-metabolites
 
 met_pcoa = pcoa(metabolites)
 spec_pcoa = pcoa(species)
@@ -28,7 +28,7 @@ kids_pcoa = pcoa(kidsspecies)
 using Microbiome.Distances
 using MultivariateStats
 
-brain_dm = pairwise(Euclidean(), Matrix(tps[complete_brain, brainmeta]), dims=1)
+brain_dm = pairwise(Euclidean(), Matrix(tps[complete_brain, Resonance.brainmeta]), dims=1)
 brain_pcoa = fit(MDS, brain_dm, distances=true)
 
 ## 

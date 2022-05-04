@@ -1,36 +1,15 @@
-## Vanja CBCL
+# Vanja + Aditi CBCL
 
 using Resonance
+omni, etoh, tps, complete_brain, metabolites, species = startup()
+genes = Resonance.read_gfs_arrow()
 
-cbcl_vars = [
-    "CBCLOlder::totalScore_tscore",
-    "CBCLOlder::internalizing_tscore",
-    "CBCLOlder::externalizing_tscore",
-    "CBCLOlder::depressed",
-    "CBCLOlder::withdrawn",
-    "CDC_BMIz",
-    "who_BMIz",
-    "mother_HHS_Education",
-    "childGender",
-    "ageMonths"
-]
+aditi_sids = readlines("data/aditi_samples.txt")
 
-fecalsamples = CSV.read("data/wrangled/samples.csv", DataFrame)
-@rsubset! fecalsamples :Fecal_EtOH == "F"
+CSV.write(joinpath(ENV["SCRATCH_SPACE"], "aditi_taxa.csv"), species[:, aditi_sids])
+CSV.write(joinpath(ENV["SCRATCH_SPACE"], "aditi_genefamilies.csv"), genes[:, aditi_sids])
 
-timepoints = CSV.read("data/wrangled/timepoints.csv", DataFrame)
-
-df = select(timepoints, ["subject", "timepoint", cbcl_vars...])
-rename!(df, Dict(k=> replace(k, r"CBCLOlder::"=>"CBCL_") for k in cbcl_vars))
-
-@rsubset! df !ismissing(:CBCL_totalScore_tscore)
-df = leftjoin(df, select(fecalsamples, 
-                    ["subject", "timepoint", "sample", "sid_old", "Mgx_batch", "16S_batch"]
-              ),
-              on=["subject", "timepoint"])
-unique!(df, ["subject", "timepoint"])
-
-CSV.write("/home/kevin/Desktop/cbcl_vanja.csv", sort(df, ["subject", "timepoint"]))
+ 
 
 ## Korean group, blood pressure
 

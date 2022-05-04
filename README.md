@@ -23,3 +23,7 @@ This code is known compatible with julia v1.7.
 Project dependencies are provided in the `Project.toml` file.
 
 TODO: More details on code and data re-use
+
+## Data and System settings
+
+TODO: Details about how to set up environment.

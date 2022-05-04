@@ -1,4 +1,5 @@
-include("startup.jl")
+using Resonance
+omni, etoh, tps, complete_brain, metabolites, species = startup()
 
 using CairoMakie
 using AlgebraOfGraphics
