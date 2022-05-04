@@ -1,23 +1,13 @@
 using Resonance
+omni, tps = startup(; dfs = [:omni, :tps])
 
-tps = CSV.read("data/wrangled/timepoints.csv", DataFrame)
-fss = CSV.read("data/wrangled/omnisamples.csv", DataFrame)
-subtpset = collect(zip(fss.subject, fss.timepoint))
-
+subtpset = collect(zip(omni.subject, omni.timepoint))
 
 subj = @chain tps begin
     groupby(:subject)
     transform!(
         nrow => :n_timepoints,
         :cogScore => ByRow(!ismissing) => :has_cogScore,
-        AsTable(r"subject|breast"i) => (s -> begin
-            if any(!ismissing, s.breastFedPercent)
-                return fill(true, length(s[1]))
-            else
-                return fill(false, length(s[1]))
-            end
-            fill(0, length(s[1]))
-        end) => :has_bfperc_subj,
         AsTable(r"subject|timepoint"i) => ByRow(s -> begin
             (s.subject, s.timepoint) in subtpset
         end) => :has_stool;
@@ -102,8 +92,8 @@ fig
 
 using Dates
 
-fss.collectionDate = [ismissing(d) ? missing : Date(d) for d in fss.collectionDate]
-colldates = sort(fss.collectionDate |> skipmissing |> collect)
+omni.collectionDate = [ismissing(d) ? missing : Date(d) for d in omni.collectionDate]
+colldates = sort(omni.collectionDate |> skipmissing |> collect)
 
 drange = range(Date(2017,07,01), today(), step=Month(1))
 
@@ -173,6 +163,7 @@ fig
 @info "Collected in 2019: $(count(c-> Year(c) == Year(2019), colldates))"
 @info "Collected in 2020: $(count(c-> Year(c) == Year(2020), colldates))"
 @info "Collected in 2021: $(count(c-> Year(c) == Year(2021), colldates))"
+@info "Collected in 2022: $(count(c-> Year(c) == Year(2022), colldates))"
 
 ##
 
@@ -234,30 +225,6 @@ fig
 
 ##
 
-# slope charts
-
-fig = Figure(resolution=(800, 1800))
-ax = Axis(fig[1,1], xlabel="age (years)", ydectorations=false)
-
-let y = 1
-    df = sort(tps, :n_samples)
-    gdf = groupby(df, :subject)
-    for sub in gdf
-        age = sub.ageMonths ./ 12
-        col = map(s-> s ? :royalblue4 : :darkgray, sub.has_stool)
-        idx = .!ismissing.(age)
-        xs = collect(skipmissing(age))
-        scatter!(ax, xs, fill(y, sum(idx)), color=col[idx])
-        length(xs) > 1 && lines!(ax, [extrema(xs)...], [y, y], color=:black, linewidth=0.5)
-        y += 1
-    end
-end
-
-fig
-
-plot(rand(10), rand(10))
-
-
 ##
 
 tps.has_cogScore = .!ismissing.(tps.cogScore)
@@ -315,12 +282,12 @@ fig
 fig, ax, plt = hist(collect(skipmissing(tps.cogScore)))
 plt2 = hist!(ax, collect(skipmissing(tps.cogScore[tps.has_stool .|| tps.has_prevstool])))
 Legend(fig[1,2], [plt, plt2], ["All scores", "Scores with stool"])
+save("figures/cogscores_hist.pdf", fig)
 fig
 
 ##
 
 tps.under3 = tps.ageMonths .< 36
-tps.under5 = tps.ageMonths .< 60
 
 ys = ["cogScore",  "stool", "prev stool", "under 3"]
 ycols = [:has_segmentation, :has_stool, :has_prevstool, :under3]
@@ -423,18 +390,3 @@ save("figures/upset_score_stool_under5.pdf", fig)
 fig
 
 ## 
-
-tps.under6mo = tps.ageMonths .<= 6
-
-fig, ax, hst = hist(@rsubset(tps, :under6mo).ageMonths, axis=(; xlabel = "Age (months)"))
-
-ax2, hst2 = hist(fig[1,2], @rsubset(tps, :under6mo, :breastfeeding=="exclusive formula").ageMonths)
-hist!(ax2, @rsubset(tps, :under6mo, :breastfeeding=="exclusive breast").ageMonths)
-fig
-
-##
-
-(@chain tps begin
-    groupby(:subject)
-    @combine(:breastfeeding = unique(:breastfeeding))
-end).breastfeeding |> countmap

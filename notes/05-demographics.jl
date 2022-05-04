@@ -1,5 +1,5 @@
 using Resonance
-omni, tps = startup([:omni, :tps])
+omni, tps = startup(; dfs = [:omni, :tps])
 
 using CairoMakie
 using AlgebraOfGraphics
@@ -57,6 +57,7 @@ Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in colors],
         tellheight=true, tellwidth=false, nbanks=3
 )
 
+save("figures/demo_race.png", fig)
 fig
 ##
 
@@ -89,6 +90,7 @@ Legend(fig[2,1],
     tellheight=true, tellwidth=false, nbanks=3
 )
 
+save("figures/demo_education.png", fig)
 fig
 
 ##
@@ -112,4 +114,6 @@ ax2 = Axis(fig[1,2], xlabel="number of mother samples")
 h2 = hist!(ax2, toplot.nmother)
 
 linkyaxes!(ax1, ax2)
+
+save("figures/dyads.png", fig)
 fig

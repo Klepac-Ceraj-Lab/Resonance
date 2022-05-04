@@ -9,6 +9,7 @@ const mainmeta = [
         "cogScore",
         "has_segmentation",
         "ECHOTPCoded",
+        "assessmentDate"
     ]
     
 const brainmeta = [
