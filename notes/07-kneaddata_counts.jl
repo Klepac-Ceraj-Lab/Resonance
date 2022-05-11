@@ -9,7 +9,7 @@ else
     df = DataFrame()
 
     kneads = readdir("/grace/echo/analysis/biobakery3/links/kneaddata/", join=true)
-    for k in kneads[946:end]
+    for k in kneads
         open(k) do io
             stream = GzipDecompressorStream(io)
             c = count(line-> startswith(line, "@"), eachline(stream))

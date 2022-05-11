@@ -29,7 +29,7 @@ function airtable_metadata()
 
     df = DataFrame()
     
-    for samp in Term.track(samples; description="[blue bold]Building DataFrame[/blue bold]")
+    @track for samp in samples
         # skip anything not in the "ECHO" project
         "rec8zdkF1pchFNiJC" ∈ get(samp, :Project, []) || continue
 
