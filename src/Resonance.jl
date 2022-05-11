@@ -24,6 +24,7 @@ using Dictionaries
 using CodecZlib
 using Statistics
 using Term
+using Term.progress
 using Arrow
 using Tables
 using SparseArrays

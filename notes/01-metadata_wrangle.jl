@@ -169,17 +169,27 @@ CSV.write("data/wrangled/covid.csv", fmp_covid)
 ##
 
 using Airtable
-using Term
 
 base = AirBase("appSWOVVdqAi5aT5u")
 tab = AirTable("Samples", base)
 joinedsamples = leftjoin(select(samplemeta, [:airtable_id, :subject, :timepoint, :sample, :childAgeMonths]), 
-                         select(fmp_alltp, [:subject, :timepoint, :ageMonths]), 
+                         select(fmp_alltp, [:subject, :timepoint, :ageMonths, :has_segmentation]), 
                          on=[:subject, :timepoint]
 )
 
-for row in Term.track(eachrow(joinedsamples); description="Updating airtable")
-    ismissing(row[:childAgeMonths]) || continue
-    ismissing(row[:ageMonths]) && continue
-    Airtable.patch!(AirRecord(; id = row[:airtable_id], table=tab), (; childAgeMonths=row[:ageMonths]))
+agepatches = AirRecord[]
+brainpatches = AirRecord[]
+
+for row in eachrow(joinedsamples)
+    if !ismissing(row[:childAgeMonths]) && ismissing(row[:ageMonths])
+        push!(agepatches, AirRecord(row[:airtable_id], tab, (; childAgeMonths=row[:ageMonths])))
+    end
+    if coalesce(row[:has_segmentation], false)
+        push!(brainpatches, AirRecord(row[:airtable_id], tab, (; concurrent_scan=row[:has_segmentation])))
+    end
 end
+
+!isempty(agepatches) && Airtable.patch!(tab, agepatches)
+
+unique!(brainpatches)
+!isempty(brainpatches) && Airtable.patch!(tab, brainpatches)

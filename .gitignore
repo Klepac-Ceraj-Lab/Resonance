@@ -7,5 +7,7 @@ data/*
 figures/
 manuscript/main.*
 !manuscript/main.tex
+slides/figures*
+!slides/figures.tex
 *scratch*
 /LocalPreferences.toml
