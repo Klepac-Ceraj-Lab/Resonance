@@ -28,6 +28,8 @@ using Term.progress
 using Arrow
 using Tables
 using SparseArrays
+using CodecZlib
+using FilePaths
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
@@ -42,5 +44,6 @@ include("genefamilies.jl")
 include("plotting.jl")
 include("brain.jl")
 include("startup.jl")
+include("kneaddata.jl")
 
 end

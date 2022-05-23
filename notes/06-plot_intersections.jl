@@ -135,7 +135,7 @@ hist!(scan_age_young, subset(tps, AsTable([:ageMonths, :has_segmentation]) => By
 Label(fig[1, 0], text = "All kids", tellheight=false)
 Label(fig[2, 1], text = "Young kids", tellheight=false)
 
-save("figures/age_hists.pdf")
+save("figures/age_hists.pdf", fig)
 fig
 
 ##
@@ -157,6 +157,7 @@ tightlimits!(ass_bydate, Left(), Right(), Bottom())
 
 linkyaxes!(stools_bydate, ass_bydate)
 
+save("figures/collection_over_time.pdf", fig)
 fig
 ##
 

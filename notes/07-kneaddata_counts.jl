@@ -1,46 +1,6 @@
 using Resonance
-using CodecZlib
-using DataFramesMeta
 
-
-if isfile("data/read_counts.csv")
-    df = CSV.read("data/read_counts.csv", DataFrame)
-else
-    df = DataFrame()
-
-    kneads = readdir("/grace/echo/analysis/biobakery3/links/kneaddata/", join=true)
-    for k in kneads
-        open(k) do io
-            stream = GzipDecompressorStream(io)
-            c = count(line-> startswith(line, "@"), eachline(stream))
-            push!(df, (file=k, count=c))
-        end
-    end
-
-    @transform!(df, @byrow :sample = first(split(basename(:file), "_")))
-    CSV.write("data/read_counts.csv", df)
-end
-
-##
-
-human = DataFrame() 
-
-for (root, dirs, files) in walkdir("/grace/echo/analysis/biobakery3/")
-    contains(root, "kneaddata") || continue
-    for f in files
-        (contains(f, "hg37") || contains(f, "sapiens")) || continue
-        s = first(split(f, "_"))
-        try
-            open(joinpath(root, f)) do io
-                stream = GzipDecompressorStream(io)
-                c = count(line-> startswith(line, "@"), eachline(stream))
-                push!(human, (sample=s, count=c))
-            end
-        catch e
-            @error e
-        end
-    end
-end
+kneadread = Resonance.load_knead()
 
 ##
 
@@ -52,6 +12,8 @@ human = @chain human begin
 end
 
 hist(human.count_sum .* 150)
+
+
 using Statistics
 
 median(human.count_sum .* 150)

@@ -97,7 +97,7 @@ function _gentps()
     
     select!(tps, ["subject", "timepoint", mainmeta..., brainmeta...])
     rename!(tps, Dict(k=> replace(k, "-"=>"_") for k in brainmeta))
-    foreach(i-> (brainmeta[i] = replace(brainmeta[i], "-"=>"_")), eachindex(brainmeta))
+    brainmeta = map(i-> replace(brainmeta[i], "-"=>"_"), eachindex(brainmeta))
     
     complete_brain = completecases(tps[:, brainmeta])
     return tps, complete_brain
