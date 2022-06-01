@@ -1,0 +1,108 @@
+\subsection*{Human Subjects}
+
+Data used in this study were drawn from the ongoing longitudinal RESONANCE study
+of healthy and neurotypical brain and cognitive development,
+based at Brown University in Providence, RI, USA.
+RESONANCE is part of the NIH initiative Environmental influences on Child Health Outcomes (ECHO) \cite{Forrest2018-ud,Gillman2018-om},
+a longitudinal observational study of healthy and neurotypical brain development
+that spans the fetal and infant to adolescent life stages,
+combining neuroimaging (magnetic resonance imaging, MRI), neurocognitive assessments, bio-specimen analyses, subject genetics,
+environmental exposures such as lead, and rich demographic, socioeconomic, family and medical history information.
+From the RESONANCE cohort, 344 typically-developing children
+between the ages of 28 days and 15 years old were selected for analysis in this study. 
+
+General participant demographics are provided in Tables \ref{tab:demographics} and \ref{tab:agestats} and Figure \ref{fig:data}.
+Complete metadata are available in Data Records (see below), with children being representative of the RI population.
+As a broad background, children in the RESONANCE cohort were born full-term (>37 weeks gestation)
+with height and weight normal for gestational age, and from uncomplicated singleton pregnancies.
+Children with known major risk factors for developmental abnormalities at enrollment were excluded.
+In addition to screening at the time of enrollment,
+on-going screening for worrisome behaviors using validated tools was performed
+to identify at-risk children and remove them from subsequent analysis.
+
+Exclusion criteria included: \emph{in utero} exposure to alcohol, cigarette or illicit substance exposure;
+preterm (<37 wks gestation) birth; small for gestational age or less than 1500 g; fetal ultrasound abnormalities;
+preeclampsia, high blood pressure, or gestational diabetes; 5 minute APGAR scores <8;
+NICU admission; neurological disorder (e.g., head injury resulting in loss of consciousness, epilepsy);
+and psychiatric or learning disorder (including maternal depression) in the infant, parents, or siblings requiring medication in the year prior to pregnancy.
+
+Demographic and other non-biospecimen data such as race and ethnicity, parental education and occupation,
+feeding behavior (breast- and formula-feeding), child weight and height,
+were collected through questionnaires or direct examination as appropriate.
+All data were collected at every assessment visit.
+All procedures for this study were approved by the local institutional review board at Rhode Island Hospital,
+and all experiments adhered to the regulation of the review board.
+Written informed consent was obtained from all parents or legal guardians of enrolled participants.
+
+
+\subsection*{Cognitive Assessments}
+
+Overall cognitive function was assessed using age-appropriate methods.
+For children from birth to 30 months, we used an Early Learning Composite
+as assessed via the Mullen Scales of Early Learning (MSEL) \cite{Mullen1995-ty},
+a standardized and population-normed tool for assessing fine and gross motor,
+expressive and receptive language, and visual reception functioning in children from birth through 68 months of age.
+
+The third edition of the Bayley Scales of Infant and Toddler Development \cite{Bayley2006-wm}
+is a standard series of measures used primarily to assess the development of infants and toddlers,
+ranging from 1 to 42 months of age.
+
+The Wechsler Intelligence Quotient for Children (WISC) \cite{Wechsler2012-mi}
+is an individually administered standard intelligence test for children aged 6 to 16 years.
+It derives a full scale intelligence quotient (IQ) score, which we used to assess overall cognitive functioning.
+The fourth edition of the Wechsler Preschool and Primary Scale of Intelligence (WPPSI-IV) \cite{Wechsler2012-mi}
+is an individually administered standard intelligence test for children aged 2 years 6 months to 7 years 7 months,
+trying to meet the increasing need for the assessment of preschoolers.
+Just as the WISC, it derives a full scale IQ score, which we used to assess overall cognitive functioning.
+
+
+\subsection*{Stool Sample Collection and Sequencing}
+
+Stool samples (n=493) were collected by parents in OMR-200 tubes (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada),
+immediately stored on ice, and brought within 24 hrs to the lab in RI where they were immediately frozen at -80 $^{\circ}$C.
+Stool samples were not collected if the subject had taken antibiotics within the last two weeks.
+DNA extraction was performed at Wellesley College (Wellesley, MA).
+Nucleic acids were extracted from stool samples using the RNeasy PowerMicrobiome kit
+automated on the QIAcube (Qiagen, Germantown, MD), excluding the DNA degradation steps.
+Extracted DNA was sequenced at the Integrated Microbiome Resource (IMR, Dalhousie University, NS, Canada)
+
+Shotgun metagenomic sequencing was performed on all samples.
+A pooled library (max 96 samples per run) was prepared using the Illumina Nextera Flex Kit for MiSeq and NextSeq from 1 ng of each sample.
+Samples were then pooled onto a plate and sequenced
+on the Illumina NextSeq 550 platform using 150+150 bp paired-end “high output” chemistry,
+generating ~400 million raw reads and ~120 Gb of sequence per plate.
+
+\hl{Are we still planning to include 16S data here?}
+
+For sequencing 16S rRNA gene amplicons,
+the V4-V5 region of the 16S ribosomal RNA gene was sequenced according to the protocol
+described by Comeau et al. \cite{Comeau2017-jg}.
+Briefly, the V4-V5 region was amplified once using the Phusion High-Fidelity DNA polymerase
+(ThermoFisher Scientific, Waltham, MA) and universal bacterial primers
+515F: 5’-GTGYCAGCMGCCGCGGTAA-3’ and 926R: 5’-CCGYCAATTYMTTTRAGTTT-3’ \cite{Parada2016-uz,Walters2016-fi}.
+These primers had appropriate Illumina adapters and error-correcting barcodes unique to each sample
+to allow up to 380 samples to be simultaneously run per single flow cell.
+After being pooled into a single library and quantified fluorometrically,
+samples were cleaned-up and normalized using the high-throughput Charm Biotech Just-a-Plate 96-well Normalization Kit (Charm Biotech, Cape Girardeau, MO).
+The normalized samples were sequenced on the Illumina MiSeq platform (Illumina, San Diego, CA)
+using 300+300 bp paired-end V3 chemistry, producing ~55,000 raw reads per sample.
+
+\subsection*{Computational Analysis}
+
+Shotgun metagenomic sequences were analyzed using the bioBakery suite of computational tools \cite{McIver2018-yc}.
+First, \verb|KneadData| (v0.7.7) was used to perform quality control of raw sequence reads,
+such as read trimming and removal of reads matching a human genome reference.
+Next, \verb|MetaPhlAn| (v3.0.7, using database \verb|mpa_v30_CHOCOPhlAn_201901|) was used to generate taxonomic profiles
+by aligning reads to a reference database of marker genes.
+Finally, \verb|HUMAnN| (v3.0.0a4) was used to functionally profile the metagenomes.
+
+Raw amplicon sequences were profiled using Quantitative Insights in Microbial Ecology 2 (QIIME2) v2021.2.0 \cite{Bolyen2019-qq}.
+Briefly, primers flanking V4-V5 were removed from fastq reads using the cutadapt (v3.2) QIIME2 plugin \cite{Martin2011-zv}.
+Raw sequence reads of samples from enrichment cultures were denoised, filtered and clustered into amplicon sequence variants (ASVs) using the Divisive Amplicon Denoising Algorithm (DADA2) plugin in QIIME 2 \cite{Callahan2016-ol}.
+After denoising and filtering, 16270 total sequences were recovered with a mean length of 373 bases (270-465, standard deviation 13.21).
+Taxonomy was assigned to each ASV using a Naïve-Bayes classifier compared against SILVA v.138 reference database \cite{Yilmaz2013-rj,Quast2013-hc}
+trained on the 515F-806R region of the 16S rRNA gene \cite{Bokulich2018-dv}.
+
+Additional data processing, generation of summary statistics, 
+and generation of plots was performed using the julia programming language \cite{Bezanson2017-ud}.
+See Code Availability section for additional details.

@@ -23,7 +23,15 @@ end
 # https://github.com/JuliaStats/MultivariateStats.jl/pull/162
 function loadings(M::MultivariateStats.MDS)
     ev = eigvals(M)
-    ev' .* projection(M)[:, 1:length(ev)]
+    return ev' .* projection(M)[:, 1:length(ev)]
+end
+
+# https://github.com/JuliaStats/MultivariateStats.jl/pull/162
+function loadings(M::MultivariateStats.MDS, dim)
+    l = loadings(M)
+    return l[:, dim]
 end
 
 varexplained(M::MultivariateStats.MDS) = eigvals(M) ./ sum(eigvals(M))
+
+mdsaxis(M::MultivariateStats.MDS, dim::Int) = "MDS$dim ($(round(varexplained(M)[dim] * 100, digits=2))%)"

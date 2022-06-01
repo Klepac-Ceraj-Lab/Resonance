@@ -90,7 +90,7 @@ function _gentps()
         all(ismissing, (t,p)) && return missing
         return max(coalesce(t, 0), coalesce(p, 0))
     end
-    
+    brainmeta = Resonance.brainmeta
     for m in brainmeta
         tps[!, m] .= tps[!, m] ./ map(x-> ismissing(x) || x == 0 ? missing : x, tps."EstimatedTotalIntraCranialVol")
     end
