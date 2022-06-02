@@ -6,7 +6,7 @@ using AlgebraOfGraphics
 
 rce = (@chain tps begin
     groupby(:subject)
-    combine(:simple_race => (r-> coalesce(r...)) => :race)
+    combine(:race => (r->coalesce(r...)) => :race)
 end).race
 
 
@@ -16,6 +16,8 @@ hhs = (@chain tps begin
     groupby(:subject)
     combine(:mother_HHS_Education => (r-> coalesce(r...)) => :hhs)
 end).hhs
+
+
 
 
 ##
@@ -57,7 +59,7 @@ Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in colors],
         tellheight=true, tellwidth=false, nbanks=3
 )
 
-save("figures/demo_race.png", fig)
+# save("figures/demo_race.png", fig)
 fig
 ##
 
@@ -92,6 +94,43 @@ Legend(fig[2,1],
 
 save("figures/demo_education.png", fig)
 fig
+
+
+##
+
+rce = categorical(sort(rce); ordered=true)
+
+rce = recode(rce, 
+    "American Indian or Alaska Native"=> "Other",
+    "Some other race"                 => "Other",
+    "Asian Indian"                    => "Asian",
+    "Black or African American"       => "Black",
+    missing                           => "Unknown"
+)
+
+levels!(rce, ["White","Black","Asian","Mixed","Other","Unknown"])
+
+fig, ax, p = pie(map(levels(rce)) do lev
+        count(==(lev), skipmissing(rce))
+    end;
+    color = [:navajowhite3,:coral,:darkorange3,:darkseagreen3,:cyan4,:dimgray],
+    axis  =(; aspect=1)
+)
+
+hidedecorations!(ax)
+hidespines!(ax)
+
+Legend(fig[2,1],
+    [MarkerElement(color=c, marker=:circle) for c in  [:navajowhite3,:coral,:darkorange3,:darkseagreen3,:cyan4,:dimgray]],
+    levels(rce),
+    "Race";
+    orientation=:horizontal,
+    tellheight=true, tellwidth=false, nbanks=3
+)
+
+save("figures/demo_race.png", fig)
+fig
+
 
 ##
 
