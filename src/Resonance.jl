@@ -30,6 +30,7 @@ using SparseArrays
 using CodecZlib
 using FilePaths
 using ProgressLogging
+using CategoricalArrays
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
