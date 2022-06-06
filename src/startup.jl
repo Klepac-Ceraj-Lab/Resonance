@@ -6,6 +6,7 @@ const mainmeta = [
         "age12moplus",
         "mother_HHS_Education",
         "race",
+        "childGender",
         "cogScore",
         "has_segmentation",
         "ECHOTPCoded",

@@ -183,3 +183,27 @@ fig
 
 #-
 
+
+## Genetics info
+
+using Resonance
+using Statistics
+
+omni, etoh, tps, complete_brain, metabolites, species = startup()
+
+echoidmap = CSV.read("data/echoids.csv", DataFrame)
+snps = CSV.read("data/85_snps_20220401.csv", DataFrame)
+rename!(snps, :Column1=> :ECHOProtocolDChild)
+
+snps = leftjoin(snps, select(echoidmap, ["subject", "ECHOProtocolDChild"]), on="ECHOProtocolDChild"; matchmissing=:notequal)
+subset!(snps, :subject => ByRow(!ismissing))
+snps = leftjoin(snps, unique(select(tps, [:subject, :childGender])), on=:subject)
+
+gentps = subset(tps, :subject=> ByRow(s-> !ismissing(s) && s ∈ snps.subject); skipmissing=true)
+
+scores = combine(groupby(gentps, :subject), :cogScore => mean ∘ skipmissing => :mean_cog)
+
+snps = select(leftjoin(snps, scores, on=:subject), Cols("ECHOProtocolDChild", "mean_cog", "childGender", :))
+subset!(snps, :mean_cog => ByRow(!ismissing))
+
+CSV.write("data/snps_cog.csv", snps)
