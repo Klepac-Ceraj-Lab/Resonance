@@ -10,6 +10,8 @@ export airtable_metadata,
        loadings,
        varexplained,
        mdsaxis,
+       permanovas,
+       plot_permanovas,
        commonname,
        countmap,
        codebreastfeeding!,
@@ -31,12 +33,15 @@ using CodecZlib
 using FilePaths
 using ProgressLogging
 using CategoricalArrays
+using PERMANOVA
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
 @reexport using CSV
 @reexport using XLSX
 @reexport using DataFramesMeta
+
+const transform = DataFrames.transform
 
 include("airtable.jl")
 include("wrangle.jl")
