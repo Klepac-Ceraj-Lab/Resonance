@@ -10,6 +10,9 @@ export airtable_metadata,
        loadings,
        varexplained,
        mdsaxis,
+       permanovas,
+       plot_permanovas,
+       mantel,
        commonname,
        countmap,
        codebreastfeeding!,
@@ -24,19 +27,24 @@ using MultivariateStats
 using Dictionaries
 using CodecZlib
 using Statistics
-using Term
-using Term.progress
 using Arrow
 using Tables
 using SparseArrays
 using CodecZlib
 using FilePaths
+using ProgressLogging
+using CategoricalArrays
+using PERMANOVA
+using LinearAlgebra
+using Random
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
 @reexport using CSV
 @reexport using XLSX
 @reexport using DataFramesMeta
+
+const transform = DataFrames.transform
 
 include("airtable.jl")
 include("wrangle.jl")
@@ -46,5 +54,6 @@ include("plotting.jl")
 include("brain.jl")
 include("startup.jl")
 include("kneaddata.jl")
+include("mantel.jl")
 
 end

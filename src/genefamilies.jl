@@ -1,10 +1,9 @@
-function write_gfs_arrow()
+function write_gfs_arrow(dir=ENV["ANALYSIS_FILES"]; kind="genefamilies", stratified=false)
     allfiles = String[]
 
     @info "getting files"
-    for (root, dirs, files) in walkdir("/grace/echo/analysis/biobakery3/")
-        contains(root, "batch") || continue
-        filter!(f-> contains(f, "genefamilies") && !contains(f, "relab") && !contains(f, "zymo") && !contains(f, r"^FE\d+"), files)
+    for (root, dirs, files) in walkdir(dir)
+        filter!(f-> contains(splitext(f)[1], Regex(string(kind, '$'))) && !contains(f, r"^FE\d+"), files)
         append!(allfiles, joinpath.(Ref(root), files))
     end
 
@@ -24,10 +23,10 @@ function write_gfs_arrow()
     @info "writing temporary arrow file"
     open(tmp, "w") do io
         tbls = Tables.partitioner(allfiles) do f
-            samplename = replace(splitext(basename(f))[1], r"_S\d+_genefamilies" => "")
+            samplename = replace(splitext(basename(f))[1], Regex(string(raw"_S\d+_", kind)) => "")
 
             sdf = CSV.read(f, DataFrame; header=["feature", "value"], skipto=2)
-            subset!(sdf, "feature"=> ByRow(f-> !contains(f, '|'))) # skip stratified features
+            stratified || subset!(sdf, "feature"=> ByRow(f-> !contains(f, '|'))) # skip stratified features
             sdf.sample .= samplename
             sdf.sidx .= sdic[samplename]
 
@@ -47,13 +46,13 @@ function write_gfs_arrow()
     df.fidx = [fdic[f] for f in df.feature]
 
     @info "Writing table"
-    Arrow.write(joinpath(scratch, "genefamilies.arrow"), df)
-    open(joinpath(scratch, "features.txt"), "w") do io
+    Arrow.write(joinpath(scratch, "$kind.arrow"), df)
+    open(joinpath(scratch, "$(kind)_features.txt"), "w") do io
         for f in keys(fdic)
             println(io, f)
         end
     end
-    open(joinpath(scratch, "samples.txt"), "w") do io
+    open(joinpath(scratch, "$(kind)_samples.txt"), "w") do io
         for s in keys(sdic)
             println(io, s)
         end
@@ -61,16 +60,16 @@ function write_gfs_arrow()
     return nothing
 end
 
-function read_gfs_arrow()
+function read_gfs_arrow(; kind="genefamilies", stratified=false)
     scratch = get(ENV, "SCRATCH_SPACE", "./scratch")
     @info "reading table"
-    tbl = Arrow.Table(joinpath(scratch, "genefamilies.arrow"))
+    tbl = Arrow.Table(joinpath(scratch, "$kind.arrow"))
     @info "building sparse mat"
     mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
     @info "getting features"
-    fs = [GeneFunction(line) for line in eachline(joinpath(scratch, "features.txt"))]
+    fs = [genefunction(line) for line in eachline(joinpath(scratch, "$(kind)_features.txt"))]
     @info "getting samples"
-    ss = [MicrobiomeSample(line) for line in eachline(joinpath(scratch, "samples.txt"))]
+    ss = [MicrobiomeSample(line) for line in eachline(joinpath(scratch, "$(kind)_samples.txt"))]
     return CommunityProfile(mat, fs, ss)
 end
 
