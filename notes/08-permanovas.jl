@@ -163,10 +163,11 @@ ax = Axis(fig[1,1], title="Mantel tests")
 hm = heatmap!(ax, vmat[1:n-1, 2:n]'; colormap=:viridis, colorrange = (0.01, 1), lowclip=:lightgray)
 
 for ci in manteldf.idx
-    text!(string(round(vmat[ci], digits=4)); position=(ci[2]-1,ci[1]), align=(:center, :center))
+    c = vmat[ci] < 0.5 ? :lightgray : :black
+    text!(string(round(vmat[ci], digits=4)); position=(ci[2]-1,ci[1]), align=(:center, :center), color=c)
     p = pmat[ci]
     stars = p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""
-    text!(stars; position=(ci[2]-1,ci[1]), align=(:center, :bottom))
+    text!(stars; position=(ci[2]-1,ci[1]), align=(:center, :bottom), color=c)
 end
 
 ax.xticks = (1:n-1, isempty(labels) ? ["comm$i" for i in 1:n-1] : labels[2:end])
