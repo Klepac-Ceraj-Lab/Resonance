@@ -81,7 +81,7 @@ linkxaxes!(dot_ax, intersection_ax)
 hidespines!(intersection_ax, :t, :r, :b)
 hidespines!(set_ax, :t, :r, :l)
 
-save("figures/upset_scan_stool.pdf", fig)
+save("figures/upset_scan_stool.png", fig)
 fig
 
 ##
@@ -135,7 +135,7 @@ hist!(scan_age_young, subset(tps, AsTable([:ageMonths, :has_segmentation]) => By
 Label(fig[1, 0], text = "All kids", tellheight=false)
 Label(fig[2, 1], text = "Young kids", tellheight=false)
 
-save("figures/age_hists.pdf", fig)
+save("figures/age_hists.png", fig)
 fig
 
 ##
@@ -157,7 +157,7 @@ tightlimits!(ass_bydate, Left(), Right(), Bottom())
 
 linkyaxes!(stools_bydate, ass_bydate)
 
-save("figures/collection_over_time.pdf", fig)
+save("figures/collection_over_time.png", fig)
 fig
 ##
 
@@ -221,7 +221,7 @@ linkxaxes!(dot_ax, intersection_ax)
 hidespines!(intersection_ax, :t, :r, :b)
 hidespines!(set_ax, :t, :r, :l)
 
-save("figures/upset_scan_stool_bysybject.pdf", fig)
+save("figures/upset_scan_stool_bysybject.png", fig)
 fig
 
 ##
@@ -274,7 +274,7 @@ linkxaxes!(dot_ax, intersection_ax)
 hidespines!(intersection_ax, :t, :r, :b)
 hidespines!(set_ax, :t, :r, :l)
 
-save("figures/upset_score_stool.pdf", fig)
+save("figures/upset_score_stool.png", fig)
 fig
 
 ##
@@ -283,7 +283,7 @@ fig
 fig, ax, plt = hist(collect(skipmissing(tps.cogScore)))
 plt2 = hist!(ax, collect(skipmissing(tps.cogScore[tps.has_stool .|| tps.has_prevstool])))
 Legend(fig[1,2], [plt, plt2], ["All scores", "Scores with stool"])
-save("figures/cogscores_hist.pdf", fig)
+save("figures/cogscores_hist.png", fig)
 fig
 
 ##
@@ -335,7 +335,7 @@ linkxaxes!(dot_ax, intersection_ax)
 hidespines!(intersection_ax, :t, :r, :b)
 hidespines!(set_ax, :t, :r, :l)
 
-save("figures/upset_score_stool_under3.pdf", fig)
+save("figures/upset_score_stool_under3.png", fig)
 fig
 
 ##
@@ -387,7 +387,7 @@ linkxaxes!(dot_ax, intersection_ax)
 hidespines!(intersection_ax, :t, :r, :b)
 hidespines!(set_ax, :t, :r, :l)
 
-save("figures/upset_score_stool_under5.pdf", fig)
+save("figures/upset_score_stool_under5.png", fig)
 fig
 
 ## 
