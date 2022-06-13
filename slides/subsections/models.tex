@@ -66,22 +66,21 @@
 \end{frame}
 
 
-\begin{frame}{Linear models - taxa}
+\begin{frame}{Mantel tests}
     \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
 
         \column{.6\textwidth} % Right column and width
     
         \begin{figure}
-        \includegraphics[width=1\linewidth]{../figures/lms-split-2.png}
+        \includegraphics[width=1\linewidth]{../figures/mantel.png}
         \end{figure}
 
         \column{.4\textwidth} % Right column and width
     
         \textbf{Details}
         \begin{itemize}
-            \item Kids $> 18$ months old, species $> 10\%$ prevalence
-            \item GLM: $bug \sim cogScore + age$
-            \item There were ~15 bugs significant after FDR correction
+            \item Run on all kids - one sample per kid
+            \item Mantel test asks how much of the variation across datasets is similar
         \end{itemize}
 
     \end{columns}

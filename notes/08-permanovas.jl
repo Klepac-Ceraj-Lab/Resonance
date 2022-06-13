@@ -113,6 +113,7 @@ save("figures/kids_all_permanovas.png", fig)
 fig
 
 #-
+
 ## Mantel tests
 
 using Combinatorics
@@ -171,5 +172,5 @@ end
 ax.xticks = (1:n-1, isempty(labels) ? ["comm$i" for i in 1:n-1] : labels[2:end])
 ax.yticks = (1:n-1, isempty(labels) ? ["comm$i" for i in 1:n] : labels[1:end-1])
 
-save("figures/mantel.svg", fig)
+save("figures/mantel.png", fig)
 fig
