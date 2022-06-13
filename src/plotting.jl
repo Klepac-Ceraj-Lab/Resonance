@@ -71,10 +71,11 @@ function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], col
     hm = heatmap!(ax, vmat'; colormap, colorrange)
 
     for ci in CartesianIndices(pmat)
-        text!(string(round(vmat[ci], digits=2), "%"); position=(ci[2],ci[1]), align=(:center, :center))
+        c = vmat[ci] < (colorrange[2] - colorrange[1]) / 2 ? :black : :lightgray
+        text!(string(round(vmat[ci], digits=2), "%"); position=(ci[2],ci[1]), align=(:center, :center), color=c)
         p = pmat[ci]
         stars = p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""
-        text!(stars; position=(ci[2],ci[1]), align=(:center, :bottom))
+        text!(stars; position=(ci[2],ci[1]), align=(:center, :bottom), color=c)
     end
 
     ax.xticks = (1:length(comms), isempty(commlabels) ? ["comm$i" for i in 1:length(comms)] : commlabels)

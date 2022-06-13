@@ -67,7 +67,7 @@ function read_gfs_arrow(; kind="genefamilies", stratified=false)
     @info "building sparse mat"
     mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
     @info "getting features"
-    fs = [GeneFunction(line) for line in eachline(joinpath(scratch, "$(kind)_features.txt"))]
+    fs = [genefunction(line) for line in eachline(joinpath(scratch, "$(kind)_features.txt"))]
     @info "getting samples"
     ss = [MicrobiomeSample(line) for line in eachline(joinpath(scratch, "$(kind)_samples.txt"))]
     return CommunityProfile(mat, fs, ss)

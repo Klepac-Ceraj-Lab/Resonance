@@ -12,6 +12,7 @@ export airtable_metadata,
        mdsaxis,
        permanovas,
        plot_permanovas,
+       mantel,
        commonname,
        countmap,
        codebreastfeeding!,
@@ -34,6 +35,8 @@ using FilePaths
 using ProgressLogging
 using CategoricalArrays
 using PERMANOVA
+using LinearAlgebra
+using Random
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
@@ -51,5 +54,6 @@ include("plotting.jl")
 include("brain.jl")
 include("startup.jl")
 include("kneaddata.jl")
+include("mantel.jl")
 
 end
