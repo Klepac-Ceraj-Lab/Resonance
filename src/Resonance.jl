@@ -17,6 +17,7 @@ export airtable_metadata,
        countmap,
        codebreastfeeding!,
        stp_overlap,
+       comm_overlap,
        startup
 
 using Reexport

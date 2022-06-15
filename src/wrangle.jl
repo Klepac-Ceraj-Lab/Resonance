@@ -135,13 +135,10 @@ function _keep_unique(ds1, ds2, srt)
         if d ∈ used
             push!(keep, false)
         else
-            @info d maxlog = 10
             push!(used, d)
-            @info d ∈ recip maxlog = 10
             push!(keep, d ∈ recip)
         end
     end
-    @info count(keep)
     return keep
 end
 
@@ -157,4 +154,29 @@ function stp_overlap(ds1, ds2; lt = (x,y)-> x[1] == y[1] ? x[2] < y[2] : x[1] < 
     keep2 = _keep_unique(ds2, ds1, srt2)
 
     return srt1[keep1], srt2[keep2]
+end
+
+function comm_overlap(c1, c2)
+    c1_stp = collect(zip(get(c1, :subject), get(c1, :timepoint)))
+    if !(eltype(c1_stp) <: Tuple{Int, Int})
+        keep = findall(stp -> !any(ismissing, stp), c1_stp)
+        c1_stp = Vector{Tuple{Int,Int}}(c1_stp[keep])
+        c1 = c1[:, keep]
+    end
+
+    c2_stp = collect(zip(get(c2, :subject), get(c2, :timepoint)))
+    if !(eltype(c2_stp) <: Tuple{Int, Int})
+        keep = findall(stp -> !any(ismissing, stp), c2_stp)
+        c2_stp = Vector{Tuple{Int,Int}}(c2_stp[keep])
+        c2 = c2[:, keep]
+    end
+    
+    srt1, srt2 = stp_overlap(c1_stp, c2_stp)
+
+    c1 = c1[:, srt1]
+    c1 = c1[0 .< vec(prevalence(c1)), :]
+
+    c2 = c2[:, srt2]
+    c2 = c2[0 .< vec(prevalence(c2)), :]
+    return c1, c2
 end
