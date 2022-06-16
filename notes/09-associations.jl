@@ -1,5 +1,14 @@
 using Resonance
 using ProgressLogging
+using CategoricalArrays
+using CairoMakie
+using AlgebraOfGraphics
+using Microbiome.Distances
+using Microbiome.MultivariateStats
+using GLM
+using MixedModels
+using MultipleTesting
+using AlgebraOfGraphics
 
 omni, etoh, tps, complete_brain, metabolites, species = startup()
 genes = Resonance.read_gfs_arrow()
@@ -17,11 +26,6 @@ set!(kos, leftjoin(select(omni, ["subject", "timepoint", "sample"]), tps, on=[:s
 set!(metabolites, leftjoin(select(etoh, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
 
 ## 
-
-using CairoMakie
-using AlgebraOfGraphics
-using Microbiome.Distances
-using Microbiome.MultivariateStats
 
 @chain DataFrame(subject=get(species, :subject), timepoint = get(species, :timepoint), age = get(species, :ageMonths)) begin
     groupby(:subject)
@@ -308,13 +312,6 @@ glutamateol = findfirst(f-> commonname(f) === "Glutamic acid", features(metabove
 
 ##
 
-using GLM
-using MixedModels
-using MultipleTesting
-using AlgebraOfGraphics
-
-
-
 genemetab = DataFrame(
     gabasynth = log.(1 .+ map(sum, eachcol(abundances(genesoverlap[neuroactive["GABA synthesis"], :])))),
     gabadegr  = log.(1 .+ map(sum, eachcol(abundances(genesoverlap[neuroactive["GABA degradation"], :])))),
@@ -538,3 +535,88 @@ isdir("data/lms/") || mkpath("data/lms")
 CSV.write("data/lms/species_lms.csv", speclms)
 
 scatter(speclm_in.maternal_ed, speclm_in.cogScore)
+
+# ### KOs lms
+
+kolm_in = DataFrame(
+    sample      = samplenames(kos),
+    subject     = get(kos, :subject),
+    read_depth  = get(kos, :reads),
+    ageMonths   = get(kos, :ageMonths),
+    race        = get(kos, :rce),
+    maternal_ed = levelcode.(get(kos, :ed)),
+    cogScore    = get(kos, :cogScore)
+)
+
+kolm_in = subset(kolm_in, :ageMonths   => ByRow(!ismissing),
+                              :read_depth  => ByRow(!ismissing),
+                              :maternal_ed => ByRow(!ismissing)
+)
+
+disallowmissing!(kolm_in, [:ageMonths, :read_depth, :maternal_ed])
+
+let comm = kos[:, [s in kolm_in.sample for s in samplenames(kos)]]
+    for sp in features(comm)[vec(prevalence(comm)) .> 0.05]
+        kolm_in[!, name(sp)] = vec(abundances(comm[sp, :]))
+    end
+end
+
+kolms = DataFrame()
+
+@progress for sp in names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed"]))
+    ssp = Symbol(sp)
+    f = @eval @formula($ssp ~ (1|subject) + read_depth + ageMonths + race + maternal_ed)
+    
+    modl = lm(f, kolm_in)
+
+    df = DataFrame(coeftable(modl))
+    df.kos .= sp
+    df.model .= "Complete"
+    rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
+    append!(kolms, df)
+end
+
+let indf = subset(kolm_in, :ageMonths => ByRow(<(6)))
+    @progress for sp in names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+        count(>(0), indf[:, sp]) / size(indf, 1) > 0.05 || continue
+
+        ssp = Symbol(sp)
+        
+        f = @eval @formula($ssp ~ (1|subject) + cogScore + read_depth + ageMonths + race + maternal_ed)
+        
+        modl = lm(f, kolm_in)
+
+        df = DataFrame(coeftable(modl))
+        df.kos .= sp
+        df.model .= "Under 6mo"
+        rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
+        append!(kolms, df)
+    end
+end
+
+let indf = subset(kolm_in, :ageMonths => ByRow(>(12)))
+    @progress for sp in names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+        count(>(0), indf[:, sp]) / size(indf, 1) > 0.05 || continue
+
+        ssp = Symbol(sp)
+        
+        f = @eval @formula($ssp ~ (1|subject) + cogScore + read_depth + ageMonths + race + maternal_ed)
+        
+        modl = lm(f, kolm_in)
+
+        df = DataFrame(coeftable(modl))
+        df.kos .= sp
+        df.model .= "Over 12mo"
+        rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
+        append!(kolms, df)
+    end
+end
+
+subset!(kolms, :Name=> ByRow(n-> any(m-> contains(n, m), ("cogScore", "maternal_ed", "race"))), :pvalue=> ByRow(!isnan))
+kolms.qvalue = adjust(kolms.pvalue, BenjaminiHochberg())
+sort!(kolms, :qvalue)
+
+isdir("data/lms/") || mkpath("data/lms")
+CSV.write("data/lms/kos_lms.csv", kolms)
+
+scatter(kolm_in.maternal_ed, kolm_in.cogScore)
