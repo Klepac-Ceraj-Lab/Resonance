@@ -465,10 +465,11 @@ speclm_in = DataFrame(
 
 speclm_in = subset(speclm_in, :ageMonths   => ByRow(!ismissing),
                               :read_depth  => ByRow(!ismissing),
-                              :maternal_ed => ByRow(!ismissing)
+                              :maternal_ed => ByRow(!ismissing),
+                              :cogScore    => ByRow(!ismissing)
 )
 
-disallowmissing!(speclm_in, [:ageMonths, :read_depth, :maternal_ed])
+disallowmissing!(speclm_in, [:ageMonths, :read_depth, :maternal_ed, :cogScore])
 
 let comm = species[:, [s in speclm_in.sample for s in samplenames(species)]]
     for sp in features(comm)[vec(prevalence(comm)) .> 0.05]
@@ -540,7 +541,7 @@ scatter(speclm_in.maternal_ed, speclm_in.cogScore)
 
 kolm_in = DataFrame(
     sample      = samplenames(kos),
-    subject     = get(kos, :subject),
+    subject     = categorical(get(kos, :subject)),
     read_depth  = get(kos, :reads),
     ageMonths   = get(kos, :ageMonths),
     race        = get(kos, :rce),
@@ -549,68 +550,118 @@ kolm_in = DataFrame(
 )
 
 kolm_in = subset(kolm_in, :ageMonths   => ByRow(!ismissing),
-                              :read_depth  => ByRow(!ismissing),
-                              :maternal_ed => ByRow(!ismissing)
+                          :read_depth  => ByRow(!ismissing),
+                          :maternal_ed => ByRow(!ismissing),
+                          :cogScore => ByRow(!ismissing)
 )
 
-disallowmissing!(kolm_in, [:ageMonths, :read_depth, :maternal_ed])
+disallowmissing!(kolm_in, [:ageMonths, :read_depth, :maternal_ed, :cogScore])
 
 let comm = kos[:, [s in kolm_in.sample for s in samplenames(kos)]]
-    for sp in features(comm)[vec(prevalence(comm)) .> 0.05]
+    for sp in features(comm)[vec(prevalence(comm)) .> 0.1]
         kolm_in[!, name(sp)] = vec(abundances(comm[sp, :]))
     end
 end
 
-kolms = DataFrame()
+#-
 
-@progress for sp in names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed"]))
+kos_cols = names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed"]))
+kos_sp_dfs = [DataFrame() for _ in kos_cols]
+
+Threads.@threads for i in eachindex(kos_cols)
+    sp = kos_cols[i]
+
     ssp = Symbol(sp)
-    f = @eval @formula($ssp ~ (1|subject) + read_depth + ageMonths + race + maternal_ed)
+    terms = sum(term(t) for t in (1, :read_depth, :ageMonths, :race, :maternal_ed))
+    resp = term(ssp)
+    sub = (term(1) | term(:subject))
+
+    f = resp ~ sub + terms
     
-    modl = lm(f, kolm_in)
+    modl = fit(MixedModel, f, kolm_in)
+
+    df = DataFrame(coeftable(modl))
+    df.kos .= sp
+    df.model .= "Complete"
+    rename!(df, "Pr(>|z|)"=>"pvalue", "Coef."=> "coef")
+    subset!(df, :z=> ByRow(!isnan))
+    kos_sp_dfs[i] = df
+end
+
+complete = reduce(vcat, kos_sp_dfs)
+
+#-
+
+kos_cols = names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+kos_sp_dfs = [DataFrame() for _ in kos_cols]
+
+indf = subset(kolm_in, :ageMonths => ByRow(<(6)))
+indf = unique(indf, :subject)
+
+
+Threads.@threads for i in eachindex(kos_cols)
+    sp = kos_cols[i]
+    count(x-> x > 0, indf[!, sp]) / size(indf, 1) > 0.05 || continue
+
+    ssp = Symbol(sp)
+    terms = sum(term(t) for t in (1, :cogScore, :read_depth, :ageMonths,  :maternal_ed))
+    resp = term(ssp)
+
+    f = resp ~ terms
+    
+    try
+        modl = fit(MixedModel, f, indf)
+    catch e
+        continue
+    end
+
+    df = DataFrame(coeftable(modl))
+    df.kos .= sp
+    df.model .= "Complete"
+    rename!(df, "Pr(>|z|)"=>"pvalue", "Coef."=> "coef")
+    subset!(df, :z=> ByRow(!isnan))
+    kos_sp_dfs[i] = df
+end
+
+u6mo = reduce(vcat, kos_sp_dfs)
+
+#-
+
+kos_cols = names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+kos_sp_dfs = [DataFrame() for _ in kos_cols]
+
+indf = subset(kolm_in, :ageMonths => ByRow(>(12)))
+indf = unique(indf, :subject)
+
+Threads.@threads for i in eachindex(kos_cols)
+    sp = kos_cols[i]
+    count(x-> x > 0, indf[!, sp]) / size(indf, 1) > 0.05 || continue
+
+    ssp = Symbol(sp)
+    terms = sum(term(t) for t in (1, :cogScore, :read_depth, :ageMonths,  :maternal_ed))
+    resp = term(ssp)
+
+    f = resp ~ terms
+    
+    try
+        modl = fit(LinearModel, f, indf)
+    catch e
+        continue
+    end
 
     df = DataFrame(coeftable(modl))
     df.kos .= sp
     df.model .= "Complete"
     rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
-    append!(kolms, df)
+    subset!(df, :t=> ByRow(!isnan))
+    kos_sp_dfs[i] = df
 end
 
-let indf = subset(kolm_in, :ageMonths => ByRow(<(6)))
-    @progress for sp in names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
-        count(>(0), indf[:, sp]) / size(indf, 1) > 0.05 || continue
+o12mo = reduce(vcat, kos_sp_dfs)
 
-        ssp = Symbol(sp)
-        
-        f = @eval @formula($ssp ~ (1|subject) + cogScore + read_depth + ageMonths + race + maternal_ed)
-        
-        modl = lm(f, kolm_in)
+#-
 
-        df = DataFrame(coeftable(modl))
-        df.kos .= sp
-        df.model .= "Under 6mo"
-        rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
-        append!(kolms, df)
-    end
-end
-
-let indf = subset(kolm_in, :ageMonths => ByRow(>(12)))
-    @progress for sp in names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
-        count(>(0), indf[:, sp]) / size(indf, 1) > 0.05 || continue
-
-        ssp = Symbol(sp)
-        
-        f = @eval @formula($ssp ~ (1|subject) + cogScore + read_depth + ageMonths + race + maternal_ed)
-        
-        modl = lm(f, kolm_in)
-
-        df = DataFrame(coeftable(modl))
-        df.kos .= sp
-        df.model .= "Over 12mo"
-        rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
-        append!(kolms, df)
-    end
-end
+kolms = vcat(complete, u6mo, o12mo)
 
 subset!(kolms, :Name=> ByRow(n-> any(m-> contains(n, m), ("cogScore", "maternal_ed", "race"))), :pvalue=> ByRow(!isnan))
 kolms.qvalue = adjust(kolms.pvalue, BenjaminiHochberg())
