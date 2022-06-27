@@ -38,6 +38,7 @@ using CategoricalArrays
 using PERMANOVA
 using LinearAlgebra
 using Random
+using ThreadsX
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames

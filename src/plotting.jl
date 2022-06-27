@@ -83,3 +83,29 @@ function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], col
 
     return hm
 end
+
+function plot_fsea(setcors, notcors; label="geneset")
+    srt = sortperm([setcors; notcors])
+    ranks = invperm(srt)
+    setranks = Set(ranks[1:length(setcors)])
+    
+    setscore =  1 / length(setcors)
+    notscore = -1 / length(notcors)
+    
+    xs = 1:length(srt)
+    ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
+    
+    fig = Figure()
+    ax1 = Axis(fig[1,1]; title="Enrichment", ylabel="enrichment score")
+    hidexdecorations!(ax1)
+    ax2 = Axis(fig[2,1]; ylabel="correlation", xlabel="rank")
+    
+    lines!(ax1, xs, ys)
+    stairs!(ax2, xs, [setcors; notcors][srt])
+    
+    rowsize!(fig.layout, 2, Relative(1/4))
+    
+    fig
+end
+
+
