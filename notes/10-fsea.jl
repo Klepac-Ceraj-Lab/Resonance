@@ -10,6 +10,7 @@ using MultipleTesting
 using AlgebraOfGraphics
 using Statistics
 using DataFrames.InvertedIndices
+using DataFrames.PrettyTables
 using ThreadsX
 
 omni, etoh, tps, complete_brain, metabolites, species = startup()
@@ -29,7 +30,7 @@ gsgenes = genes[:, .!ismissing.(get(genes, :cogScore))]
 cscor = cor(abundances(gsgenes), get(gsgenes, :cogScore), dims=2)
 
 fsdf = DataFrame(
-    ThreadsX.map(collect(keys(neuroactive))) do gs
+    map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
         isempty(ixs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
@@ -39,6 +40,9 @@ fsdf = DataFrame(
         acs = filter(!isnan, cscor[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
 
+        fig = Resonance.plot_fsea(acs, cs; label = gs)
+        save("figures/fsea_$(replace(gs, ' '=>"-")).png", fig)
+
         return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end
 )
@@ -46,18 +50,10 @@ fsdf = DataFrame(
 subset!(fsdf, :pvalue=> ByRow(!isnan))
 fsdf.qvalue = adjust(fsdf.pvalue, BenjaminiHochberg())
 sort!(fsdf, :qvalue)
-CSV.write("data/fsea_all.csv")
+CSV.write("data/fsea_all.csv", fsdf)
 
+pretty_table(first(fsdf, 10); backend = Val(:latex))
 #- 
-
-gs = "Menaquinone synthesis"
-ixs = neuroactive[gs]
-cs = filter(!isnan, cscor[ixs])
-acs = filter(!isnan, cscor[Not(ixs)])
-
-Resonance.plot_fsea(acs, cs)
-
-#-
 
 nodupes_samples = unique(DataFrame(metadata(gsgenes)), :subject).sample
 

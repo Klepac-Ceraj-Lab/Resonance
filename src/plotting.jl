@@ -84,8 +84,10 @@ function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], col
     return hm
 end
 
-function plot_fsea(setcors, notcors; label="geneset")
-    srt = sortperm([setcors; notcors])
+function plot_fsea(setcors, notcors; label="")
+    fullcors = [setcors; notcors]
+    
+    srt = sortperm(fullcors; rev=true)
     ranks = invperm(srt)
     setranks = Set(ranks[1:length(setcors)])
     
@@ -95,16 +97,35 @@ function plot_fsea(setcors, notcors; label="geneset")
     xs = 1:length(srt)
     ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
     
+    t = "Enrichment score - $(round(maximum(ys), digits=3))"
+    !isempty(label) && (t = string(label, ": ", t))
+
     fig = Figure()
-    ax1 = Axis(fig[1,1]; title="Enrichment", ylabel="enrichment score")
+    ax1 = Axis(fig[1,1]; title=t, ylabel="enrichment score")
     hidexdecorations!(ax1)
-    ax2 = Axis(fig[2,1]; ylabel="correlation", xlabel="rank")
+
+    ax2 = Axis(fig[2,1])
+    hidedecorations!(ax2)
+
+    ax3 = Axis(fig[3,1]; ylabel="correlation", xlabel="rank")
     
     lines!(ax1, xs, ys)
-    stairs!(ax2, xs, [setcors; notcors][srt])
+
+    vlines!(ax2, ranks[1:length(setcors)]; color=:black)
+
+    blow, bup = extrema(fullcors)
+    band!(ax3, xs, fill(blow, length(srt)), fill(bup, length(srt)); color=fullcors[srt])
     
-    rowsize!(fig.layout, 2, Relative(1/4))
+    lower = [x < 0 ? x : 0.0 for x in fullcors[srt]]
+    upper = [x > 0 ? x : 0.0 for x in fullcors[srt]]
+    band!(ax3, xs, lower, upper; color=:lightgray)
+
     
+    rowsize!(fig.layout, 2, Relative(1/8))
+    rowsize!(fig.layout, 3, Relative(1/4))
+    
+    linkxaxes!(ax1, ax2, ax3)
+    tightlimits!.((ax1, ax2, ax3))
     fig
 end
 
