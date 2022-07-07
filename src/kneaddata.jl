@@ -6,7 +6,7 @@ function load_knead(dir=ENV["ANALYSIS_FILES"])
         "--output", joinpath(dir, "kneaddata", "kneaddata_read_counts.tsv")
     ]))
 
-    df = CSV.read("/grace/sequencing/processed/mgx/kneaddata/kneaddata_read_counts.tsv", DataFrame; missingstring="NA")
+    df = CSV.read(joinpath(ENV["ANALYSIS_FILES"], "kneaddata", "kneaddata_read_counts.tsv"), DataFrame; missingstring="NA")
     for col in names(df, r"Homo_sapiens")
         df[!, col] = map(p-> coalesce(p...), zip(df[!, col], df[!, replace(col, "Homo_sapiens"=>"hg37dec_v0.1")]))
     end

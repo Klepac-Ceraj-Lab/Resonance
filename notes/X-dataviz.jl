@@ -23,7 +23,7 @@ save("slides/assets/kneaddatacounts.png", fig)
                     )
 
 spec = metaphlan_profiles(filter(f-> contains(f, "profile") && any(s-> contains(f, s), md.sample), 
-    readdir("/grace/echo/analysis/biobakery3/links/metaphlan", join=true)), :species)
+    readdir(joinpath(ENV["ANALYSIS_FILES"], "metaphlan"), join=true)), :species)
 
 sns = map(samplenames(spec)) do s
     replace(s, r"_S\d+_profile"=>"")
@@ -107,11 +107,11 @@ metabs = CSV.read("data/metabolites.csv", DataFrame)
 
 ##
 
-humann_join("/grace/echo/analysis/biobakery3/links/humann/genefamilies", 
-            "/grace/echo/analysis/biobakery3/links/humann/all_genefamilies.tsv"; 
+humann_join(joinpath(ENV["ANALYSIS_FILES"], "humann", "genefamilies"), 
+            joinpath(ENV["ANALYSIS_FILES"], "humann", "all_genefamilies.tsv"); 
             file_name="genefamilies")
 
-func = humann_profiles("/grace/echo/analysis/biobakery3/links/humann/all_genefamilies.tsv", stratified=false)
+func = humann_profiles(joinpath(ENV["ANALYSIS_FILES"], "humann", "all_genefamilies.tsv"), stratified=false)
 
 sns = map(samplenames(func)) do s
     replace(s, r"_S\d+_genefamilies"=>"")
