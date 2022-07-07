@@ -1,12 +1,31 @@
 using Resonance
-omni, etoh, tps, complete_brain, metabolites, species = startup()
-
-## 
-
+using ProgressLogging
+using CategoricalArrays
 using CairoMakie
 using AlgebraOfGraphics
 using Microbiome.Distances
 using Microbiome.MultivariateStats
+using GLM
+using MixedModels
+using MultipleTesting
+using AlgebraOfGraphics
+
+omni, etoh, tps, complete_brain, metabolites, species = startup()
+genes = Resonance.read_gfs_arrow()
+ecs = Resonance.read_gfs_arrow(kind="ecs_rename")
+ecs = filter(!hastaxon, ecs)
+kos = Resonance.read_gfs_arrow(kind="kos_rename")
+kos = filter(!hastaxon, kos)
+
+unique!(tps, ["subject", "timepoint"])
+
+set!(species, leftjoin(select(omni, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
+set!(genes, leftjoin(select(omni, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
+set!(ecs, leftjoin(select(omni, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
+set!(kos, leftjoin(select(omni, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
+set!(metabolites, leftjoin(select(etoh, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
+
+## 
 
 @chain DataFrame(subject=get(species, :subject), timepoint = get(species, :timepoint), age = get(species, :ageMonths)) begin
     groupby(:subject)
@@ -28,7 +47,7 @@ kids_pcoa = pcoa(kidsspecies)
 using Microbiome.Distances
 using MultivariateStats
 
-brain_dm = pairwise(Euclidean(), Matrix(tps[complete_brain, Resonance.brainmeta]), dims=1)
+brain_dm = pairwise(Euclidean(), Matrix(tps[complete_brain, replace.(Resonance.brainmeta, "-"=>"_")]), dims=1)
 brain_pcoa = fit(MDS, brain_dm, distances=true)
 
 ## 
@@ -283,32 +302,23 @@ fig
 
 ##
 
-allmeta = leftjoin(tps, select(omni, [:subject, :timepoint, :sample]), on=[:subject, :timepoint])
-unirefs = Resonance.read_gfs_arrow()
-set!(unirefs, allmeta)
-##
 
-neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs)))
+(genesoverlap, metaboverlap) = comm_overlap(genes, metabolites)
+neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(genesoverlap)))
 
-overlap = intersect(Set(zip(get(unirefs, :subject), get(unirefs, :timepoint))), Set(zip(get(metabolites, :subject), get(metabolites, :timepoint))))
+gabaol = findfirst(f-> commonname(f) === "gamma-Aminobutyric acid", features(metaboverlap))
+glutamateol = findfirst(f-> commonname(f) === "Glutamic acid", features(metaboverlap))
 
-metaboverlap = metabolites[:, map(s-> (s.subject, s.timepoint) in overlap, samples(metabolites))]
 
 ##
-
-using GLM
-using MixedModels
-using AlgebraOfGraphics
-
-
 
 genemetab = DataFrame(
-    gabasynth = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["GABA synthesis"], [esmap[s] for s in samplenames(metaboverlap)]])))),
-    gabadegr  = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["GABA degradation"], [esmap[s] for s in samplenames(metaboverlap)]])))),
-    gabagut   = log.(vec(abundances(metaboverlap[gaba, :]))),
-    glutsynth = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate synthesis"], [esmap[s] for s in samplenames(metaboverlap)]])))),
-    glutdegr  = log.(1 .+ map(sum, eachcol(abundances(unirefs[neuroactive["Glutamate degradation"], [esmap[s] for s in samplenames(metaboverlap)]])))),
-    glutgut   = log.(vec(abundances(metaboverlap[glutamate, :]))),
+    gabasynth = log.(1 .+ map(sum, eachcol(abundances(genesoverlap[neuroactive["GABA synthesis"], :])))),
+    gabadegr  = log.(1 .+ map(sum, eachcol(abundances(genesoverlap[neuroactive["GABA degradation"], :])))),
+    gabagut   = log.(vec(abundances(metaboverlap[gabaol, :]))),
+    glutsynth = log.(1 .+ map(sum, eachcol(abundances(genesoverlap[neuroactive["Glutamate synthesis"], :])))),
+    glutdegr  = log.(1 .+ map(sum, eachcol(abundances(genesoverlap[neuroactive["Glutamate degradation"], :])))),
+    glutgut   = log.(vec(abundances(metaboverlap[glutamateol, :]))),
     mc        = get(metaboverlap, :Mother_Child))
 
 gabasynthlm = lm(@formula(gabagut ~ gabasynth + mc), genemetab)
@@ -339,22 +349,22 @@ fig = Figure(resolution=(800,800))
 ax1 = Axis(fig[1,1], xlabel="GABA Synthesis log(RPKM)", ylabel="GABA (log abundance)")
 ax2 = Axis(fig[2,1], xlabel="GABA Degradation log(RPKM)", ylabel="GABA (log abundance)")
 
-scatter!(ax1, log.(1+genemetab.gabasynth), log.(1+genemetab.gabagut),
+scatter!(ax1, log.(1 .+ genemetab.gabasynth), log.(1 .+ genemetab.gabagut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
               
 for grp in groupby(pred, :mc)
     c = first(grp.mc) == "M" ? :dodgerblue : :orange
-    lines!(ax1, grp.gabasynth, grp.gabasynth_pred, color=c)
+    lines!(ax1, log.(1 .+ grp.gabasynth), log.(1 .+ grp.gabasynth_pred), color=c)
 end
             
 
-scatter!(ax2, log.(1+genemetab.gabadegr), log.(1+genemetab.gabagut),
+scatter!(ax2, log.(1 .+ genemetab.gabadegr), log.(1 .+ genemetab.gabagut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
 
 
 for grp in groupby(pred, :mc)
     c = first(grp.mc) == "M" ? :dodgerblue : :orange
-    lines!(ax2, grp.gabadegr, grp.gabadegr_pred, color=c)
+    lines!(ax2, log.(1 .+ grp.gabadegr), log.(1 .+ grp.gabadegr_pred), color=c)
 end  
 
 ##
@@ -377,22 +387,22 @@ ax1 = Axis(fig[1,1], xlabel="Glutamate Synthesis log(RPKM)", ylabel="Glutamate (
 ax2 = Axis(fig[2,1], xlabel="Glutamate Degradation log(RPKM)", ylabel="Glutamate (log abundance)")
 
 
-scatter!(ax1, log.(1+genemetab.glutsynth), log.(1+genemetab.glutgut),
+scatter!(ax1, log.(1 .+ genemetab.glutsynth), log.(1 .+ genemetab.glutgut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
               
 for grp in groupby(pred, :mc)
     c = first(grp.mc) == "M" ? :dodgerblue : :orange
-    lines!(ax1, grp.glutsynth, grp.glutsynth_pred, color=c)
+    lines!(ax1, log.(1 .+ grp.glutsynth), log.(1 .+ grp.glutsynth_pred), color=c)
 end
             
 
-scatter!(ax2, log.(1+genemetab.glutdegr), log.(1+genemetab.glutgut),
+scatter!(ax2, log.(1 .+ genemetab.glutdegr), log.(1 .+ genemetab.glutgut),
               color=[ismissing(x) ? :gray : x == "M" ? :dodgerblue : :orange for x in genemetab.mc])
 
 
 for grp in groupby(pred, :mc)
     c = first(grp.mc) == "M" ? :dodgerblue : :orange
-    lines!(ax2, grp.glutdegr, grp.glutdegr_pred, color=c)
+    lines!(ax2, log.(1 .+ grp.glutdegr), log.(1 .+ grp.glutdegr_pred), color=c)
 end  
 
 ##
@@ -401,17 +411,263 @@ m1 = MarkerElement(color=:dodgerblue, marker=:circle)
 l1 = LineElement(color=:dodgerblue)
 m2 = MarkerElement(color=:orange, marker=:circle)
 l2 = LineElement(color=:orange)
-Legend(fig[4, 1], [[m1, l1], [m2, l2]], ["moms", "kids"], orientation=:horizontal, tellheight=true, tellwidth=false)
+Legend(fig[3, 1], [[m1, l1], [m2, l2]], ["moms", "kids"], orientation=:horizontal, tellheight=true, tellwidth=false)
 
 save("figures/glutamate_genes_metabolites.png", fig)
 fig
 
 ##
 
-scatter(log.(1 .+ genemetab.glutdegr), log.(1 .+ genemetab.glutsynth), genemetab.glutgut,
-    axis=(; xlabel="degradataion", ylabel="synthesis", zlabel="concentration"))
+# ## Linear models
+#
+# For each feature type (`species`, `ECs`, `KOs`),
+# we will run the following linear mixed-effects models:
+# 
+# - All samples: feature ~ (1|subject) + ageMonths + maternal_ed + race + sex + read_depth
+# - just kids < 6mo: feature ~ (1|subject) + cogScore + ageMonths + cesarean + breastfeeding + maternal_ed + race + sex + read_depth
+# - just kids > 1 year : feature ~ (1|subject) + cogScore + ageMonths + maternal_ed + race + sex + read_depth
+# - For kids that have a stool sample < 6 months and a future cogscore: feature_u6mo ~ cogScore_later + age_stool + maternal_ed + race + sex + read_depth
+# 
 
-## 
+# ### Read count
+#
+# All linear models will include read-depth as a covariate
 
-using PERMANOVA
+reads = CSV.read("data/read_counts.csv", DataFrame)
 
+for col in names(reads, Not("Sample"))
+    if eltype(reads[!, col]) <: Union{Missing, <:AbstractString}
+        reads[!, col] = [ismissing(x) ? missing : parse(Float64, x) for x in reads[!, col]]
+    end
+end
+
+select!(reads,
+    "Sample"=> ByRow(s-> replace(s, r"_S\d+_kneaddata"=> "")) => "sample",
+    AsTable(r"final") => ByRow(r-> sum(values(r))) => "reads"
+)
+
+
+set!(species, reads)
+set!(kos, reads)
+set!(ecs, reads)
+
+# ### Species lms
+
+speclm_in = DataFrame(
+    sample      = samplenames(species),
+    subject     = get(species, :subject),
+    read_depth  = get(species, :reads),
+    ageMonths   = get(species, :ageMonths),
+    race        = get(species, :rce),
+    maternal_ed = levelcode.(get(species, :ed)),
+    cogScore    = get(species, :cogScore)
+)
+
+speclm_in = subset(speclm_in, :ageMonths   => ByRow(!ismissing),
+                              :read_depth  => ByRow(!ismissing),
+                              :maternal_ed => ByRow(!ismissing),
+                              :cogScore    => ByRow(!ismissing)
+)
+
+disallowmissing!(speclm_in, [:ageMonths, :read_depth, :maternal_ed, :cogScore])
+
+let comm = species[:, [s in speclm_in.sample for s in samplenames(species)]]
+    for sp in features(comm)[vec(prevalence(comm)) .> 0.05]
+        speclm_in[!, name(sp)] = vec(abundances(comm[sp, :]))
+    end
+end
+
+speclms = DataFrame()
+
+@progress for sp in names(speclm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed"]))
+    ssp = Symbol(sp)
+    f = @eval @formula($ssp ~ (1|subject) + read_depth + ageMonths + race + maternal_ed)
+    
+    modl = lm(f, speclm_in)
+
+    df = DataFrame(coeftable(modl))
+    df.species .= sp
+    df.model .= "Complete"
+    rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
+    append!(speclms, df)
+end
+
+let indf = subset(speclm_in, :ageMonths => ByRow(<(6)))
+    @progress for sp in names(speclm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+        count(>(0), indf[:, sp]) / size(indf, 1) > 0.05 || continue
+
+        ssp = Symbol(sp)
+        
+        f = @eval @formula($ssp ~ (1|subject) + cogScore + read_depth + ageMonths + race + maternal_ed)
+        
+        modl = lm(f, speclm_in)
+
+        df = DataFrame(coeftable(modl))
+        df.species .= sp
+        df.model .= "Under 6mo"
+        rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
+        append!(speclms, df)
+    end
+end
+
+let indf = subset(speclm_in, :ageMonths => ByRow(>(12)))
+    @progress for sp in names(speclm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+        count(>(0), indf[:, sp]) / size(indf, 1) > 0.05 || continue
+
+        ssp = Symbol(sp)
+        
+        f = @eval @formula($ssp ~ (1|subject) + cogScore + read_depth + ageMonths + race + maternal_ed)
+        
+        modl = lm(f, speclm_in)
+
+        df = DataFrame(coeftable(modl))
+        df.species .= sp
+        df.model .= "Over 12mo"
+        rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
+        append!(speclms, df)
+    end
+end
+
+subset!(speclms, :Name=> ByRow(n-> any(m-> contains(n, m), ("cogScore", "maternal_ed", "race"))), :pvalue=> ByRow(!isnan))
+speclms.qvalue = adjust(speclms.pvalue, BenjaminiHochberg())
+sort!(speclms, :qvalue)
+
+isdir("data/lms/") || mkpath("data/lms")
+CSV.write("data/lms/species_lms.csv", speclms)
+
+scatter(speclm_in.maternal_ed, speclm_in.cogScore)
+
+# ### KOs lms
+
+kolm_in = DataFrame(
+    sample      = samplenames(kos),
+    subject     = categorical(get(kos, :subject)),
+    read_depth  = get(kos, :reads),
+    ageMonths   = get(kos, :ageMonths),
+    race        = get(kos, :rce),
+    maternal_ed = levelcode.(get(kos, :ed)),
+    cogScore    = get(kos, :cogScore)
+)
+
+kolm_in = subset(kolm_in, :ageMonths   => ByRow(!ismissing),
+                          :read_depth  => ByRow(!ismissing),
+                          :maternal_ed => ByRow(!ismissing),
+                          :cogScore => ByRow(!ismissing)
+)
+
+disallowmissing!(kolm_in, [:ageMonths, :read_depth, :maternal_ed, :cogScore])
+
+let comm = kos[:, [s in kolm_in.sample for s in samplenames(kos)]]
+    for sp in features(comm)[vec(prevalence(comm)) .> 0.1]
+        kolm_in[!, name(sp)] = vec(abundances(comm[sp, :]))
+    end
+end
+
+#-
+
+kos_cols = names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed"]))
+kos_sp_dfs = [DataFrame() for _ in kos_cols]
+
+Threads.@threads for i in eachindex(kos_cols)
+    sp = kos_cols[i]
+
+    ssp = Symbol(sp)
+    terms = sum(term(t) for t in (1, :read_depth, :ageMonths, :race, :maternal_ed))
+    resp = term(ssp)
+    sub = (term(1) | term(:subject))
+
+    f = resp ~ sub + terms
+    
+    modl = fit(MixedModel, f, kolm_in)
+
+    df = DataFrame(coeftable(modl))
+    df.kos .= sp
+    df.model .= "Complete"
+    rename!(df, "Pr(>|z|)"=>"pvalue", "Coef."=> "coef")
+    subset!(df, :z=> ByRow(!isnan))
+    kos_sp_dfs[i] = df
+end
+
+complete = reduce(vcat, kos_sp_dfs)
+
+#-
+
+kos_cols = names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+kos_sp_dfs = [DataFrame() for _ in kos_cols]
+
+indf = subset(kolm_in, :ageMonths => ByRow(<(6)))
+indf = unique(indf, :subject)
+
+
+Threads.@threads for i in eachindex(kos_cols)
+    sp = kos_cols[i]
+    count(x-> x > 0, indf[!, sp]) / size(indf, 1) > 0.05 || continue
+
+    ssp = Symbol(sp)
+    terms = sum(term(t) for t in (1, :cogScore, :read_depth, :ageMonths,  :maternal_ed))
+    resp = term(ssp)
+
+    f = resp ~ terms
+    
+    try
+        modl = fit(MixedModel, f, indf)
+    catch e
+        continue
+    end
+
+    df = DataFrame(coeftable(modl))
+    df.kos .= sp
+    df.model .= "Complete"
+    rename!(df, "Pr(>|z|)"=>"pvalue", "Coef."=> "coef")
+    subset!(df, :z=> ByRow(!isnan))
+    kos_sp_dfs[i] = df
+end
+
+u6mo = reduce(vcat, kos_sp_dfs)
+
+#-
+
+kos_cols = names(kolm_in, Not(["sample", "subject", "read_depth", "ageMonths", "race", "maternal_ed", "cogScore"]))
+kos_sp_dfs = [DataFrame() for _ in kos_cols]
+
+indf = subset(kolm_in, :ageMonths => ByRow(>(12)))
+indf = unique(indf, :subject)
+
+Threads.@threads for i in eachindex(kos_cols)
+    sp = kos_cols[i]
+    count(x-> x > 0, indf[!, sp]) / size(indf, 1) > 0.05 || continue
+
+    ssp = Symbol(sp)
+    terms = sum(term(t) for t in (1, :cogScore, :read_depth, :ageMonths,  :maternal_ed))
+    resp = term(ssp)
+
+    f = resp ~ terms
+    
+    try
+        modl = fit(LinearModel, f, indf)
+    catch e
+        continue
+    end
+
+    df = DataFrame(coeftable(modl))
+    df.kos .= sp
+    df.model .= "Complete"
+    rename!(df, "Pr(>|t|)"=>"pvalue", "Coef."=> "coef")
+    subset!(df, :t=> ByRow(!isnan))
+    kos_sp_dfs[i] = df
+end
+
+o12mo = reduce(vcat, kos_sp_dfs)
+
+#-
+
+kolms = vcat(complete, u6mo, o12mo)
+
+subset!(kolms, :Name=> ByRow(n-> any(m-> contains(n, m), ("cogScore", "maternal_ed", "race"))), :pvalue=> ByRow(!isnan))
+kolms.qvalue = adjust(kolms.pvalue, BenjaminiHochberg())
+sort!(kolms, :qvalue)
+
+isdir("data/lms/") || mkpath("data/lms")
+CSV.write("data/lms/kos_lms.csv", kolms)
+
+scatter(kolm_in.maternal_ed, kolm_in.cogScore)

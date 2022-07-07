@@ -17,6 +17,7 @@ export airtable_metadata,
        countmap,
        codebreastfeeding!,
        stp_overlap,
+       comm_overlap,
        startup
 
 using Reexport
@@ -37,6 +38,7 @@ using CategoricalArrays
 using PERMANOVA
 using LinearAlgebra
 using Random
+using ThreadsX
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames

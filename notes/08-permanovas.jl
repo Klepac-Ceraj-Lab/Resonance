@@ -125,14 +125,9 @@ labels = ["species", "genes", "ecs", "kos", "metabolites"]
 
 for ((c1, l1), (c2, l2)) in combinations(collect(zip(comms, labels)), 2)
     
-    srt1, srt2 = stp_overlap(collect(zip(get(c1, :subject), get(c1, :timepoint))),
-                             collect(zip(get(c2, :subject), get(c2, :timepoint))))
-    
-    c1 = c1[:, srt1]
-    c1 = c1[0 .< vec(prevalence(c1)) .< 1, :]
-    
-    c2 = c2[:, srt2]
-    c2 = c2[0 .< vec(prevalence(c2)) .< 1, :]
+    c1, c2 = comm_overlap(c1, c2)
+    c1 = c1[featurenames(c1) .!= "UNGROUPED", :]
+    c2 = c2[featurenames(c2) .!= "UNGROUPED", :]
 
     dm1 = braycurtis(c1)
     dm2 = braycurtis(c2)
