@@ -14,6 +14,6 @@ function load_knead(dir=ENV["ANALYSIS_FILES"])
     df."decontaminated Homo_sapiens orphan2" = map(x-> ismissing(x) ? missing :  x isa Real ? x : parse(Float64, x), df."decontaminated Homo_sapiens orphan2")
 
     df = select(df, Not(r"hg37"))
-    CSV.write("data/read_counts.csv", df)
+    CSV.write(datafiles("read_counts.csv"), df)
     return df
 end

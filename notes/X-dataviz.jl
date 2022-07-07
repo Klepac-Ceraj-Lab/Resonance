@@ -1,11 +1,11 @@
 using Resonance
 using CairoMakie
 
-md = CSV.read("data/wrangled.csv", DataFrame)
+md = CSV.read(datafiles("wrangled.csv"), DataFrame)
 
 ##
 
-reads = CSV.read("data/read_counts.csv", DataFrame)
+reads = CSV.read(datafiles("read_counts.csv"), DataFrame)
 (fig, ax, hs) = hist(reads.count, axis=(
     xlabel="Total reads (single)",
     ylabel="# of samples"
@@ -101,7 +101,7 @@ save("slides/assets/age_taxon_ratios.png", fig)
 fig
 ## 
 
-metabs = CSV.read("data/metabolites.csv", DataFrame)
+metabs = CSV.read(datafiles("metabolites.csv"), DataFrame)
 
 
 

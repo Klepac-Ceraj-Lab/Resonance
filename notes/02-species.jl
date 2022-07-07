@@ -20,4 +20,4 @@ species = CommunityProfile(abundances(species)[:, idx], features(species), map(s
     MicrobiomeSample(replace(s, r"_S\d+_profile"=>""))
 end)
 
-CSV.write("data/species.csv", species)
+CSV.write(datafiles("species.csv"), species)

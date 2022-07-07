@@ -1,6 +1,6 @@
 using Resonance
 
-metadata = CSV.read("data/wrangled.csv", DataFrame)
+metadata = CSV.read(datafiles("wrangled.csv"), DataFrame)
 @rsubset!(metadata, !ismissing(:subject), 
                     !ismissing(:sample),
                     )
@@ -34,16 +34,16 @@ end
 
 permutedims(volumes, "sample")
 
-CSV.write("data/halla_volumes.tsv", permutedims(volumes, :sample), delim='\t')
-CSV.write("data/halla_species.tsv", brainspec, delim='\t')
+CSV.write(datafiles("halla_volumes.tsv"), permutedims(volumes, :sample), delim='\t')
+CSV.write(datafiles("halla_species.tsv"), brainspec, delim='\t')
 
 ##
 
-run(`halla -x data/halla_species.tsv -y data/halla_volumes.tsv --alla -o data/halla_brain/`)
+run(`halla -x $(datafiles("halla_species.tsv")) -y $(datafiles("halla_volumes.tsv")) --alla -o $(datafiles("halla_brain"))`)
 
 ##
 
-metabs = CSV.read("data/metabolites.csv", DataFrame)
+metabs = CSV.read(datafiles("metabolites.csv"), DataFrame)
 
 ##
 
@@ -60,13 +60,13 @@ metabspec = let cmp = spec[:, string.(sample_meta.sample)]
     CommunityProfile(abundances(cmp), features(cmp), MicrobiomeSample.(string.(sample_meta.etoh_sample)))
 end
 
-CSV.write("data/halla_metabolites.tsv", select(metabs, ["Metabolite", sample_meta.etoh_sample...]), delim='\t')
-CSV.write("data/halla_metab_species.tsv", metabspec, delim='\t')
+CSV.write(datafiles("halla_metabolites.tsv"), select(metabs, ["Metabolite", sample_meta.etoh_sample...]), delim='\t')
+CSV.write(datafiles("halla_metab_species.tsv"), metabspec, delim='\t')
 
 
 ##
 
-run(`halla -x data/halla_metab_species.tsv -y data/halla_metabolites.tsv --alla -o data/halla_metab/`)
+run(`halla -x $(datafiles("halla_metab_species.tsv") -y $(datafiles("halla_metabolites.tsv") --alla -o $(datafiles("halla_metab"))`)
 
 ##
 
@@ -78,4 +78,4 @@ ax, sc = scatter(fig[1,1], volumes."Right-Cerebral-Cortex", volumes."Left-Cerebr
 
 fig
 
-CSV.write("data/volumes_desc.csv", describe(volumes))
+CSV.write(datafiles("volumes_desc.csv"), describe(volumes))

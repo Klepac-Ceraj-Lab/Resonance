@@ -76,7 +76,7 @@ end
 
 sort!(lm_results, :qvalue)
 
-CSV.write("data/lm_results/species_cogscore.csv", lm_results)
+CSV.write(datafiles("lm_results", "species_cogscore.csv"), lm_results)
 ##
 
 cl = ["lower"=> :seagreen, "middle"=> :lightgray, "upper"=> :dodgerblue]
@@ -305,7 +305,7 @@ for sp in features(youngcomm)
     yfdf[!, Microbiome.name(sp)] = collect(vec(abundances(species[sp, yfdf.sample])))
 end
 
-CSV.write("data/lm_results/under12m_cogScores_taxa.csv", yfdf)
+CSV.write(datafiles("lm_results", "under12m_cogScores_taxa.csv"), yfdf)
 
 ##
 
@@ -346,7 +346,7 @@ end
 lm_results
 
 sort!(lm_results, :qvalue)
-CSV.write("data/lm_results/young_species_predict_cogscore.csv", lm_results)
+CSV.write(datafiles("lm_results", "young_species_predict_cogscore.csv"), lm_results)
 
 ##
 
@@ -372,7 +372,7 @@ for sp in features(oldcomm)
     ofdf[!, Microbiome.name(sp)] = collect(vec(abundances(species[sp, ofdf.sample])))
 end
 
-CSV.write("data/lm_results/over12m_cogScores_taxa.csv", ofdf)
+CSV.write(datafiles("lm_results", "over12m_cogScores_taxa.csv"), ofdf)
 
 ##
 
@@ -413,7 +413,7 @@ end
 lm_results
 
 sort!(lm_results, :qvalue)
-CSV.write("data/lm_results/old_species_predict_cogscore.csv", lm_results)
+CSV.write(datafiles("lm_results", "old_species_predict_cogscore.csv"), lm_results)
 
 ##
 

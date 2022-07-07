@@ -50,7 +50,7 @@ fsdf = DataFrame(
 subset!(fsdf, :pvalue=> ByRow(!isnan))
 fsdf.qvalue = adjust(fsdf.pvalue, BenjaminiHochberg())
 sort!(fsdf, :qvalue)
-CSV.write("data/fsea_all.csv", fsdf)
+CSV.write(datafiles("fsea_all.csv"), fsdf)
 
 pretty_table(first(fsdf, 10); backend = Val(:latex))
 #- 
@@ -79,7 +79,7 @@ fsdf = DataFrame(
 subset!(fsdf, :pvalue=> ByRow(!isnan))
 fsdf.qvalue = adjust(fsdf.pvalue, BenjaminiHochberg())
 sort!(fsdf, :qvalue)
-CSV.write("data/fsea_nodupe.csv")
+CSV.write(datafiles("fsea_nodupe.csv"))
 
 #-
 
@@ -107,7 +107,7 @@ fsdf = DataFrame(
 subset!(fsdf, :pvalue=> ByRow(!isnan))
 fsdf.qvalue = adjust(fsdf.pvalue, BenjaminiHochberg())
 sort!(fsdf, :qvalue)
-CSV.write("data/fsea_u6.csv")
+CSV.write(datafiles("fsea_u6.csv"))
 
 
 #-
@@ -136,4 +136,4 @@ fsdf = DataFrame(
 subset!(fsdf, :pvalue=> ByRow(!isnan))
 fsdf.qvalue = adjust(fsdf.pvalue, BenjaminiHochberg())
 sort!(fsdf, :qvalue)
-CSV.write("data/fsea_o12.csv")
+CSV.write(datafiles("fsea_o12.csv"))

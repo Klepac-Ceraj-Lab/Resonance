@@ -1,6 +1,9 @@
 module Resonance
 
-export airtable_metadata,
+export datafiles,
+       scratchfiles,
+       analysisfiles,
+       airtable_metadata,
        brain_ingest,
        findprevstool,
        count_set,
@@ -48,6 +51,7 @@ using ThreadsX
 
 const transform = DataFrames.transform
 
+include("files.jl")
 include("airtable.jl")
 include("wrangle.jl")
 include("metabolites.jl")

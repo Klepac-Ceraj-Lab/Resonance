@@ -74,7 +74,7 @@ function read_gfs_arrow(; kind="genefamilies", stratified=false)
 end
 
 
-function get_neuroactive_kos(neuroactivepath="data/gbm.txt")
+function get_neuroactive_kos(neuroactivepath=datafiles("gbm.txt"))
     neuroactive = Dictionary{String, Vector{String}}()
     desc = ""
     for line in eachline(neuroactivepath)
@@ -94,7 +94,7 @@ function get_neuroactive_kos(neuroactivepath="data/gbm.txt")
    return neuroactive
 end
 
-function getneuroactive(features; neuroactivepath="data/gbm.txt", map_ko_uniref_path="data/map_ko_uniref90.txt.gz")
+function getneuroactive(features; neuroactivepath=datafiles("gbm.txt"), map_ko_uniref_path=datafiles("map_ko_uniref90.txt.gz"))
     neuroactivekos = get_neuroactive_kos(neuroactivepath)
 
     kos2uniref = Dictionary{String, Vector{String}}()

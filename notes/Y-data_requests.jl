@@ -4,7 +4,7 @@ using Resonance
 omni, etoh, tps, complete_brain, metabolites, species = startup()
 genes = Resonance.read_gfs_arrow()
 
-aditi_sids = readlines("data/aditi_samples.txt")
+aditi_sids = readlines(datafiles("aditi_samples.txt"))
 
 CSV.write(joinpath(ENV["SCRATCH_SPACE"], "aditi_taxa.csv"), species[:, aditi_sids])
 CSV.write(joinpath(ENV["SCRATCH_SPACE"], "aditi_genefamilies.csv"), genes[:, aditi_sids])
@@ -15,10 +15,10 @@ CSV.write(joinpath(ENV["SCRATCH_SPACE"], "aditi_genefamilies.csv"), genes[:, adi
 
 using Resonance
 
-fecalsamples = CSV.read("data/wrangled/samples.csv", DataFrame)
+fecalsamples = CSV.read(datafiles("wrangled", "samples.csv"), DataFrame)
 @rsubset! fecalsamples :Fecal_EtOH == "F"
 
-timepoints = CSV.read("data/wrangled/timepoints.csv", DataFrame)
+timepoints = CSV.read(datafiles("wrangled", "timepoints.csv"), DataFrame)
 
 function mapbp(label)
     bp = Dict(
