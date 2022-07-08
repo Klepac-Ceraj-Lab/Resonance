@@ -1,3 +1,12 @@
+# # Taxonomic profiles
+#
+# This notebook just loads in all of the taxonomic profiles
+# from the biobakery analysis folder (`$ANALYSIS_FILES`),
+# subsets on the species,
+# and then writes a new table to the data folder.
+#
+# This only needs to be run once each time new samples are added.
+
 using Resonance
 
 profiles = String[]

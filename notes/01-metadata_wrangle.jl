@@ -25,12 +25,13 @@
 # # pandoc
 # export SOURCE_FORMAT="markdown+pipe_tables+backtick_code_blocks+auto_identifiers+strikeout+yaml_metadata_block+implicit_figures+all_symbols_escapable+link_attributes+smart+fenced_divs"
 # export DATE_COVER=(date "+%d %B %Y")
-#```
+# ```
 
 using Resonance
 
 samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
-## Now to add important metadata to samples
+
+# Now to add important metadata to samples
 
 @chain samplemeta begin
     groupby([:subject, :timepoint])

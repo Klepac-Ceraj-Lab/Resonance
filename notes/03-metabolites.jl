@@ -1,5 +1,4 @@
 using Resonance
-using CairoMakie
 
 etohsamples = CSV.read(datafiles("wrangled", "etohsamples.csv"), DataFrame, stringtype=String)
 
@@ -33,7 +32,7 @@ rename_dict["C1162_3E_1A"] = "FE01852" # should have been 4E
 rename_dict["C1227_3E_1A"] = "FE01922" # should have been 4E
 rename_dict["M0932_7E_1A"] = "FE01759" # should have been C0932
 
-rename_dict = Dict(k => rename_dict[k] for k in keys(rename_dict) if k in metab_samples)
+rename_dict = Dict(k => rename_dict[k] for k in keys(rename_dict) if !ismissing(k) && k in metab_samples)
 rename!(metabs, rename_dict)
 metab_samples = names(metabs)[9:end]
 
