@@ -27,8 +27,8 @@ for s in samples(species)
     end
 end
 
-CSV.write("data/wrangled/tidy_timepoints_with_brain.csv", tps_specific)
-CSV.write("data/wrangled/tidy_subjects.csv", subj_specific)
+CSV.write(datafiles("wrangled", "tidy_timepoints_with_brain.csv", tps_specific)
+CSV.write(datafiles("wrangled", "tidy_subjects.csv", subj_specific)
 
 
 ##

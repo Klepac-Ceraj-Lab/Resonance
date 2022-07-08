@@ -1,11 +1,11 @@
 using Resonance
 using CairoMakie
 
-md = CSV.read("data/wrangled.csv", DataFrame)
+md = CSV.read(datafiles("wrangled.csv"), DataFrame)
 
 ##
 
-reads = CSV.read("data/read_counts.csv", DataFrame)
+reads = CSV.read(datafiles("read_counts.csv"), DataFrame)
 (fig, ax, hs) = hist(reads.count, axis=(
     xlabel="Total reads (single)",
     ylabel="# of samples"
@@ -23,7 +23,7 @@ save("slides/assets/kneaddatacounts.png", fig)
                     )
 
 spec = metaphlan_profiles(filter(f-> contains(f, "profile") && any(s-> contains(f, s), md.sample), 
-    readdir("/grace/echo/analysis/biobakery3/links/metaphlan", join=true)), :species)
+    readdir(joinpath(ENV["ANALYSIS_FILES"], "metaphlan"), join=true)), :species)
 
 sns = map(samplenames(spec)) do s
     replace(s, r"_S\d+_profile"=>"")
@@ -101,17 +101,17 @@ save("slides/assets/age_taxon_ratios.png", fig)
 fig
 ## 
 
-metabs = CSV.read("data/metabolites.csv", DataFrame)
+metabs = CSV.read(datafiles("metabolites.csv"), DataFrame)
 
 
 
 ##
 
-humann_join("/grace/echo/analysis/biobakery3/links/humann/genefamilies", 
-            "/grace/echo/analysis/biobakery3/links/humann/all_genefamilies.tsv"; 
+humann_join(joinpath(ENV["ANALYSIS_FILES"], "humann", "genefamilies"), 
+            joinpath(ENV["ANALYSIS_FILES"], "humann", "all_genefamilies.tsv"); 
             file_name="genefamilies")
 
-func = humann_profiles("/grace/echo/analysis/biobakery3/links/humann/all_genefamilies.tsv", stratified=false)
+func = humann_profiles(joinpath(ENV["ANALYSIS_FILES"], "humann", "all_genefamilies.tsv"), stratified=false)
 
 sns = map(samplenames(func)) do s
     replace(s, r"_S\d+_genefamilies"=>"")

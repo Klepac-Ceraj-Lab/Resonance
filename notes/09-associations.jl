@@ -433,7 +433,7 @@ fig
 #
 # All linear models will include read-depth as a covariate
 
-reads = CSV.read("data/read_counts.csv", DataFrame)
+reads = CSV.read(datafiles("read_counts.csv"), DataFrame)
 
 for col in names(reads, Not("Sample"))
     if eltype(reads[!, col]) <: Union{Missing, <:AbstractString}
@@ -532,8 +532,8 @@ subset!(speclms, :Name=> ByRow(n-> any(m-> contains(n, m), ("cogScore", "materna
 speclms.qvalue = adjust(speclms.pvalue, BenjaminiHochberg())
 sort!(speclms, :qvalue)
 
-isdir("data/lms/") || mkpath("data/lms")
-CSV.write("data/lms/species_lms.csv", speclms)
+isdir(datafiles("lms")) || mkpath(datafiles("lms"))
+CSV.write(datafiles("lms", "species_lms.csv"), speclms)
 
 scatter(speclm_in.maternal_ed, speclm_in.cogScore)
 
@@ -667,7 +667,7 @@ subset!(kolms, :Name=> ByRow(n-> any(m-> contains(n, m), ("cogScore", "maternal_
 kolms.qvalue = adjust(kolms.pvalue, BenjaminiHochberg())
 sort!(kolms, :qvalue)
 
-isdir("data/lms/") || mkpath("data/lms")
-CSV.write("data/lms/kos_lms.csv", kolms)
+isdir(datafiles("lms")) || mkpath(datafiles("lms"))
+CSV.write(datafiles("lms", "kos_lms.csv"), kolms)
 
 scatter(kolm_in.maternal_ed, kolm_in.cogScore)

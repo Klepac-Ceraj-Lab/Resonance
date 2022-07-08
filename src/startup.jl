@@ -61,15 +61,15 @@ Generates some data objects useful in many scripts.
 Requires files the following files,
 generated in notebooks 1-3:
 
-- "data/wrangled/omnisamples.csv"
-- "data/wrangled/etohsamples.csv"
-- "data/wrangled/timepoints.csv"
-- "data/wrangled/metabolites.csv"
-- "data/wrangled/species.csv"
+- "\$DATA_FILES/wrangled/omnisamples.csv"
+- "\$DATA_FILES/wrangled/etohsamples.csv"
+- "\$DATA_FILES/wrangled/timepoints.csv"
+- "\$DATA_FILES/wrangled/metabolites.csv"
+- "\$DATA_FILES/wrangled/species.csv"
 """
 function startup(; dfs=[:omni, :etoh, :tps, :complete_brain, :metabolites, :species])
-    omni = CSV.read(joinpath(@__DIR__, "..", "data/wrangled/omnisamples.csv"), DataFrame)
-    etoh = CSV.read(joinpath(@__DIR__, "..", "data/wrangled/etohsamples.csv"), DataFrame)
+    omni = CSV.read(datafiles("wrangled", "omnisamples.csv"), DataFrame)
+    etoh = CSV.read(datafiles("wrangled", "etohsamples.csv"), DataFrame)
     
     tps, complete_brain = _gentps()
     
@@ -81,7 +81,7 @@ function startup(; dfs=[:omni, :etoh, :tps, :complete_brain, :metabolites, :spec
 end
 
 function _gentps()
-    tps  = CSV.read(joinpath(@__DIR__, "..", "data/wrangled/timepoints.csv"), DataFrame)
+    tps  = CSV.read(datafiles("wrangled", "timepoints.csv"), DataFrame)
 
     DataFrames.transform!(groupby(tps, :subject), :mother_HHS_Education => (r->coalesce(r...)) => :hhs)
     tps.ed = categorical(tps.hhs; levels=[-8 , 2:7...], ordered=true)
@@ -132,7 +132,7 @@ function _gentps()
 end
 
 function _genmetabolites(etoh_samples, tps)
-    metabolites = CSV.read(joinpath(@__DIR__, "..", "data/wrangled/metabolites.csv"), DataFrame)
+    metabolites = CSV.read(datafiles("wrangled", "metabolites.csv"), DataFrame)
     ms = [Resonance.Metabolite(row[:uid], row[:Metabolite], row[:MZ], row[:RT]) for row in eachrow(metabolites)]
     metabolites = CommunityProfile(Matrix(metabolites[!, 9:end]), ms, MicrobiomeSample.(names(metabolites)[9:end]))
     set!(metabolites, leftjoin(etoh_samples, tps[!, ["subject",  "timepoint", mainmeta...]], on=[:subject, :timepoint], makeunique=true))
@@ -141,7 +141,7 @@ function _genmetabolites(etoh_samples, tps)
 end
 
 function _genspecies(omni_samples, tps)
-    species = CSV.read(joinpath(@__DIR__, "..", "data/wrangled/species.csv"), DataFrame)
+    species = CSV.read(datafiles("wrangled", "species.csv"), DataFrame)
     species = CommunityProfile(Matrix(species[!, 2:end]), taxon.(species[!, 1]), MicrobiomeSample.(names(species)[2:end]))
     set!(species, leftjoin(omni_samples, tps[!, ["subject", "timepoint", mainmeta...]], on=[:subject, :timepoint], makeunique=true))
     species = species[:, map(!ismissing, get(species, :subject)) .& map(!ismissing, get(species, :timepoint))]

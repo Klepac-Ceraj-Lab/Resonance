@@ -6,7 +6,10 @@ using AlgebraOfGraphics
 
 hist(collect(skipmissing(tps.ageMonths)))
 
-##
+# ## Old numbers
+#
+# These are numbers sent from a presentation given by Rhode Island groupby.
+# Deprecating in favor of pulling from metadata table.
 
 labels = [
     "White",
@@ -35,7 +38,7 @@ colors = [
     :dimgray
 ]
 
-fig, ax, p = pie(counts, color = colors, axis=(;aspect=1))
+fig, ax, p = pie(map(p-> p[2], counts), color = colors, axis=(;aspect=1))
 hidedecorations!(ax)
 hidespines!(ax)
 
@@ -45,7 +48,7 @@ Legend(fig[2,1], [MarkerElement(color=c, marker=:circle) for c in colors],
         tellheight=true, tellwidth=false, nbanks=3
 )
 
-# save("figures/demo_race.png", fig)
+## save("figures/demo_race.png", fig)
 fig
 ##
 

@@ -1,15 +1,15 @@
 using Resonance
 using AlgebraOfGraphics
 
-timepoints = CSV.read("data/wrangled/timepoints.csv", DataFrame)
+timepoints = CSV.read(datafiles("wrangled", "timepoints.csv"), DataFrame)
 
-omnisamples = CSV.read("data/wrangled/omnisamples.csv", DataFrame)
+omnisamples = CSV.read(datafiles("wrangled", "omnisamples.csv"), DataFrame)
 rename!(omnisamples, "DOC"=>"date")
 
-covid = CSV.read("data/wrangled/covid.csv", DataFrame)
+covid = CSV.read(datafiles("wrangled", "covid.csv"), DataFrame)
 rename!(covid, ["SampleID"=>"sample", "CollectionDate"=>"date"])
 
-spec = metaphlan_profiles("data/wrangled/species.csv")
+spec = metaphlan_profiles(datafiles("wrangled", "species.csv"))
 spec = spec[:, intersect(samplenames(spec), omnisamples.sample)]
 
 insert!(spec, select(omnisamples, ["sample", "date"]))
