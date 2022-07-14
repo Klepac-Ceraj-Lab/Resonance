@@ -40,7 +40,7 @@ samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
 end
 
 
-fmp_samples = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Fecal_All_033022.xlsx"), "Sheet1", infer_eltypes=true)...)
+fmp_samples = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Sample_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true)...)
 rename!(fmp_samples, Dict(:studyID=>:subject, :collectionNum=> :timepoint))
 @rsubset! fmp_samples begin
     :subject in samplemeta.subject 
@@ -56,13 +56,13 @@ unique!(samplemeta)
 # then normalize certain columns.
 # First, subject-specific data
 
-fmp_subject = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Subject_Centric_060222.xlsx"), "Sheet1", infer_eltypes=true)...)
+fmp_subject = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Subject_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true)...)
 rename!(fmp_subject, Dict(:studyID=>:subject))
 @rsubset! fmp_subject :subject in samplemeta.subject
 
 # Then, timepoint-specific data
 
-fmp_timepoint = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Timepoint_Centric_033122.xlsx"), "Sheet1", infer_eltypes=true)...)
+fmp_timepoint = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Timepoint_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true)...)
 rename!(fmp_timepoint, Dict(:studyID=>:subject))
 
 # and COVID-specific samples
