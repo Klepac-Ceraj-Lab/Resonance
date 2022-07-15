@@ -213,7 +213,7 @@ agepatches = AirRecord[]
 brainpatches = AirRecord[]
 
 for row in eachrow(joinedsamples)
-    if !ismissing(row[:childAgeMonths]) && ismissing(row[:ageMonths])
+    if !ismissing(row[:ageMonths]) && ismissing(row[:childAgeMonths])
         push!(agepatches, AirRecord(row[:airtable_id], tab, (; childAgeMonths=row[:ageMonths])))
     end
     if coalesce(row[:has_segmentation], false)
