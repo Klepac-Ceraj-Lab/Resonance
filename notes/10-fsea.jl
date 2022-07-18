@@ -40,8 +40,8 @@ fsdf = DataFrame(
         acs = filter(!isnan, cscor[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
 
-        fig = Resonance.plot_fsea(acs, cs; label = gs)
-        save("figures/fsea_$(replace(gs, ' '=>"-")).png", fig)
+        # fig = Resonance.plot_fsea(acs, cs; label = gs)
+        # save("figures/fsea_$(replace(gs, ' '=>"-")).png", fig)
 
         return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end
@@ -137,3 +137,62 @@ subset!(fsdf, :pvalue=> ByRow(!isnan))
 fsdf.qvalue = adjust(fsdf.pvalue, BenjaminiHochberg())
 sort!(fsdf, :qvalue)
 CSV.write(datafiles("fsea_o12.csv"))
+
+
+#-
+
+brain_features = Symbol.(replace.(Resonance.brainmeta, "-"=>"_"))
+brgenes = genes[:, .!ismissing.(get(genes, :Left_Thalamus))]
+
+brfsea = DataFrame()
+
+for region in brain_features
+    @warn region
+    cscor = cor(abundances(brgenes), get(brgenes, region), dims=2)
+
+    fsdf = DataFrame(
+        map(collect(keys(neuroactive))) do gs
+            @info gs
+            ixs = neuroactive[gs]
+            isempty(ixs) && return (; region, geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN, cs = Float64[], acs = Float64[])
+
+            cs = filter(!isnan, cscor[ixs])
+            isempty(cs) && return (; region, geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN, cs = Float64[], acs = Float64[])
+
+            acs = filter(!isnan, cscor[Not(ixs)])
+            mwu = MannWhitneyUTest(cs, acs)
+
+            return (; region, geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu), cs, acs)
+        end
+    )
+    subset!(fsdf, :pvalue=> ByRow(!isnan))
+    append!(brfsea, fsdf)
+end
+
+brfsea.qvalue = adjust(brfsea.pvalue, BenjaminiHochberg())
+sort!(brfsea, :qvalue)
+CSV.write(datafiles("fsea_brain_all.csv"), select(brfsea, Not(["cs", "acs"])))
+
+pretty_table(first(select(brfsea, Not(["cs", "acs"])), 10); backend = Val(:latex))
+
+#-
+
+using Connectomes
+using CairoMakie
+using ColorSchemes
+
+c = Connectomes.connectomepath() |> Connectome
+
+#-
+
+fig = Figure(resolution=(1200,600))
+ax = Axis3(fig[1,1], aspect = :data, azimuth = 0.0pi, elevation=0.0pi)
+hidedecorations!(ax)
+hidespines!(ax)
+
+
+for i in 1:83
+    plot_roi!(i, get(ColorSchemes.viridis, rand()))
+end
+ 
+fig

@@ -84,9 +84,10 @@ function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], col
     return hm
 end
 
-function plot_fsea(setcors, notcors; label="")
+function plot_fsea(setcors, notcors; label="", bandres=5000)
     fullcors = [setcors; notcors]
-    
+    ncors = length(fullcors)
+
     srt = sortperm(fullcors; rev=true)
     ranks = invperm(srt)
     setranks = Set(ranks[1:length(setcors)])
@@ -94,10 +95,10 @@ function plot_fsea(setcors, notcors; label="")
     setscore =  1 / length(setcors)
     notscore = -1 / length(notcors)
     
-    xs = 1:length(srt)
+    xs = 1:ncors
     ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
     
-    t = "Enrichment score - $(round(maximum(ys), digits=3))"
+    t = "Enrichment score - $(round(max(abs.(extrema(ys))...), digits=3))"
     !isempty(label) && (t = string(label, ": ", t))
 
     fig = Figure()
@@ -110,11 +111,12 @@ function plot_fsea(setcors, notcors; label="")
     ax3 = Axis(fig[3,1]; ylabel="correlation", xlabel="rank")
     
     lines!(ax1, xs, ys)
-
     vlines!(ax2, ranks[1:length(setcors)]; color=:black)
 
+
+    rn = ncors > bandres ? round.(Int, range(1, ncors; length=bandres)) : range(1, ncors)
     blow, bup = extrema(fullcors)
-    band!(ax3, xs, fill(blow, length(srt)), fill(bup, length(srt)); color=fullcors[srt])
+    band!(ax3, xs, fill(blow, rn), fill(bup, rn); color=fullcors[srt[rn]])
     
     lower = [x < 0 ? x : 0.0 for x in fullcors[srt]]
     upper = [x > 0 ? x : 0.0 for x in fullcors[srt]]
