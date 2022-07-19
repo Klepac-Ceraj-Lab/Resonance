@@ -40,8 +40,8 @@ fsdf = DataFrame(
         acs = filter(!isnan, cscor[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
 
-        # fig = Resonance.plot_fsea(acs, cs; label = gs)
-        # save("figures/fsea_$(replace(gs, ' '=>"-")).png", fig)
+        fig = Resonance.plot_fsea(acs, cs; label = gs)
+        save("figures/fsea_$(replace(gs, ' '=>"-")).png", fig)
 
         return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end
@@ -196,3 +196,7 @@ for i in 1:83
 end
  
 fig
+
+
+#- 
+

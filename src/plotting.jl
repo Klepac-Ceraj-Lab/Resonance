@@ -116,11 +116,11 @@ function plot_fsea(setcors, notcors; label="", bandres=5000)
 
     rn = ncors > bandres ? round.(Int, range(1, ncors; length=bandres)) : range(1, ncors)
     blow, bup = extrema(fullcors)
-    band!(ax3, xs, fill(blow, rn), fill(bup, rn); color=fullcors[srt[rn]])
+    band!(ax3, rn, fill(blow, length(rn)), fill(bup, length(rn)); color=fullcors[srt[rn]])
     
     lower = [x < 0 ? x : 0.0 for x in fullcors[srt]]
     upper = [x > 0 ? x : 0.0 for x in fullcors[srt]]
-    band!(ax3, xs, lower, upper; color=:lightgray)
+    band!(ax3, xs[rn], lower[rn], upper[rn]; color=:lightgray)
 
     
     rowsize!(fig.layout, 2, Relative(1/8))
