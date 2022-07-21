@@ -23,9 +23,9 @@ const brainmeta = [
             #  "TotalGrayVol",
             #  "BrainSegVol-to-eTIV",
             #  "CerebralWhiteMatterVol",
-            #  "lhCorticalWhiteMatterVol",
+                "lhCorticalWhiteMatterVol",
             #  "lhCerebralWhiteMatterVol",
-            #  "lhCortexVol",
+                "lhCortexVol",
                 "Left-Thalamus",
                 "Left-Lateral-Ventricle",
                 "Left-Cerebellum-White-Matter",
@@ -38,9 +38,9 @@ const brainmeta = [
                 "Left-Accumbens-area",
                 "Left-VentralDC",
                 "Left-choroid-plexus",
-            #  "rhCorticalWhiteMatterVol",
+                "rhCorticalWhiteMatterVol",
             #  "rhCerebralWhiteMatterVol",
-            #  "rhCortexVol",
+                "rhCortexVol",
                 "Right-Thalamus",
                 "Right-Lateral-Ventricle",
                 "Right-Cerebellum-White-Matter",
@@ -117,6 +117,25 @@ function _gentps()
         all(ismissing, (t,p)) && return missing
         return max(coalesce(t, 0), coalesce(p, 0))
     end
+
+    tps."lhCorticalWhiteMatterVol" = map(eachrow(tps)) do row
+        (t, p) = (row."lhCorticalWhiteMatterVol", row."lhCerebralWhiteMatterVol")
+        all(ismissing, (t,p)) && return missing
+        return max(coalesce(t, 0), coalesce(p, 0))
+    end
+    
+    tps."rhCorticalWhiteMatterVol" = map(eachrow(tps)) do row
+        (t, p) = (row."rhCorticalWhiteMatterVol", row."rhCerebralWhiteMatterVol")
+        all(ismissing, (t,p)) && return missing
+        return max(coalesce(t, 0), coalesce(p, 0))
+    end
+
+    tps."CorticalWhiteMatterVol" = map(eachrow(tps)) do row
+        (t, p) = (row."CorticalWhiteMatterVol", row."CerebralWhiteMatterVol")
+        all(ismissing, (t,p)) && return missing
+        return max(coalesce(t, 0), coalesce(p, 0))
+    end
+
     brainmeta = Resonance.brainmeta
     for m in brainmeta
         tps[!, m] .= tps[!, m] ./ map(x-> ismissing(x) || x == 0 ? missing : x, tps."EstimatedTotalIntraCranialVol")
