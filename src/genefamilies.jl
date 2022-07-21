@@ -81,9 +81,10 @@ function get_neuroactive_kos(neuroactivepath=datafiles("gbm.txt"))
        line = split(line, r"[\t,]")
        if startswith(line[1], "MGB")
            (mgb, desc) = line
-           desc = rstrip(replace(desc, r"\bI+\b.*$"=>""))
-           desc = replace(desc, r" \([\w\s]+\)$"=>"")
+           desc = rstrip(replace(desc, r"\b[IV]+\b.*$"=>""))
+           desc = replace(desc, r" \([\w\s\-]+\)"=>"")
            desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
+           desc = replace(desc, " (AA"=>"")
            @info "getting unirefs for $desc"
            !in(desc, keys(neuroactive)) && insert!(neuroactive, desc, String[])
        else
