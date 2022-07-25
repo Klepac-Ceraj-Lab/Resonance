@@ -112,11 +112,25 @@ mean_sq_error = mean(sq_errors) # Mean Square Error
 
 rf_model = RandomForestRegressor()
 
-range_max_depth = range(rf_model, :min_samples_leaf; lower=1, upper=5)
+range_max_depth = range(rf_model, :max_depth; lower=-1, upper=5)
+range_samples_leaf = range(rf_model, :min_samples_leaf; lower=1, upper=5)
+range_min_samples_split = range(rf_model, :min_samples_split; lower=1, upper=5)
+range_min_purity_increase = range(rf_model, :min_purity_increase; lower=0.0, upper=0.3)
+range_n_trees = range(rf_model, :n_trees; lower=10, upper=100)
+range_sampling_fraction = range(rf_model, :sampling_fraction; lower=10, upper=100)
+
+ranges_vector = [
+    range_max_depth,
+    range_samples_leaf,
+    range_min_samples_split,
+    range_min_purity_increase,
+    range_n_trees,
+    range_sampling_fraction
+]
 
 tuned_rf_model = TunedModel(
     model = rf_model,
-    range = range_max_depth,
+    ranges = ranges_vector,
     resampling = CV(nfolds=3),
     tuning = Grid(resolution=10),
     measure = mae
@@ -124,6 +138,19 @@ tuned_rf_model = TunedModel(
 
 rf_machine = machine(tuned_rf_model, X, y)
 
-#### Training the Machine on `train` rows of `X`
+#### Tuning-training the Machine on `train` rows of `X`
 
 fit!(rf_machine, rows=train)
+
+#### Accessing tuning report
+
+tuning_report = report(rf_machine)
+
+@show tuning_report.best_history_entry.measurement
+
+y_hat = predict(rf_machine, rows=test)
+
+abs_errors = MLJ.MLJBase.l1(y_hat, y[test]) # Absolute ErrorS
+mean_abs_error = mean(abs_errors) # Mean Absolute Error
+sq_errors = MLJ.MLJBase.l2(y_hat, y[test]) # Square ErrorS
+mean_sq_error = mean(sq_errors) # Mean Square Error
