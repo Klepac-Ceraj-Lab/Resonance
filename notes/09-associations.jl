@@ -26,9 +26,6 @@ set!(ecs, leftjoin(select(omni, ["subject", "timepoint", "sample"]), tps, on=[:s
 set!(kos, leftjoin(select(omni, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
 set!(metabolites, leftjoin(select(etoh, ["subject", "timepoint", "sample"]), tps, on=[:subject, :timepoint]))
 
-
-count(!ismissing, get(species, Symbol("Left-Thalamus")))
-
 ## 
 
 met_pcoa = pcoa(metabolites)
@@ -174,6 +171,25 @@ fig
 
 isdir("figures/brainplots") || mkpath("figures/brainplots")
 
+tps.brain_outlier = ThreadsX.map(eachrow(tps)) do row
+    ismissing(row.EstimatedTotalIntraCranialVol) && return false
+    return !(7.5e5 < row.EstimatedTotalIntraCranialVol < 2e6)
+end
+
+tps.gita_outlier = map(zip(tps.subject, tps.timepoint)) do stp
+    stp in [(82, 5) (252, 6) (337, 2) (477, 4) (503, 2) (635, 2) (767, 2)]
+end
+
+#-
+
+tps.brain_ol_colors = map(eachrow(tps)) do row
+    row.gita_outlier && return (:tomato, 1.)
+    row.brain_outlier && return (:orangered, 1.)
+    return (:dodgerblue, 0.1)
+end
+
+#-
+
 for m in Resonance.brainmeta
     fig = Figure(; resolution=(1200,1200))
     ax1 = Axis(fig[1,1]; xlabel=string(m, ": relative"), ylabel="PCA1 ($(round(varexplained(brain_pcoa)[1] * 100, digits=2))%)")
@@ -181,19 +197,21 @@ for m in Resonance.brainmeta
 
     ax3 = Axis(fig[2,1]; xlabel=string(m, ": relative"), ylabel="Age (log(months))")
     ax4 = Axis(fig[2,2]; xlabel=string(m, ": absolute"), ylabel="Age (log(months))")
+    
+
 
     scatter!(ax1, tps[complete_brain, m], Resonance.loadings(brain_pcoa)[:,1];
-        color = [x ? (:orangered, 1.) : (:dodgerblue, 0.2) for x in tps[complete_brain, "brain_outlier"]]
+        color = tps.brain_ol_colors[complete_brain]
     )
     scatter!(ax2, tps[complete_brain, m] .* tps[complete_brain, "EstimatedTotalIntraCranialVol"], Resonance.loadings(brain_pcoa)[:,1];
-        color = [x ? (:orangered, 1.) : (:dodgerblue, 0.2) for x in tps[complete_brain, "brain_outlier"]]
+        color = tps.brain_ol_colors[complete_brain]
     )
 
     scatter!(ax3, tps[complete_brain, m], log.(tps[complete_brain, "ageMonths"]);
-        color = [x ? (:orangered, 1.) : (:dodgerblue, 0.2) for x in tps[complete_brain, "brain_outlier"]]
+        color = tps.brain_ol_colors[complete_brain]
     )
     scatter!(ax4, tps[complete_brain, m] .* tps[complete_brain, "EstimatedTotalIntraCranialVol"], log.(tps[complete_brain, "ageMonths"]);
-        color = [x ? (:orangered, 1.) : (:dodgerblue, 0.2) for x in tps[complete_brain, "brain_outlier"]]
+        color = tps.brain_ol_colors[complete_brain]
     )
 
     Label(fig[0, :], m, textsize = 30)
@@ -202,21 +220,15 @@ for m in Resonance.brainmeta
     display(fig)
 end
 
-tps.brain_outlier = ThreadsX.map(eachrow(tps)) do row
-    ismissing(row.EstimatedTotalIntraCranialVol) && return false
-    return !(7.5e5 < row.EstimatedTotalIntraCranialVol < 2e6)
-end
-
-
 let m = "EstimatedTotalIntraCranialVol"
     fig = Figure(; resolution=(1200,600))
     ax1 = Axis(fig[1,1]; ylabel="$m ^ℯ", xlabel="PCA1 ($(round(varexplained(brain_pcoa)[1] * 100, digits=2))%)")
     ax2 = Axis(fig[1,2]; ylabel="$m ^ℯ", xlabel="Age (months)")
 
     scatter!(ax1, Resonance.loadings(brain_pcoa)[:,1], tps[complete_brain, m] .^ ℯ;
-        color = [x ? :orangered : :dodgerblue for x in tps[complete_brain, "brain_outlier"]])
+        color = tps.brain_ol_colors[complete_brain])
     scatter!(ax2, tps[complete_brain, "ageMonths"], tps[complete_brain, m] .^ ℯ;
-        color = [x ? :orangered : :dodgerblue for x in tps[complete_brain, "brain_outlier"]])
+        color = tps.brain_ol_colors[complete_brain])
 
     Legend(fig[2,1:2], 
         [MarkerElement(; color=:dodgerblue, marker=:circle), MarkerElement(; color=:orangered, marker=:circle)],
@@ -264,7 +276,7 @@ fig
 
 ##
 
-lhsrt_metab, srt_spec = stp_overlap(collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))),
+srt_metab, srt_spec = stp_overlap(collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))),
                                   collect(zip(get(species, :subject), get(species, :timepoint)))
 )
 
@@ -629,7 +641,15 @@ sort!(speclms, :qvalue)
 isdir(datafiles("lms")) || mkpath(datafiles("lms"))
 CSV.write(datafiles("lms", "species_lms.csv"), speclms)
 
-scatter(speclm_in.maternal_ed, speclm_in.cogScore)
+#-
+
+using Distributions
+
+fig, ax, sc = scatter(speclm_in.maternal_ed .+ rand(Normal(0, 0.05), nrow(speclm_in)), speclm_in.cogScore;
+    axis  = (; xlabel="Maternal Education (HHS)", ylabel="CogScore"),
+    color = (:dodgerblue2, 0.4))
+
+save("figures/sp_mated_cog.png", fig)
 
 # ### KOs lms
 
@@ -764,4 +784,4 @@ sort!(kolms, :qvalue)
 isdir(datafiles("lms")) || mkpath(datafiles("lms"))
 CSV.write(datafiles("lms", "kos_lms.csv"), kolms)
 
-scatter(kolm_in.maternal_ed, kolm_in.cogScore)
+scatter(kolm_in.maternal_ed .+ rand(Normal(0, 0.1), nrow(kolm_in)), kolm_in.cogScore)
