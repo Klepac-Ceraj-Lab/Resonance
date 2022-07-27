@@ -4,6 +4,7 @@
 # Loading packages
 #####
 
+using ProgressMeter
 using CairoMakie
 using CSV
 using DataFrames
@@ -108,11 +109,8 @@ negligiblestd_cols = findall(is_negligiblestd_col)
 zerostd_colnames = names(predictionDf)[zerostd_cols]
 negligiblestd_colnames = names(predictionDf)[negligiblestd_cols]
 
-predictionDf = DataFrames.select(predictionDf, Not(negligiblestd_colnames))
-
-#### Splitting training data between train and test
-
-train, test = partition(eachindex(1:nrow(predictionDf)), 0.7, shuffle=true, rng=ml_rng)
+# Uncomment to remove negligible columns
+#predictionDf = DataFrames.select(predictionDf, Not(negligiblestd_colnames))
 
 #### Checking the schema and MLJ scitypes
 
@@ -120,27 +118,14 @@ schema(predictionDf)
 
 #### Separating the predictors and target variable, vewing matching machine models
 
-y, X = unpack(predictionDf, ==(:target); rng=ml_rng);
-
+y, X = unpack(predictionDf, ==(:target));
 for m in models(matching(X,y)) println(m) end
 
-#### Building the MLJ machine for target problem.
+#### Computing the standardizer parameters
 
 RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
-Standardizer = @load Standardizer pkg=MLJModels
 
-input_standardizer = Standardizer()
-input_standardization_machine = machine(input_standardizer, X)
-fit!(input_standardization_machine, rows = train)
-X_scaled = MLJ.transform(input_standardization_machine, X)
-
-target_standardizer = Standardizer()
-target_standardization_machine = machine(target_standardizer, y)
-fit!(target_standardization_machine, rows = train)
-y_scaled = MLJ.transform(target_standardization_machine, y)
-
-rf_model = RandomForestRegressor(n_subfeatures = 0, rng=ml_rng)
-
+#### Building the Tuning grid for training the Random Forest model
 # Hyperparameters of DecisionTree.RandomForestRegressor:
 # ```
 # max_depth = -1, 
@@ -152,97 +137,117 @@ rf_model = RandomForestRegressor(n_subfeatures = 0, rng=ml_rng)
 # sampling_fraction = 0.7
 # ````
 
-#range_max_depth = range(rf_model, :max_depth; lower=-1, upper=5)
-range_samples_leaf = range(rf_model, :min_samples_leaf; lower=1, upper=5)
-range_min_samples_split = range(rf_model, :min_samples_split; lower=1, upper=5)
-range_min_purity_increase = range(rf_model, :min_purity_increase; lower=0.0, upper=0.3)
-range_n_trees = range(rf_model, :n_trees; lower=50, upper=450)
-range_sampling_fraction = range(rf_model, :sampling_fraction; lower=0.5, upper=0.9)
+grid_resolution = 5
+range_max_depth = [ -1 ] # range(-1, 3, length = grid_resolution)
+range_samples_leaf = range(1, 5, length = grid_resolution)
+range_min_purity_increase = [ 0.0 ] # range(0.0, 0.3, length = grid_resolution)
+range_n_trees = range(50, 500, length = 2*grid_resolution)
+range_sampling_fraction = range(0.5, 0.9, length = grid_resolution)
 
-ranges_vector = [
-#    range_max_depth,
+tuning_grid = vec(collect(Base.product(
+    range_max_depth,
     range_samples_leaf,
-    range_min_samples_split,
-#    range_min_purity_increase,
+    range_min_purity_increase,
     range_n_trees,
-    range_sampling_fraction
-]
+    range_sampling_fraction,
+)))
 
-tunable_rf_model = TunedModel(
-    model = rf_model,
-    ranges = ranges_vector,
-    resampling = [(train, test)],
-    #resampling = Holdout(),
-    tuning = Grid(resolution=5),
-    measure = mae,
-    acceleration = CPUThreads(),
-    cache=true
+#### Tuning loop
+
+#### Splitting training data between train and test
+train, test = partition(eachindex(1:nrow(predictionDf)), 0.7, shuffle=true, rng=ml_rng)
+
+machines_vector = Vector{Machine{MLJDecisionTreeInterface.RandomForestRegressor, true}}(undef, length(tuning_grid))
+train_mae_vector = Vector{Float64}(undef, length(tuning_grid))
+train_cor_vector = Vector{Float64}(undef, length(tuning_grid))
+test_mae_vector = Vector{Float64}(undef, length(tuning_grid))
+test_cor_vector = Vector{Float64}(undef, length(tuning_grid))
+
+@showprogress for i in 1:length(tuning_grid)
+
+    rf_model = RandomForestRegressor(
+        max_depth = tuning_grid[i][1], 
+        min_samples_leaf = tuning_grid[i][2], 
+        min_purity_increase = tuning_grid[i][3], 
+        n_subfeatures = 0, 
+        n_trees = tuning_grid[i][4], 
+        sampling_fraction = tuning_grid[i][5],
+        rng=ml_rng
+    )
+
+    rf_machine = machine(rf_model, X[train, :], y[train])
+    fit!(rf_machine, verbosity=0)
+
+    train_y_hat = predict(rf_machine, X[train, :]) 
+    train_mae = mean(MLJ.MLJBase.l1(train_y_hat, y[train]))
+    train_cor = Statistics.cor(train_y_hat, y[train])
+
+    test_y_hat = predict(rf_machine, X[test, :])
+    test_mae = mean(MLJ.MLJBase.l1(test_y_hat, y[test]))
+    test_cor = Statistics.cor(test_y_hat, y[test])
+
+    machines_vector[i] = deepcopy(rf_machine)
+    train_mae_vector[i] = train_mae
+    train_cor_vector[i] = train_cor
+    test_mae_vector[i] = test_mae
+    test_cor_vector[i] = test_cor
+
+end
+
+println(minimum(train_mae_vector))
+println(minimum(test_mae_vector))
+println(maximum(train_cor_vector))
+println(maximum(test_cor_vector))
+
+#### Selecting model with the best performance on the test set
+
+selected_machine = machines_vector[findmax(test_cor_vector)[2]]
+
+train_y_hat = predict(selected_machine, X[train, :]) 
+train_mae = mean(MLJ.MLJBase.l1(train_y_hat, y[train]))
+train_cor = Statistics.cor(train_y_hat, y[train])
+
+test_y_hat = predict(selected_machine, X[test, :])
+test_mae = mean(MLJ.MLJBase.l1(test_y_hat, y[test]))
+test_cor = Statistics.cor(test_y_hat, y[test])
+
+#### Plotting and saving figures
+
+train_set_plot = Figure(resolution = (800, 600))
+ax = Axis(train_set_plot[1, 1],
+    title = "Comparison of predicted and ground truth Future cogScore for the *TRAIN* set",
+    xlabel = "Ground Truth",
+    ylabel = "Prediction"
 )
+scatter!(ax, y[train], train_y_hat)
+ablines!(ax, 1, 1)
+annotations!( ax, ["r = $(round(train_cor; digits = 2))"], [Point(60, 120)], textsize = 40)
 
-tuning_rf_machine = machine(tunable_rf_model, X_scaled, y_scaled)
+save("figures/prediction_futurecogscore_trainset_comparison.png", train_set_plot)
 
-#### Training the Machine on `train` rows of `X`
+test_set_plot = Figure()
+ax = Axis(test_set_plot[1, 1],
+    title = "Comparison of predicted and ground truth Future cogScore for the *TEST* set",
+    xlabel = "Ground Truth",
+    ylabel = "Prediction"
+)
+scatter!(ax, y[test], test_y_hat)
+ablines!(ax, 1, 1)
+annotations!( ax, ["r = $(round(test_cor; digits = 2))"], [Point(60, 120)], textsize = 40)
 
-fit!(tuning_rf_machine) # train rows were already separated on the resampling definition.
+save("figures/prediction_futurecogscore_testset_comparison.png", test_set_plot)
 
-tuning_report = report(tuning_rf_machine)
-@show tuning_report.best_history_entry
-@show tuning_report.best_model
-   
-#### Evaluating the Machine on both `train` and `test` rows of `X`
-
-train_y_hat = MLJ.predict(tuning_rf_machine, rows=train)
-test_y_hat = MLJ.predict(tuning_rf_machine, rows=test)
-
-train_abs_errors = MLJ.MLJBase.l1(train_y_hat, y_scaled[train]) # Absolute ErrorS
-train_mean_abs_error = mean(train_abs_errors) # Mean Absolute Error
-train_sq_errors = MLJ.MLJBase.l2(train_y_hat, y_scaled[train]) # Square ErrorS
-train_mean_sq_error = mean(train_sq_errors) # Mean Square Error
-
-test_abs_errors = MLJ.MLJBase.l1(test_y_hat, y_scaled[test]) # Absolute ErrorS
-test_mean_abs_error = mean(test_abs_errors) # Mean Absolute Error
-test_sq_errors = MLJ.MLJBase.l2(test_y_hat, y_scaled[test]) # Square ErrorS
-test_mean_sq_error = mean(test_sq_errors) # Mean Square Error
-
-Statistics.cor(y_scaled[train], train_y_hat)
-Statistics.cor(y_scaled[test], test_y_hat)
-
-scatter(y_scaled[train], train_y_hat)
-scatter(y_scaled[test], test_y_hat)
-
-#### Evaluating the Machine on both `train` and `test` rows of `X`
-
-train_target_hat = MLJ.inverse_transform(target_standardization_machine, predict(tuning_rf_machine, rows=train))
-test_target_hat = MLJ.inverse_transform(target_standardization_machine, predict(tuning_rf_machine, rows=test))
-
-train_abs_errors = MLJ.MLJBase.l1(train_target_hat, y[train]) # Absolute ErrorS
-train_mean_abs_error = mean(train_abs_errors) # Mean Absolute Error
-train_sq_errors = MLJ.MLJBase.l2(train_target_hat, y[train]) # Square ErrorS
-train_mean_sq_error = mean(train_sq_errors) # Mean Square Error
-
-test_abs_errors = MLJ.MLJBase.l1(test_target_hat, y[test]) # Absolute ErrorS
-test_mean_abs_error = mean(test_abs_errors) # Mean Absolute Error
-test_sq_errors = MLJ.MLJBase.l2(test_target_hat, y[test]) # Square ErrorS
-test_mean_sq_error = mean(test_sq_errors) # Mean Square Error
-
-Statistics.cor(y[train], train_target_hat)
-Statistics.cor(y[test], test_target_hat)
-
-scatter(y[train], train_target_hat)
-scatter(y[test], test_target_hat)
-
-##### Feature Importances
 using DecisionTree
 
 @assert cor(
-    apply_forest(tuning_rf_machine.fitresult.fitresult, Matrix(X_scaled[test, :])),
+    apply_forest(selected_machine.fitresult, Matrix(X[test, :])),
     test_y_hat
 ) == 1.0
 
-impurity_importances = impurity_importance(tuning_rf_machine.fitresult.fitresult)
+impurity_importances = impurity_importance(selected_machine.fitresult)
 impurity_ordered_idx = sortperm(impurity_importances; rev = true)
 
 impurityDF = DataFrame(
-    :Variable => names(X_scaled)[impurity_ordered_idx],
+    :Variable => names(X)[impurity_ordered_idx],
     :Importance => impurity_importances[impurity_ordered_idx]
 )
