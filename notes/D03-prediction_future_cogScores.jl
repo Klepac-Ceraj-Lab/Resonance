@@ -251,3 +251,40 @@ impurityDF = DataFrame(
     :Variable => names(X)[impurity_ordered_idx],
     :Importance => impurity_importances[impurity_ordered_idx]
 )
+
+### Using linear regression to adjust future cogScore ~ futureAgeMonths and train on residuals
+
+futurecogscore_futureagemonths_exploration = Figure()
+ax = Axis(futurecogscore_futureagemonths_regression[1, 1],
+    title = "futureCogScore as a function of futureAgeMonths",
+    xlabel = "futureAgeMonths",
+    ylabel = "futureCogScore"
+)
+scatter!(ax, predictionDf.futureAgeMonths, predictionDf.target)
+
+futurecogscore_futureagemonths_exploration
+
+using GLM
+
+fm = @formula(target ~ futureAgeMonths)
+linear_regressor = lm(fm, predictionDf)
+
+intercept = linear_regressor.model.pp.beta0[1]
+slope = linear_regressor.model.pp.beta0[2]
+
+linear_prediction = GLM.predict(linearRegressor, hcat(ones(Float64, nrow(predictionDf)), predictionDf.futureAgeMonths))
+residuals = predictionDf.target .- linear_prediction
+
+futurecogscore_futureagemonths_regression = Figure()
+ax = Axis(futurecogscore_futureagemonths_regression[1, 1],
+    title = "true futureCogScore as a function of regression output from futureAgeMonths",
+    xlabel = "futureCogScore",
+    ylabel = "estimation of futureCogScore"
+)
+scatter!(ax, predictionDf.target, linear_prediction)
+
+futurecogscore_futureagemonths_regression
+
+####
+
+predictionDf.target .= residuals
