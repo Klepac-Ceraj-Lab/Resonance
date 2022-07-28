@@ -1,5 +1,5 @@
 using Resonance
-omni, tps = startup(; dfs = [:omni, :tps])
+omni, etoh, tps = startup(; dfs = [:omni, :etoh, :tps])
 
 subtpset = collect(zip(omni.subject, omni.timepoint))
 
@@ -189,6 +189,85 @@ fig
 @info "Collected in 2020: $(count(c-> Year(c) == Year(2020), colldates))"
 @info "Collected in 2021: $(count(c-> Year(c) == Year(2021), colldates))"
 @info "Collected in 2022: $(count(c-> Year(c) == Year(2022), colldates))"
+
+# ## Sample Selection
+#
+# We want to keep all subjects that have at least 1 timepoint
+# with both a stool sample and a cognitive assessment.
+
+keepers = subset(tps, :has_stool .=> identity, :has_cogScore .=> identity).subject |> unique
+keeptps = subset(tps, :subject => ByRow(s-> s in keepers), :ECHOTPCoded => ByRow(tp-> !startswith(tp, "Pre")))
+keeptps.omni = leftjoin(keeptps, unique(select(omni, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
+keeptps.etoh = leftjoin(keeptps, unique(select(etoh, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
+CSV.write("data/timepoints_final.csv", keeptps)
+#-
+
+
+keepsubj = groupby(keeptps, :subject)
+
+#-
+
+fig = Figure()
+ax1 = Axis(fig[1,1]; xlabel = "N samples", ylabel="N subjects", title="total timepoints", xticks = 0:13)
+ax2 = Axis(fig[1,2]; xlabel = "N samples", ylabel="N subjects", title="stool samples", xticks = 0:13)
+ax3 = Axis(fig[2,1]; xlabel = "N samples", ylabel="N subjects", title="cogScores", xticks = 0:13)
+ax4 = Axis(fig[2,2]; xlabel = "N samples", ylabel="N subjects", title="segmentation", xticks = 0:13)
+
+let toplot = combine(keepsubj, :subject => length => :toplot).toplot
+    barplot!(ax1, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+let toplot = combine(keepsubj, :has_stool => count => :toplot).toplot
+    barplot!(ax2, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+let toplot = combine(keepsubj, :has_cogScore => count => :toplot).toplot
+    barplot!(ax3, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+let toplot = combine(keepsubj, :has_segmentation => count => :toplot).toplot
+    barplot!(ax4, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+
+axs = [ax1, ax2, ax3, ax4]
+linkxaxes!(axs...)
+foreach(ax-> tightlimits!(ax, Left(), Right(), Bottom()), axs)
+
+fig
+
+##
+
+ys = ["stool", "cogScore", "segmentation"]
+ycols = [:has_stool, :has_cogScore, :has_segmentation]
+
+
+intersects = [
+    [1],
+    [2],
+    [3],
+    [1,2],
+    [1,3],
+    [1,2,3], 
+]
+
+fig = Resonance.plot_upset(keeptps, ycols, ys, intersects)
+Label(fig[0, 2], "Timepoints intersections"; textsize = 20)
+
+save("figures/upset_keep_cog_stool.png", fig)
+fig
+
+#-
+
+fig = Resonance.plot_upset(
+        combine(keepsubj, 
+            :has_stool=> any => :has_stool,
+            :has_scan=> any => :has_scan,
+            :has_cogScore => any => :has_cogScore,
+            :has_segmentation => any => :has_segmentation
+        ), ycols, ys, intersects
+)
+
+Label(fig[0, 2], "Subjects intersections"; textsize = 20)
+
+save("figures/upset_keep_subj_cog_stool.png", fig)
+fig
 
 ##
 
