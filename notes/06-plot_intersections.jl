@@ -1,5 +1,5 @@
 using Resonance
-omni, tps = startup(; dfs = [:omni, :tps])
+omni, etoh, tps = startup(; dfs = [:omni, :etoh, :tps])
 
 subtpset = collect(zip(omni.subject, omni.timepoint))
 
@@ -21,6 +21,14 @@ subj = @chain tps begin
     end) => :has_futstool; ungroup=false)
 end
 
+tps.has_scan = .!ismissing.(tps.scanDate)
+
+subjs = combine(groupby(tps, :subject), 
+    :has_stool=> any => :has_stool,
+    :has_scan=> any => :has_scan,
+    :has_cogScore => any => :has_cogScore,
+    :has_segmentation => any => :has_segmentation
+)
 
 # ## Plotting set intersections
 # 
@@ -32,59 +40,58 @@ using CairoMakie
 
 ##
 
-ys = ["scan",  "stool", "prev stool"]
-ycols = [:has_segmentation, :has_stool, :has_prevstool]
+ys = ["stool", "cogScore", "segmentation"]
+ycols = [:has_stool, :has_cogScore, :has_segmentation]
 
-fig = Figure()
-
-intersection_ax = Axis(fig[1,1:2], ylabel="intersection size", yautolimitmargin = (0, 0.15))
-dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:length(ys), ys))
-set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
-                 xautolimitmargin = (0, 0.25),  xgridvisible = false)
 
 intersects = [
-    [1],        # 1. scan only    
-    [2],        # 2. stool only
-    [1,2],      # 3. scan & stool
-    [1,3],      # 4. scan & prior stool
-    [2,3],      # 5. stool & prior stool
-    # [2,4],      # 5. stool & future stool
-    [1,2,3],    # 5. scan & stool & prior stool
-    # [1,2,5],    # 6. scan & stool & bf
-    # [1,2,3,5]   # 7. scan & stool & prior stool && bf
+    [1],
+    [2],
+    [3],
+    [1,2],
+    [1,3],
+    [1,2,3], 
 ]
 
-barplot!(intersection_ax, 1:length(intersects), [count_set(tps, ycols, i) for i in intersects],
-            bar_labels=:y, color = :gray20,
-            label_size = 14, label_formatter = x -> string(Int(x)))
+fig = Resonance.plot_upset(tps, ycols, ys, intersects)
 
-barplot!(set_ax, 1:length(ys), [count(x-> !ismissing(x) && x, tps[!, col]) for col in ycols], 
-            direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
-            label_formatter = x -> string(Int(x)))
+save("figures/upset_cog_stool.png", fig)
+fig
 
-            
-for i in 1:2:length(ycols)
-    poly!(dot_ax,
-    BBox(0, length(intersects) + 1, i-0.5, i+0.5),
-    color = :gray95
-    )
-end
+#-
 
-upset_dots!(dot_ax, intersects)
+fig = Resonance.plot_upset(subjs, ycols, ys, intersects)
+save("figures/upset_subj_cog_stool.png", fig)
+fig
 
-hidexdecorations!(intersection_ax)
-hideydecorations!(set_ax)
 
-rowgap!(fig.layout, 0)
-linkyaxes!(dot_ax, set_ax)
-linkxaxes!(dot_ax, intersection_ax)
-hidespines!(intersection_ax, :t, :r, :b)
-hidespines!(set_ax, :t, :r, :l)
+##
+
+ys = ["stool", "segmentation", "scan"]
+ycols = [:has_stool, :has_segmentation, :has_scan]
+
+
+intersects = [
+    [1],
+    [3], 
+    [1,2,3], 
+    [1,3]
+]
+
+fig = Resonance.plot_upset(subset(tps, :ageMonths => ByRow(x-> !ismissing(x) && x >12)), ycols, ys, intersects)
 
 save("figures/upset_scan_stool.png", fig)
 fig
 
-##
+#-
+
+fig = Resonance.plot_upset(subjs, ycols, ys, intersects)
+save("figures/upset_subj_scan_stool.png", fig)
+fig
+
+
+#-
+
 
 # ### Age distributions
 #
@@ -133,15 +140,15 @@ hist!(scan_age_young, subset(tps, AsTable([:ageMonths, :has_segmentation]) => By
                                 color=:gray20)
 
 Label(fig[1, 0], text = "All kids", tellheight=false)
-Label(fig[2, 1], text = "Young kids", tellheight=false)
+Label(fig[2, 0], text = "Young kids", tellheight=false)
 
 save("figures/age_hists.png", fig)
 fig
 
 ##
-fig = Figure()
 
-stools_bydate = Axis(fig[1, 1], title="Stool samples collected by date",
+fig = Figure()
+stools_bydate = Axis(fig[missing_seg, 1], title="Stool samples collected by date",
                         xticks=(1:4:length(drange), string.(drange[1:4:end])),
                         xticklabelrotation=π/4)
 barplot!(stools_bydate, 1:length(drange), colldatecount, color=:gray20)
@@ -161,10 +168,106 @@ save("figures/collection_over_time.png", fig)
 fig
 ##
 
+fig = Figure()
+
+segmis_dates = sort(tps[tps.has_stool .& tps.has_scan .& .!(tps.has_segmentation), :scanDate] |> skipmissing |> collect)
+segmis = map(drange) do dt
+    count(cd-> dt <= cd < dt+Month(1), segmis_dates)
+end
+
+missing_seg = Axis(fig[1, 1], title="Scans w/o segmentation",
+                        xticks=(1:4:length(drange), string.(drange[1:4:end])),
+                        xticklabelrotation=π/4)
+barplot!(missing_seg, 1:length(drange), segmis, color=:gray20)
+tightlimits!(missing_seg, Left(), Right(), Bottom())
+
+save("figures/scans_over_time.png", fig)
+fig
+
+#-
 @info "Collected in 2019: $(count(c-> Year(c) == Year(2019), colldates))"
 @info "Collected in 2020: $(count(c-> Year(c) == Year(2020), colldates))"
 @info "Collected in 2021: $(count(c-> Year(c) == Year(2021), colldates))"
 @info "Collected in 2022: $(count(c-> Year(c) == Year(2022), colldates))"
+
+# ## Sample Selection
+#
+# We want to keep all subjects that have at least 1 timepoint
+# with both a stool sample and a cognitive assessment.
+
+keepers = subset(tps, :has_stool .=> identity, :has_cogScore .=> identity).subject |> unique
+keeptps = subset(tps, :subject => ByRow(s-> s in keepers), :ECHOTPCoded => ByRow(tp-> !startswith(tp, "Pre")))
+keeptps.omni = leftjoin(keeptps, unique(select(omni, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
+keeptps.etoh = leftjoin(keeptps, unique(select(etoh, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
+CSV.write("data/timepoints_final.csv", keeptps)
+#-
+
+
+keepsubj = groupby(keeptps, :subject)
+
+#-
+
+fig = Figure()
+ax1 = Axis(fig[1,1]; xlabel = "N samples", ylabel="N subjects", title="total timepoints", xticks = 0:13)
+ax2 = Axis(fig[1,2]; xlabel = "N samples", ylabel="N subjects", title="stool samples", xticks = 0:13)
+ax3 = Axis(fig[2,1]; xlabel = "N samples", ylabel="N subjects", title="cogScores", xticks = 0:13)
+ax4 = Axis(fig[2,2]; xlabel = "N samples", ylabel="N subjects", title="segmentation", xticks = 0:13)
+
+let toplot = combine(keepsubj, :subject => length => :toplot).toplot
+    barplot!(ax1, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+let toplot = combine(keepsubj, :has_stool => count => :toplot).toplot
+    barplot!(ax2, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+let toplot = combine(keepsubj, :has_cogScore => count => :toplot).toplot
+    barplot!(ax3, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+let toplot = combine(keepsubj, :has_segmentation => count => :toplot).toplot
+    barplot!(ax4, unique(toplot), [count(==(c), toplot) for c in unique(toplot)]; bins = length(unique(toplot)))
+end
+
+axs = [ax1, ax2, ax3, ax4]
+linkxaxes!(axs...)
+foreach(ax-> tightlimits!(ax, Left(), Right(), Bottom()), axs)
+
+fig
+
+##
+
+ys = ["stool", "cogScore", "segmentation"]
+ycols = [:has_stool, :has_cogScore, :has_segmentation]
+
+
+intersects = [
+    [1],
+    [2],
+    [3],
+    [1,2],
+    [1,3],
+    [1,2,3], 
+]
+
+fig = Resonance.plot_upset(keeptps, ycols, ys, intersects)
+Label(fig[0, 2], "Timepoints intersections"; textsize = 20)
+
+save("figures/upset_keep_cog_stool.png", fig)
+fig
+
+#-
+
+fig = Resonance.plot_upset(
+        combine(keepsubj, 
+            :has_stool=> any => :has_stool,
+            :has_scan=> any => :has_scan,
+            :has_cogScore => any => :has_cogScore,
+            :has_segmentation => any => :has_segmentation
+        ), ycols, ys, intersects
+)
+
+Label(fig[0, 2], "Subjects intersections"; textsize = 20)
+
+save("figures/upset_keep_subj_cog_stool.png", fig)
+fig
 
 ##
 
