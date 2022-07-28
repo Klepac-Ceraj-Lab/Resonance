@@ -20,6 +20,45 @@ function upset_dots!(ax, colsets, nsets=maximum(Iterators.flatten(colsets)))
     end
 end
 
+function plot_upset(df, ycols, ylabels, intersects; figure=(;))
+    fig = Figure(; figure...)
+
+    intersection_ax = Axis(fig[1,1:2]; ylabel="intersection size", yautolimitmargin = (0, 0.15))
+    dot_ax = Axis(fig[2,1:2], yticklabelpad = 10, yticks = (1:length(ylabels), ylabels))
+    set_ax = Axis(fig[2,3], xlabel="set size", xticklabelrotation=π/4,
+                    xautolimitmargin = (0, 0.25),  xgridvisible = false)
+
+
+    barplot!(intersection_ax, 1:length(intersects), [count_set(df, ycols, i) for i in intersects],
+                bar_labels=:y, color = :gray20,
+                label_size = 14, label_formatter = x -> string(Int(x)))
+
+    barplot!(set_ax, 1:length(ylabels), [count(x-> !ismissing(x) && x, df[!, col]) for col in ycols], 
+                direction=:x, bar_labels=:y, label_size = 14, color = :gray20,
+                label_formatter = x -> string(Int(x)))
+
+                
+    for i in 1:2:length(ycols)
+        poly!(dot_ax,
+        BBox(0, length(intersects) + 1, i-0.5, i+0.5),
+        color = :gray95
+        )
+    end
+
+    upset_dots!(dot_ax, intersects)
+
+    hidexdecorations!(intersection_ax)
+    hideydecorations!(set_ax)
+
+    rowgap!(fig.layout, 0)
+    linkyaxes!(dot_ax, set_ax)
+    linkxaxes!(dot_ax, intersection_ax)
+    hidespines!(intersection_ax, :t, :r, :b)
+    hidespines!(set_ax, :t, :r, :l)
+   
+    return fig
+end
+
 # https://github.com/JuliaStats/MultivariateStats.jl/pull/162
 function loadings(M::MultivariateStats.MDS)
     ev = eigvals(M)

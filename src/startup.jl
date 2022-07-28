@@ -10,6 +10,7 @@ const mainmeta = [
         "has_segmentation",
         "ECHOTPCoded",
         "assessmentDate",
+        "scanDate",
         "ed",
         "rce"
     ]
