@@ -44,7 +44,6 @@ using Tables
 using SparseArrays
 using CodecZlib
 using FilePaths
-using ProgressLogging
 using CategoricalArrays
 using PERMANOVA
 using LinearAlgebra
@@ -55,7 +54,6 @@ using ThreadsX
 @reexport using DataFrames
 @reexport using CSV
 @reexport using XLSX
-@reexport using DataFramesMeta
 
 const transform = DataFrames.transform
 

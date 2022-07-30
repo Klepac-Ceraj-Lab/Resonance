@@ -175,45 +175,5 @@ CSV.write(datafiles("fsea_brain_all.csv"), brfsea)
 
 pretty_table(first(brfsea, 10); backend = Val(:latex))
 
-#-
-
-using Connectomes
-using WGLMakie
-using ColorSchemes
-WGLMakie.activate!()
-
-c = Connectomes.connectomepath() |> Connectome
-brfsea = CSV.read(datafiles("fsea_brain_all.csv"), DataFrame)
-brgroup = groupby(brfsea, :geneset)
-
-#-
-
-gr = first(brgroup)
-gr = subset(gr, :pvalue => ByRow(<(0.05)))
-
-
-
-#-
-fig = Figure(resolution=(1200,600))
-ax = Axis3(fig[1,1], aspect = :data, azimuth = 0.0pi, elevation=0.0pi)
-hidedecorations!(ax)
-hidespines!(ax)
-
-plotted = Int[]
-
-for (r, m) in zip(gr.region, gr.mu)
-    i = findfirst(l-> contains(l, replace(r, "_"=>"-")), c.parc.Label)
-    i = isnothing(i) && r == "Brain_Stem" ? 83 : i
-    isnothing(i) && continue
-    push!(plotted, i)
-    plot_roi!(i, get(ColorSchemes.viridis, m / 3e7))
-end
-
-for i in setdiff(c.parc.ID, plotted)
-    plot_roi!(i, (:gray, 0.2))
-end
-
-fig
-
 #- 
 
