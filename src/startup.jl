@@ -14,9 +14,7 @@ const mainmeta = [
         "ed",
         "rce"
     ]
-
-const brainmeta_underscore = replace.(brainmeta, "-"=>"_")
-    
+   
 const brainmeta = [
             #  "CortexVol",
             #  "CorticalWhiteMatterVol",
@@ -57,6 +55,8 @@ const brainmeta = [
                 "Brain-Stem",
                 "CSF"
     ]
+
+const brainmeta_underscore = replace.(brainmeta, "-"=>"_")
 
 """
 Generates some data objects useful in many scripts.

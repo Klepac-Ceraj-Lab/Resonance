@@ -166,89 +166,59 @@ function fix_metadata_colnames!(longdata_df::DataFrame)
     
 end
 
-function check_longdata_metaduplicates!(longdata_df::DataFrame; remove_duplicates=true)
 
-    n_unique_rows = size(unique(longdata_df[:, 1:3]),1)
+function check_longdata_metaduplicates!(longdata_df::DataFrame; remove_duplicates=true)
+    n_unique_rows = size(unique(longdata_df[:, 1:3]),1)    
     
     if (n_unique_rows != size(longdata_df, 1))
-    
         n_nonunique = size(longdata_df, 1) - n_unique_rows
 
-        if remove_duplicates
-
+        if remove_duplicates    
             @warn "Long Dataframe contains non-unique rows! Argument `remove_duplicates` set to `true`. Removing duplicated data."
             @warn "After removal, $(n_unique_rows) will remain. $(n_nonunique) rows were rmoved from the original $(size(longdata_df, 1))"
             rawDf = unique!(longdata_df)
             return(longdata_df)
-
         else
-
             @warn "Long Dataframe contains non-unique rows! Argument `remove_duplicates` set to `false`. Returning source data."
             return(longdata_df)
-
         end #end if remove_duplicates
-    
     end # end if n_unique_rows
-     
 end # end function
 
 function build_future_df(base_df, to_predict::Symbol)
 
     subjects = unique(base_df.subject)
-
     result_lines = Vector{DataFrame}()
 
     for this_subject in subjects
-
         subject_df = base_df[ base_df.subject .== this_subject ,:]
-
         if (size(subject_df, 1) == 1)
-
             continue;
-
         else
-
             for origin_idx in 1:(size(subject_df, 1) - 1)
-
                 if (ismissing(subject_df[origin_idx, :Absiella_dolichum]))
-
                     continue;
-
                 else
-
                     for target_idx in (origin_idx + 1):size(subject_df, 1)
-
                         if (ismissing(subject_df[target_idx, to_predict]))
-
                             continue;
-
                         else
                             origin_df = DataFrame()
                             push!(origin_df, copy(subject_df[origin_idx, :]))
                             target_df = subject_df[target_idx, :]
-
                             insertcols!(origin_df, 1, :target => parse(Float64, target_df[to_predict]))
                             insertcols!(origin_df, 1, :futureAgeMonths => parse(Float64, target_df[:ageMonths]))
                             insertcols!(origin_df, 1, :ageMonthsDelta => parse(Float64, target_df[:ageMonths]) - parse(Float64, origin_df[1, :ageMonths]))
                             insertcols!(origin_df, 1, :futureTimepoint => subject_df[target_idx, :timepoint])
                             insertcols!(origin_df, 1, :timepointDelta => subject_df[target_idx, :timepoint] - subject_df[origin_idx, :timepoint])
-
                             push!(result_lines, origin_df)
-
                         end # end if ismissing(to_predict from irigin_idx)
-
                     end # end for target_idx
-
                 end # end if ismissing(stool from irigin_idx)
-
             end # end for origin_idx
-
         end # end if size == 1
-
     end # end for subject
-
     return(reduce(vcat, result_lines))
-
 end # end function1
 
 function tryparsecol(T, col)
