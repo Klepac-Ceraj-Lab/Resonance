@@ -25,6 +25,8 @@ CSV.write(datafiles("exports", "brain_measures.csv"), select(metadata,
     Resonance.brainmeta...
 ))
 
+metabolites = CSV.read(datafiles("wrangled", "metabolites.csv"), DataFrame)
+
 #-
 
 @info "Unique subjects:" N = metadata.subject |> unique |> length
@@ -35,6 +37,11 @@ CSV.write(datafiles("exports", "brain_measures.csv"), select(metadata,
 #
 
 keepomni = Set(skipmissing(metadata.omni))
+dropetoh = setdiff(names(metabolites, r"^FE"), Set(skipmissing(metadata.etoh)))
+
+#-
+
+CSV.write(datafiles("exports", "metabolites.csv"), select(metabolites, Not(dropetoh)))
 
 #-
 
