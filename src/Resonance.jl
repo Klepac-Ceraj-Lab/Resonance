@@ -24,7 +24,11 @@ export datafiles,
        startup,
        build_future_df,
        check_longdata_metaduplicates!,
-       microbiome_predictors
+       microbiome_predictors,
+       tryparsecol,
+       univariate_tietjenmoore,
+       test_tietjenmoore,
+       try_outliers
 
 using Reexport
 using Airtable

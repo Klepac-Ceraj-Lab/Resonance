@@ -250,3 +250,67 @@ function build_future_df(base_df, to_predict::Symbol)
     return(reduce(vcat, result_lines))
 
 end # end function1
+
+function tryparsecol(Type::DataType, col)
+    try
+        return(parse.(Type, col))
+    catch
+        return(col)
+    end
+end
+
+function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 100000, return_indexes = true)
+
+    function compute_tietjenmoore(data, k, n)
+        r_all = abs.(data .- mean(data))
+        filteredData = data[sortperm(r_all)][1:(n-k)]
+        ksub = (filteredData .- mean(filteredData))
+    
+        return( sum(ksub .^ 2) / sum(r_all .^ 2) )
+    end
+    
+    function test_tietjenmoore(dataSeries,k, n, alpha, sim_trials)
+        ek = compute_tietjenmoore(dataSeries,k, n)
+        simulation = [ compute_tietjenmoore(randn(length(dataSeries)), k, n) for i in 1:sim_trials ]
+        Talpha=quantile(simulation,alpha)
+
+        return(ek, Talpha)
+    end
+
+    println("----- Begin Tietjen-Moore Outlier test -----")
+    println("H0: There are no outliers in the data set.")
+    println("H1: There are exactly k outliers in the data set\n")
+
+    n = length(values)
+
+    L_set, L_critical = test_tietjenmoore(values, k, n, alpha, sim_trials)
+    println("Set L-statistic for $n samples and $k outliers with mode $(mode): $(round(L_set, digits = 4))")     
+    println("Critical L for $n samples and $k outliers with mode $(mode): $(round(L_critical, digits = 4))\n")
+
+    if L_set < L_critical
+        println("L_set < L_critical !")
+        println("**SUCCESSFUL REJECTION OF H0** with confidence level $alpha" )
+
+        r_all = abs.(values .- mean(values))
+        outlier_indexes = sortperm(r_all)[(n-k+1):end]
+
+        return_indexes ? (return(outlier_indexes)) : (return(true))
+
+    else
+        println("L_set > L_critical !")
+        println("**CANNOT REJECT H0** with confidence level $alpha" )
+
+        return_indexes ? (return([])) : (return(false))    
+    
+    end # endif L_set < L_critical
+end # end function
+
+function try_outliers(f, data, n)
+    for i in n:-1:1
+        outlier_idx = f(data, i)
+        if length(outlier_idx) != 0
+            return(i, outlier_idx)
+        end
+    end
+    return(0, Int64[])
+end
