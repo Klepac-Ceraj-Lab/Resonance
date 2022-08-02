@@ -45,7 +45,7 @@ println("Children:\n")
 println("$(size(g00C_df, 1)) unique samples from $(length(unique(g00C_df.subject))) subjects.")
 println("of which")
 # #### Children samples with no information available (Empty)
-g00CE_df = g00CE_df[ismissing.(g00CE_df.Absiella_dolichum), :]
+g00CE_df = g00C_df[ismissing.(g00CE_df.Absiella_dolichum), :]
 g00CE_df = g00CE_df[ismissing.(g00CE_df.cogScore), :]
 g00CE_df = g00CE_df[ismissing.(g00CE_df.Left_Thalamus), :]
 println("$(size(g00CE_df, 1)) unique samples from $(length(unique(g00CE_df.subject))) subjects have no data collected.\n")
