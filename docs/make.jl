@@ -10,7 +10,7 @@ makedocs(;
     sitename = "Resonance",
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://Klepac-Ceraj-lab.github.io/Resonance",
+        canonical = "https://Klepac-Ceraj-Lab.github.io/Resonance",
         edit_link = "main",
         assets = String[],
     ),
@@ -26,7 +26,7 @@ makedocs(;
 )
 
 deploydocs(;
-    repo = "github.com/Klepac-Ceraj-lab/Resonance",
+    repo = "github.com/Klepac-Ceraj-Lab/Resonance",
     push_preview = true,
     devbranch = "main",
 )

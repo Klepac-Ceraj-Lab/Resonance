@@ -11,3 +11,4 @@ slides/figures*
 !slides/figures.tex
 *scratch*
 /LocalPreferences.toml
+test/Manifest.toml

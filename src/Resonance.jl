@@ -32,6 +32,7 @@ export datafiles,
        unstack_techreplicates
 
 using Reexport
+using ReTest
 using Airtable
 using CairoMakie
 using AlgebraOfGraphics
@@ -43,7 +44,6 @@ using Arrow
 using Tables
 using SparseArrays
 using CodecZlib
-using FilePaths
 using CategoricalArrays
 using PERMANOVA
 using LinearAlgebra
