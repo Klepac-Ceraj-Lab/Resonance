@@ -34,7 +34,7 @@ check_longdata_metaduplicates!(rawDf; remove_duplicates=true)
 
 # ### Removing technical/biological replicates
 
-retainfirst = true # if true, retain the first technical/biological replicate; if false, retain the last technical/biological replicate
+retainfirst = get(ENV, "RETAIN_FIRST", true) # if true, retain the first technical/biological replicate; if false, retain the last technical/biological replicate
 
 if retainfirst
 

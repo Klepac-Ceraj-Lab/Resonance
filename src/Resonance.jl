@@ -28,7 +28,8 @@ export datafiles,
        tryparsecol,
        univariate_tietjenmoore,
        test_tietjenmoore,
-       try_outliers
+       try_outliers,
+       unstack_techreplicates
 
 using Reexport
 using Airtable

@@ -24,28 +24,11 @@ unique(nonuniqueDf[:,1:2])
 # ## Removing duplicates
 
 # ### Removing actual duplicated lines
-
 check_longdata_metaduplicates!(rawDf; remove_duplicates=true)
 
 # ### Removing technical/biological replicates
-
-retainfirst = true # if true, retain the first technical/biological replicate; if false, retain the last technical/biological replicate
-
-if retainfirst
-
-    unstackedDf = @chain rawDf begin
-        groupby( [:subject, :timepoint, :variable] )
-        combine(:value=>first)
-        unstack(:variable, :value_first)
-    end
-
-else
-    
-    unstackedDf = unstack(rawDf, :variable, :value; allowduplicates=true)
-
-end
-
-colnames = names(unstackedDf)
+retainfirst = parse(Bool, get(ENV, "RETAIN_FIRST", "true")) # if true, retain the first technical/biological replicate; if false, retain the last technical/biological replicate
+unstackedDf = unstack_techreplicates(rawDf, retainfirst)
 
 # ## Description of the Dataset
 

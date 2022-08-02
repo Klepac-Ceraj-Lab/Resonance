@@ -251,57 +251,49 @@ function build_future_df(base_df, to_predict::Symbol)
 
 end # end function1
 
-function tryparsecol(Type::DataType, col)
-    try
-        return(parse.(Type, col))
-    catch
-        return(col)
-    end
+function tryparsecol(T, col)
+    newcol = tryparse.(T, col)
+    return any(isnothing, newcol) ? col : newcol
 end
 
-function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 100000, return_indexes = true)
+function compute_tietjenmoore(data, k, n)
+    r_all = abs.(data .- mean(data))
+    filteredData = data[sortperm(r_all)][1:(n-k)]
+    ksub = (filteredData .- mean(filteredData))
 
-    function compute_tietjenmoore(data, k, n)
-        r_all = abs.(data .- mean(data))
-        filteredData = data[sortperm(r_all)][1:(n-k)]
-        ksub = (filteredData .- mean(filteredData))
-    
-        return( sum(ksub .^ 2) / sum(r_all .^ 2) )
-    end
-    
-    function test_tietjenmoore(dataSeries,k, n, alpha, sim_trials)
-        ek = compute_tietjenmoore(dataSeries,k, n)
-        simulation = [ compute_tietjenmoore(randn(length(dataSeries)), k, n) for i in 1:sim_trials ]
-        Talpha=quantile(simulation,alpha)
+    return( sum(ksub .^ 2) / sum(r_all .^ 2) )
+end
 
-        return(ek, Talpha)
-    end
+function test_tietjenmoore(dataSeries,k, n, alpha, sim_trials)
+    ek = compute_tietjenmoore(dataSeries,k, n)
+    simulation = [ compute_tietjenmoore(randn(length(dataSeries)), k, n) for i in 1:sim_trials ]
+    Talpha=quantile(simulation,alpha)
 
-    println("----- Begin Tietjen-Moore Outlier test -----")
-    println("H0: There are no outliers in the data set.")
-    println("H1: There are exactly k outliers in the data set\n")
+    return(ek, Talpha)
+end
+
+function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 100000)
+
+    @info "----- Begin Tietjen-Moore Outlier test -----"
+    @info "H0: There are no outliers in the data set."
+    @info "H1: There are exactly k outliers in the data set\n"
 
     n = length(values)
 
     L_set, L_critical = test_tietjenmoore(values, k, n, alpha, sim_trials)
-    println("Set L-statistic for $n samples and $k outliers with mode $(mode): $(round(L_set, digits = 4))")     
-    println("Critical L for $n samples and $k outliers with mode $(mode): $(round(L_critical, digits = 4))\n")
+    @info "Set L-statistic for $n samples and $k outliers with mode $(mode): $(round(L_set, digits = 4))"
+    @info "Critical L for $n samples and $k outliers with mode $(mode): $(round(L_critical, digits = 4))\n"
 
     if L_set < L_critical
-        println("L_set < L_critical !")
-        println("**SUCCESSFUL REJECTION OF H0** with confidence level $alpha" )
-
+        @info "L_set < L_critical !"
+        @info "**SUCCESSFUL REJECTION OF H0** with confidence level $alpha" 
         r_all = abs.(values .- mean(values))
         outlier_indexes = sortperm(r_all)[(n-k+1):end]
-
-        return_indexes ? (return(outlier_indexes)) : (return(true))
-
+        return outlier_indexes
     else
-        println("L_set > L_critical !")
-        println("**CANNOT REJECT H0** with confidence level $alpha" )
-
-        return_indexes ? (return([])) : (return(false))    
-    
+        @warn "L_set > L_critical !"
+        @warn "**CANNOT REJECT H0** with confidence level $alpha"
+        return Int64[]
     end # endif L_set < L_critical
 end # end function
 
@@ -312,5 +304,20 @@ function try_outliers(f, data, n)
             return(i, outlier_idx)
         end
     end
-    return(0, Int64[])
+    return 0, Int64[]
 end
+
+function unstack_techreplicates(raw_data, retain_first=true)
+
+    unstackedDf = retain_first ?
+    begin 
+        @chain raw_data begin
+            groupby([:subject, :timepoint, :variable])
+            combine(:value=>first)
+            unstack(:variable, :value_first)
+        end #end @chain
+    end : #end if_true
+    unstack(raw_data, :variable, :value; allowduplicates=true)
+
+    return unstackedDf
+end #end function

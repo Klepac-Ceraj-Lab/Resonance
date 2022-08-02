@@ -1,22 +1,70 @@
-# #Machine Learning Models
-
-#####
-# Loading packages
-#####
-
-using ProgressMeter
-using CairoMakie
-using CSV
-using DataFrames
-using MLJ
-using Statistics
-using StableRNGs
-using Resonance
-ml_rng = StableRNG(102528)
-
 #####
 # Functions to use
 #####
+
+function tryparse(Type::DataType, col)
+    try
+        return(parse.(Type, col))
+    catch
+        return(col)
+    end
+end
+
+function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 250000, return_indexes = true)
+
+    function compute_tietjenmoore(data, k, n)
+        r_all = abs.(data .- mean(data))
+        filteredData = data[sortperm(r_all)][1:(n-k)]
+        ksub = (filteredData .- mean(filteredData))
+    
+        return( sum(ksub .^ 2) / sum(r_all .^ 2) )
+    end
+    
+    function test_tietjenmoore(dataSeries,k, n, alpha, sim_trials)
+        ek = compute_tietjenmoore(dataSeries,k, n)
+        simulation = [ compute_tietjenmoore(randn(length(dataSeries)), k, n) for i in 1:sim_trials ]
+        Talpha=round(quantile(Normal(Statistics.mean(simulation), Statistics.std(simulation)),alpha), digits = 3)
+
+        return(ek, Talpha)
+    end
+
+    println("----- Begin Tietjen-Moore Outlier test -----")
+    println("H0: There are no outliers in the data set.")
+    println("H1: There are exactly k outliers in the data set\n")
+
+    n = length(values)
+
+    L_set, L_critical = test_tietjenmoore(values, k, n, alpha, sim_trials)
+    println("Set L-statistic for $n samples and $k outliers with mode $(mode): $(round(L_set, digits = 4))")     
+    println("Critical L for $n samples and $k outliers with mode $(mode): $(round(L_critical, digits = 4))\n")
+
+    if L_set < L_critical
+        println("L_set < L_critical !")
+        println("**SUCCESSFUL REJECTION OF H0** with confidence level $alpha" )
+
+        r_all = abs.(values .- mean(values))
+        outlier_indexes = sortperm(r_all)[(n-k+1):end]
+
+        return_indexes ? (return(outlier_indexes)) : (return(true))
+
+    else
+        println("L_set > L_critical !")
+        println("**CANNOT REJECT H0** with confidence level $alpha" )
+
+        return_indexes ? (return([])) : (return(false))    
+    
+    end # endif L_set < L_critical
+end # end function
+
+function try_outliers(f, data, n)
+    for i in n:-1:1
+        outlier_idx = f(data, i)
+        if length(outlier_idx) != 0
+            return(i, outlier_idx)
+        end
+    end
+    return(0, Int64[])
+end
 
 #####
 # Script
@@ -45,7 +93,7 @@ check_longdata_metaduplicates!(rawDf; remove_duplicates=true)
 
 # ### Removing technical/biological replicates
 
-retainfirst = true # if true, retain the first technical/biological replicate; if false, retain the last technical/biological replicate
+retainfirst = get(ENV, "RETAIN_FIRST", true) # if true, retain the first technical/biological replicate; if false, retain the last technical/biological replicate
 
 if retainfirst
 
@@ -65,9 +113,14 @@ end
 
 #### Building predictionDf
 
-select_columns = [ "target", "ageMonths", "futureAgeMonths", microbiome_predictors... ]
+select_columns = [ "target", "ageMonths", "futureAgeMonths", "ageMonthsDelta", "timepointDelta", microbiome_predictors... ]
 
-##### 1. Removing rows with missing values
+##### 1. Removing rows with missing values and applying filters
+
+max_input_age = 12
+max_prediction_age = 24
+max_ageMonthsDelta = 12
+selected_timepoint_delta = 1
 
 predictionDf = @chain unstackedDf begin
     subset(:ageMonths => x -> .!(ismissing.(x)))
@@ -75,26 +128,24 @@ predictionDf = @chain unstackedDf begin
     DataFrames.select(select_columns)
 end
 
-function parseif(Type::DataType, col)
-    if typeof(col) == Vector{Type}
-        return(col)
-    else
-        return(parse.(Type, col))
-    end
-end
-
-mapcols!(col -> parseif(Float64, col), predictionDf)
+mapcols!(col -> tryparse(Float64, col), predictionDf)
 
 ##### 2. Filtering by ageMonths < max_prediction_age
-
-max_input_age = 120
-max_prediction_age = 240
 
 predictionDf = @chain predictionDf begin
     subset(:ageMonths => x ->  x .<= max_input_age)
     subset(:futureAgeMonths => x ->  x .<= max_prediction_age)
+    subset(:ageMonthsDelta => x ->  x .<= max_ageMonthsDelta)
+    subset(:timepointDelta => x ->  x .== selected_timepoint_delta)
+    DataFrames.select(Not(:timepointDelta))
 #    DataFrames.transform(:ageMonths => ByRow(x -> x / max_prediction_age) => [:ageMonths])
 end
+
+##### Removing outliers with the Tietjen-Moore test
+n_outliers, outlier_idx = try_outliers(univariate_tietjenmoore, predictionDf.target, 10)
+println("Found $n_outliers outliers with the Tietjen-Moore test! Filtering DataFrame")
+println("New prediction table was reduced from $(nrow(predictionDf)) to $(nrow(predictionDf) - n_outliers) rows.")
+predictionDf = predictionDf[Not(outlier_idx), :]
 
 ##### 3. Removing microbiome columns with zero standard deviation
 
@@ -109,14 +160,16 @@ negligiblestd_cols = findall(is_negligiblestd_col)
 zerostd_colnames = names(predictionDf)[zerostd_cols]
 negligiblestd_colnames = names(predictionDf)[negligiblestd_cols]
 
-# Uncomment to remove negligible columns
-#predictionDf = DataFrames.select(predictionDf, Not(negligiblestd_colnames))
+# Uncomment to remove zerostd columns
+predictionDf = DataFrames.select(predictionDf, Not(zerostd_colnames))
 
 #### Checking the schema and MLJ scitypes
 
 schema(predictionDf)
 
 #### Separating the predictors and target variable, vewing matching machine models
+
+ml_rng = StableRNG(102528)
 
 y, X = unpack(predictionDf, ==(:target));
 for m in models(matching(X,y)) println(m) end
@@ -128,51 +181,68 @@ RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
 #### Building the Tuning grid for training the Random Forest model
 # Hyperparameters of DecisionTree.RandomForestRegressor:
 # ```
-# max_depth = -1, 
-# min_samples_leaf = 1, 
-# min_samples_split = 2, 
-# min_purity_increase = 0.0, 
-# n_subfeatures = -1, 
-# n_trees = 10, 
-# sampling_fraction = 0.7
+# n_trees = 10,                 Number of trees to train. Equivalent to R's randomForest `ntree`
+# n_subfeatures = 0             Number of features to consider at random per split. Equivalent to R's randomForest `mtry`
+# partial_sampling = 0.7        Fraction of samples to train each tree on. Equivalent to R's randomForest `sampsize`, but R takes an integer and this is a fraction.
+# max_depth = -1,               Maximum depth of the decision trees. Equivalent to R's randomForest `maxnodes`
+# min_samples_leaf = 1,         Equivalent to R's randomForest `nodesize`
+# min_samples_split = 2,        No equivalence.
+# min_purity_increase = 0.0,    No equivalence.
 # ````
 
-grid_resolution = 5
-range_max_depth = [ -1 ] # range(-1, 3, length = grid_resolution)
-range_samples_leaf = range(1, 5, length = grid_resolution)
-range_min_purity_increase = [ 0.0 ] # range(0.0, 0.3, length = grid_resolution)
-range_n_trees = range(50, 500, length = 2*grid_resolution)
-range_sampling_fraction = range(0.5, 0.9, length = grid_resolution)
+range_n_trees = collect(50:25:500)
+range_max_depth = collect(-1:3)
+range_partial_sampling = collect(0.5:0.1:0.9)
+range_min_samples_leaf = collect(1:1:5)
+range_min_purity_increase = [ 0.0, 0.1, 0.2, 0.3 ]
+
+# range_n_trees = collect(10:30:310)#collect(10:10:150)
+# range_n_subfeatures = collect(10:20:150)#collect(10:20:250)
+# range_partial_sampling = collect(0.3:0.1:0.7)
+# range_max_depth = [ -1 ]#collect(4:2:20)
+# range_min_samples_leaf = collect(1:1:5)#collect(1:1:10)
+# range_min_samples_split = [ 2, 3, 4 ]#[ 2, 3, 4, 5, 6, 7, 8 ]s
+# range_min_purity_increase = [ 0.0, 0.05, 0.10, 0.15 ]#[ 0.00, 0.05, 0.10, 0.15, 0.20, 0.25 ]
 
 tuning_grid = vec(collect(Base.product(
-    range_max_depth,
-    range_samples_leaf,
-    range_min_purity_increase,
     range_n_trees,
-    range_sampling_fraction,
+    range_max_depth,
+    range_partial_sampling,
+    range_min_samples_leaf,
+    range_min_purity_increase,
 )))
 
 #### Tuning loop
 
 #### Splitting training data between train and test
-train, test = partition(eachindex(1:nrow(predictionDf)), 0.7, shuffle=true, rng=ml_rng)
+train, test = partition(eachindex(1:nrow(predictionDf)), 0.6, shuffle=true, rng=ml_rng)
 
-machines_vector = Vector{Machine{MLJDecisionTreeInterface.RandomForestRegressor, true}}(undef, length(tuning_grid))
 train_mae_vector = Vector{Float64}(undef, length(tuning_grid))
 train_cor_vector = Vector{Float64}(undef, length(tuning_grid))
 test_mae_vector = Vector{Float64}(undef, length(tuning_grid))
 test_cor_vector = Vector{Float64}(undef, length(tuning_grid))
 
+bestcor = 0.0
+
 @showprogress for i in 1:length(tuning_grid)
 
+    global bestcor
+
     rf_model = RandomForestRegressor(
-        max_depth = tuning_grid[i][1], 
-        min_samples_leaf = tuning_grid[i][2], 
-        min_purity_increase = tuning_grid[i][3], 
-        n_subfeatures = 0, 
-        n_trees = tuning_grid[i][4], 
-        sampling_fraction = tuning_grid[i][5],
+        n_trees = tuning_grid[i][1],
+        sampling_fraction = tuning_grid[i][3],
+        max_depth = tuning_grid[i][2],
+        min_samples_leaf = tuning_grid[i][4],
+        min_purity_increase = tuning_grid[i][5],
         rng=ml_rng
+        # n_trees = tuning_grid[i][1],
+        # n_subfeatures = tuning_grid[i][2],
+        # sampling_fraction = tuning_grid[i][3],
+        # max_depth = tuning_grid[i][4],
+        # min_samples_leaf = tuning_grid[i][5],
+        # min_samples_split = tuning_grid[i][6],
+        # min_purity_increase = tuning_grid[i][7],
+        # rng=ml_rng
     )
 
     rf_machine = machine(rf_model, X[train, :], y[train])
@@ -186,11 +256,18 @@ test_cor_vector = Vector{Float64}(undef, length(tuning_grid))
     test_mae = mean(MLJ.MLJBase.l1(test_y_hat, y[test]))
     test_cor = Statistics.cor(test_y_hat, y[test])
 
-    machines_vector[i] = deepcopy(rf_machine)
+#    machines_vector[i] = deepcopy(rf_machine)
     train_mae_vector[i] = train_mae
     train_cor_vector[i] = train_cor
     test_mae_vector[i] = test_mae
     test_cor_vector[i] = test_cor
+
+    if !isnan(test_cor)
+        if(test_cor) > bestcor
+            global bestcor = test_cor
+            global bestmodel = deepcopy(rf_machine)
+        end
+    end
 
 end
 
@@ -201,7 +278,7 @@ println(maximum(test_cor_vector))
 
 #### Selecting model with the best performance on the test set
 
-selected_machine = machines_vector[findmax(test_cor_vector)[2]]
+selected_machine = bestmodel
 
 train_y_hat = predict(selected_machine, X[train, :]) 
 train_mae = mean(MLJ.MLJBase.l1(train_y_hat, y[train]))
@@ -221,7 +298,7 @@ ax = Axis(train_set_plot[1, 1],
 )
 scatter!(ax, y[train], train_y_hat)
 ablines!(ax, 1, 1)
-annotations!( ax, ["r = $(round(train_cor; digits = 2))"], [Point(60, 120)], textsize = 40)
+annotations!( ax, ["r = $(round(train_cor; digits = 2))"], [Point(60, 100)], textsize = 40)
 
 save("figures/prediction_futurecogscore_trainset_comparison.png", train_set_plot)
 
@@ -233,7 +310,7 @@ ax = Axis(test_set_plot[1, 1],
 )
 scatter!(ax, y[test], test_y_hat)
 ablines!(ax, 1, 1)
-annotations!( ax, ["r = $(round(test_cor; digits = 2))"], [Point(60, 120)], textsize = 40)
+annotations!( ax, ["r = $(round(test_cor; digits = 2))"], [Point(60, 95)], textsize = 40)
 
 save("figures/prediction_futurecogscore_testset_comparison.png", test_set_plot)
 
@@ -247,12 +324,15 @@ using DecisionTree
 impurity_importances = impurity_importance(selected_machine.fitresult)
 impurity_ordered_idx = sortperm(impurity_importances; rev = true)
 
-impurityDF = DataFrame(
+impurityDf = DataFrame(
     :Variable => names(X)[impurity_ordered_idx],
     :Importance => impurity_importances[impurity_ordered_idx]
 )
 
 ### Using linear regression to adjust future cogScore ~ futureAgeMonths and train on residuals
+
+predictionDf[sortperm(predictionDf.target), :]
+predictionDf[predictionDf.ageMonthsDelta .>= 12.0, :]
 
 futurecogscore_futureagemonths_exploration = Figure()
 ax = Axis(futurecogscore_futureagemonths_regression[1, 1],
