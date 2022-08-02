@@ -11,14 +11,16 @@ metadata = let df = CSV.read("data/timepoints_final.csv", DataFrame)
     df[df.has_segmentation .| .!ismissing.(df.cogScore) .| .!ismissing.(df.omni)  .| .!ismissing.(df.etoh), :]
 end
 
-CSV.write("data/timepoint_metadata.csv", select(metadata,
+sort!(metadata, ["subject", "timepoint"])
+
+CSV.write(datafiles("exports", "timepoint_metadata.csv"), select(metadata,
     "subject", "timepoint", # Identifiers
     "ageMonths", "race", "ed" => "maternalEd", # Demographics
     "assessmentDate", "scanDate", # Dates 
     "cogScore", "omni", "etoh", "has_segmentation" # Measurements
 ))
 
-CSV.write("data/brain_measures.csv", select(metadata, 
+CSV.write(datafiles("exports", "brain_measures.csv"), select(metadata, 
     "subject", "timepoint",
     Resonance.brainmeta...
 ))
@@ -27,6 +29,7 @@ CSV.write("data/brain_measures.csv", select(metadata,
 
 @info "Unique subjects:" N = metadata.subject |> unique |> length
 @info "Unique stool samples:" N = count(!ismissing, metadata.omni)
+@info "Unique metabolomics samples:" N = count(!ismissing, metadata.etoh)
 @info "Ages (in months)" min = minimum(skipmissing(metadata.ageMonths)) max = maximum(skipmissing(metadata.ageMonths)) mean = mean(skipmissing(metadata.ageMonths)) median = median(skipmissing(metadata.ageMonths))
 
 #

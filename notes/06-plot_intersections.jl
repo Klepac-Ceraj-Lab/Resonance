@@ -18,7 +18,6 @@ subj = @chain tps begin
         AsTable(r"subject|timepoint"i) => ByRow(s -> begin
             (s.subject, s.timepoint) in tpmetabset
         end) => :has_metabolomics;
-    ;
         ungroup=false
     )
     transform!(AsTable(r"timepoint|has_stool") => (s-> begin
@@ -30,7 +29,6 @@ subj = @chain tps begin
 end
 
 tps.has_scan = .!ismissing.(tps.scanDate)
-tps.has_metabolomics .= 
 
 subjs = combine(groupby(tps, :subject), 
     :has_stool=> any => :has_stool,
@@ -208,7 +206,6 @@ keepers = subset(tps, :has_stool .=> identity, :has_cogScore .=> identity).subje
 keeptps = subset(tps, :subject => ByRow(s-> s in keepers), :ECHOTPCoded => ByRow(tp-> !startswith(tp, "Pre")))
 keeptps.omni = leftjoin(keeptps, unique(select(omni, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
 keeptps.etoh = leftjoin(keeptps, unique(select(etoh, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
-keeptps.has_metabolomics =
 CSV.write("data/timepoints_final.csv", keeptps)
 #-
 
