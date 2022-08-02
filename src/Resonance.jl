@@ -21,7 +21,15 @@ export datafiles,
        codebreastfeeding!,
        stp_overlap,
        comm_overlap,
-       startup
+       startup,
+       build_future_df,
+       check_longdata_metaduplicates!,
+       microbiome_predictors,
+       tryparsecol,
+       univariate_tietjenmoore,
+       test_tietjenmoore,
+       try_outliers,
+       unstack_techreplicates
 
 using Reexport
 using Airtable
@@ -61,5 +69,6 @@ include("brain.jl")
 include("startup.jl")
 include("kneaddata.jl")
 include("mantel.jl")
+include("prediction.jl")
 
 end
