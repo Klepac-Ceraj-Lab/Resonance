@@ -1,7 +1,11 @@
 using Resonance
 omni, etoh, tps = startup(; dfs = [:omni, :etoh, :tps])
 
-subtpset = collect(zip(omni.subject, omni.timepoint))
+subset!(omni, "Mgx_batch" => ByRow(!ismissing))
+subset!(etoh, "Metabolomics_batch" => ByRow(m-> m==1))
+
+tpstoolset = collect(zip(omni.subject, omni.timepoint))
+tpmetabset = collect(zip(etoh.subject, etoh.timepoint))
 
 subj = @chain tps begin
     groupby(:subject)
@@ -9,8 +13,12 @@ subj = @chain tps begin
         nrow => :n_timepoints,
         :cogScore => ByRow(!ismissing) => :has_cogScore,
         AsTable(r"subject|timepoint"i) => ByRow(s -> begin
-            (s.subject, s.timepoint) in subtpset
-        end) => :has_stool;
+            (s.subject, s.timepoint) in tpstoolset
+        end) => :has_stool,
+        AsTable(r"subject|timepoint"i) => ByRow(s -> begin
+            (s.subject, s.timepoint) in tpmetabset
+        end) => :has_metabolomics;
+    ;
         ungroup=false
     )
     transform!(AsTable(r"timepoint|has_stool") => (s-> begin
@@ -22,6 +30,7 @@ subj = @chain tps begin
 end
 
 tps.has_scan = .!ismissing.(tps.scanDate)
+tps.has_metabolomics .= 
 
 subjs = combine(groupby(tps, :subject), 
     :has_stool=> any => :has_stool,
@@ -199,6 +208,7 @@ keepers = subset(tps, :has_stool .=> identity, :has_cogScore .=> identity).subje
 keeptps = subset(tps, :subject => ByRow(s-> s in keepers), :ECHOTPCoded => ByRow(tp-> !startswith(tp, "Pre")))
 keeptps.omni = leftjoin(keeptps, unique(select(omni, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
 keeptps.etoh = leftjoin(keeptps, unique(select(etoh, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
+keeptps.has_metabolomics =
 CSV.write("data/timepoints_final.csv", keeptps)
 #-
 
