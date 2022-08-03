@@ -29,7 +29,7 @@ function airtable_metadata()
 
     df = DataFrame()
     
-    @progress "Adding samples" for samp in samples
+    for samp in samples
         # skip anything not in the "ECHO" project
         "rec8zdkF1pchFNiJC" ∈ get(samp, :Project, []) || continue
 

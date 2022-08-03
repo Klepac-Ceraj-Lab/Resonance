@@ -1,4 +1,4 @@
-function write_gfs_arrow(dir=ENV["ANALYSIS_FILES"]; kind="genefamilies", stratified=false)
+function write_gfs_arrow(dir=ENV["ANALYSIS_FILES"]; kind="genefamilies", stratified=false, keepsamples=[])
     allfiles = String[]
 
     @info "getting files"
@@ -9,6 +9,11 @@ function write_gfs_arrow(dir=ENV["ANALYSIS_FILES"]; kind="genefamilies", stratif
 
     unique!(allfiles) do f
         first(split(basename(f), '_')) |> String
+    end
+    
+    if !isempty(keepsamples)
+        filter!(f-> String(first(split(basename(f), '_'))) in keepsamples, allfiles)
+        length(allfiles) > 0 || throw(ErrorException("No sample intersection found"))
     end
 
     samples = Set(Iterators.map(f-> first(split(basename(f), '_')) |> String, allfiles))
@@ -59,6 +64,7 @@ function write_gfs_arrow(dir=ENV["ANALYSIS_FILES"]; kind="genefamilies", stratif
     end
     return nothing
 end
+
 
 function read_gfs_arrow(; kind="genefamilies", stratified=false)
     scratch = get(ENV, "SCRATCH_SPACE", "./scratch")

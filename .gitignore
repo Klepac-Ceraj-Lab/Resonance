@@ -1,6 +1,7 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
+.vscode/
 /docs/build/
 .envrc
 data/*
@@ -11,3 +12,4 @@ slides/figures*
 !slides/figures.tex
 *scratch*
 /LocalPreferences.toml
+test/Manifest.toml

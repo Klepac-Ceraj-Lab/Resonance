@@ -37,17 +37,16 @@ samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
 
 @chain samplemeta begin
     groupby([:subject, :timepoint])
-    @transform!(:has_metabolomics = any(!ismissing, :Metabolomics_batch))
+    transform!(:Metabolomics_batch => (x-> any(!ismissing, x)) => :has_metabolomics)
     sort!([:subject, :timepoint])
 end
 
 
-fmp_samples = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Sample_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true)...)
+fmp_samples = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Sample_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true))
 rename!(fmp_samples, Dict(:studyID=>:subject, :collectionNum=> :timepoint))
-@rsubset! fmp_samples begin
-    :subject in samplemeta.subject 
-    !ismissing(:timepoint)
-end
+subset!(fmp_samples, :subject => ByRow(s-> s in samplemeta.subject),
+                     :timepoint => ByRow(!ismissing)
+)
 
 samplemeta = leftjoin(samplemeta, select(fmp_samples, [:subject, :timepoint, :collectionDate]), on=[:subject, :timepoint])
 unique!(samplemeta)
@@ -58,18 +57,18 @@ unique!(samplemeta)
 # then normalize certain columns.
 # First, subject-specific data
 
-fmp_subject = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Subject_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true)...)
+fmp_subject = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Subject_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true))
 rename!(fmp_subject, Dict(:studyID=>:subject))
-@rsubset! fmp_subject :subject in samplemeta.subject
+subset!(fmp_subject, :subject => ByRow(s-> s in samplemeta.subject))
 
 # Then, timepoint-specific data
 
-fmp_timepoint = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Timepoint_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true)...)
+fmp_timepoint = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Timepoint_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true))
 rename!(fmp_timepoint, Dict(:studyID=>:subject))
 
 # and COVID-specific samples
 
-fmp_covid = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "COVID_Fecal_040122.xlsx"), "Sheet1", infer_eltypes=true)...)
+fmp_covid = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "COVID_Fecal_040122.xlsx"), "Sheet1", infer_eltypes=true))
 rename!(fmp_covid, Dict(:studyID=>:subject))
 fmp_covid = leftjoin(fmp_covid, fmp_subject, on=:subject)
 
@@ -77,7 +76,7 @@ fmp_covid = leftjoin(fmp_covid, fmp_subject, on=:subject)
 #
 # The next stemp is to merge all of the tables.
 
-@rsubset!(fmp_timepoint, !ismissing(:subject))
+subset!(fmp_timepoint, "subject" => ByRow(!ismissing))
 fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=[:subject])
 
 
@@ -193,8 +192,8 @@ for n in names(fmp_alltp)
 end
 
 CSV.write(datafiles("wrangled", "timepoints.csv"), fmp_alltp)
-CSV.write(datafiles("wrangled", "omnisamples.csv"), @rsubset(samplemeta, :Fecal_EtOH == "F"))
-CSV.write(datafiles("wrangled", "etohsamples.csv"), @rsubset(samplemeta, :Fecal_EtOH == "E"))
+CSV.write(datafiles("wrangled", "omnisamples.csv"), subset(samplemeta, "Fecal_EtOH" => ByRow(==("F")), "Mgx_batch"=> ByRow(!ismissing)))
+CSV.write(datafiles("wrangled", "etohsamples.csv"), subset(samplemeta, "Fecal_EtOH" => ByRow(==("E")), "Metabolomics_batch"=> ByRow(!ismissing)))
 CSV.write(datafiles("wrangled", "covid.csv"), fmp_covid)
 
 # ## Uploading to Airtable

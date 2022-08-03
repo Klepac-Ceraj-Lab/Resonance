@@ -32,30 +32,29 @@ export datafiles,
        unstack_techreplicates
 
 using Reexport
-using Airtable
-using CairoMakie
-using AlgebraOfGraphics
-using MultivariateStats
-using Dictionaries
-using CodecZlib
-using Statistics
+using ReTest
+
 using Arrow
-using Tables
-using SparseArrays
-using CodecZlib
-using FilePaths
-using ProgressLogging
+using Airtable
+using AlgebraOfGraphics
+using CairoMakie
 using CategoricalArrays
-using PERMANOVA
+using Chain
+using CodecZlib
+using Dictionaries
 using LinearAlgebra
+using MultivariateStats
+using PERMANOVA
 using Random
+using SparseArrays
+using Statistics
+using Tables
 using ThreadsX
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
 @reexport using CSV
 @reexport using XLSX
-@reexport using DataFramesMeta
 
 const transform = DataFrames.transform
 
