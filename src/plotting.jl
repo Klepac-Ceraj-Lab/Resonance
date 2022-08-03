@@ -78,18 +78,19 @@ mdsaxis(M::MultivariateStats.MDS, dim::Int) = "MDS$dim ($(round(varexplained(M)[
 varexpl(p::PERMANOVA.PSummary) = p.results[1, 3] * 100
 pvalue(p::PERMANOVA.PSummary) = p.results[1, 5]
 
-function plot_permanovas(comms, metadatums; commlabels=[], mdlabels=[], colormap=:blues, colorrange=(0,10))
+function plot_permanovas(pdf; commlabels=[], mdlabels=[], colormap=:blues, colorrange=(0,10))
     fig = Figure()
     ax = Axis(fig[1,1])
-    hm = plot_permanovas!(ax, comms, metadatums; commlabels, mdlabels, colormap, colorrange)
+    hm = plot_permanovas!(ax, pdf; commlabels, mdlabels, colormap, colorrange)
 
     return fig, ax, hm
 end
 
-function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], colormap=:blues, colorrange=(0,10))
-    ps = [permanovas(comm, metadatums) for comm in comms]
-    vmat = mapreduce(df-> df.varexpl, hcat, ps)
-    pmat = mapreduce(df-> df.pvalue, hcat, ps)
+function plot_permanovas!(ax, pdf; commlabels=unique(pdf.label), mdlabels=unique(pdf.metadatum), colormap=:blues, colorrange=(0,10))
+    pgrp = groupby(pdf, :label)
+    
+    vmat = mapreduce(df-> df.varexpl, hcat, pgrp)
+    pmat = mapreduce(df-> df.pvalue, hcat, pgrp)
     
     hm = heatmap!(ax, vmat'; colormap, colorrange)
 
@@ -101,8 +102,8 @@ function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], col
         text!(stars; position=(ci[2],ci[1]), align=(:center, :bottom), color=c)
     end
 
-    ax.xticks = (1:length(comms), isempty(commlabels) ? ["comm$i" for i in 1:length(comms)] : commlabels)
-    ax.yticks = (1:length(metadatums), isempty(commlabels) ? string.(metadatums) : mdlabels)
+    ax.xticks = (1:length(commlabels), commlabels)
+    ax.yticks = (1:length(mdlabels), mdlabels)
 
     return hm
 end

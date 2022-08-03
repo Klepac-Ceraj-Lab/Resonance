@@ -55,7 +55,7 @@ hist!(A_histright, filter(>(24), mtdt.ageMonths) ./ 12; color = :darkgray, bins=
 rowgap!(A, -20)
 rowsize!(A, 1, Relative(1/3))
 colsize!(A, 2, Relative(1/3))
-linkyaxes!(A_histleft, fig1a_histright)
+linkyaxes!(A_histleft, A_histright)
 
 figure
 ```
@@ -64,10 +64,25 @@ figure
 
 ```julia
 B = Axis(BC[1,1])
-Resonance.plot_permanovas!(B, [species, unirefs, metabolites], [:ageMonths, :race, :maternalEd];
-                commlabels = ["taxa", "genes", "metabolits"],
-                mdlabels   = ["Age", "Race", "Maternal Edu."])
 
+commlabels = ["taxa", "genes", "metabolites"]
+mdlabels = ["Cog. score", "Age", "Race", "Maternal Edu."]
+
+perms = let permout = outputfiles("permanovas_all.csv")
+    if !isfile(permout)
+        p = permanovas([species, unirefs, metabolites],
+                        [:cogScore, :ageMonths, :race, :maternalEd];
+                        commlabels, mdlabels)
+        CSV.write(permout, p)
+    else
+        p = CSV.read(permout, DataFrame)
+    end
+    p
+end
+
+
+Resonance.plot_permanovas!(B, perms)
+figure
 ```
 
 ### 1C - Mantel tests

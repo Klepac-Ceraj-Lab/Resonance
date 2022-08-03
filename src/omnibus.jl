@@ -1,7 +1,7 @@
-function permanovas(comm, metadatums; n = 1000)
+function permanovas(comm, metadatums; n = 1000, mdlabels = String.(metadatums))
     permdf = DataFrame()
     
-    for md in metadatums
+    for (md, lab) in zip(metadatums, mdlabels)
         com_md = get(comm, md)
         hasmd = findall(!ismissing, com_md)
         df = DataFrame(test = com_md[hasmd])
@@ -10,19 +10,19 @@ function permanovas(comm, metadatums; n = 1000)
 
         p = permanova(df, abundances(comm)[:, hasmd]', BrayCurtis, @formula(1 ~ test), n)
 
-        push!(permdf, (; metadatum = md, varexpl=varexpl(p), pvalue=pvalue(p)))
+        push!(permdf, (; metadatum = lab, varexpl=varexpl(p), pvalue=pvalue(p)))
     end
 
     return permdf
 end
 
-function permanovas(comms::AbstractArray{<:CommunityProfile}, metadatums; n = 1000, commlabels = [])
+function permanovas(comms::AbstractArray{<:CommunityProfile}, metadatums; n = 1000, commlabels = [], mdlabels = String.(metadatums))
     permdf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
     
     for (i, c) in enumerate(comms)
         @info "Permanovas for $(commlabels[i])"
-        df = permanovas(c, metadatums; n)
+        df = permanovas(c, metadatums; n, mdlabels)
         df.label .= commlabels[i]
         append!(permdf, df)
     end

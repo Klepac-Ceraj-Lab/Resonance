@@ -4,6 +4,8 @@ module Resonance
 export datafiles,
        scratchfiles,
        analysisfiles,
+       outputfiles,
+       figurefiles,
        Metadata,
        TaxonomicProfiles,
        UnirefProfiles,
