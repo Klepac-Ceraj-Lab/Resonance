@@ -6,7 +6,9 @@ struct UnirefProfiles <: Dataset end
 struct KOProfiles <: Dataset end
 struct ECProfiles <: Dataset end
 struct MetabolicProfiles <: Dataset end
+struct Neuroimaging <: Dataset end
 
+load(ds::Dataset; kwargs...) = MethodError("load has not been implemented for $(typeof(ds))")
 
 load(::Metadata) = CSV.read(datafiles("exports", "timepoint_metadata.csv"), DataFrame)
 
