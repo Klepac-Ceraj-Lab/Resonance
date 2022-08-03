@@ -81,7 +81,7 @@ include("plotting.jl")
 include("brain.jl")
 include("startup.jl")
 include("kneaddata.jl")
-include("mantel.jl")
+include("omnibus.jl")
 include("prediction.jl")
 include("data_loading.jl")
 
