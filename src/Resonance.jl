@@ -55,6 +55,7 @@ using CairoMakie
 using CategoricalArrays
 using Chain
 using CodecZlib
+using Combinatorics
 using Dictionaries
 using LinearAlgebra
 using MultivariateStats
