@@ -1,28 +1,42 @@
 module Resonance
 
+# Data loading     
 export datafiles,
        scratchfiles,
        analysisfiles,
-       airtable_metadata,
+       Metadata,
+       TaxonomicProfiles,
+       UnirefProfiles,
+       KOProfiles,
+       ECProfiles,
+       MetabolicProfiles,
+       startup
+
+# Data wrangling
+export airtable_metadata,
        brain_ingest,
        findprevstool,
        count_set,
        upset_dots!,
-       load_metabolites,
+       load_metabolites, # should replace with load(MetabolicProfiles())
        pull_row,
-       loadings,
+       countmap,
+       codebreastfeeding!,
+       stp_overlap,
+       comm_overlap
+
+
+# Plotting
+export loadings,
        varexplained,
        mdsaxis,
        permanovas,
        plot_permanovas,
        mantel,
-       commonname,
-       countmap,
-       codebreastfeeding!,
-       stp_overlap,
-       comm_overlap,
-       startup,
-       build_future_df,
+       commonname
+
+# Machine Learning
+export build_future_df,
        check_longdata_metaduplicates!,
        microbiome_predictors,
        tryparsecol,
@@ -69,5 +83,6 @@ include("startup.jl")
 include("kneaddata.jl")
 include("mantel.jl")
 include("prediction.jl")
+include("data_loading.jl")
 
 end
