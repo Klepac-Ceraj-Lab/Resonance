@@ -33,21 +33,22 @@ export datafiles,
 
 using Reexport
 using ReTest
-using Airtable
-using CairoMakie
-using AlgebraOfGraphics
-using MultivariateStats
-using Dictionaries
-using CodecZlib
-using Statistics
+
 using Arrow
-using Tables
-using SparseArrays
-using CodecZlib
+using Airtable
+using AlgebraOfGraphics
+using CairoMakie
 using CategoricalArrays
-using PERMANOVA
+using Chain
+using CodecZlib
+using Dictionaries
 using LinearAlgebra
+using MultivariateStats
+using PERMANOVA
 using Random
+using SparseArrays
+using Statistics
+using Tables
 using ThreadsX
 
 @reexport using BiobakeryUtils
