@@ -10,7 +10,21 @@ struct Neuroimaging <: Dataset end
 
 load(ds::Dataset; kwargs...) = MethodError("load has not been implemented for $(typeof(ds))")
 
-load(::Metadata) = CSV.read(datafiles("exports", "timepoint_metadata.csv"), DataFrame)
+load(::Metadata) = CSV.read(datafiles("exports", "timepoint_metadata.csv"), DataFrame;
+    types = [
+        Int64,                   # subject
+        Int64,                   # timepoint
+        Union{Missing, Float64}, # ageMonths
+        Union{Missing, String},  # race
+        Union{Missing, String},  # maternalEd
+        Union{Missing, Date},    # assessmentDate
+        Union{Missing, Date},    # scanDate
+        Union{Missing, Float64}, # cogScore
+        Union{Missing, String},  # omni
+        Union{Missing, String},  # etoh
+        Bool                     # has_segmentation
+    ]        
+)
 
 function load(::TaxonomicProfiles; timepoint_metadata = load(Metadata()))
     tbl = Arrow.Table(datafiles("exports", "taxa.arrow"))
