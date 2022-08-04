@@ -33,6 +33,7 @@ perform_airtable_write = false
 
 samplemeta = airtable_metadata() # having set ENV["AIRTABLE_KEY"]
 
+#-
 # Now to add important metadata to samples
 
 @chain samplemeta begin
@@ -133,6 +134,7 @@ fmp_alltp.has_race = .!ismissing.(fmp_alltp."race")
 
 #-
 
+
 subj = groupby(fmp_alltp, :subject)
 transform!(subj, nrow => :n_samples; ungroup=false)
 
@@ -177,13 +179,8 @@ fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
         (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
     end
 end
-count(row-> !ismissing(row."Blood Pressure::Diastolic") && !ismissing(row.ageMonths),
-                eachrow(fmp_alltp))
 
-fmp_alltp.age0to3mo   = map(a-> !ismissing(a) && a < 3,       fmp_alltp.ageMonths)
-fmp_alltp.age3to6mo   = map(a-> !ismissing(a) && 3 <= a < 6,  fmp_alltp.ageMonths)
-fmp_alltp.age6to12mo  = map(a-> !ismissing(a) && 6 <= a < 12, fmp_alltp.ageMonths)
-fmp_alltp.age12moplus = map(a-> !ismissing(a) && 12 <= a,     fmp_alltp.ageMonths)
+
 
 for n in names(fmp_alltp)
     fmp_alltp[!, n] = map(fmp_alltp[!, n]) do v

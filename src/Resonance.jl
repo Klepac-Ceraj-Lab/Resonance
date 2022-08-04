@@ -53,7 +53,6 @@ using Airtable
 using AlgebraOfGraphics
 using CairoMakie
 using CategoricalArrays
-using Chain
 using CodecZlib
 using Combinatorics
 using Dictionaries
@@ -68,6 +67,7 @@ using ThreadsX
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
+@reexport using Chain
 @reexport using CSV
 @reexport using XLSX
 

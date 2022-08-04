@@ -15,7 +15,7 @@ sort!(metadata, ["subject", "timepoint"])
 
 CSV.write(datafiles("exports", "timepoint_metadata.csv"), select(metadata,
     "subject", "timepoint", # Identifiers
-    "ageMonths", "race", "ed" => "maternalEd", # Demographics
+    "ageMonths", "race", "mother_HHS_Education" => "maternalEd", # Demographics
     "assessmentDate", "scanDate", # Dates 
     "cogScore", "omni", "etoh", "has_segmentation" # Measurements
 ))

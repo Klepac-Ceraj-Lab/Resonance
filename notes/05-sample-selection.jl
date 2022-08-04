@@ -10,7 +10,6 @@ tpmetabset = collect(zip(etoh.subject, etoh.timepoint))
 subj = @chain tps begin
     groupby(:subject)
     transform!(
-        nrow => :n_timepoints,
         :cogScore => ByRow(!ismissing) => :has_cogScore,
         AsTable(r"subject|timepoint"i) => ByRow(s -> begin
             (s.subject, s.timepoint) in tpstoolset
@@ -29,6 +28,7 @@ subj = @chain tps begin
 end
 
 tps.has_scan = .!ismissing.(tps.scanDate)
+
 
 subjs = combine(groupby(tps, :subject), 
     :has_stool=> any => :has_stool,
@@ -79,15 +79,23 @@ fig
 # with both a stool sample and a cognitive assessment.
 
 keepers = subset(tps, :has_stool .=> identity, :has_cogScore .=> identity).subject |> unique
+
 keeptps = subset(tps, :subject => ByRow(s-> s in keepers), 
                       :ECHOTPCoded => ByRow(tp-> !startswith(tp, "Pre") # remove moms ("prenatal")
 ))
 
+
 # Now, add columns with sample names for omnigene (metagenomics) and ethanol (metabolomics).
 # Note, up above we removed samples that haven't (yet) been sequenced or LCMS'ed
 
-keeptps.omni = leftjoin(keeptps, unique(select(omni, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
-keeptps.etoh = leftjoin(keeptps, unique(select(etoh, ["subject", "timepoint", "sample"]), ["subject","timepoint"]); on = ["subject", "timepoint"]).sample
+keepomni = unique(select(omni, ["subject", "timepoint", "sample"]), ["subject","timepoint"])
+rename!(keepomni, "sample"=> "omni")
+keepetoh = unique(select(etoh, ["subject", "timepoint", "sample"]), ["subject","timepoint"])
+rename!(keepetoh, "sample"=> "etoh")
+
+leftjoin!(keeptps, keepomni; on = ["subject", "timepoint"])
+leftjoin!(keeptps, keepetoh; on = ["subject", "timepoint"])
+
 CSV.write("data/timepoints_final.csv", keeptps)
 
 # ## Upset plots on kept samples / subjects

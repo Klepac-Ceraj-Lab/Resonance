@@ -1,9 +1,5 @@
 const mainmeta = [
         "ageMonths",
-        "age0to3mo",
-        "age3to6mo",
-        "age6to12mo",
-        "age12moplus",
         "mother_HHS_Education",
         "race",
         "cogScore",
