@@ -116,7 +116,7 @@ function plot_permanovas!(ax, pdf; commlabels=unique(pdf.label), mdlabels=unique
     return hm
 end
 
-function plot_mantel(manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:purples, colorrange=(0,100))
+function plot_mantel(manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:deep, colorrange=(0,100))
     fig = Figure()
     ax = Axis(fig[1,1], title="Mantel tests")
     hm = plot_mantel!(ax, manteldf; commlabels, mdlabels, colormap, colorrange)
@@ -124,12 +124,14 @@ function plot_mantel(manteldf; commlabels=unique([manteldf.thing1; manteldf.thin
     return fig, ax, hm
 end
 
-function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:purples, colorrange=(0,100))
+function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:deep, colorrange=(0,100))
     n = length(commlabels)
+    labidx = Dict(l=> i for (i, l) in enumerate(commlabels))
+
     vmat = zeros(n, n)
     pmat = ones(n, n)
 
-    manteldf.idx = [CartesianIndex(i, j) for (i,j) in combinations(1:n, 2)]
+    manteldf.idx = [CartesianIndex(i, j) for (i,j) in zip(map(t-> labidx[t], manteldf.thing1), map(t-> labidx[t], manteldf.thing2))]
     for row in eachrow(manteldf)
         vmat[row.idx] = row.stat
         pmat[row.idx] = row.pvalue
@@ -137,10 +139,10 @@ function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf
 
     #-
 
-    hm = heatmap!(ax, vmat[1:n-1, 2:n]'; colormap=:viridis, colorrange = (0.01, 1), lowclip=:lightgray)
+    hm = heatmap!(ax, vmat[1:n-1, 2:n]'; colormap, colorrange = (0.01, 1), lowclip=:lightgray)
 
     for ci in manteldf.idx
-        c = vmat[ci] < 0.5 ? :lightgray : :black
+        c = vmat[ci] < 0.5 ? :black : :lightgray 
         text!(string(round(vmat[ci], digits=4)); position=(ci[2]-1,ci[1]), align=(:center, :center), color=c)
         p = pmat[ci]
         stars = p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""

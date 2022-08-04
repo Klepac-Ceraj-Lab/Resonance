@@ -40,10 +40,10 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 
 ```julia
-figure = Figure(; resolution = (1200, 1200));
+figure = Figure(; resolution = (1200, 1200))
 A = GridLayout(figure[1,1])
 BC = GridLayout(figure[1:2,2])
-DEF = GridLayout(figure[2,1])
+DEF = GridLayout(figure[2,1]);
 ```
 
 
@@ -96,7 +96,7 @@ metdm = braycurtis(metabolites)
 This is a permutation test of variance
 
 ```julia
-B = Axis(BC[1,1]; alignmode=Outside())
+B = Axis(BC[1,1]; alignmode=Outside(), title="PERMANOVAs")
 
 commlabels = ["taxa", "UniRef90s", "ECs", "KOs"]
 mdlabels = ["Cog. score", "Age", "Race", "Maternal Edu."]
@@ -140,7 +140,7 @@ figure
 ### 1C - Mantel tests
 
 ```julia
-C = Axis(BC[2,1]; alignmode=Outside())
+C = Axis(BC[2,1]; alignmode=Outside(), title="Mantel Tests")
 
 mdf = let mantout = outputfiles("mantel_all.csv")
     if isfile(mantout)
