@@ -1,7 +1,5 @@
 function permanovas(comm, metadatums; n = 1000, mdlabels = String.(metadatums))
-    permdf = DataFrame()
-    
-    for (md, lab) in zip(metadatums, mdlabels)
+    permdf = ThreadsX.mapreduce(hcat, zip(metadatums, mdlabels)) do (md, lab)    
         com_md = get(comm, md)
         hasmd = findall(!ismissing, com_md)
         df = DataFrame(test = com_md[hasmd])
@@ -10,7 +8,7 @@ function permanovas(comm, metadatums; n = 1000, mdlabels = String.(metadatums))
 
         p = permanova(df, abundances(comm)[:, hasmd]', BrayCurtis, @formula(1 ~ test), n)
 
-        push!(permdf, (; metadatum = lab, varexpl=varexpl(p), pvalue=pvalue(p)))
+        return (; metadatum = lab, varexpl=varexpl(p), pvalue=pvalue(p))
     end
 
     return permdf
@@ -20,11 +18,11 @@ function permanovas(comms::AbstractArray{<:CommunityProfile}, metadatums; n = 10
     permdf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
     
-    for (i, c) in enumerate(comms)
+    ThreadsX.mapreduce(hcat, enumerate(comms)) do (i, c)
         @info "Permanovas for $(commlabels[i])"
         df = permanovas(c, metadatums; n, mdlabels)
         df.label .= commlabels[i]
-        append!(permdf, df)
+        return df
     end
     
     return permdf
@@ -42,7 +40,7 @@ function mantel(mat1, mat2; n = 1000)
     c_real = cor(v1, v2)
     cs = Vector{Float64}(undef, n)
 
-    @inbounds for i in range(1, n)
+    @inbounds ThreadsX.foreach(range(1, n)) do i
         cs[i] = cor(view(v1, randperm(ord)), view(v2, randperm(ord)))
     end
 
@@ -50,19 +48,36 @@ function mantel(mat1, mat2; n = 1000)
 
 end
 
-function mantel(comms::AbstractArray{<:CommunityProfile}, commlabels = []; n = 1000)
+# This could be faster - currently calculating dm in each iteration instead of once per comm
+function mantel(comms::AbstractArray{<:CommunityProfile}; commlabels = [], n = 1000)
     manteldf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
+    iter = collect(combinations(eachindex(comms), 2))
 
-    for ((c1, l1), (c2, l2)) in combinations(collect(zip(comms, commlabels)), 2)
-        @info "Mantel for $l1 and $l2"
-        c1, c2 = comm_overlap(c1, c2)
-        c1 = c1[featurenames(c1) .!= "UNGROUPED", :]
-        c2 = c2[featurenames(c2) .!= "UNGROUPED", :]
+    overlaps = ThreadsX.map(iter) do (i1, i2)
+        c1, c2 = comms[[i1, i2]]
+        return stp_overlap(
+                    zip(get(c1, :subject), get(c2, :timepoint)),
+                    zip(get(c1, :subject), get(c2, :timepoint))
+                )
+    end
+
+    dms = ThreadsX.map(enumerate(iter)) do (i, (i1, i2))
+        ol1, ol2 = overlaps[i]
+        c1, c2 = comms[[i1, i2]]
+        c1 = c1[featurenames(c1) .!= "UNGROUPED", ol1]
+        c2 = c2[featurenames(c2) .!= "UNGROUPED", ol2]
 
         dm1 = braycurtis(c1)
         dm2 = braycurtis(c2)
+        return (dm1, dm2)        
+    end
 
+    labels = collect(combinations(commlabels, 2))
+
+    for i in eachindex(dms)
+        dm1, dm2 = dms[i]
+        l1, l2 = labels[i]
         m, p = mantel(dm1, dm2; n)
         push!(manteldf, (; stat = m, pvalue = p, thing1 = l1, thing2 = l2))      
     end

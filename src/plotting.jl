@@ -75,6 +75,14 @@ varexplained(M::MultivariateStats.MDS) = eigvals(M) ./ sum(eigvals(M))
 
 mdsaxis(M::MultivariateStats.MDS, dim::Int) = "MDS$dim ($(round(varexplained(M)[dim] * 100, digits=2))%)"
 
+function plot_pcoa!(ax, M::MultivariateStats.MDS; dims=(1,2), kwargs...)
+    haskey(kwargs, :xlabel) || (kwargs[:xlabel] =  mdsaxis(M, dims[1]))
+    haskey(kwargs, :ylabel) || (kwargs[:ylabel] =  mdsaxis(M, dims[2]))
+    
+    scatter!(ax, loadings(M, dims[1]), loadings(M, dims[2]); kwargs...)
+end
+
+
 varexpl(p::PERMANOVA.PSummary) = p.results[1, 3] * 100
 pvalue(p::PERMANOVA.PSummary) = p.results[1, 5]
 
@@ -108,7 +116,7 @@ function plot_permanovas!(ax, pdf; commlabels=unique(pdf.label), mdlabels=unique
     return hm
 end
 
-function plot_mantel(manteldf; commlabels=[], colormap=:purples, colorrange=(0,100))
+function plot_mantel(manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:purples, colorrange=(0,100))
     fig = Figure()
     ax = Axis(fig[1,1], title="Mantel tests")
     hm = plot_mantel!(ax, manteldf; commlabels, mdlabels, colormap, colorrange)
@@ -116,8 +124,8 @@ function plot_mantel(manteldf; commlabels=[], colormap=:purples, colorrange=(0,1
     return fig, ax, hm
 end
 
-function plot_mantel!(ax, manteldf; commlabels=[], colormap=:purples, colorrange=(0,100))
-    n = length(unique(manteldf.thing1; manteldf.thing2))
+function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:purples, colorrange=(0,100))
+    n = length(commlabels)
     vmat = zeros(n, n)
     pmat = ones(n, n)
 

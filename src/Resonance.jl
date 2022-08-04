@@ -34,7 +34,10 @@ export loadings,
        mdsaxis,
        permanovas,
        plot_permanovas,
+       plot_permanovas!,
        mantel,
+       plot_mantel,
+       plot_mantel!,
        commonname
 
 # Machine Learning

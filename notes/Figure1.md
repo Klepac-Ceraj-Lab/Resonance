@@ -16,6 +16,7 @@ mtdt = Resonance.load(Metadata())
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mtdt)
 species = filter(t-> taxrank(t) == :species, taxa)
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mtdt) # this can take a bit
+unirefs = filter(!hastaxon, unirefs)
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mtdt)
 ```
 
@@ -25,15 +26,17 @@ Then, we will start constructing the figure.
 See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layout-tutorial/) for more information.
 
 
-## Figure 1
-
-
 ```julia
 figure = Figure(; resolution = (850, 1100));
 A = GridLayout(figure[1,1])
 BC = GridLayout(figure[2,1])
-
+DEF = GridLayout(figure[1:2,2])
 ```
+
+
+## Summaries
+
+
 
 ### 1A - Cohort diagram and ages
 
@@ -68,28 +71,44 @@ B = Axis(BC[1,1])
 commlabels = ["taxa", "genes", "metabolites"]
 mdlabels = ["Cog. score", "Age", "Race", "Maternal Edu."]
 
-perms = let permout = outputfiles("permanovas_all.csv")
-    if !isfile(permout)
-        p = permanovas([species, unirefs, metabolites],
-                        [:cogScore, :ageMonths, :race, :maternalEd];
-                        commlabels, mdlabels)
-        CSV.write(permout, p)
-    else
-        p = CSV.read(permout, DataFrame)
-    end
-    p
-end
+perms = permanovas([species, unirefs, metabolites],
+                    [:cogScore, :ageMonths, :race, :maternalEd];
+                    commlabels, mdlabels
+)
+
+CSV.write(permout, p)
 
 
-Resonance.plot_permanovas!(B, perms)
+plot_permanovas!(B, perms)
 figure
 ```
 
 ### 1C - Mantel tests
 
 ```julia
+C = Axis(BC[1,2])
 
+mdf = mantel([species, unirefs, metabolites]; commlabels)
 
-
-
+plot_mantel!(C, mdf)
+figure
 ```
+
+## Ordinations
+
+```julia
+D = Axis(DEF[1,1])
+
+plot_pcoa!(D, pcoa(species); color=get(species, :ageMonths))
+
+E = Axis(DEF[2,1])
+
+plot_pcoa!(E, pcoa(unirefs); color=get(species, :ageMonths))
+
+F = Axis(DEF[3,1])
+
+plot_pcoa!(F, pcoa(metabolites); color=get(species, :ageMonths))
+
+figure
+```
+
