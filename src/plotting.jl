@@ -76,10 +76,10 @@ varexplained(M::MultivariateStats.MDS) = eigvals(M) ./ sum(eigvals(M))
 mdsaxis(M::MultivariateStats.MDS, dim::Int) = "MDS$dim ($(round(varexplained(M)[dim] * 100, digits=2))%)"
 
 function plot_pcoa!(ax, M::MultivariateStats.MDS; dims=(1,2), kwargs...)
-    xlabel = get(kwargs, :xlabel, mdsaxis(M, dims[1]))
-    ylabel = get(kwargs, :ylabel, mdsaxis(M, dims[2]))
+    ax.xlabel = get(kwargs, :xlabel, mdsaxis(M, dims[1]))
+    ax.ylabel = get(kwargs, :ylabel, mdsaxis(M, dims[2]))
     
-    scatter!(ax, loadings(M, dims[1]), loadings(M, dims[2]); (k=>v for (k, v) in pairs(kwargs) if !in(k, (:xlabel, :ylabel)))...)
+    scatter!(ax, loadings(M, dims[1]), loadings(M, dims[2]); kwargs...)
 end
 
 

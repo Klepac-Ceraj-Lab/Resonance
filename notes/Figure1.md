@@ -6,6 +6,7 @@ First, load packages that will be used throughout this notebook.
 using Resonance
 using FileIO
 using CairoMakie # for plotting
+using Distance
 ```
 
 Then, we'll load in the different data sources.
@@ -35,10 +36,10 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 
 ```julia
-figure = Figure(; resolution = (850, 1100));
+figure = Figure(; resolution = (1200, 1200));
 A = GridLayout(figure[1,1])
-BC = GridLayout(figure[2,1])
-DEF = GridLayout(figure[1:2,2])
+BC = GridLayout(figure[1:2,2])
+DEF = GridLayout(figure[2,1])
 ```
 
 
@@ -71,7 +72,7 @@ linkyaxes!(A_histleft, A_histright)
 figure
 ```
 
-### 1B - PERMANOVA
+### 1B-C: Omnibus tests
 
 ```julia
 B = Axis(BC[1,1]; alignmode=Outside())
@@ -102,12 +103,13 @@ figure
 ### 1C - Mantel tests
 
 ```julia
-C = Axis(BC[1,2]; alignmode=Outside())
+C = Axis(BC[2,1]; alignmode=Outside())
 
 mdf = let mantout = outputfiles("mantel_all.csv")
     if isfile(mantout)
         m = CSV.read(mantout, DataFrame)
     else
+        sdf = pairwuse
         m = mantel([species, #=unirefs,=# ecs, kos, metabolites]; commlabels)
         CSV.write(mantout, m)
     end
@@ -127,14 +129,15 @@ plot_pcoa!(D, pcoa(species); color=get(species, :ageMonths))
 
 E = Axis(DEF[2,1])
 
-plot_pcoa!(E, pcoa(unirefs); color=get(species, :ageMonths))
+plot_pcoa!(E, pcoa(unirefs); color=get(unirefs, :ageMonths))
 
 F = Axis(DEF[3,1])
 
-plot_pcoa!(F, pcoa(metabolites); color=get(species, :ageMonths))
+plot_pcoa!(F, pcoa(metabolites); color=get(metabolites, :ageMonths))
 
 save(figurefiles("Figure1.svg"), figure)
 save(figurefiles("Figure1.png"), figure)
 figure
 ```
 
+![](figures/Figure1.png)

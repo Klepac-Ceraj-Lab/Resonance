@@ -1,10 +1,37 @@
-function permanovas(comm, metadatums; n = 1000, mdlabels = String.(metadatums))
+function permanovas(dm::Matrix, metadatums::Vector{<:Vector}; n = 1000, mdlabels = ["md$i" for i in eachindex(metadatums)])
+    permdf = mapreduce(vcat, zip(metadatums, mdlabels)) do (md, lab)    
+        hasmd = findall(!ismissing, md)
+        df = DataFrame(test = md[hasmd])
+        disallowmissing!(df)
+        size(df, 1) < 20 && @warn "Very small number of not missing $lab"
+
+        p = permanova(df, dm[hasmd, hasmd], @formula(1 ~ test), n)
+
+        return (; metadatum = lab, varexpl=varexpl(p), pvalue=pvalue(p))
+    end
+
+    return DataFrame(permdf)
+end
+
+function permanovas(dms::AbstractArray{<:Matrix}, metadatums; n = 1000, commlabels = [], mdlabels = ["md$i" for i in eachindex(metadatums)])
+    isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(dms)])
+    
+    mapreduce(vcat, enumerate(dms)) do (i, dm)
+        @info "Permanovas for $(commlabels[i])"
+        df = permanovas(dm, metadatums; n, mdlabels)
+        df.label .= commlabels[i]
+        return df
+    end
+end
+
+
+function permanovas(comm::CommunityProfile, metadatums; n = 1000, mdlabels = String.(metadatums))
     permdf = mapreduce(vcat, zip(metadatums, mdlabels)) do (md, lab)    
         com_md = get(comm, md)
         hasmd = findall(!ismissing, com_md)
         df = DataFrame(test = com_md[hasmd])
         disallowmissing!(df)
-        size(df, 1) < 20 && @warn "Very small number of not missing $md"
+        size(df, 1) < 20 && @warn "Very small number of not missing $lab"
 
         p = permanova(df, abundances(comm)[:, hasmd]', BrayCurtis, @formula(1 ~ test), n)
 
@@ -45,35 +72,13 @@ function mantel(mat1, mat2; n = 1000)
 
 end
 
-function mantel(comms::AbstractArray{<:CommunityProfile}; commlabels = [], n = 1000)
+function mantel(dms::AbstractArray{<:Matrix}; commlabels = [], n = 1000)
     manteldf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
-    iter = collect(combinations(eachindex(comms), 2))
 
-    overlaps = ThreadsX.map(iter) do (i1, i2)
-        c1, c2 = comms[[i1, i2]]
-        return stp_overlap(
-                    collect(zip(get(c1, :subject), get(c2, :timepoint))),
-                    collect(zip(get(c1, :subject), get(c2, :timepoint)))
-                )
-    end
-
-    dms = ThreadsX.map(enumerate(iter)) do (i, (i1, i2))
-        ol1, ol2 = overlaps[i]
-        c1, c2 = comms[[i1, i2]]
-        c1 = c1[featurenames(c1) .!= "UNGROUPED", ol1]
-        c2 = c2[featurenames(c2) .!= "UNGROUPED", ol2]
-
-        dm1 = braycurtis(c1)
-        dm2 = braycurtis(c2)
-        return (dm1, dm2)        
-    end
-
-    labels = collect(combinations(commlabels, 2))
-
-    for i in eachindex(dms)
-        dm1, dm2 = dms[i]
-        l1, l2 = labels[i]
+    for (i,j) in combinations(eachindex(dms), 2)
+        dm1, dm2 = dms[[i, j]]
+        l1, l2 = commlabels[[i, j]]
         m, p = mantel(dm1, dm2; n)
         push!(manteldf, (; stat = m, pvalue = p, thing1 = l1, thing2 = l2))      
     end
