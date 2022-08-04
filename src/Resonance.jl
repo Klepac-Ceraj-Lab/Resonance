@@ -38,6 +38,7 @@ export loadings,
        mantel,
        plot_mantel,
        plot_mantel!,
+       plot_pcoa!,
        commonname
 
 # Machine Learning

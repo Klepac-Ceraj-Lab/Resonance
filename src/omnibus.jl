@@ -1,5 +1,5 @@
 function permanovas(comm, metadatums; n = 1000, mdlabels = String.(metadatums))
-    permdf = ThreadsX.mapreduce(hcat, zip(metadatums, mdlabels)) do (md, lab)    
+    permdf = mapreduce(vcat, zip(metadatums, mdlabels)) do (md, lab)    
         com_md = get(comm, md)
         hasmd = findall(!ismissing, com_md)
         df = DataFrame(test = com_md[hasmd])
@@ -11,21 +11,18 @@ function permanovas(comm, metadatums; n = 1000, mdlabels = String.(metadatums))
         return (; metadatum = lab, varexpl=varexpl(p), pvalue=pvalue(p))
     end
 
-    return permdf
+    return DataFrame(permdf)
 end
 
 function permanovas(comms::AbstractArray{<:CommunityProfile}, metadatums; n = 1000, commlabels = [], mdlabels = String.(metadatums))
-    permdf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
     
-    ThreadsX.mapreduce(hcat, enumerate(comms)) do (i, c)
+    mapreduce(vcat, enumerate(comms)) do (i, c)
         @info "Permanovas for $(commlabels[i])"
         df = permanovas(c, metadatums; n, mdlabels)
         df.label .= commlabels[i]
         return df
     end
-    
-    return permdf
 end
 
 function mantel(mat1, mat2; n = 1000)
@@ -48,7 +45,6 @@ function mantel(mat1, mat2; n = 1000)
 
 end
 
-# This could be faster - currently calculating dm in each iteration instead of once per comm
 function mantel(comms::AbstractArray{<:CommunityProfile}; commlabels = [], n = 1000)
     manteldf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
@@ -57,8 +53,8 @@ function mantel(comms::AbstractArray{<:CommunityProfile}; commlabels = [], n = 1
     overlaps = ThreadsX.map(iter) do (i1, i2)
         c1, c2 = comms[[i1, i2]]
         return stp_overlap(
-                    zip(get(c1, :subject), get(c2, :timepoint)),
-                    zip(get(c1, :subject), get(c2, :timepoint))
+                    collect(zip(get(c1, :subject), get(c2, :timepoint))),
+                    collect(zip(get(c1, :subject), get(c2, :timepoint)))
                 )
     end
 
