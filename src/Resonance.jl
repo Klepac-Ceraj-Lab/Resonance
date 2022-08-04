@@ -4,6 +4,8 @@ module Resonance
 export datafiles,
        scratchfiles,
        analysisfiles,
+       outputfiles,
+       figurefiles,
        Metadata,
        TaxonomicProfiles,
        UnirefProfiles,
@@ -32,7 +34,11 @@ export loadings,
        mdsaxis,
        permanovas,
        plot_permanovas,
+       plot_permanovas!,
        mantel,
+       plot_mantel,
+       plot_mantel!,
+       plot_pcoa!,
        commonname
 
 # Machine Learning

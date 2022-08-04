@@ -1,33 +1,55 @@
-function permanovas(comm, metadatums; n = 1000)
-    permdf = DataFrame()
+function permanovas(dm::Matrix, metadatums::Vector{<:Vector}; n = 1000, mdlabels = ["md$i" for i in eachindex(metadatums)])
+    permdf = mapreduce(vcat, zip(metadatums, mdlabels)) do (md, lab)    
+        hasmd = findall(!ismissing, md)
+        df = DataFrame(test = md[hasmd])
+        disallowmissing!(df)
+        size(df, 1) < 20 && @warn "Very small number of not missing $lab"
+
+        p = permanova(df, dm[hasmd, hasmd], @formula(1 ~ test), n)
+
+        return (; metadatum = lab, varexpl=varexpl(p), pvalue=pvalue(p))
+    end
+
+    return DataFrame(permdf)
+end
+
+function permanovas(dms::AbstractArray{<:Matrix}, metadatums; n = 1000, commlabels = [], mdlabels = ["md$i" for i in eachindex(metadatums)])
+    isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(dms)])
     
-    for md in metadatums
+    mapreduce(vcat, enumerate(dms)) do (i, dm)
+        @info "Permanovas for $(commlabels[i])"
+        df = permanovas(dm, metadatums; n, mdlabels)
+        df.label .= commlabels[i]
+        return df
+    end
+end
+
+
+function permanovas(comm::CommunityProfile, metadatums; n = 1000, mdlabels = String.(metadatums))
+    permdf = mapreduce(vcat, zip(metadatums, mdlabels)) do (md, lab)    
         com_md = get(comm, md)
         hasmd = findall(!ismissing, com_md)
         df = DataFrame(test = com_md[hasmd])
         disallowmissing!(df)
-        size(df, 1) < 20 && @warn "Very small number of not missing $md"
+        size(df, 1) < 20 && @warn "Very small number of not missing $lab"
 
         p = permanova(df, abundances(comm)[:, hasmd]', BrayCurtis, @formula(1 ~ test), n)
 
-        push!(permdf, (; metadatum = md, varexpl=varexpl(p), pvalue=pvalue(p)))
+        return (; metadatum = lab, varexpl=varexpl(p), pvalue=pvalue(p))
     end
 
-    return permdf
+    return DataFrame(permdf)
 end
 
-function permanovas(comms::AbstractArray{<:CommunityProfile}, metadatums; n = 1000, commlabels = [])
-    permdf = DataFrame()
+function permanovas(comms::Vector{<:CommunityProfile}, metadatums; n = 1000, commlabels = [], mdlabels = String.(metadatums))
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
     
-    for (i, c) in enumerate(comms)
+    mapreduce(vcat, enumerate(comms)) do (i, c)
         @info "Permanovas for $(commlabels[i])"
-        df = permanovas(c, metadatums; n)
+        df = permanovas(c, metadatums; n, mdlabels)
         df.label .= commlabels[i]
-        append!(permdf, df)
+        return df
     end
-    
-    return permdf
 end
 
 function mantel(mat1, mat2; n = 1000)
@@ -42,7 +64,7 @@ function mantel(mat1, mat2; n = 1000)
     c_real = cor(v1, v2)
     cs = Vector{Float64}(undef, n)
 
-    @inbounds for i in range(1, n)
+    @inbounds ThreadsX.foreach(range(1, n)) do i
         cs[i] = cor(view(v1, randperm(ord)), view(v2, randperm(ord)))
     end
 
@@ -50,19 +72,13 @@ function mantel(mat1, mat2; n = 1000)
 
 end
 
-function mantel(comms::AbstractArray{<:CommunityProfile}, commlabels = []; n = 1000)
+function mantel(dms::Vector{<:Matrix}; commlabels = [], n = 1000)
     manteldf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
 
-    for ((c1, l1), (c2, l2)) in combinations(collect(zip(comms, commlabels)), 2)
-        @info "Mantel for $l1 and $l2"
-        c1, c2 = comm_overlap(c1, c2)
-        c1 = c1[featurenames(c1) .!= "UNGROUPED", :]
-        c2 = c2[featurenames(c2) .!= "UNGROUPED", :]
-
-        dm1 = braycurtis(c1)
-        dm2 = braycurtis(c2)
-
+    for (i,j) in combinations(eachindex(dms), 2)
+        dm1, dm2 = dms[[i, j]]
+        l1, l2 = commlabels[[i, j]]
         m, p = mantel(dm1, dm2; n)
         push!(manteldf, (; stat = m, pvalue = p, thing1 = l1, thing2 = l2))      
     end

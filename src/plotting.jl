@@ -75,21 +75,30 @@ varexplained(M::MultivariateStats.MDS) = eigvals(M) ./ sum(eigvals(M))
 
 mdsaxis(M::MultivariateStats.MDS, dim::Int) = "MDS$dim ($(round(varexplained(M)[dim] * 100, digits=2))%)"
 
+function plot_pcoa!(ax, M::MultivariateStats.MDS; dims=(1,2), kwargs...)
+    ax.xlabel = get(kwargs, :xlabel, mdsaxis(M, dims[1]))
+    ax.ylabel = get(kwargs, :ylabel, mdsaxis(M, dims[2]))
+    
+    scatter!(ax, loadings(M, dims[1]), loadings(M, dims[2]); kwargs...)
+end
+
+
 varexpl(p::PERMANOVA.PSummary) = p.results[1, 3] * 100
 pvalue(p::PERMANOVA.PSummary) = p.results[1, 5]
 
-function plot_permanovas(comms, metadatums; commlabels=[], mdlabels=[], colormap=:blues, colorrange=(0,10))
+function plot_permanovas(pdf; commlabels=[], mdlabels=[], colormap=:blues, colorrange=(0,10))
     fig = Figure()
     ax = Axis(fig[1,1])
-    hm = plot_permanovas!(ax, comms, metadatums; commlabels, mdlabels, colormap, colorrange)
+    hm = plot_permanovas!(ax, pdf; commlabels, mdlabels, colormap, colorrange)
 
     return fig, ax, hm
 end
 
-function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], colormap=:blues, colorrange=(0,10))
-    ps = [permanovas(comm, metadatums) for comm in comms]
-    vmat = mapreduce(df-> df.varexpl, hcat, ps)
-    pmat = mapreduce(df-> df.pvalue, hcat, ps)
+function plot_permanovas!(ax, pdf; commlabels=unique(pdf.label), mdlabels=unique(pdf.metadatum), colormap=:blues, colorrange=(0,10))
+    pgrp = groupby(pdf, :label)
+    
+    vmat = mapreduce(df-> df.varexpl, hcat, pgrp)
+    pmat = mapreduce(df-> df.pvalue, hcat, pgrp)
     
     hm = heatmap!(ax, vmat'; colormap, colorrange)
 
@@ -101,13 +110,13 @@ function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], col
         text!(stars; position=(ci[2],ci[1]), align=(:center, :bottom), color=c)
     end
 
-    ax.xticks = (1:length(comms), isempty(commlabels) ? ["comm$i" for i in 1:length(comms)] : commlabels)
-    ax.yticks = (1:length(metadatums), isempty(commlabels) ? string.(metadatums) : mdlabels)
+    ax.xticks = (1:length(commlabels), commlabels)
+    ax.yticks = (1:length(mdlabels), mdlabels)
 
     return hm
 end
 
-function plot_mantel(manteldf; commlabels=[], colormap=:purples, colorrange=(0,100))
+function plot_mantel(manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:deep, colorrange=(0,100))
     fig = Figure()
     ax = Axis(fig[1,1], title="Mantel tests")
     hm = plot_mantel!(ax, manteldf; commlabels, mdlabels, colormap, colorrange)
@@ -115,12 +124,14 @@ function plot_mantel(manteldf; commlabels=[], colormap=:purples, colorrange=(0,1
     return fig, ax, hm
 end
 
-function plot_mantel!(ax, manteldf; commlabels=[], colormap=:purples, colorrange=(0,100))
-    n = length(unique(manteldf.thing1; manteldf.thing2))
+function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf.thing2]), colormap=:deep, colorrange=(0,100))
+    n = length(commlabels)
+    labidx = Dict(l=> i for (i, l) in enumerate(commlabels))
+
     vmat = zeros(n, n)
     pmat = ones(n, n)
 
-    manteldf.idx = [CartesianIndex(i, j) for (i,j) in combinations(1:n, 2)]
+    manteldf.idx = [CartesianIndex(i, j) for (i,j) in zip(map(t-> labidx[t], manteldf.thing1), map(t-> labidx[t], manteldf.thing2))]
     for row in eachrow(manteldf)
         vmat[row.idx] = row.stat
         pmat[row.idx] = row.pvalue
@@ -128,10 +139,10 @@ function plot_mantel!(ax, manteldf; commlabels=[], colormap=:purples, colorrange
 
     #-
 
-    hm = heatmap!(ax, vmat[1:n-1, 2:n]'; colormap=:viridis, colorrange = (0.01, 1), lowclip=:lightgray)
+    hm = heatmap!(ax, vmat[1:n-1, 2:n]'; colormap, colorrange = (0.01, 1), lowclip=:lightgray)
 
     for ci in manteldf.idx
-        c = vmat[ci] < 0.5 ? :lightgray : :black
+        c = vmat[ci] < 0.5 ? :black : :lightgray 
         text!(string(round(vmat[ci], digits=4)); position=(ci[2]-1,ci[1]), align=(:center, :center), color=c)
         p = pmat[ci]
         stars = p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""
