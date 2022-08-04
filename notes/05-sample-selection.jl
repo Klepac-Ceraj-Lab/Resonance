@@ -78,9 +78,9 @@ fig
 # We want to keep all subjects that have at least 1 timepoint
 # with both a stool sample and a cognitive assessment.
 
-keepers = subset(tps, :has_stool .=> identity, :has_cogScore .=> identity).subject |> unique
+transform!(groupby(tps, :subject), AsTable([:has_stool, :has_cogScore]) => (tbl -> any(tbl.has_stool) && any(tbl.has_cogScore)) => :keeper)
 
-keeptps = subset(tps, :subject => ByRow(s-> s in keepers), 
+keeptps = subset(tps, :keeper => identity, 
                       :ECHOTPCoded => ByRow(tp-> !startswith(tp, "Pre") # remove moms ("prenatal")
 ))
 

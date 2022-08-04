@@ -78,22 +78,6 @@ mdsaxis(M::MultivariateStats.MDS, dim::Int) = "MDS$dim ($(round(varexplained(M)[
 varexpl(p::PERMANOVA.PSummary) = p.results[1, 3] * 100
 pvalue(p::PERMANOVA.PSummary) = p.results[1, 5]
 
-function permanovas(comm, metadatums)
-    permdf = DataFrame()
-    for md in metadatums
-        com_md = get(comm, md)
-        hasmd = findall(!ismissing, com_md)
-        df = DataFrame(test = com_md[hasmd])
-        disallowmissing!(df)
-        size(df, 1) < 20 && @warn "Very small number of not missing $md"
-
-        p = permanova(df, abundances(comm)[:, hasmd]', BrayCurtis, @formula(1 ~ test))
-        push!(permdf, (; metadatum = md, varexpl=varexpl(p), pvalue=pvalue(p)))
-    end
-    return permdf
-
-end
-
 function plot_permanovas(comms, metadatums; commlabels=[], mdlabels=[], colormap=:blues, colorrange=(0,10))
     fig = Figure()
     ax = Axis(fig[1,1])
@@ -122,6 +106,44 @@ function plot_permanovas!(ax, comms, metadatums; commlabels=[], mdlabels=[], col
 
     return hm
 end
+
+function plot_mantel(manteldf; commlabels=[], colormap=:purples, colorrange=(0,100))
+    fig = Figure()
+    ax = Axis(fig[1,1], title="Mantel tests")
+    hm = plot_mantel!(ax, manteldf; commlabels, mdlabels, colormap, colorrange)
+
+    return fig, ax, hm
+end
+
+function plot_mantel!(ax, manteldf; commlabels=[], colormap=:purples, colorrange=(0,100))
+    n = length(unique(manteldf.thing1; manteldf.thing2))
+    vmat = zeros(n, n)
+    pmat = ones(n, n)
+
+    manteldf.idx = [CartesianIndex(i, j) for (i,j) in combinations(1:n, 2)]
+    for row in eachrow(manteldf)
+        vmat[row.idx] = row.stat
+        pmat[row.idx] = row.pvalue
+    end
+
+    #-
+
+    hm = heatmap!(ax, vmat[1:n-1, 2:n]'; colormap=:viridis, colorrange = (0.01, 1), lowclip=:lightgray)
+
+    for ci in manteldf.idx
+        c = vmat[ci] < 0.5 ? :lightgray : :black
+        text!(string(round(vmat[ci], digits=4)); position=(ci[2]-1,ci[1]), align=(:center, :center), color=c)
+        p = pmat[ci]
+        stars = p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""
+        text!(stars; position=(ci[2]-1,ci[1]), align=(:center, :bottom), color=c)
+    end
+
+    ax.xticks = (1:n-1, isempty(commlabels) ? ["comm$i" for i in 1:n-1] : commlabels[2:end])
+    ax.yticks = (1:n-1, isempty(commlabels) ? ["comm$i" for i in 1:n] : commlabels[1:end-1])
+
+    return hm
+end
+
 
 function plot_fsea(setcors, notcors; label="", bandres=5000)
     fullcors = [setcors; notcors]

@@ -1,7 +1,7 @@
 name = "Resonance"
 uuid = "4cd67c38-a7de-4831-b40f-984a6a588dec"
 authors = ["Kevin Bonham", "PhD <kbonham@wellesley.edu> and contributors"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Airtable = "96f7d883-6668-4fbe-bb01-b60427b16035"
@@ -17,9 +17,11 @@ ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DecisionTree = "7806a523-6efd-50cb-b5f6-3fa6f1930dbb"
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
 HypothesisTests = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
@@ -47,8 +49,8 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
-XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
+XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
