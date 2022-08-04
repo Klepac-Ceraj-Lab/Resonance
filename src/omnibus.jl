@@ -41,7 +41,7 @@ function permanovas(comm::CommunityProfile, metadatums; n = 1000, mdlabels = Str
     return DataFrame(permdf)
 end
 
-function permanovas(comms::AbstractArray{<:CommunityProfile}, metadatums; n = 1000, commlabels = [], mdlabels = String.(metadatums))
+function permanovas(comms::Vector{<:CommunityProfile}, metadatums; n = 1000, commlabels = [], mdlabels = String.(metadatums))
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
     
     mapreduce(vcat, enumerate(comms)) do (i, c)
@@ -72,7 +72,7 @@ function mantel(mat1, mat2; n = 1000)
 
 end
 
-function mantel(dms::AbstractArray{<:Matrix}; commlabels = [], n = 1000)
+function mantel(dms::Vector{<:Matrix}; commlabels = [], n = 1000)
     manteldf = DataFrame()
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
 
