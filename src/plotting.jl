@@ -155,8 +155,13 @@ function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf
     return hm
 end
 
-
 function plot_fsea(setcors, notcors; label="", bandres=5000)
+    fig = Figure()
+    plot_fsea!(fig.layout, setcors, notcors; label, bandres)
+    fig
+end
+
+function plot_fsea!(grid, setcors, notcors; label="", bandres=5000)
     fullcors = [setcors; notcors]
     ncors = length(fullcors)
 
@@ -170,17 +175,16 @@ function plot_fsea(setcors, notcors; label="", bandres=5000)
     xs = 1:ncors
     ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
     
-    t = "Enrichment score - $(round(max(abs.(extrema(ys))...), digits=3))"
-    !isempty(label) && (t = string(label, ": ", t))
+    t = "Enrichment score: $(round(enrichment_score(setcors, notcors), digits=3))"
+    !isempty(label) && (t = string(label, " ", t))
 
-    fig = Figure()
-    ax1 = Axis(fig[1,1]; title=t, ylabel="enrichment score")
+    ax1 = Axis(grid[1,1]; title=t, ylabel="enrichment score")
     hidexdecorations!(ax1)
 
-    ax2 = Axis(fig[2,1])
+    ax2 = Axis(grid[2,1])
     hidedecorations!(ax2)
 
-    ax3 = Axis(fig[3,1]; ylabel="correlation", xlabel="rank")
+    ax3 = Axis(grid[3,1]; ylabel="correlation", xlabel="rank")
     
     lines!(ax1, xs, ys)
     vlines!(ax2, ranks[1:length(setcors)]; color=:black)
@@ -195,12 +199,12 @@ function plot_fsea(setcors, notcors; label="", bandres=5000)
     band!(ax3, xs[rn], lower[rn], upper[rn]; color=:lightgray)
 
     
-    rowsize!(fig.layout, 2, Relative(1/8))
-    rowsize!(fig.layout, 3, Relative(1/4))
+    rowsize!(grid, 2, Relative(1/8))
+    rowsize!(grid, 3, Relative(1/4))
     
     linkxaxes!(ax1, ax2, ax3)
     tightlimits!.((ax1, ax2, ax3))
-    fig
+    grid
 end
 
 

@@ -57,12 +57,25 @@ pretty_table(first(fsdf, 10); backend = Val(:latex))
 ```
 
 ```julia
+figure = Figure(resolution=(1200, 800))
+
+A = Axis(figure[1,1]; xlabel="prevalence", ylabel="correlation")
+B = GridLayout(figure[1,2])
+C = GridLayout(figure[2,1])
+D = GridLayout(figure[2,2])
+```
+
+```julia
+
+```
+
+```julia
 gs = "Menaquinone synthesis"
 ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea(cs, acs; label=gs)
 ```
 
 ```julia
@@ -71,7 +84,7 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea!(B, cs, acs; label=gs)
 ```
 
 ```julia
@@ -80,7 +93,7 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea!(C, cs, acs; label=gs)
 ```
 
 ```julia
@@ -89,7 +102,7 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea(cs, acs; label=gs)
 ```
 
 ```julia
@@ -98,7 +111,8 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea!(D, cs, acs; label=gs)
+figure
 ```
 
 ```julia
@@ -107,7 +121,7 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea(cs, acs; label=gs)
 ```
 
 ```julia
@@ -116,7 +130,7 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea(cs, acs; label=gs)
 ```
 
 ```julia
@@ -125,7 +139,7 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea(cs, acs; label=gs)
 ```
 
 ```julia
@@ -134,6 +148,6 @@ ixs = neuroactive[gs]
 cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
-fig = Resonance.plot_fsea(cs, acs; label=gs)
+Resonance.plot_fsea(cs, acs; label=gs)
 ```
 

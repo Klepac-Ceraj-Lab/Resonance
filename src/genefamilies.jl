@@ -87,10 +87,10 @@ function get_neuroactive_kos(neuroactivepath=datafiles("gbm.txt"))
        line = split(line, r"[\t,]")
        if startswith(line[1], "MGB")
            (mgb, desc) = line
-           desc = rstrip(replace(desc, r"\b[IV]+\b.*$"=>""))
-           desc = replace(desc, r" \([\w\s\-]+\)"=>"")
-           desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
-           desc = replace(desc, " (AA"=>"")
+        #    desc = rstrip(replace(desc, r"\b[IV]+\b.*$"=>""))
+        #    desc = replace(desc, r" \([\w\s\-]+\)"=>"")
+        #    desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
+        #    desc = replace(desc, " (AA"=>"")
            @info "getting unirefs for $desc"
            !in(desc, keys(neuroactive)) && insert!(neuroactive, desc, String[])
        else
@@ -138,4 +138,18 @@ function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos::AbstractVecto
     end
 
     return fsea(cors, pos)
+end
+
+function enrichment_score(setcors, notcors)
+    srt = sortperm([setcors; notcors]; rev=true)
+    ranks = invperm(srt)
+    setranks = Set(ranks[1:length(setcors)])
+    
+    setscore =  1 / length(setcors)
+    notscore = -1 / length(notcors)
+    
+    ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
+    
+    lower, upper = extrema(ys)
+    return abs(lower) > abs(upper) ? lower : upper
 end
