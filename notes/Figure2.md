@@ -143,7 +143,7 @@ specu6_lmresults
 ```julia
 speco18_lmresults = DataFrame()
 
-for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))    
     @info spc
 
     over0 = speco18[!, spc] .> 0
@@ -151,7 +151,7 @@ for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", 
     df = speco18[over0, ["ageMonths", "cogScore", "read_depth", "subject", "maternalEd"]]
     df.bug = log.(speco18[over0, spc] ./ 100)
 
-    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(cogScore ~ bug  + ageMonths + read_depth + maternalEd), df)
 
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
@@ -289,20 +289,30 @@ figure
 ```julia
 # for sp in subset(speco18_lmresults, :qvalue => ByRow(<(0.1))).species
 
-spc = "Prevotella_copri"
+spc = "Faecalibacterium_prausnitzii"
 
-over0 = speco18[!, spc] .> 0
+over0 = findall(row-> !ismissing(row.maternalEd) && row[spc] > 0, eachrow(speco18))
 
-df = speco18[over0, ["ageMonths", "cogScore", "read_depth", "subject"]]
+df = speco18[over0, ["ageMonths", "cogScore", "read_depth", "subject", "maternalEd"]]
 @show size(df)
 df.bug = log.(speco18[over0, spc] ./ 100)
 
-mod = lm(@formula(bug ~ ageMonths + read_depth), df)
+mod1 = lm(@formula(cogScore ~ ageMonths + read_depth + maternalEd), df)
+mod2 = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
 # end
 
-scatter(predict(mod), log.(speco18[over0, spc] ./ 100))
-lines!([-6, 0], [-6, 0])
+scatter(predict(mod1), speco18[over0, "cogScore"])
+lines!([40, 140], [40, 140])
 
-scatter!(predict(mod), log.(speco18[over0, spc] ./ 100); color=:orange)
+scatter!(predict(mod2), speco18[over0, "cogScore"]; color=:orange)
+current_figure()
+
+cor(predict(mod1), speco18[over0, "cogScore"])
+cor(predict(mod2), speco18[over0, "cogScore"])
+
+df2 = copy(df)
+df2.bug .= 0
+
+scatter!(predict(mod2, df2), speco18[over0, "cogScore"]; color=:purple)
 current_figure()
 ```
