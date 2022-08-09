@@ -203,7 +203,7 @@ E = Axis(BCDE[4,1])
 
 
 ```julia
-heatmap!(A,k.x,k.y, log2.(k.density .+ minimum(k.density)/2))
+heatmap!(A,k.x,k.y, k.density .^ (1/4))
 
 
 for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (B,C,D))
@@ -216,6 +216,7 @@ end
 
 Resonance.plot_corrband!(E, cors)
 
+rowsize!(BCDE, 4, Relative(1/8))
 figure
 ```
 
