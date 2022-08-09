@@ -1,184 +1,65 @@
 #####
-# Functions to use
+# Notebook D02 - Prediction of futureCogScores from current taxonomic data
 #####
 
-function tryparse(Type::DataType, col)
-    try
-        return(parse.(Type, col))
-    catch
-        return(col)
-    end
-end
+using Chain
+using Statistics
+using Random
+using StableRNGs
+using ProgressMeter
+using MLJ
+ml_rng = StableRNG(0)
 
-function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 250000, return_indexes = true)
+## 1. Collecting the data to make the future dataframe
+include("D00-collect_taxonomic_cogscore_data.jl")
 
-    function compute_tietjenmoore(data, k, n)
-        r_all = abs.(data .- mean(data))
-        filteredData = data[sortperm(r_all)][1:(n-k)]
-        ksub = (filteredData .- mean(filteredData))
-    
-        return( sum(ksub .^ 2) / sum(r_all .^ 2) )
-    end
-    
-    function test_tietjenmoore(dataSeries,k, n, alpha, sim_trials)
-        ek = compute_tietjenmoore(dataSeries,k, n)
-        simulation = [ compute_tietjenmoore(randn(length(dataSeries)), k, n) for i in 1:sim_trials ]
-        Talpha=round(quantile(Normal(Statistics.mean(simulation), Statistics.std(simulation)),alpha), digits = 3)
+## 2. Building prediction inputs and outputs
+prediction_df = build_metadata_prediction_df(cogscore_taxa_df, Symbol.(retained_featurenames), [ :cogScore ])
 
-        return(ek, Talpha)
-    end
-
-    println("----- Begin Tietjen-Moore Outlier test -----")
-    println("H0: There are no outliers in the data set.")
-    println("H1: There are exactly k outliers in the data set\n")
-
-    n = length(values)
-
-    L_set, L_critical = test_tietjenmoore(values, k, n, alpha, sim_trials)
-    println("Set L-statistic for $n samples and $k outliers with mode $(mode): $(round(L_set, digits = 4))")     
-    println("Critical L for $n samples and $k outliers with mode $(mode): $(round(L_critical, digits = 4))\n")
-
-    if L_set < L_critical
-        println("L_set < L_critical !")
-        println("**SUCCESSFUL REJECTION OF H0** with confidence level $alpha" )
-
-        r_all = abs.(values .- mean(values))
-        outlier_indexes = sortperm(r_all)[(n-k+1):end]
-
-        return_indexes ? (return(outlier_indexes)) : (return(true))
-
-    else
-        println("L_set > L_critical !")
-        println("**CANNOT REJECT H0** with confidence level $alpha" )
-
-        return_indexes ? (return([])) : (return(false))    
-    
-    end # endif L_set < L_critical
-end # end function
-
-function try_outliers(f, data, n)
-    for i in n:-1:1
-        outlier_idx = f(data, i)
-        if length(outlier_idx) != 0
-            return(i, outlier_idx)
-        end
-    end
-    return(0, Int64[])
-end
-
-#####
-# Script
-#####
-
-# ## Parsing tidy CSV data
-
-rawDf = CSV.read(
-    joinpath("data", "tidy_timepoints_with_brain.csv"),
-    DataFrame;
-    delim = ',',
-    types = [Int64, Int64, String, String],
-    header = ["subject", "timepoint", "variable", "value"],
-    skipto = 2
-)
-
-# ### Fixing some metadata names (see source for details)
-
-#fix_metadata_colnames!(rawDf)
-
-# ## Removing duplicates
-
-# ### Removing actual duplicated lines
-
-check_longdata_metaduplicates!(rawDf; remove_duplicates=true)
-
-# ### Removing technical/biological replicates
-
-retainfirst = get(ENV, "RETAIN_FIRST", true) # if true, retain the first technical/biological replicate; if false, retain the last technical/biological replicate
-
-if retainfirst
-
-    unstackedDf = @chain rawDf begin
-        groupby( [:subject, :timepoint, :variable] )
-        combine(:value=>first)
-        unstack(:variable, :value_first)
-    end
-
-else 
-    unstackedDf = unstack(rawDf, :variable, :value; allowduplicates=true)
-end
-
-## Prediction workflows
-
-### Problem 2: predict future cogScore from current taxonomic profile
-
-#### Building predictionDf
-
-select_columns = [ "target", "ageMonths", "futureAgeMonths", "ageMonthsDelta", "timepointDelta", microbiome_predictors... ]
-
-##### 1. Removing rows with missing values and applying filters
-
-max_input_age = 12
+### 2.1. Data boundary conditions
+max_original_age = 12
 max_prediction_age = 24
 max_ageMonthsDelta = 12
 selected_timepoint_delta = 1
 
-predictionDf = @chain unstackedDf begin
+### 2.2. Subsetting data
+prediction_df = @chain prediction_df begin
     subset(:ageMonths => x -> .!(ismissing.(x)))
-    build_future_df(:cogScore)
-    DataFrames.select(select_columns)
-end
-
-mapcols!(col -> tryparse(Float64, col), predictionDf)
-
-##### 2. Filtering by ageMonths < max_prediction_age
-
-predictionDf = @chain predictionDf begin
-    subset(:ageMonths => x ->  x .<= max_input_age)
+    subset(:ageMonths => x ->  x .<= max_original_age)
     subset(:futureAgeMonths => x ->  x .<= max_prediction_age)
     subset(:ageMonthsDelta => x ->  x .<= max_ageMonthsDelta)
-    subset(:timepointDelta => x ->  x .== selected_timepoint_delta)
-    DataFrames.select(Not(:timepointDelta))
-#    DataFrames.transform(:ageMonths => ByRow(x -> x / max_prediction_age) => [:ageMonths])
+    # subset(:timepointDelta => x ->  x .== selected_timepoint_delta)
+    # unique( [:subject] )
+    # DataFrames.select(Not(:timepointDelta))
 end
+prediction_df.futureCogScore = Float64.(prediction_df.futureCogScore)
 
-##### Removing outliers with the Tietjen-Moore test
-n_outliers, outlier_idx = try_outliers(univariate_tietjenmoore, predictionDf.target, 10)
-println("Found $n_outliers outliers with the Tietjen-Moore test! Filtering DataFrame")
-println("New prediction table was reduced from $(nrow(predictionDf)) to $(nrow(predictionDf) - n_outliers) rows.")
-predictionDf = predictionDf[Not(outlier_idx), :]
+### 2.3. Removing outliers with the Tietjen-Moore test
+#n_outliers, outlier_idx = try_outliers(univariate_tietjenmoore, Float64.(prediction_df.futureCogScore), 10)
+#println("Found $n_outliers outliers with the Tietjen-Moore test! Filtering DataFrame")
+#println("New prediction table was reduced from $(nrow(predictionDf)) to $(nrow(predictionDf) - n_outliers) rows.")
+#predictionDf = predictionDf[Not(outlier_idx), :]
 
-##### 3. Removing microbiome columns with zero standard deviation
-
-std_cutoff = 0.1
-standard_deviations = [ std(predictionDf[:,i]) for i in 1:ncol(predictionDf) ]
-is_zerostd_col = standard_deviations .== 0
-is_negligiblestd_col = standard_deviations .<= std_cutoff
-println("$(sum(is_zerostd_col)) columns have zero standard deviation!")
-println("$(sum(is_negligiblestd_col)) columns have a standard deviation lower than $std_cutoff")
-zerostd_cols = findall(is_zerostd_col)
-negligiblestd_cols = findall(is_negligiblestd_col)
-zerostd_colnames = names(predictionDf)[zerostd_cols]
-negligiblestd_colnames = names(predictionDf)[negligiblestd_cols]
-
-# Uncomment to remove zerostd columns
-predictionDf = DataFrames.select(predictionDf, Not(zerostd_colnames))
-
-#### Checking the schema and MLJ scitypes
-
-schema(predictionDf)
-
-#### Separating the predictors and target variable, vewing matching machine models
-
-ml_rng = StableRNG(102528)
-
-y, X = unpack(predictionDf, ==(:target));
+### 2.4. Separating predictors and target from the additional metadata
+y = prediction_df.futureCogScore
+X = dropmissing(prediction_df[:, retained_featurenames])
 for m in models(matching(X,y)) println(m) end
 
-#### Computing the standardizer parameters
+### 2.5. Removing microbiome columns with zero standard deviation
+standard_deviations = [ std(X[:,i]) for i in 1:ncol(X) ]
+is_zerostd_col = standard_deviations .== 0
+println("$(sum(is_zerostd_col)) columns have zero standard deviation!")
+zerostd_cols = findall(is_zerostd_col)
+zerostd_colnames = names(X)[zerostd_cols]
+X = DataFrames.select(X, Not(zerostd_colnames))
+
+## 3. Training the predictor model
+
+### 3.1. Loading the desired model
 
 RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
 
-#### Building the Tuning grid for training the Random Forest model
+### 3.2. Building the Tuning grid for hyperparameter tuning
 # Hyperparameters of DecisionTree.RandomForestRegressor:
 # ```
 # n_trees = 10,                 Number of trees to train. Equivalent to R's randomForest `ntree`
@@ -190,32 +71,50 @@ RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
 # min_purity_increase = 0.0,    No equivalence.
 # ````
 
-range_n_trees = collect(50:25:500)
-range_max_depth = collect(-1:3)
-range_partial_sampling = collect(0.5:0.1:0.9)
-range_min_samples_leaf = collect(1:1:5)
-range_min_purity_increase = [ 0.0, 0.1, 0.2, 0.3 ]
+# range_n_trees = collect(50:25:500)
+# range_n_subfeatures = collect(10:20:100)
+# range_max_depth = collect(-1:2:20)
+# range_partial_sampling = collect(0.5:0.1:0.9)
+# range_min_samples_leaf = collect(5:2:20)
+# range_min_purity_increase = [ 0.0, 0.1, 0.2, 0.3 ]
 
-# range_n_trees = collect(10:30:310)#collect(10:10:150)
-# range_n_subfeatures = collect(10:20:150)#collect(10:20:250)
-# range_partial_sampling = collect(0.3:0.1:0.7)
-# range_max_depth = [ -1 ]#collect(4:2:20)
-# range_min_samples_leaf = collect(1:1:5)#collect(1:1:10)
-# range_min_samples_split = [ 2, 3, 4 ]#[ 2, 3, 4, 5, 6, 7, 8 ]s
-# range_min_purity_increase = [ 0.0, 0.05, 0.10, 0.15 ]#[ 0.00, 0.05, 0.10, 0.15, 0.20, 0.25 ]
+# # range_n_trees = collect(10:30:310)#collect(10:10:150)
+# # range_n_subfeatures = collect(10:20:150)#collect(10:20:250)
+# # range_partial_sampling = collect(0.3:0.1:0.7)
+# # range_max_depth = [ -1 ]#collect(4:2:20)
+# # range_min_samples_leaf = collect(1:1:5)#collect(1:1:10)
+# # range_min_samples_split = [ 2, 3, 4 ]#[ 2, 3, 4, 5, 6, 7, 8 ]s
+# # range_min_purity_increase = [ 0.0, 0.05, 0.10, 0.15 ]#[ 0.00, 0.05, 0.10, 0.15, 0.20, 0.25 ]
 
-tuning_grid = vec(collect(Base.product(
-    range_n_trees,
-    range_max_depth,
-    range_partial_sampling,
-    range_min_samples_leaf,
-    range_min_purity_increase,
-)))
+# tuning_grid = vec(collect(Base.product(
+#     range_n_trees,
+#     range_n_subfeatures,
+#     range_max_depth,
+#     range_partial_sampling,
+#     range_min_samples_leaf,
+#     range_min_purity_increase,
+# )))
+
+    # Declaring the optimization grid
+    nodesize_range = collect(1:2:30)
+    maxnodes_range = collect(1:2:30)
+    sampsize_range = collect(5:2:80) ./ ncol(X)
+    mtry_range = collect(5:2:60)
+    n_trees_range = [ 40, 50, 60, 70 ]
+
+    tuning_grid = vec(collect(Base.product(
+        nodesize_range,
+        maxnodes_range,
+        sampsize_range,
+        mtry_range,
+        n_trees_range
+    )))
 
 #### Tuning loop
 
 #### Splitting training data between train and test
-train, test = partition(eachindex(1:nrow(predictionDf)), 0.6, shuffle=true, rng=ml_rng)
+Random.seed!(ml_rng, 1)
+train, test = partition(eachindex(1:nrow(X)), 0.5, shuffle=true, rng=ml_rng)
 
 train_mae_vector = Vector{Float64}(undef, length(tuning_grid))
 train_cor_vector = Vector{Float64}(undef, length(tuning_grid))
@@ -227,23 +126,34 @@ bestcor = 0.0
 @showprogress for i in 1:length(tuning_grid)
 
     global bestcor
+    Random.seed!(ml_rng, 0)
 
     rf_model = RandomForestRegressor(
-        n_trees = tuning_grid[i][1],
-        sampling_fraction = tuning_grid[i][3],
+        n_trees = tuning_grid[i][5],
+        min_samples_leaf = tuning_grid[i][1],
         max_depth = tuning_grid[i][2],
-        min_samples_leaf = tuning_grid[i][4],
-        min_purity_increase = tuning_grid[i][5],
+        sampling_fraction = tuning_grid[i][3],
+        n_subfeatures = tuning_grid[i][4],
         rng=ml_rng
-        # n_trees = tuning_grid[i][1],
-        # n_subfeatures = tuning_grid[i][2],
-        # sampling_fraction = tuning_grid[i][3],
-        # max_depth = tuning_grid[i][4],
-        # min_samples_leaf = tuning_grid[i][5],
-        # min_samples_split = tuning_grid[i][6],
-        # min_purity_increase = tuning_grid[i][7],
-        # rng=ml_rng
     )
+
+    # rf_model = RandomForestRegressor(
+    #     n_trees = tuning_grid[i][1],
+    #     n_subfeatures = tuning_grid[i][2],
+    #     sampling_fraction = tuning_grid[i][4],
+    #     max_depth = tuning_grid[i][3],
+    #     min_samples_leaf = tuning_grid[i][5],
+    #     min_purity_increase = tuning_grid[i][6],
+    #     rng=ml_rng
+    #     # n_trees = tuning_grid[i][1],
+    #     # n_subfeatures = tuning_grid[i][2],
+    #     # sampling_fraction = tuning_grid[i][3],
+    #     # max_depth = tuning_grid[i][4],
+    #     # min_samples_leaf = tuning_grid[i][5],
+    #     # min_samples_split = tuning_grid[i][6],
+    #     # min_purity_increase = tuning_grid[i][7],
+    #     # rng=ml_rng
+    # )
 
     rf_machine = machine(rf_model, X[train, :], y[train])
     fit!(rf_machine, verbosity=0)
@@ -366,5 +276,4 @@ scatter!(ax, predictionDf.target, linear_prediction)
 futurecogscore_futureagemonths_regression
 
 ####
-
 predictionDf.target .= residuals
