@@ -155,13 +155,13 @@ function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf
     return hm
 end
 
-function plot_fsea(setcors, notcors; label="", bandres=5000)
+function plot_fsea(setcors, notcors; label="")
     fig = Figure()
     plot_fsea!(fig.layout, setcors, notcors; label, bandres)
     fig
 end
 
-function plot_fsea!(grid, setcors, notcors; label="", bandres=5000)
+function plot_fsea!(grid, setcors, notcors; label="")
     fullcors = [setcors; notcors]
     ncors = length(fullcors)
 
@@ -183,28 +183,32 @@ function plot_fsea!(grid, setcors, notcors; label="", bandres=5000)
 
     ax2 = Axis(grid[2,1])
     hidedecorations!(ax2)
-
-    ax3 = Axis(grid[3,1]; ylabel="correlation", xlabel="rank")
     
     lines!(ax1, xs, ys)
     vlines!(ax2, ranks[1:length(setcors)]; color=:black)
-
-
-    rn = ncors > bandres ? round.(Int, range(1, ncors; length=bandres)) : range(1, ncors)
-    blow, bup = extrema(fullcors)
-    band!(ax3, rn, fill(blow, length(rn)), fill(bup, length(rn)); color=fullcors[srt[rn]])
-    
-    lower = [x < 0 ? x : 0.0 for x in fullcors[srt]]
-    upper = [x > 0 ? x : 0.0 for x in fullcors[srt]]
-    band!(ax3, xs[rn], lower[rn], upper[rn]; color=:lightgray)
-
     
     rowsize!(grid, 2, Relative(1/8))
-    rowsize!(grid, 3, Relative(1/4))
-    
-    linkxaxes!(ax1, ax2, ax3)
-    tightlimits!.((ax1, ax2, ax3))
+    rowgap!(grid, 1, Fixed(0))
+
+    linkxaxes!(ax1, ax2)
+    tightlimits!.((ax1, ax2))
     grid
 end
 
+function plot_corrband!(ax, cors; bandres=5000)
+    ax.xlabel="rank"
+    ax.ylabel="enrichment score"
+    srt = sortperm(cors; rev=true)
+    ncors = length(cors)
+    rn = ncors > bandres ? round.(Int, range(1, ncors; length=bandres)) : range(1, ncors)
+    blow, bup = extrema(cors)
+
+    xs = 1:ncors
+    band!(ax, xs[rn], fill(blow, length(rn)), fill(bup, length(rn)); color=cors[srt[rn]])
+    
+    lower = [x < 0 ? x : 0.0 for x in cors[srt]]
+    upper = [x > 0 ? x : 0.0 for x in cors[srt]]
+    band!(ax, rn, lower[rn], upper[rn]; color=:lightgray)
+    tightlimits!(ax)
+end
 
