@@ -16,8 +16,23 @@ Then, we'll load in the different data sources.
 
 ```julia
 mdata = Resonance.load(Metadata())
+
 mdata.maternalEd = categorical([ismissing(m) || m == "-8" ? missing : parse(Int, m) for m in mdata.maternalEd]; ordered=true)
 droplevels!(mdata.maternalEd)
+
+let (lq, uq) = quantile(collect(skipmissing(mdata.cogScore)), [0.25, 0.75])
+    mdata.quartile = categorical(map(mdata.cogScore) do cs
+        ismissing(cs) && return missing
+        cs <= lq && return "lower"
+        cs >= uq && return "upper"
+        return "middle"
+    end; levels = ["lower", "middle", "upper"], ordered = true)
+end
+
+
+```
+
+```julia
 
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 species = filter(t-> taxrank(t) == :species, taxa)
@@ -37,7 +52,7 @@ and over 18 months old (most kids are eating solid foods).
 
 ```julia
 specmdata = select(DataFrame(metadata(species)),
-                ["subject", "timepoint", "ageMonths", "cogScore", "read_depth", "maternalEd"]
+                ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
 )
 
 specmdata.sample = samplenames(species)
@@ -51,7 +66,7 @@ unique!(speco18, "subject")
 
 
 komdata = select(DataFrame(metadata(kos)),
-                ["subject", "timepoint", "ageMonths", "cogScore", "read_depth", "maternalEd"]
+                ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
 )
 komdata.sample = samplenames(kos)
 sort!(komdata, ["subject", "timepoint"])
@@ -91,43 +106,58 @@ end
 ```julia
 isdir(outputfiles("maaslin")) || mkdir(outputfiles("maaslin"))
 
-let df = select(mdata, "omni"=>"sample", "ageMonths", "cogScore", "read_depth", "maternalEd")
+let df = select(mdata, "omni"=>"sample", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd")
     subset!(df, "sample"=> ByRow(!ismissing))
     unique!(df, "sample")
     CSV.write(outputfiles("maaslin", "metadata.tsv"), df; delim='\t')
 end
 
-let df = select(specu6, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "read_depth", "maternalEd"])))
+let df = select(specu6, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
     CSV.write(outputfiles("maaslin", "specu6.tsv"), df; delim='\t')
 end
 
-let df = select(speco18, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "read_depth", "maternalEd"])))
+let df = select(speco18, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
     CSV.write(outputfiles("maaslin", "speco18.tsv"), df; delim='\t')
 end
 
-let df = select(kou6, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "read_depth", "maternalEd"])))
+let df = select(kou6, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
     CSV.write(outputfiles("maaslin", "kou6.tsv"), df; delim='\t')
 end
 
-let df = select(koo18, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "read_depth", "maternalEd"])))
+let df = select(koo18, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
     CSV.write(outputfiles("maaslin", "koo18.tsv"), df; delim='\t')
 end
 ```
 
 ### Run MaAsLin
 
-First, set MaAsLin2 CLI executable in `$PATH`
+First, set MaAsLin2 CLI executable in `PATH`
+
 
 ```julia
 
 for (df, label) in zip((specu6, speco18, kou6, koo18), ("specu6", "speco18", "kou6", "koo18"))
     c = Cmd([
         "Maaslin2.R",
-        "--fixed_effects='ageMonths,cogScore,read_depth,maternalEd'",
+        "-f", "ageMonths,quartile,read_depth,maternalEd",
         "--standardize=FALSE",
         outputfiles("maaslin", "$label.tsv"),
         outputfiles("maaslin", "metadata.tsv"),
-        outputfiles("maaslin", label),
+        outputfiles("maaslin", string(label, "_cogScore")),
+    ])
+
+    run(c)
+end
+
+
+for (df, label) in zip((specu6, speco18, kou6, koo18), ("specu6", "speco18", "kou6", "koo18"))
+    c = Cmd([
+        "Maaslin2.R",
+        "-f", "ageMonths,quartile,read_depth,maternalEd",
+        "--standardize=FALSE", "-d", "quartile,middle",
+        outputfiles("maaslin", "$label.tsv"),
+        outputfiles("maaslin", "metadata.tsv"),
+        outputfiles("maaslin", string(label, "_quartile")),
     ])
 
     run(c)
