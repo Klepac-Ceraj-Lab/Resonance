@@ -16,6 +16,8 @@ Then, we'll load in the different data sources.
 
 ```julia
 mdata = Resonance.load(Metadata())
+mdata.maternalEd = categorical([ismissing(m) || m == "-8" ? missing : parse(Int, m) for m in mdata.maternalEd]; ordered=true)
+droplevels!(mdata.maternalEd)
 
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 species = filter(t-> taxrank(t) == :species, taxa)
@@ -37,8 +39,6 @@ and over 18 months old (most kids are eating solid foods).
 specmdata = select(DataFrame(metadata(species)),
                 ["subject", "timepoint", "ageMonths", "cogScore", "read_depth", "maternalEd"]
 )
-
-specmdata.maternalEd = categorical([x == "-8" ? missing : x for x in specmdata.maternalEd]; ordered = true)
 
 specmdata.sample = samplenames(species)
 sort!(specmdata, ["subject", "timepoint"])
@@ -67,18 +67,18 @@ unique!(koo18, "subject")
 
 ```julia
 for f in features(species)
-    colu6 = vec(abundances(species[f, specu6.sample])) ./ 100
+    colu6 = vec(abundances(species[f, specu6.sample]))
     specu6[!, name(f)] = colu6
 
-    colo18 = vec(abundances(species[f, speco18.sample])) ./ 100
+    colo18 = vec(abundances(species[f, speco18.sample]))
     speco18[!, name(f)] = colo18
 end
 
 for f in features(kos)
-    colu6 = vec(abundances(kos[f, kou6.sample])) ./ 100
+    colu6 = vec(abundances(kos[f, kou6.sample]))
     kou6[!, name(f)] = colu6
 
-    colo18 = vec(abundances(kos[f, koo18.sample])) ./ 100
+    colo18 = vec(abundances(kos[f, koo18.sample]))
     koo18[!, name(f)] = colo18
 end
 
@@ -138,13 +138,21 @@ end
 ### Read MaAsLin
 
 ```julia
+specu6_maaslin = CSV.read(outputfiles("maaslin", "specu6", "all_results.tsv"), DataFrame; delim='\t')
+subset!(specu6_maaslin, :metadata=>ByRow(==("cogScore")))
+specu6_maaslin.qvalue = adjust(specu6_maaslin.pval, BenjaminiHochberg())
+
 speco18_maaslin = CSV.read(outputfiles("maaslin", "speco18", "all_results.tsv"), DataFrame; delim='\t')
 subset!(speco18_maaslin, :metadata=>ByRow(==("cogScore")))
 speco18_maaslin.qvalue = adjust(speco18_maaslin.pval, BenjaminiHochberg())
 
-dt = CSV.read(outputfiles("maaslin", "speco18", "features", "filtered_data.tsv"), DataFrame; delim='\t')
-dtnorm = CSV.read(outputfiles("maaslin", "speco18", "features", "filtered_data_norm.tsv"), DataFrame; delim='\t')
-dttrans = CSV.read(outputfiles("maaslin", "speco18", "features", "filtered_data_norm_transformed.tsv"), DataFrame; delim='\t')
+kou6_maaslin = CSV.read(outputfiles("maaslin", "kou6", "all_results.tsv"), DataFrame; delim='\t')
+subset!(kou6_maaslin, :metadata=>ByRow(==("cogScore")))
+kou6_maaslin.qvalue = adjust(collect(kou6_maaslin.pval), BenjaminiHochberg())
+
+koo18_maaslin = CSV.read(outputfiles("maaslin", "koo18", "all_results.tsv"), DataFrame; delim='\t')
+subset!(koo18_maaslin, :metadata=>ByRow(==("cogScore")))
+koo18_maaslin.qvalue = adjust(collect(koo18_maaslin.pval), BenjaminiHochberg())
 ```
 
 
@@ -157,12 +165,14 @@ dttrans = CSV.read(outputfiles("maaslin", "speco18", "features", "filtered_data_
 specu6_lmresults = DataFrame()
 
 for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+    count(>(0), specu6[!, spc]) / size(specu6, 1) > 0.1 || continue
+    
     @info spc
 
     ab = specu6[!, spc] .+ (minimum(filter(>(0), specu6[!, spc])) / 2) # add half-minimum non-zerovalue
 
     df = specu6[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
-    df.bug = log.(ab ./ 100)
+    df.bug = log2.(ab)
 
     mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
@@ -199,12 +209,13 @@ specu6_lmresults
 speco18_lmresults = DataFrame()
 
 for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+    count(>(0), speco18[!, spc]) / size(speco18, 1) > 0.1 || continue
     @info spc
 
     ab = speco18[!, spc] .+ (minimum(filter(>(0), speco18[!, spc])) / 2) # add half-minimum non-zerovalue
 
     df = speco18[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
-    df.bug = log.(ab ./ 100)
+    df.bug = log2.(ab)
 
     mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
@@ -241,12 +252,13 @@ speco18_lmresults
 kou6_lmresults = DataFrame()
 
 for ko in names(kou6, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+    count(>(0), kou6[!, ko]) / size(kou6, 1) > 0.1 || continue
     @info ko
 
     ab = kou6[!, ko] .+ (minimum(filter(>(0), kou6[!, ko])) / 2) # add half-minimum non-zerovalue
 
     df = kou6[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
-    df.bug = log.(ab ./ 100)
+    df.bug = log2.(ab)
 
     mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
@@ -295,16 +307,17 @@ sort!(kou6_ecs)
 ### Kids over 18mo, KOs
 
 
-````julia
+```julia
 koo18_lmresults = DataFrame()
 
 for ko in names(koo18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+    count(>(0), koo18[!, ko]) / size(koo18, 1) > 0.1 || continue
     @info ko
 
     ab = koo18[!, ko] .+ (minimum(filter(>(0), koo18[!, ko])) / 2) # add half-minimum non-zerovalue
 
     df = koo18[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
-    df.bug = log.(ab ./ 100)
+    df.bug = log2.(ab)
 
     mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
@@ -375,8 +388,8 @@ spc = "Eubacterium_eligens"
 df = speco18[:, ["ageMonths", "cogScore", "read_depth", "subject", "maternalEd"]]
 @show size(df)  
 
-halfmin = minimum(filter(>(0), `speco18[:, spc]`)) / 2
-df.bug = log.((speco18[:, spc] .+ halfmin) ./ 100)
+halfmin = minimum(filter(>(0), speco18[:, spc])) / 2
+df.bug = log2.((speco18[:, spc] .+ halfmin))
 
 mod1 = lm(@formula(cogScore ~ ageMonths + read_depth + maternalEd), df)
 mod2 = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
