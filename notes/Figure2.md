@@ -29,7 +29,7 @@ let (lq, uq) = quantile(collect(skipmissing(mdata.cogScore)), [0.25, 0.75])
     end; levels = ["lower", "middle", "upper"], ordered = true)
 end
 
-
+mdata.read_depth ./= 1e6
 ```
 
 ```julia
@@ -193,7 +193,7 @@ koo18_maaslin.qvalue = adjust(collect(koo18_maaslin.pval), BenjaminiHochberg())
 ```julia
 specu6_lmresults = DataFrame()
 
-for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
     count(>(0), specu6[!, spc]) / size(specu6, 1) > 0.1 || continue
     
     @info spc
