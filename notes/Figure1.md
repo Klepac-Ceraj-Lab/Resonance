@@ -65,22 +65,24 @@ For now, the graphic here is a place-holder, but we'll have something like this 
 
 ```julia
 A_img = Axis(A[2,1:2]; aspect = DataAspect(), alignmode=Inside())
-A_histleft = Axis(A[1,1]; xlabel = "Age (months)", ylabel="Samples (N)", alignmode=Mixed(; left=60)) # TODO: set xticks to match cartoon
+A_histleft = Axis(A[1,1]; ylabel="Samples (N)", alignmode=Mixed(; left=45))
 A_histright = Axis(A[1,2]; xlabel = "Age (years)", xticks=2:2:16, alignmode=Inside())
 hidedecorations!(A_img)
 hidespines!(A_img)
 
 image!(A_img, rotr90(load("figures/fig1a_placeholder.png")))
 
-hist!(A_histleft, filter(<=(24), mtdt.ageMonths); color = :darkgray)
-hist!(A_histright, filter(>(24), mtdt.ageMonths) ./ 12; color = :darkgray, bins=8)
+hist!(A_histleft, filter(<=(24), mdata.ageMonths); color = :darkgray)
+hist!(A_histright, filter(>(24), mdata.ageMonths) ./ 12; color = :darkgray, bins=8)
 
 rowgap!(A, -30)
 rowsize!(A, 1, Relative(1/5))
 colsize!(A, 2, Relative(1/3))
 linkyaxes!(A_histleft, A_histright)
 
-rowsize!(figure.layout, 1, Relative(2/3))
+colsize!(figure.layout, 1, Relative(3/7))
+A_histleft.xticks = ([0,3,6,12], ["", "", "", ""])
+figure
 ```
 
 ### 1B-C: Omnibus tests
@@ -145,6 +147,9 @@ plot_permanovas!(Ba, perms)
 ```julia
 Bb = Axis(B[1,2]; alignmode=Outside())
 Bc = Axis(B[2,2]; alignmode=Outside())
+Label(B[1,3], "Under 6mo"; tellwidth=true, tellheight=false, rotation=-π/2)
+Label(B[2,3], "Over 18mo"; tellwidth=true, tellheight=false, rotation=-π/2)
+colwidth!(B, 1, Relative=(1/2))
 
 perms = let permout = outputfiles("permanovas_u6mo.csv")
     if isfile(permout)
