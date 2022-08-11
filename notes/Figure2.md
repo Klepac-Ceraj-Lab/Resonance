@@ -64,7 +64,6 @@ unique!(specu6, "subject")
 speco18 = subset(specmdata, "ageMonths" => ByRow(>(18)), "cogScore"=> ByRow(!ismissing))
 unique!(speco18, "subject")
 
-
 komdata = select(DataFrame(metadata(kos)),
                 ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
 )
@@ -168,20 +167,20 @@ end
 ### Read MaAsLin
 
 ```julia
-specu6_maaslin = CSV.read(outputfiles("maaslin", "specu6", "all_results.tsv"), DataFrame; delim='\t')
-subset!(specu6_maaslin, :metadata=>ByRow(==("cogScore")))
+specu6_maaslin = CSV.read(outputfiles("maaslin", "specu6_quartile", "all_results.tsv"), DataFrame; delim='\t')
+subset!(specu6_maaslin, :metadata=>ByRow(==("quartile")))
 specu6_maaslin.qvalue = adjust(specu6_maaslin.pval, BenjaminiHochberg())
 
-speco18_maaslin = CSV.read(outputfiles("maaslin", "speco18", "all_results.tsv"), DataFrame; delim='\t')
-subset!(speco18_maaslin, :metadata=>ByRow(==("cogScore")))
+speco18_maaslin = CSV.read(outputfiles("maaslin", "speco18_quartile", "all_results.tsv"), DataFrame; delim='\t')
+subset!(speco18_maaslin, :metadata=>ByRow(==("quartile")))
 speco18_maaslin.qvalue = adjust(speco18_maaslin.pval, BenjaminiHochberg())
 
-kou6_maaslin = CSV.read(outputfiles("maaslin", "kou6", "all_results.tsv"), DataFrame; delim='\t')
-subset!(kou6_maaslin, :metadata=>ByRow(==("cogScore")))
+kou6_maaslin = CSV.read(outputfiles("maaslin", "kou6_quartile", "all_results.tsv"), DataFrame; delim='\t')
+subset!(kou6_maaslin, :metadata=>ByRow(==("quartile")))
 kou6_maaslin.qvalue = adjust(collect(kou6_maaslin.pval), BenjaminiHochberg())
 
-koo18_maaslin = CSV.read(outputfiles("maaslin", "koo18", "all_results.tsv"), DataFrame; delim='\t')
-subset!(koo18_maaslin, :metadata=>ByRow(==("cogScore")))
+koo18_maaslin = CSV.read(outputfiles("maaslin", "koo18_quartile", "all_results.tsv"), DataFrame; delim='\t')
+subset!(koo18_maaslin, :metadata=>ByRow(==("quartile")))
 koo18_maaslin.qvalue = adjust(collect(koo18_maaslin.pval), BenjaminiHochberg())
 ```
 
@@ -238,16 +237,16 @@ specu6_lmresults
 ```julia
 speco18_lmresults = DataFrame()
 
-for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd", "quartile"]))
     count(>(0), speco18[!, spc]) / size(speco18, 1) > 0.1 || continue
     @info spc
 
     ab = speco18[!, spc] .+ (minimum(filter(>(0), speco18[!, spc])) / 2) # add half-minimum non-zerovalue
 
-    df = speco18[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
+    df = speco18[:, ["ageMonths", "cogScore", "read_depth"]]
     df.bug = log2.(ab)
 
-    mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth), df)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
     append!(speco18_lmresults, ct)
@@ -263,7 +262,7 @@ rename!(speco18_lmresults, "Pr(>|t|)"=>"pvalue");
 @chain speco18_lmresults begin
     subset!(:Name => ByRow(x->
         !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
+            ("(Intercept)", "ageMonths", "read_depth")
             )
         )
     )
@@ -411,21 +410,27 @@ figure
 ```
 
 ```julia
-# for sp in subset(speco18_lmresults, :qvalue => ByRow(<(0.1))).species
-
-spc = "Eubacterium_eligens"
+using RCall
+spc = "Romboutsia_ilealis"
 
 df = speco18[:, ["ageMonths", "cogScore", "read_depth", "subject", "maternalEd"]]
-@show size(df)  
 
 halfmin = minimum(filter(>(0), speco18[:, spc])) / 2
-df.bug = log2.((speco18[:, spc] .+ halfmin))
+df.bug = collect(log2.((speco18[:, spc] .+ halfmin)))
 
-mod1 = lm(@formula(cogScore ~ ageMonths + read_depth + maternalEd), df)
-mod2 = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
-# end
+mod1 = lm(@formula(cogScore ~ ageMonths + read_depth), df)
+mod2 = lm(@formula(cogScore ~ bug + ageMonths + read_depth), df)
 
-cc = completecases(speco18, ["ageMonths", "cogScore", "read_depth", "subject", "maternalEd"])
+reval("library('lme4')")
+@rput df
+
+reval("mod3 <- lm(cogScore ~ 1 + bug + ageMonths + read_depth, df)")
+reval("summary(mod3)")
+
+```
+
+```julia
+cc = completecases(speco18, ["ageMonths", "cogScore", "read_depth", "subject"])
 
 scatter(predict(mod1), df[cc, "cogScore"])
 abline!(0,1)
