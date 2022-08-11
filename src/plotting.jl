@@ -104,10 +104,10 @@ function plot_permanovas!(ax, pdf; commlabels=unique(pdf.label), mdlabels=unique
 
     for ci in CartesianIndices(pmat)
         c = vmat[ci] < (colorrange[2] - colorrange[1]) / 2 ? :black : :lightgray
-        text!(string(round(vmat[ci], digits=2), "%"); position=(ci[2],ci[1]), align=(:center, :center), color=c)
+        text!(ax, string(round(vmat[ci], digits=2), "%"); position=(ci[2],ci[1]), align=(:center, :center), color=c)
         p = pmat[ci]
         stars = p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""
-        text!(stars; position=(ci[2],ci[1]), align=(:center, :bottom), color=c)
+        text!(ax, stars; position=(ci[2],ci[1]), align=(:center, :bottom), color=c)
     end
 
     ax.xticks = (1:length(commlabels), commlabels)
@@ -143,10 +143,10 @@ function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf
 
     for ci in manteldf.idx
         c = vmat[ci] < 0.5 ? :black : :lightgray 
-        text!(string(round(vmat[ci], digits=4)); position=(ci[2]-1,ci[1]), align=(:center, :center), color=c)
+        text!(ax, string(round(vmat[ci], digits=4)); position=(ci[2]-1,ci[1]), align=(:center, :center), color=c)
         p = pmat[ci]
         stars = p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""
-        text!(stars; position=(ci[2]-1,ci[1]), align=(:center, :bottom), color=c)
+        text!(ax, stars; position=(ci[2]-1,ci[1]), align=(:center, :bottom), color=c)
     end
 
     ax.xticks = (1:n-1, isempty(commlabels) ? ["comm$i" for i in 1:n-1] : commlabels[2:end])

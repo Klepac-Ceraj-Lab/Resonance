@@ -6,7 +6,7 @@ First, load packages that will be used throughout this notebook.
 using Resonance
 using FileIO
 using CairoMakie # for plotting
-using Distance
+using MultivariateStats
 ```
 
 Then, we'll load in the different data sources.
@@ -40,10 +40,10 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 
 ```julia
-figure = Figure(; resolution = (1200, 1200))
+figure = Figure(; resolution = (1600, 1200))
 A = GridLayout(figure[1,1])
-BC = GridLayout(figure[1:2,2])
-DEF = GridLayout(figure[2,1]);
+BC = GridLayout(figure[2,1:2])
+DEF = GridLayout(figure[1,2]);
 ```
 
 
@@ -56,10 +56,9 @@ DEF = GridLayout(figure[2,1]);
 For now, the graphic here is a place-holder, but we'll have something like this for 1A.
 
 ```julia
-
-A_histleft = Axis(A[1,1]; xlabel = "Age (months)", ylabel="Samples (N)", alignmode=Outside()) # TODO: set xticks to match cartoon
-A_histright = Axis(A[1,2]; xlabel = "Age (years)", xticks=2:2:16, alignmode=Outside())
-A_img = Axis(A[2,1:2]; aspect = DataAspect())
+A_img = Axis(A[2,1:2]; aspect = DataAspect(), alignmode=Inside())
+A_histleft = Axis(A[1,1]; xlabel = "Age (months)", ylabel="Samples (N)", alignmode=Mixed(; left=60)) # TODO: set xticks to match cartoon
+A_histright = Axis(A[1,2]; xlabel = "Age (years)", xticks=2:2:16, alignmode=Inside())
 hidedecorations!(A_img)
 hidespines!(A_img)
 
@@ -68,11 +67,12 @@ image!(A_img, rotr90(load("figures/fig1a_placeholder.png")))
 hist!(A_histleft, filter(<=(24), mtdt.ageMonths); color = :darkgray)
 hist!(A_histright, filter(>(24), mtdt.ageMonths) ./ 12; color = :darkgray, bins=8)
 
-rowgap!(A, -20)
-rowsize!(A, 1, Relative(1/4))
+rowgap!(A, -30)
+rowsize!(A, 1, Relative(1/5))
 colsize!(A, 2, Relative(1/3))
 linkyaxes!(A_histleft, A_histright)
 
+rowsize!(figure.layout, 1, Relative(2/3))
 figure
 ```
 
@@ -84,11 +84,11 @@ We'll calculate them once for each profile rather
 rather than separately for each test.
 
 ```julia
-spedm = braycurtis(species)
-unidm = braycurtis(unirefs)
-ecsdm = braycurtis(ecs)
-kosdm = braycurtis(kos)
-metdm = braycurtis(metabolites)
+# spedm = braycurtis(species)
+# unidm = braycurtis(unirefs)
+# ecsdm = braycurtis(ecs)
+# kosdm = braycurtis(kos)
+# metdm = braycurtis(metabolites)
 ```
 
 #### PERMANOVA
@@ -96,7 +96,8 @@ metdm = braycurtis(metabolites)
 This is a permutation test of variance
 
 ```julia
-B = Axis(BC[1,1]; alignmode=Outside(), title="PERMANOVAs")
+B = GridLayout(BC[1,1])
+Ba = Axis(B[1:2,1]; alignmode=Outside())
 
 commlabels = ["taxa", "UniRef90s", "ECs", "KOs"]
 mdlabels = ["Cog. score", "Age", "Race", "Maternal Edu."]
@@ -132,7 +133,67 @@ end
 
 CSV.write("output/permanovas_all.csv", perms)
 
-plot_permanovas!(B, perms)
+plot_permanovas!(Ba, perms)
+figure
+```
+
+```julia
+Bb = Axis(B[1,2]; alignmode=Outside())
+Bc = Axis(B[2,2]; alignmode=Outside())
+
+perms = let permout = outputfiles("permanovas_u6mo.csv")
+    if isfile(permout)
+        p = CSV.read(permout, DataFrame)
+    else
+        idx = findall(<(6), get(species, :ageMonths))
+        p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
+                                get(species, :cogScore)[idx], 
+                                get(species, :ageMonths)[idx], 
+                                get(species, :race)[idx], 
+                                get(species, :maternalEd)[idx]
+                    ]; commlabels=["taxa", "UniRef90s"], mdlabels
+        )
+        idx = findall(<(6), get(metabolites, :ageMonths))
+        p2 = permanovas(metdm[idx,idx], [
+                                get(metabolites, :cogScore)[idx], 
+                                get(metabolites, :ageMonths)[idx], 
+                                get(metabolites, :race)[idx], 
+                                get(metabolites, :maternalEd)[idx]
+                    ]; mdlabels
+        )
+        p2.label .= "metabolites"
+
+        append!(p, p2)
+
+        CSV.write(permout, p)
+    end
+    p
+end
+
+plot_permanovas!(Bb, perms)
+figure
+perms = let permout = outputfiles("permanovas_o12mo.csv")
+    if isfile(permout)
+        p = CSV.read(permout, DataFrame)
+    else
+        idx = findall(>(18), get(species, :ageMonths))
+        p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
+                                get(species, :cogScore)[idx], 
+                                get(species, :ageMonths)[idx], 
+                                get(species, :race)[idx], 
+                                get(species, :maternalEd)[idx]
+                    ]; commlabels=["taxa", "UniRef90s"], mdlabels
+        )
+
+        CSV.write(permout, p)
+    end
+    p
+end
+
+plot_permanovas!(Bc, perms)
+
+colsize!(BC, 1, Relative(2/3))
+Label(BC[0,1], "PERMANOVAs")
 figure
 ```
 
@@ -140,8 +201,8 @@ figure
 ### 1C - Mantel tests
 
 ```julia
-C = Axis(BC[2,1]; alignmode=Outside(), title="Mantel Tests")
-
+C = Axis(BC[1,2]; alignmode=Outside())
+figure
 mdf = let mantout = outputfiles("mantel_all.csv")
     if isfile(mantout)
         mdf = CSV.read(mantout, DataFrame)
@@ -164,6 +225,8 @@ mdf = let mantout = outputfiles("mantel_all.csv")
 end
 
 plot_mantel!(C, mdf)
+Label(BC[0,2], "Mantel"; tellwidth=false)
+
 figure
 ```
 
@@ -172,18 +235,22 @@ figure
 ```julia
 D = Axis(DEF[1,1])
 
-spepco = fit(MDS, spedm)
-plot_pcoa!(D, spepco; color=get(species, :ageMonths))
+spepco = fit(MDS, spedm; distances=true)
+sc = plot_pcoa!(D, spepco; color=get(species, :ageMonths))
 
 E = Axis(DEF[2,1])
 
-unipco = fit(MDS, unidm)
+unipco = fit(MDS, unidm; distances=true)
 plot_pcoa!(E, unipco; color=get(unirefs, :ageMonths))
 
-F = Axis(DEF[3,1])
+# F = Axis(DEF[3,1])
 
-metpco = fit(MDS, metdm)
-plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
+# metpco = fit(MDS, metdm)
+# plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
+
+Label(DEF[1,0], "species"; tellheight=false, tellwidth=true)
+Label(DEF[2,0], "UniRef90"; tellheight=false, tellwidth=true)
+Colorbar(DEF[1:2, 2], sc; label="Age (months)", flip)
 
 save(figurefiles("Figure1.svg"), figure)
 save(figurefiles("Figure1.png"), figure)
