@@ -7,30 +7,38 @@ using Resonance
 using FileIO
 using CairoMakie # for plotting
 using MultivariateStats
+using CategoricalArrays
 ```
 
 Then, we'll load in the different data sources.
 
 ```julia
-mtdt = Resonance.load(Metadata())
+mdata = Resonance.load(Metadata())
+mdata.maternalEd = categorical(map(e-> e == "-8" ? missing : parse(Int, e), mdata.maternalEd); ordered=true)
+    
 
-taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mtdt)
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 species = filter(t-> taxrank(t) == :species, taxa)
 
-unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mtdt) # this can take a bit
+unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
 unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
 
-ecs = Resonance.load(ECProfiles(); timepoint_metadata = mtdt)
+ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
 ecs = filter(!hastaxon, ecs)
 
-kos = Resonance.load(KOProfiles(); timepoint_metadata = mtdt)
+kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
 kos = filter(!hastaxon, kos)
 
-metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mtdt)
+metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
 
 @assert all(samplenames(species) .== samplenames(unirefs))
 @assert all(samplenames(species) .== samplenames(ecs))
 @assert all(samplenames(species) .== samplenames(kos))
+
+uidx = let md = DataFrame(Microbiome.metadata(taxa))
+    smp = Set(unique(md, :subject).sample)
+    findall(s-> s in smp, samplenames(taxa))
+end
 ```
 
 
@@ -73,7 +81,6 @@ colsize!(A, 2, Relative(1/3))
 linkyaxes!(A_histleft, A_histright)
 
 rowsize!(figure.layout, 1, Relative(2/3))
-figure
 ```
 
 ### 1B-C: Omnibus tests
@@ -84,11 +91,11 @@ We'll calculate them once for each profile rather
 rather than separately for each test.
 
 ```julia
-# spedm = braycurtis(species)
-# unidm = braycurtis(unirefs)
-# ecsdm = braycurtis(ecs)
-# kosdm = braycurtis(kos)
-# metdm = braycurtis(metabolites)
+isdefined(Main, :spedm) || (spedm = braycurtis(species))
+isdefined(Main, :unidm) || (unidm = braycurtis(unirefs))
+isdefined(Main, :ecsdm) || (ecsdm = braycurtis(ecs))
+isdefined(Main, :kosdm) || (kosdm = braycurtis(kos))
+isdefined(Main, :metdm) || (metdm = braycurtis(metabolites))
 ```
 
 #### PERMANOVA
@@ -103,16 +110,15 @@ commlabels = ["taxa", "UniRef90s", "ECs", "KOs"]
 mdlabels = ["Cog. score", "Age", "Race", "Maternal Edu."]
 
 
-
 perms = let permout = outputfiles("permanovas_all.csv")
     if isfile(permout)
         p = CSV.read(permout, DataFrame)
     else
-        p = permanovas([spedm, unidm, ecsdm, kosdm], [
-                                get(species, :cogScore), 
-                                get(species, :ageMonths), 
-                                get(species, :race), 
-                                get(species, :maternalEd)
+        p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[uidx, uidx]], [
+                                get(species, :cogScore)[uidx], 
+                                get(species, :ageMonths)[uidx], 
+                                get(species, :race)[uidx], 
+                                get(species, :maternalEd)[uidx]
                     ]; commlabels, mdlabels
         )
         p2 = permanovas(metdm, [
@@ -134,7 +140,6 @@ end
 CSV.write("output/permanovas_all.csv", perms)
 
 plot_permanovas!(Ba, perms)
-figure
 ```
 
 ```julia
@@ -171,7 +176,6 @@ perms = let permout = outputfiles("permanovas_u6mo.csv")
 end
 
 plot_permanovas!(Bb, perms)
-figure
 perms = let permout = outputfiles("permanovas_o12mo.csv")
     if isfile(permout)
         p = CSV.read(permout, DataFrame)
@@ -194,7 +198,6 @@ plot_permanovas!(Bc, perms)
 
 colsize!(BC, 1, Relative(2/3))
 Label(BC[0,1], "PERMANOVAs")
-figure
 ```
 
 
@@ -202,7 +205,6 @@ figure
 
 ```julia
 C = Axis(BC[1,2]; alignmode=Outside())
-figure
 mdf = let mantout = outputfiles("mantel_all.csv")
     if isfile(mantout)
         mdf = CSV.read(mantout, DataFrame)
@@ -227,7 +229,6 @@ end
 plot_mantel!(C, mdf)
 Label(BC[0,2], "Mantel"; tellwidth=false)
 
-figure
 ```
 
 ## Ordinations
@@ -250,7 +251,7 @@ plot_pcoa!(E, unipco; color=get(unirefs, :ageMonths))
 
 Label(DEF[1,0], "species"; tellheight=false, tellwidth=true)
 Label(DEF[2,0], "UniRef90"; tellheight=false, tellwidth=true)
-Colorbar(DEF[1:2, 2], sc; label="Age (months)", flip)
+Colorbar(DEF[1:2, 2], sc; label="Age (months)", flipaxis=true)
 
 save(figurefiles("Figure1.svg"), figure)
 save(figurefiles("Figure1.png"), figure)

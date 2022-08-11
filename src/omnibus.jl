@@ -1,4 +1,4 @@
-function permanovas(dm::Matrix, metadatums::Vector{<:Vector}; n = 1000, mdlabels = ["md$i" for i in eachindex(metadatums)])
+function permanovas(dm::Matrix, metadatums::Vector{<:AbstractVector}; n = 1000, mdlabels = ["md$i" for i in eachindex(metadatums)])
     permdf = mapreduce(vcat, zip(metadatums, mdlabels)) do (md, lab)    
         hasmd = findall(!ismissing, md)
         df = DataFrame(test = md[hasmd])
@@ -13,7 +13,7 @@ function permanovas(dm::Matrix, metadatums::Vector{<:Vector}; n = 1000, mdlabels
     return DataFrame(permdf)
 end
 
-function permanovas(dms::AbstractArray{<:Matrix}, metadatums; n = 1000, commlabels = [], mdlabels = ["md$i" for i in eachindex(metadatums)])
+function permanovas(dms::AbstractArray{<:AbstractMatrix}, metadatums; n = 1000, commlabels = [], mdlabels = ["md$i" for i in eachindex(metadatums)])
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(dms)])
     
     mapreduce(vcat, enumerate(dms)) do (i, dm)
