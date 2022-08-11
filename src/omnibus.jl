@@ -1,4 +1,4 @@
-function permanovas(dm::Matrix, metadatums::Vector{<:Vector}; n = 1000, mdlabels = ["md$i" for i in eachindex(metadatums)])
+function permanovas(dm::Matrix, metadatums::Vector{<:AbstractVector}; n = 1000, mdlabels = ["md$i" for i in eachindex(metadatums)])
     permdf = mapreduce(vcat, zip(metadatums, mdlabels)) do (md, lab)    
         hasmd = findall(!ismissing, md)
         df = DataFrame(test = md[hasmd])
@@ -13,7 +13,7 @@ function permanovas(dm::Matrix, metadatums::Vector{<:Vector}; n = 1000, mdlabels
     return DataFrame(permdf)
 end
 
-function permanovas(dms::AbstractArray{<:Matrix}, metadatums; n = 1000, commlabels = [], mdlabels = ["md$i" for i in eachindex(metadatums)])
+function permanovas(dms::AbstractArray{<:AbstractMatrix}, metadatums; n = 1000, commlabels = [], mdlabels = ["md$i" for i in eachindex(metadatums)])
     isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(dms)])
     
     mapreduce(vcat, enumerate(dms)) do (i, dm)
@@ -74,7 +74,7 @@ end
 
 function mantel(dms::Vector{<:Matrix}; commlabels = [], n = 1000)
     manteldf = DataFrame()
-    isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(comms)])
+    isempty(commlabels) && (commlabels = ["comm$i" for i in eachindex(dms)])
 
     for (i,j) in combinations(eachindex(dms), 2)
         dm1, dm2 = dms[[i, j]]
@@ -109,11 +109,13 @@ end
     end
 
     @testset "Mantel tests" begin
-        m1 = mantel(braycurtis(c1), braycurtis(c2))
+        d1 = braycurtis(c1)
+        d2 = braycurtis(c2)
+        m1 = mantel(d1,d2)
         @test m1 isa Tuple{Float64, Float64}
         @test all(<(1), m1)
         
-        m2 = mantel([c1, c2])
+        m2 = mantel([d1, d2])
         @test m2 isa DataFrame
         @test size(m2) == (1,4)
         @test names(m2) == ["stat", "pvalue", "thing1", "thing2"]

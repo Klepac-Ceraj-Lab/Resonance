@@ -22,7 +22,8 @@ load(::Metadata) = CSV.read(datafiles("exports", "timepoint_metadata.csv"), Data
         Union{Missing, Float64}, # cogScore
         Union{Missing, String},  # omni
         Union{Missing, String},  # etoh
-        Bool                     # has_segmentation
+        Bool,                     # has_segmentation
+        Union{Missing, Float64}  # read_depth
     ]        
 )
 
