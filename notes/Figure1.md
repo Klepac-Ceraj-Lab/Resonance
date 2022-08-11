@@ -259,3 +259,21 @@ figure
 ```
 
 ![](figures/Figure1.png)
+
+## Supplement
+
+### Multivariate permanovas
+
+Maternal education & race.
+
+```julia
+using PERMANOVA
+
+df = DataFrame(maternalEd = get(species, :maternalEd)[uidx], 
+               race       = get(species, :race)[uidx])
+oidx = findall(.!ismissing.(df.maternalEd) .& .!ismissing.(df.race))
+df = df[oidx, :]
+
+permanova(df, spedm[uidx[oidx], uidx[oidx]], @formula(1 ~ maternalEd + race), 1000)
+
+```
