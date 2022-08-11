@@ -29,6 +29,7 @@ let (lq, uq) = quantile(collect(skipmissing(mdata.cogScore)), [0.25, 0.75])
     end; levels = ["lower", "middle", "upper"], ordered = true)
 end
 
+# https://github.com/JuliaStats/GLM.jl/issues/431
 mdata.read_depth ./= 1e6
 ```
 
@@ -98,95 +99,7 @@ end
 
 ```
 
-## MaAsLin
-
-### Export for MaAsLin2
-
-```julia
-isdir(outputfiles("maaslin")) || mkdir(outputfiles("maaslin"))
-
-let df = select(mdata, "omni"=>"sample", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd")
-    subset!(df, "sample"=> ByRow(!ismissing))
-    unique!(df, "sample")
-    CSV.write(outputfiles("maaslin", "metadata.tsv"), df; delim='\t')
-end
-
-let df = select(specu6, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
-    CSV.write(outputfiles("maaslin", "specu6.tsv"), df; delim='\t')
-end
-
-let df = select(speco18, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
-    CSV.write(outputfiles("maaslin", "speco18.tsv"), df; delim='\t')
-end
-
-let df = select(kou6, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
-    CSV.write(outputfiles("maaslin", "kou6.tsv"), df; delim='\t')
-end
-
-let df = select(koo18, Cols("sample", Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"])))
-    CSV.write(outputfiles("maaslin", "koo18.tsv"), df; delim='\t')
-end
-```
-
-### Run MaAsLin
-
-First, set MaAsLin2 CLI executable in `PATH`
-
-
-```julia
-
-for (df, label) in zip((specu6, speco18, kou6, koo18), ("specu6", "speco18", "kou6", "koo18"))
-    c = Cmd([
-        "Maaslin2.R",
-        "-f", "ageMonths,quartile,read_depth,maternalEd",
-        "--standardize=FALSE",
-        outputfiles("maaslin", "$label.tsv"),
-        outputfiles("maaslin", "metadata.tsv"),
-        outputfiles("maaslin", string(label, "_cogScore")),
-    ])
-
-    run(c)
-end
-
-
-for (df, label) in zip((specu6, speco18, kou6, koo18), ("specu6", "speco18", "kou6", "koo18"))
-    c = Cmd([
-        "Maaslin2.R",
-        "-f", "ageMonths,quartile,read_depth,maternalEd",
-        "--standardize=FALSE", "-d", "quartile,middle",
-        outputfiles("maaslin", "$label.tsv"),
-        outputfiles("maaslin", "metadata.tsv"),
-        outputfiles("maaslin", string(label, "_quartile")),
-    ])
-
-    run(c)
-end
-
-```
-
-### Read MaAsLin
-
-```julia
-specu6_maaslin = CSV.read(outputfiles("maaslin", "specu6_quartile", "all_results.tsv"), DataFrame; delim='\t')
-subset!(specu6_maaslin, :metadata=>ByRow(==("quartile")))
-specu6_maaslin.qvalue = adjust(specu6_maaslin.pval, BenjaminiHochberg())
-
-speco18_maaslin = CSV.read(outputfiles("maaslin", "speco18_quartile", "all_results.tsv"), DataFrame; delim='\t')
-subset!(speco18_maaslin, :metadata=>ByRow(==("quartile")))
-speco18_maaslin.qvalue = adjust(speco18_maaslin.pval, BenjaminiHochberg())
-
-kou6_maaslin = CSV.read(outputfiles("maaslin", "kou6_quartile", "all_results.tsv"), DataFrame; delim='\t')
-subset!(kou6_maaslin, :metadata=>ByRow(==("quartile")))
-kou6_maaslin.qvalue = adjust(collect(kou6_maaslin.pval), BenjaminiHochberg())
-
-koo18_maaslin = CSV.read(outputfiles("maaslin", "koo18_quartile", "all_results.tsv"), DataFrame; delim='\t')
-subset!(koo18_maaslin, :metadata=>ByRow(==("quartile")))
-koo18_maaslin.qvalue = adjust(collect(koo18_maaslin.pval), BenjaminiHochberg())
-```
-
-
-## GLM.jl
-
+## Running the models
 
 ### Kids under 6mo, species
 
@@ -200,13 +113,24 @@ for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScore", "
 
     ab = specu6[!, spc] .+ (minimum(filter(>(0), specu6[!, spc])) / 2) # add half-minimum non-zerovalue
 
-    df = specu6[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
+    df = specu6[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
     df.bug = log2.(ab)
 
-    mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
+    ct.kind .= "cogScore"
     append!(specu6_lmresults, ct)
+
+    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
+    droplevels!(df.quartile)
+
+    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df)
+    ct = DataFrame(coeftable(mod))
+    ct.species .= spc
+    ct.kind .= "quartile"
+    append!(specu6_lmresults, ct)
+
 end    
 select!(specu6_lmresults, Cols(:species, :Name, :))
 rename!(specu6_lmresults, "Pr(>|t|)"=>"pvalue");
@@ -223,12 +147,14 @@ rename!(specu6_lmresults, "Pr(>|t|)"=>"pvalue");
             )
         )
     )
+
+    groupby(:kind)
     transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
     sort!(:qvalue)
 end
 
 CSV.write(outputfiles("lms_u6mo_species.csv"), specu6_lmresults)
-specu6_lmresults
+specu6_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```
 
 ### Kids over 18mo, species
@@ -237,19 +163,31 @@ specu6_lmresults
 ```julia
 speco18_lmresults = DataFrame()
 
-for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd", "quartile"]))
+for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
     count(>(0), speco18[!, spc]) / size(speco18, 1) > 0.1 || continue
+    
     @info spc
 
     ab = speco18[!, spc] .+ (minimum(filter(>(0), speco18[!, spc])) / 2) # add half-minimum non-zerovalue
 
-    df = speco18[:, ["ageMonths", "cogScore", "read_depth"]]
+    df = speco18[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
     df.bug = log2.(ab)
 
-    mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth), df)
+    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
+    ct.kind .= "cogScore"
     append!(speco18_lmresults, ct)
+
+    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
+    droplevels!(df.quartile)
+
+    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df)
+    ct = DataFrame(coeftable(mod))
+    ct.species .= spc
+    ct.kind .= "quartile"
+    append!(speco18_lmresults, ct)
+
 end    
 select!(speco18_lmresults, Cols(:species, :Name, :))
 rename!(speco18_lmresults, "Pr(>|t|)"=>"pvalue");
@@ -262,37 +200,51 @@ rename!(speco18_lmresults, "Pr(>|t|)"=>"pvalue");
 @chain speco18_lmresults begin
     subset!(:Name => ByRow(x->
         !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth")
+            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
             )
         )
     )
+
+    groupby(:kind)
     transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
     sort!(:qvalue)
 end
 
-CSV.write(outputfiles("lms_o18mo_species.csv"), speco18_lmresults)
-speco18_lmresults
+CSV.write(outputfiles("lms_o12mo_species.csv"), speco18_lmresults)
+speco18_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```
 
 
-### Kids under 6mo, KOs
+### Kids under 6mo, ko
 
 ```julia
 kou6_lmresults = DataFrame()
 
-for ko in names(kou6, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+for ko in names(kou6, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
     count(>(0), kou6[!, ko]) / size(kou6, 1) > 0.1 || continue
+    
     @info ko
 
     ab = kou6[!, ko] .+ (minimum(filter(>(0), kou6[!, ko])) / 2) # add half-minimum non-zerovalue
 
-    df = kou6[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
-    df.bug = log2.(ab)
+    df = kou6[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df.func = log2.(ab)
 
-    mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(func ~ cogScore + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
     ct.ko .= ko
+    ct.kind .= "cogScore"
     append!(kou6_lmresults, ct)
+
+    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
+    droplevels!(df.quartile)
+
+    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + maternalEd), df)
+    ct = DataFrame(coeftable(mod))
+    ct.ko .= ko
+    ct.kind .= "quartile"
+    append!(kou6_lmresults, ct)
+
 end    
 select!(kou6_lmresults, Cols(:ko, :Name, :))
 rename!(kou6_lmresults, "Pr(>|t|)"=>"pvalue");
@@ -309,49 +261,47 @@ rename!(kou6_lmresults, "Pr(>|t|)"=>"pvalue");
             )
         )
     )
+
+    groupby(:kind)
     transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
     sort!(:qvalue)
 end
 
 CSV.write(outputfiles("lms_u6mo_ko.csv"), kou6_lmresults)
-kou6_lmresults
+kou6_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```
 
-```julia
-kou6_ecs = DataFrame(filter(!isnothing, ThreadsX.map(subset(kou6_lmresults, :qvalue=> ByRow(<(0.1))).ko) do ko
-    m = match(r"\[EC\:(\d+\.\d+\.\d+\.\d+)\]", ko)
-    if isnothing(m)
-        return nothing
-    else
-        (l1, l2, l3, l4) = parse.(Int, split(m.captures[1], "."))
-        return (; l1, l2, l3, l4)
-    end
-end))
-
-sort!(kou6_ecs)
-
-```
-
-
-### Kids over 18mo, KOs
+### Kids over 18mo, ko
 
 
 ```julia
 koo18_lmresults = DataFrame()
 
-for ko in names(koo18, Not(["subject", "timepoint", "ageMonths", "cogScore", "sample", "read_depth", "maternalEd"]))
+for ko in names(koo18, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
     count(>(0), koo18[!, ko]) / size(koo18, 1) > 0.1 || continue
+    
     @info ko
 
     ab = koo18[!, ko] .+ (minimum(filter(>(0), koo18[!, ko])) / 2) # add half-minimum non-zerovalue
 
-    df = koo18[:, ["ageMonths", "cogScore", "read_depth", "maternalEd"]]
-    df.bug = log2.(ab)
+    df = koo18[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df.func = log2.(ab)
 
-    mod = lm(@formula(cogScore ~ bug + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(func ~ cogScore + ageMonths + read_depth + maternalEd), df)
     ct = DataFrame(coeftable(mod))
     ct.ko .= ko
+    ct.kind .= "cogScore"
     append!(koo18_lmresults, ct)
+
+    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
+    droplevels!(df.quartile)
+
+    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + maternalEd), df)
+    ct = DataFrame(coeftable(mod))
+    ct.ko .= ko
+    ct.kind .= "quartile"
+    append!(koo18_lmresults, ct)
+
 end    
 select!(koo18_lmresults, Cols(:ko, :Name, :))
 rename!(koo18_lmresults, "Pr(>|t|)"=>"pvalue");
@@ -368,12 +318,14 @@ rename!(koo18_lmresults, "Pr(>|t|)"=>"pvalue");
             )
         )
     )
+
+    groupby(:kind)
     transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
     sort!(:qvalue)
 end
 
 CSV.write(outputfiles("lms_o18mo_ko.csv"), koo18_lmresults)
-koo18_lmresults
+koo18_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```
 
 ## Plots
