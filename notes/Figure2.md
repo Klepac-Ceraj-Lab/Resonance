@@ -52,7 +52,7 @@ we are going to split the datasets into stools collected prior to 6 months old
 and over 18 months old (most kids are eating solid foods).
 
 ```julia
-specmdata = select(DataFrame(metadata(species)),
+specmdata = select(DataFrame(Microbiome.metadata(species)),
                 ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
 )
 
@@ -65,7 +65,7 @@ unique!(specu6, "subject")
 speco18 = subset(specmdata, "ageMonths" => ByRow(>(18)), "cogScore"=> ByRow(!ismissing))
 unique!(speco18, "subject")
 
-komdata = select(DataFrame(metadata(kos)),
+komdata = select(DataFrame(Microbiome.metadata(kos)),
                 ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
 )
 komdata.sample = samplenames(kos)
@@ -106,26 +106,27 @@ end
 ```julia
 specu6_lmresults = DataFrame()
 
+
 for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
     count(>(0), specu6[!, spc]) / size(specu6, 1) > 0.1 || continue
     
     @info spc
+    over0 = specu6[!, spc] .> 0
+    ab = collect(specu6[over0, spc] .+ (minimum(filter(>(0), specu6[!, spc])) / 2)) # add half-minimum non-zerovalue
 
-    ab = specu6[!, spc] .+ (minimum(filter(>(0), specu6[!, spc])) / 2) # add half-minimum non-zerovalue
-
-    df = specu6[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df = specu6[over0, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
     df.bug = log2.(ab)
 
-    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
     ct.kind .= "cogScore"
     append!(specu6_lmresults, ct)
-
     subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
     droplevels!(df.quartile)
+    length(unique(df.quartile)) > 1 || continue 
 
-    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
     ct.kind .= "quartile"
@@ -163,26 +164,27 @@ specu6_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```julia
 speco18_lmresults = DataFrame()
 
+
 for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
     count(>(0), speco18[!, spc]) / size(speco18, 1) > 0.1 || continue
     
     @info spc
+    over0 = speco18[!, spc] .> 0
+    ab = collect(speco18[over0, spc] .+ (minimum(filter(>(0), speco18[!, spc])) / 2)) # add half-minimum non-zerovalue
 
-    ab = speco18[!, spc] .+ (minimum(filter(>(0), speco18[!, spc])) / 2) # add half-minimum non-zerovalue
-
-    df = speco18[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df = speco18[over0, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
     df.bug = log2.(ab)
 
-    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
     ct.kind .= "cogScore"
     append!(speco18_lmresults, ct)
-
     subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
     droplevels!(df.quartile)
+    length(unique(df.quartile)) > 1 || continue 
 
-    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
     ct.kind .= "quartile"
@@ -210,7 +212,7 @@ rename!(speco18_lmresults, "Pr(>|t|)"=>"pvalue");
     sort!(:qvalue)
 end
 
-CSV.write(outputfiles("lms_o12mo_species.csv"), speco18_lmresults)
+CSV.write(outputfiles("lms_o18mo_species.csv"), speco18_lmresults)
 speco18_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```
 
