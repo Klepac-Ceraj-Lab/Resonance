@@ -7,6 +7,7 @@ using Statistics
 using HypothesisTests
 using MultipleTesting
 using KernelDensity
+using MultivariateStats
 using ThreadsX
 ```
 
@@ -17,6 +18,11 @@ mdata = Resonance.load(Metadata())
 
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
 unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
+isdefined(Main, :unidm) || (unidm = braycurtis(unirefs))
+unipco = fit(MDS, unidm; distances=true)
+
+metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata=mdata)
+metabolites = metabolites[:, [!ismissing(a) && a < 14 for a in get(metabolites, :ageMonths)]]
 ```
 
 ## Calculate correlations
@@ -193,20 +199,24 @@ k = kde(hcat(vec(prevalence(unirefs[keepuni, allages.sample])), cors))
 ```julia
 figure = Figure(resolution=(1200, 1200))
 
-A = Axis(figure[1,1]; xlabel="prevalence", ylabel="correlation")
-BCDE = GridLayout(figure[1:2,2])
-B = GridLayout(BCDE[1,1])
-C = GridLayout(BCDE[2,1])
-D = GridLayout(BCDE[3,1])
-E = Axis(BCDE[4,1])
+A = GridLayout(figure[1,1])
+B = GridLayout(figure[2,1])
+CDEF = GridLayout(figure[1:2,2])
+C = GridLayout(CDEF[1,1])
+D = GridLayout(CDEF[2,1])
+E = GridLayout(CDEF[3,1])
+F = Axis(CDEF[4,1])
 ```
 
 
 ```julia
-heatmap!(A,k.x,k.y, k.density .^ (1/4))
+aax = Axis(A[1,1])
+pco = plot_pcoa!(aax, unipco; color=get(unirefs, :ageMonths))
+Colorbar(A[1,2], pco; label="Age (months)")
+ax, hm = heatmap(B[1,1],k.x,k.y, k.density .^ (1/4); colormap=:plasma, axis = (;xlabel = "prevalence", ylabel="correlation"))
+Colorbar(B[1,2], hm; label=L"$Density^{\frac{1}{4}}$")
 
-
-for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (B,C,D))
+for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
     ixs = neuroactive_full[gs]
     cs = filter(!isnan, cors[ixs])
     acs = filter(!isnan, cors[Not(ixs)])
@@ -214,28 +224,84 @@ for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "
     Resonance.plot_fsea!(panel, cs, acs; label=gs)
 end
 
-Resonance.plot_corrband!(E, cors)
+Resonance.plot_corrband!(F, cors)
 
-rowsize!(BCDE, 4, Relative(1/8))
+rowsize!(CDEF, 4, Relative(1/8))
 figure
 ```
 
-```julia
-gs = "Glutamate degradation I"
-ixs = neuroactive_full[gs]
-cs = filter(!isnan, cors[ixs])
-acs = filter(!isnan, cors[Not(ixs)])
+## Metabolites
 
-Resonance.plot_fsea!(C, cs, acs; label=gs, bandres=0)
+```julia
+moi = [ # metabolites of interest
+    "pyridoxine", # vit B6
+    "gaba",
+    "glutamate"
+]
+
+pyrdidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"pyridoxine"i), mfeats))
+gabaidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"gamma-aminobutyric"i), mfeats))
+glutidx = ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^glutamic"i), mfeats)
+
+pyrd = vec(abundances(metabolites[pyrdidx, :]))
+gaba = vec(abundances(metabolites[gabaidx, :]))
+glut1 = vec(abundances(metabolites[glutidx[1], :]))
+glut2 = vec(abundances(metabolites[glutidx[2], :]))
+
 ```
 
 ```julia
-gs = 
-ixs = neuroactive_full[gs]
-cs = filter(!isnan, cors[ixs])
-acs = filter(!isnan, cors[Not(ixs)])
+fig, ax, pysc = scatter(log.(pyrd), get(metabolites, :ageMonths))
+gasc = scatter!(log.(gaba), get(metabolites, :ageMonths))
+gl1sc = scatter!(log.(glut1), get(metabolites, :ageMonths))
+gl2sc = scatter!(log.(glut2), get(metabolites, :ageMonths))
 
-Resonance.plot_fsea!(D, cs, acs; label=gs)
-figure
+Legend(fig[1,2], [pysc, gasc, gl1sc, gl2sc], ["pyridoxine", "GABA", "glutamate1", "glutamate2"])
+ax.xlabel = L"log_e(metabolite)"
+ax.ylabel = "age (months)"
+fig
 ```
 
+```julia
+fig = Figure()
+ax1 = Axis(fig[1,1]; xlabel = L"log_e(pyridoxine)", ylabel = L"log_e(GABA)")
+ax2 = Axis(fig[1,2]; xlabel = L"log_e(pyridoxine)", ylabel = L"log_e(Glutamate)")
+ax3 = Axis(fig[2,1]; xlabel = L"log_e(GABA)", ylabel = L"log_e(Glutamate)")
+ax4 = Axis(fig[2,2]; xlabel = L"log_e(GABA[1])", ylabel = L"log_e(Glutamate[2])")
+
+sc1 = scatter!(ax1, log.(pyrd), log.(gaba); color = get(metabolites, :ageMonths))
+sc2 = scatter!(ax2, log.(pyrd), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
+sc3 = scatter!(ax3, log.(gaba), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
+sc4 = scatter!(ax4, log.(glut1), log.(glut2); color = get(metabolites, :ageMonths))
+
+Colorbar(fig[1:2, 3], sc1; label = "Age (Months)")
+fig
+```
+
+## GABA and GABA genes
+
+```julia
+mtbsubtp = collect(zip(get(metabolites, :subject), get(metabolites, :timepoint)))
+uniol = findall(stp -> stp in mtbsubtp, collect(zip(get(unirefs, :subject), get(unirefs, :timepoint))))
+ur = unirefs[:, uniol]
+ursubtp = collect(zip(get(ur, :subject), get(ur, :timepoint)))
+mtbol = findall(stp -> stp in ursubtp, collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))))
+
+cors = vec(cor(glut1[mtbol] .+ glut2[mtbol], abundances(ur), dims=2))
+
+ixs = neuroactive_full["Glutamate degradation II"]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+mwu = MannWhitneyUTest(cs, acs)
+
+Resonance.plot_fsea(cs, acs; label="Glutamate synthesis II")
+
+```
+
+```julia
+fig = Figure()
+ax = Axis(fig[1,1])
+
+scatter!(ax, vec(abundances(ur[ixs[10], :])), log.((glut1[mtbol] .+ glut2[mtbol]) ./ 2))
+fig
+```

@@ -157,7 +157,7 @@ end
 
 function plot_fsea(setcors, notcors; label="")
     fig = Figure()
-    plot_fsea!(fig.layout, setcors, notcors; label, bandres)
+    plot_fsea!(fig.layout, setcors, notcors; label)
     fig
 end
 
