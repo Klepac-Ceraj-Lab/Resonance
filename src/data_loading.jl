@@ -8,6 +8,18 @@ struct ECProfiles <: Dataset end
 struct MetabolicProfiles <: Dataset end
 struct Neuroimaging <: Dataset end
 
+function map_string_timepoint(concatstring)::Tuple{Int64, Int64}
+    letter_to_timepoint = Dict( [ x => y for (x,y) in zip('a':'l',1:14)] ) 
+    isletter(concatstring[end]) ? (return(parse(Int64, concatstring[1:end-1]), letter_to_timepoint[concatstring[end]])) : (return(parse(Int64, concatstring), 1))
+end # end function
+
+function split_subject_timepoint(stringsvector)
+    mappings = map(map_string_timepoint, stringsvector)
+    subjects = map(x -> x[1], mappings)
+    timepoints = map(x -> x[2], mappings)
+    return subjects, timepoints
+end # end function
+
 load(ds::Dataset; kwargs...) = MethodError("load has not been implemented for $(typeof(ds))")
 
 load(::Metadata) = CSV.read(datafiles("exports", "timepoint_metadata.csv"), DataFrame;
@@ -74,4 +86,14 @@ function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))
     comm = CommunityProfile(Matrix(df[!, r"^FE"]), ms, MicrobiomeSample.(names(df, r"^FE")))
     set!(comm, timepoint_metadata; namecol=:etoh)
     return comm
+end
+
+function load(::Neuroimaging)
+    df = CSV.read(datafiles("exports", "raw_brain_measures.csv")) ## Have the raw_brain_measures.csv file in your exports directory.
+    subjs, tpts = split_subject_timepoint(df."Measure:volume")
+        df."Left-Thalamus" = df."Left-Thalamus" .+ df."Left-Thalamus-Proper"
+        df."Right-Thalamus" = df."Right-Thalamus" .+ df."Right-Thalamus-Proper"
+        df."IntraCranialVol" = df."EstimatedTotalIntraCranialVol" .+ df."IntraCranialVol"
+    df = hcat(DataFrame(:subject => subjs, :timepoint => tpts ), select(df, _reduced_braincols))
+    return sort(df, [:subject, :timepoint])
 end

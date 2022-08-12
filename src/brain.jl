@@ -77,6 +77,36 @@ const _braincols = [
     "IntraCranialVol"
 ]
 
+const _reduced_braincols = [
+    "Left-Thalamus",
+    "Left-Lateral-Ventricle",
+    "Left-Cerebellum-White-Matter",
+    "Left-Cerebellum-Cortex",
+    "Left-Caudate",
+    "Left-Putamen",
+    "Left-Pallidum",
+    "Left-Hippocampus",
+    "Left-Amygdala",
+    "Left-Accumbens-area",
+    "Left-VentralDC",
+    "Left-choroid-plexus",
+    "Right-Thalamus",
+    "Right-Lateral-Ventricle",
+    "Right-Cerebellum-White-Matter",
+    "Right-Cerebellum-Cortex",
+    "Right-Caudate",
+    "Right-Putamen",
+    "Right-Pallidum",
+    "Right-Hippocampus",
+    "Right-Amygdala",
+    "Right-Accumbens-area",
+    "Right-VentralDC",
+    "Right-choroid-plexus",
+    "Brain-Stem",
+    "CSF",
+    "IntraCranialVol"
+]
+
 const _skipbrain = [
     "Left-Thalamus",
     "Right-Thalamus",
