@@ -197,7 +197,7 @@ k = kde(hcat(vec(prevalence(unirefs[keepuni, allages.sample])), cors))
 ```
 
 ```julia
-figure = Figure(resolution=(1200, 1200))
+figure = Figure(resolution=(900, 900))
 
 A = GridLayout(figure[1,1])
 B = GridLayout(figure[2,1])
@@ -214,26 +214,28 @@ aax = Axis(A[1,1])
 pco = plot_pcoa!(aax, unipco; color=get(unirefs, :ageMonths))
 Colorbar(A[1,2], pco; label="Age (months)")
 ax, hm = heatmap(B[1,1],k.x,k.y, k.density .^ (1/4); colormap=:plasma, axis = (;xlabel = "prevalence", ylabel="correlation"))
-Colorbar(B[1,2], hm; label=L"$Density^{\frac{1}{4}}$")
+Colorbar(B[1,2], hm; label=L"\sqrt[4]{Density}")
 
 for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
     ixs = neuroactive_full[gs]
     cs = filter(!isnan, cors[ixs])
     acs = filter(!isnan, cors[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs; label=gs)
+    Resonance.plot_fsea!(panel, cs, acs; label=replace(gs, "degradation"=> "degr.", "synthesis"=> "synth."))
 end
 
 Resonance.plot_corrband!(F, cors)
 
 rowsize!(CDEF, 4, Relative(1/8))
+save(figurefiles("Figure3.svg"), figure)
+save(figurefiles("Figure3.png"), figure)
 figure
 ```
 
 ## Metabolites
 
 ```julia
-moi = [ # metabolites of interest
+bmoi = [ # metabolites of interest
     "pyridoxine", # vit B6
     "gaba",
     "glutamate"

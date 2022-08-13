@@ -197,7 +197,7 @@ end
 
 function plot_corrband!(ax, cors; bandres=5000)
     ax.xlabel="rank"
-    ax.ylabel="enrichment score"
+    ax.ylabel="correlation"
     srt = sortperm(cors; rev=true)
     ncors = length(cors)
     rn = ncors > bandres ? round.(Int, range(1, ncors; length=bandres)) : range(1, ncors)
