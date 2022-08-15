@@ -199,3 +199,33 @@ merit_report_df = DataFrame(
 # trial_test_mae
 # trial_test_mape
 # trial_test_cor
+
+#####
+# Reporting Importances
+#####
+
+average_importances = DataFrame(
+    :Variable => names(X),
+    :Importance => map(mean, eachrow(reduce(hcat, [ impurity_importance(trial_machine[i].fitresult) for i in 1:n_trials ])))
+); sort(average_importances, :Importance, rev = true)[1:30, :]
+
+using JLD2
+
+modeling_export = Dict(
+        :n_trials => n_trials,
+        :selected_trial => 1,
+        :models => trial_machine,
+        :dataset_partitions => trial_partition,
+        :slope_corrections => trial_slopecorrection,
+        :train_maes => trial_train_mae,
+        :train_mapes => trial_train_mape,
+        :train_correlations => trial_train_cor,
+        :test_maes => trial_test_mae,
+        :test_mapes => trial_test_mape,
+        :test_correlations => trial_test_cor,
+        :importance_df => average_importances
+)
+
+JLD2.@save "models/results_regression_futureCogScores_allAgeMonths_onlytaxa.jld" modeling_export
+
+a = JLD2.load("models/results_regression_futureCogScores_allAgeMonths_onlytaxa.jld", "modeling_export")

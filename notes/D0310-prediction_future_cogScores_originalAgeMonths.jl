@@ -189,13 +189,13 @@ merit_report_df = DataFrame(
     :Test_COR => trial_test_cor
 )
 
-# trial_partition
-# trial_machine
-# trial_slopecorrection
-# trial_plot
-# trial_train_mae
-# trial_train_mape
-# trial_train_cor
-# trial_test_mae
-# trial_test_mape
-# trial_test_cor
+#####
+# Reporting Importances
+#####
+
+average_importances = DataFrame(
+    :Variable => names(X),
+    :Importance => map(mean, eachrow(reduce(hcat, [ impurity_importance(trial_machine[i].fitresult) for i in 1:n_trials ])))
+); sort(average_impurities, :Importance, rev = true)[1:30, :]
+
+using JLD2
