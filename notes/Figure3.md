@@ -23,6 +23,8 @@ unipco = fit(MDS, unidm; distances=true)
 
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata=mdata)
 metabolites = metabolites[:, [!ismissing(a) && a < 14 for a in get(metabolites, :ageMonths)]]
+isdefined(Main, :metdm) || (metdm = braycurtis(metabolites))
+metpco = fit(MDS, metdm; distances=true)
 ```
 
 ## Calculate correlations
@@ -42,47 +44,60 @@ neuroactive_full = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""),
 ```
 
 ```julia
-fsdf = DataFrame(
-    ThreadsX.map(collect(keys(neuroactive))) do gs
-        ixs = neuroactive[gs]
-        isempty(ixs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+fsdf = let 
+    if isfile(outputfiles("fsea_consolidated.csv"))
+        tmp = CSV.read(outputfiles("fsea_consolidated.csv"), DataFrame)
+    else
+        tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
+            ixs = neuroactive[gs]
+            isempty(ixs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
-        cs = filter(!isnan, cors[ixs])
-        isempty(cs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+            cs = filter(!isnan, cors[ixs])
+            isempty(cs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
-        acs = filter(!isnan, cors[Not(ixs)])
-        mwu = MannWhitneyUTest(cs, acs)
+            acs = filter(!isnan, cors[Not(ixs)])
+            mwu = MannWhitneyUTest(cs, acs)
 
-        return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+            return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        end)
+
+        subset!(tmp, :pvalue=> ByRow(!isnan))
+        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+        sort!(tmp, :qvalue)
+        CSV.write(outputfiles("fsea_consolidated.csv"), tmp)
     end
-)
+    tmp
+end
 
-subset!(fsdf, :pvalue=> ByRow(!isnan))
-fsdf.qvalue = adjust(fsdf.pvalue, BenjaminiHochberg())
-sort!(fsdf, :qvalue)
-CSV.write(outputfiles("fsea_consolidated.csv"), fsdf)
 ```
 
 ```julia
-fsdf2 = DataFrame(
-    ThreadsX.map(collect(keys(neuroactive_full))) do gs
-        ixs = neuroactive_full[gs]
-        isempty(ixs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+fsdf2 = let
+    if isfile(outputfiles("fsea_all.csv"))
+        tmp = CSV.read(outputfiles("fsea_all.csv"), DataFrame)
+    else
+        tmp = DataFrame(
+            ThreadsX.map(collect(keys(neuroactive_full))) do gs
+                ixs = neuroactive_full[gs]
+                isempty(ixs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
-        cs = filter(!isnan, cors[ixs])
-        isempty(cs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+                cs = filter(!isnan, cors[ixs])
+                isempty(cs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
-        acs = filter(!isnan, cors[Not(ixs)])
-        mwu = MannWhitneyUTest(cs, acs)
+                acs = filter(!isnan, cors[Not(ixs)])
+                mwu = MannWhitneyUTest(cs, acs)
 
-        return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+                return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+            end
+        )
+
+        subset!(tmp, :pvalue=> ByRow(!isnan))
+        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+        sort!(tmp, :qvalue)
+        CSV.write(outputfiles("fsea_all.csv"), tmp)
     end
-)
-
-subset!(fsdf2, :pvalue=> ByRow(!isnan))
-fsdf2.qvalue = adjust(fsdf2.pvalue, BenjaminiHochberg())
-sort!(fsdf2, :qvalue)
-CSV.write(outputfiles("fsea_all.csv"), fsdf2)
+    tmp
+end
 ```
 
 ```julia
@@ -206,6 +221,7 @@ C = GridLayout(CDEF[1,1])
 D = GridLayout(CDEF[2,1])
 E = GridLayout(CDEF[3,1])
 F = Axis(CDEF[4,1])
+G = GridLayout(figure[3,1:2])
 ```
 
 
@@ -214,7 +230,7 @@ aax = Axis(A[1,1])
 pco = plot_pcoa!(aax, unipco; color=get(unirefs, :ageMonths))
 Colorbar(A[1,2], pco; label="Age (months)")
 ax, hm = heatmap(B[1,1],k.x,k.y, k.density .^ (1/4); colormap=:plasma, axis = (;xlabel = "prevalence", ylabel="correlation"))
-Colorbar(B[1,2], hm; label=L"\sqrt[4]{Density}")
+Colorbar(B[1,2], hm; label=L"$Density^{\frac{1}{4}}$")
 
 for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
     ixs = neuroactive_full[gs]
@@ -227,9 +243,6 @@ end
 Resonance.plot_corrband!(F, cors)
 
 rowsize!(CDEF, 4, Relative(1/8))
-save(figurefiles("Figure3.svg"), figure)
-save(figurefiles("Figure3.png"), figure)
-figure
 ```
 
 ## Metabolites
@@ -240,7 +253,7 @@ bmoi = [ # metabolites of interest
     "gaba",
     "glutamate"
 ]
-
+mfeats = commonname.(features(metabolites))
 pyrdidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"pyridoxine"i), mfeats))
 gabaidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"gamma-aminobutyric"i), mfeats))
 glutidx = ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^glutamic"i), mfeats)
@@ -253,16 +266,20 @@ glut2 = vec(abundances(metabolites[glutidx[2], :]))
 ```
 
 ```julia
-fig, ax, pysc = scatter(log.(pyrd), get(metabolites, :ageMonths))
-gasc = scatter!(log.(gaba), get(metabolites, :ageMonths))
-gl1sc = scatter!(log.(glut1), get(metabolites, :ageMonths))
-gl2sc = scatter!(log.(glut2), get(metabolites, :ageMonths))
 
-Legend(fig[1,2], [pysc, gasc, gl1sc, gl2sc], ["pyridoxine", "GABA", "glutamate1", "glutamate2"])
-ax.xlabel = L"log_e(metabolite)"
-ax.ylabel = "age (months)"
-fig
+Ga = Axis(G[1,1])
+Gb = Axis(G[1,2]; xlabel = L"log_e(GABA)", ylabel = L"log_e(Glutamate)")
+
+pcom = plot_pcoa!(Ga, metpco; color=get(metabolites, :ageMonths))
+sc = scatter!(Gb, log.(gaba), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
+Colorbar(G[1, 3], sc; label = "Age (Months)")
+
+save(figurefiles("Figure3.svg"), figure)
+save(figurefiles("Figure3.png"), figure)
+figure
+
 ```
+
 
 ```julia
 fig = Figure()
@@ -273,11 +290,10 @@ ax4 = Axis(fig[2,2]; xlabel = L"log_e(GABA[1])", ylabel = L"log_e(Glutamate[2])"
 
 sc1 = scatter!(ax1, log.(pyrd), log.(gaba); color = get(metabolites, :ageMonths))
 sc2 = scatter!(ax2, log.(pyrd), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
-sc3 = scatter!(ax3, log.(gaba), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
+
 sc4 = scatter!(ax4, log.(glut1), log.(glut2); color = get(metabolites, :ageMonths))
 
-Colorbar(fig[1:2, 3], sc1; label = "Age (Months)")
-fig
+
 ```
 
 ## GABA and GABA genes
