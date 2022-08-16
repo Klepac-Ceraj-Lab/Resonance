@@ -255,7 +255,7 @@ plot_pcoa!(Ea, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, ta
 plot_pcoa!(Eb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
 pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
 
-Colorbar(DEF[2, 2], pco; label="Relative abundance (%)", colormap = :Purples)
+Colorbar(DEF[2, 2], pco; label="Relative abundance (%)")
 
 # F = Axis(DEF[3,1])
 
@@ -271,6 +271,35 @@ figure
 ![](figures/Figure1.png)
 
 ## Supplement
+
+```julia
+fig = Figure()
+ax = Axis(fig[1,1], title = "Bacteroidetes")
+ax2 = Axis(fig[1,2], title = "Prevotella")
+ax3 = Axis(fig[2,1], title = "Bacteroides")
+ax4 = Axis(fig[2,2], title = "Alistipes")
+plot_pcoa!(ax, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+plot_pcoa!(ax2, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, taxa)[r"Prevotella", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+plot_pcoa!(ax3, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, taxa)[r"Bacteroides", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+plot_pcoa!(ax4, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, taxa)[r"Alistipes", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+fig
+```
 
 ### Multivariate permanovas
 
