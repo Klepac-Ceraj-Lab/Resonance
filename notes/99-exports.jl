@@ -6,21 +6,30 @@ using Statistics
 
 #-
 
-metadata = let df = CSV.read("data/timepoints_final.csv", DataFrame)
+mdata = let df = CSV.read("data/timepoints_final.csv", DataFrame)
     df.has_segmentation = map(s-> s == "true", df.has_segmentation)
     df[df.has_segmentation .| .!ismissing.(df.cogScore) .| .!ismissing.(df.omni)  .| .!ismissing.(df.etoh), :]
 end
 
-sort!(metadata, ["subject", "timepoint"])
+sort!(mdata, ["subject", "timepoint"])
 
-CSV.write(datafiles("exports", "timepoint_metadata.csv"), select(metadata,
+knead = Resonance.load_knead()
+knead.omni = replace.(knead.Sample, r"_S\d+_kneaddata"=>"")
+let keep = Set(skipmissing(mdata.omni))
+    subset!(knead, :sample=> ByRow(s-> s in keep))
+end
+unique!(knead, :omni)
+transform!(knead, AsTable(r"final") => ByRow(sum) => "read_depth")
+leftjoin!(mdata, select(knead, "omni", "read_depth"); on="omni", matchmissing=:equal)
+
+CSV.write(datafiles("exports", "timepoint_metadata.csv"), select(mdata,
     "subject", "timepoint", # Identifiers
     "ageMonths", "race", "mother_HHS_Education" => "maternalEd", # Demographics
     "assessmentDate", "scanDate", # Dates 
-    "cogScore", "omni", "etoh", "has_segmentation" # Measurements
+    "cogScore", "omni", "etoh", "has_segmentation", "read_depth" # Measurements
 ))
 
-CSV.write(datafiles("exports", "brain_measures.csv"), select(metadata, 
+CSV.write(datafiles("exports", "brain_measures.csv"), select(mdata, 
     "subject", "timepoint",
     Resonance.brainmeta...
 ))
@@ -29,15 +38,15 @@ metabolites = CSV.read(datafiles("wrangled", "metabolites.csv"), DataFrame)
 
 #-
 
-@info "Unique subjects:" N = metadata.subject |> unique |> length
-@info "Unique stool samples:" N = count(!ismissing, metadata.omni)
-@info "Unique metabolomics samples:" N = count(!ismissing, metadata.etoh)
-@info "Ages (in months)" min = minimum(skipmissing(metadata.ageMonths)) max = maximum(skipmissing(metadata.ageMonths)) mean = mean(skipmissing(metadata.ageMonths)) median = median(skipmissing(metadata.ageMonths))
+@info "Unique subjects:" N = mdata.subject |> unique |> length
+@info "Unique stool samples:" N = count(!ismissing, mdata.omni)
+@info "Unique metabolomics samples:" N = count(!ismissing, mdata.etoh)
+@info "Ages (in months)" min = minimum(skipmissing(mdata.ageMonths)) max = maximum(skipmissing(mdata.ageMonths)) mean = mean(skipmissing(mdata.ageMonths)) median = median(skipmissing(mdata.ageMonths))
 
 #
 
-keepomni = Set(skipmissing(metadata.omni))
-dropetoh = setdiff(names(metabolites, r"^FE"), Set(skipmissing(metadata.etoh)))
+keepomni = Set(skipmissing(mdata.omni))
+dropetoh = setdiff(names(metabolites, r"^FE"), Set(skipmissing(mdata.etoh)))
 
 #-
 
@@ -45,7 +54,7 @@ CSV.write(datafiles("exports", "metabolites.csv"), select(metabolites, Not(drope
 
 #-
 
-allsamples = sort(collect(skipmissing(metadata.omni)))
+allsamples = sort(collect(skipmissing(mdata.omni)))
 
 allfiles = String[]
 for (root, dirs, files) in walkdir(ENV["ANALYSIS_FILES"])

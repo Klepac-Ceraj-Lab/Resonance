@@ -6,6 +6,7 @@ First, load packages that will be used throughout this notebook.
 using Resonance
 using FileIO
 using CairoMakie # for plotting
+using Distances
 using MultivariateStats
 using CategoricalArrays
 ```
@@ -243,6 +244,7 @@ Label(BC[0,2], "Mantel"; tellwidth=false)
 D = Axis(DEF[1,1])
 
 spepco = fit(MDS, spedm; distances=true)
+
 sc = plot_pcoa!(D, spepco; color=get(species, :ageMonths))
 Colorbar(DEF[1, 2], sc; label="Age (months)", flipaxis=true)
 
@@ -250,6 +252,7 @@ E = GridLayout(DEF[2,1])
 Ea = Axis(E[1,1]; title = "Bacteroidetes")
 Eb = Axis(E[1,2]; title = "Firmicutes")
 Ec = Axis(E[1,3]; title = "Actinobacteria")
+
 
 plot_pcoa!(Ea, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])), colormap=:Purples)
 plot_pcoa!(Eb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
@@ -259,8 +262,8 @@ Colorbar(DEF[2, 2], pco; label="Relative abundance (%)")
 
 # F = Axis(DEF[3,1])
 
-# metpco = fit(MDS, metdm)
-# plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
+metpco = fit(MDS, metdm; distances=true)
+plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
 
 
 save(figurefiles("Figure1.svg"), figure)
