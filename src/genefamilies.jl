@@ -80,19 +80,21 @@ function read_gfs_arrow(; kind="genefamilies", stratified=false)
 end
 
 
-function get_neuroactive_kos(neuroactivepath=datafiles("gbm.txt"))
+function get_neuroactive_kos(neuroactivepath=datafiles("gbm.txt"); consolidate=true)
     neuroactive = Dictionary{String, Vector{String}}()
     desc = ""
     for line in eachline(neuroactivepath)
        line = split(line, r"[\t,]")
        if startswith(line[1], "MGB")
-           (mgb, desc) = line
-           desc = rstrip(replace(desc, r"\b[IV]+\b.*$"=>""))
-           desc = replace(desc, r" \([\w\s\-]+\)"=>"")
-           desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
-           desc = replace(desc, " (AA"=>"")
-           @info "getting unirefs for $desc"
-           !in(desc, keys(neuroactive)) && insert!(neuroactive, desc, String[])
+            (mgb, desc) = line
+            if consolidate
+                desc = rstrip(replace(desc, r"\b[IV]+\b.*$"=>""))
+                desc = replace(desc, r" \([\w\s\-]+\)"=>"")
+                desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
+                desc = replace(desc, " (AA"=>"")
+            end
+            @info "getting unirefs for $desc"
+            !in(desc, keys(neuroactive)) && insert!(neuroactive, desc, String[])
        else
            filter!(l-> occursin(r"^K\d+$", l), line)
            append!(neuroactive[desc], String.(line))
@@ -101,8 +103,8 @@ function get_neuroactive_kos(neuroactivepath=datafiles("gbm.txt"))
    return neuroactive
 end
 
-function getneuroactive(features; neuroactivepath=datafiles("gbm.txt"), map_ko_uniref_path=datafiles("map_ko_uniref90.txt.gz"))
-    neuroactivekos = get_neuroactive_kos(neuroactivepath)
+function getneuroactive(features; neuroactivepath=datafiles("gbm.txt"), map_ko_uniref_path=datafiles("map_ko_uniref90.txt.gz"), consolidate=true)
+    neuroactivekos = get_neuroactive_kos(neuroactivepath; consolidate)
 
     kos2uniref = Dictionary{String, Vector{String}}()
     for line in eachline(GzipDecompressorStream(open(map_ko_uniref_path)))
@@ -138,4 +140,18 @@ function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos::AbstractVecto
     end
 
     return fsea(cors, pos)
+end
+
+function enrichment_score(setcors, notcors)
+    srt = sortperm([setcors; notcors]; rev=true)
+    ranks = invperm(srt)
+    setranks = Set(ranks[1:length(setcors)])
+    
+    setscore =  1 / length(setcors)
+    notscore = -1 / length(notcors)
+    
+    ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
+    
+    lower, upper = extrema(ys)
+    return abs(lower) > abs(upper) ? lower : upper
 end
