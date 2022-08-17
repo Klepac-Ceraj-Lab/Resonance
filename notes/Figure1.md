@@ -6,6 +6,7 @@ First, load packages that will be used throughout this notebook.
 using Resonance
 using FileIO
 using CairoMakie # for plotting
+using Distances
 using MultivariateStats
 using CategoricalArrays
 ```
@@ -242,7 +243,7 @@ Label(BC[0,2], "Mantel"; tellwidth=false)
 D = Axis(DEF[1,1])
 
 spepco = fit(MDS, spedm; distances=true)
-sc = plot_pcoa!(D, spepco; color=get(species, :ageMonths))
+plot_pcoa!(D, spepco; color=get(species, :ageMonths))
 
 E = Axis(DEF[2,1])
 
@@ -251,8 +252,8 @@ plot_pcoa!(E, unipco; color=get(unirefs, :ageMonths))
 
 # F = Axis(DEF[3,1])
 
-# metpco = fit(MDS, metdm)
-# plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
+metpco = fit(MDS, metdm; distances=true)
+plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
 
 Label(DEF[1,0], "species"; tellheight=false, tellwidth=true)
 Label(DEF[2,0], "UniRef90"; tellheight=false, tellwidth=true)
