@@ -166,7 +166,6 @@ function fix_metadata_colnames!(longdata_df::DataFrame)
     
 end
 
-
 function check_longdata_metaduplicates!(longdata_df::DataFrame; remove_duplicates=true)
     n_unique_rows = size(unique(longdata_df[:, 1:3]),1)    
     
@@ -185,8 +184,40 @@ function check_longdata_metaduplicates!(longdata_df::DataFrame; remove_duplicate
     end # end if n_unique_rows
 end # end function
 
-function build_future_df(base_df, to_predict::Symbol)
+function build_metadata_prediction_df(base_df, inputs::Vector{Symbol}, targets::Vector{Symbol})
 
+    subjects = unique(base_df.subject)
+    has_stool = findall(.!(ismissing.(base_df.sample)))
+    has_cogscore = findall(.!(ismissing.(base_df.cogScore)))
+
+    subjects_stool_idx = [ intersect(findall(base_df.subject .== el), has_stool) for el in subjects ]
+    subjects_cogscore_idx = [ intersect(findall(base_df.subject .== el), has_cogscore) for el in subjects ]
+
+    line_combinations = vcat( [ vec(collect(Base.product(subjects_stool_idx[i], subjects_cogscore_idx[i]))) for i in 1:length(subjects) ]... )
+    line_combinations = line_combinations[ [ el[2] > el[1] for el in line_combinations ] ]
+
+    targets_df = @chain base_df[ [el[2] for el in line_combinations], :] begin
+        select( [:subject, :timepoint, :ageMonths, targets...] )
+        rename!( [:timepoint => :futureTimepoint, :ageMonths => :futureAgeMonths, (targets .=> Symbol.("future" .* uppercasefirst.(String.(targets))))...] )
+    end
+
+    inputs_df = @chain base_df[ [el[1] for el in line_combinations], :] begin
+        select( Not(:subject) )
+    end
+
+    prediction_df = hcat(targets_df, inputs_df)
+    prediction_df.ageMonthsDelta = prediction_df.futureAgeMonths .- prediction_df.ageMonths 
+    prediction_df.timepointDelta = prediction_df.futureTimepoint .- prediction_df.timepoint 
+    
+    select!(prediction_df, [:subject, :ageMonths, :timepoint, :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta, targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...])
+    sort!(prediction_df, [:subject, :timepoint, :futureTimepoint])
+    
+    return prediction_df
+
+end
+
+function build_future_df(base_df, to_predict::Symbol)
+  
     subjects = unique(base_df.subject)
     result_lines = Vector{DataFrame}()
 
@@ -206,9 +237,9 @@ function build_future_df(base_df, to_predict::Symbol)
                             origin_df = DataFrame()
                             push!(origin_df, copy(subject_df[origin_idx, :]))
                             target_df = subject_df[target_idx, :]
-                            insertcols!(origin_df, 1, :target => parse(Float64, target_df[to_predict]))
-                            insertcols!(origin_df, 1, :futureAgeMonths => parse(Float64, target_df[:ageMonths]))
-                            insertcols!(origin_df, 1, :ageMonthsDelta => parse(Float64, target_df[:ageMonths]) - parse(Float64, origin_df[1, :ageMonths]))
+                            insertcols!(origin_df, 1, :target => target_df[to_predict])
+                            insertcols!(origin_df, 1, :futureAgeMonths => target_df[:ageMonths])
+                            insertcols!(origin_df, 1, :ageMonthsDelta => target_df[:ageMonths] - origin_df[1, :ageMonths])
                             insertcols!(origin_df, 1, :futureTimepoint => subject_df[target_idx, :timepoint])
                             insertcols!(origin_df, 1, :timepointDelta => subject_df[target_idx, :timepoint] - subject_df[origin_idx, :timepoint])
                             push!(result_lines, origin_df)
@@ -244,35 +275,50 @@ end
 
 function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 100000)
 
-    @info "----- Begin Tietjen-Moore Outlier test -----"
-    @info "H0: There are no outliers in the data set."
-    @info "H1: There are exactly k outliers in the data set\n"
+    @info "----- Begin Tietjen-Moore Outlier test -----\n
+        H0: There are no outliers in the data set.\n
+        H1: There are exactly k outliers in the data set"
 
     n = length(values)
-
     L_set, L_critical = test_tietjenmoore(values, k, n, alpha, sim_trials)
-    @info "Set L-statistic for $n samples and $k outliers with mode $(mode): $(round(L_set, digits = 4))"
-    @info "Critical L for $n samples and $k outliers with mode $(mode): $(round(L_critical, digits = 4))\n"
 
     if L_set < L_critical
-        @info "L_set < L_critical !"
-        @info "**SUCCESSFUL REJECTION OF H0** with confidence level $alpha" 
+        @info "Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))\n
+            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))\n
+            L_set < L_critical\n
+            **SUCCESSFUL REJECTION OF H0** with confidence level $alpha" 
         r_all = abs.(values .- mean(values))
         outlier_indexes = sortperm(r_all)[(n-k+1):end]
         return outlier_indexes
     else
-        @warn "L_set > L_critical !"
-        @warn "**CANNOT REJECT H0** with confidence level $alpha"
+        @info """
+            Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))
+            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))
+            L_set > L_critical !
+            **CANNOT REJECT H0** with confidence level $alpha
+            """
         return Int64[]
     end # endif L_set < L_critical
 end # end function
 
-function try_outliers(f, data, n)
-    for i in n:-1:1
-        outlier_idx = f(data, i)
-        if length(outlier_idx) != 0
-            return(i, outlier_idx)
+function try_outliers(f, data, n; reverse=true)
+
+    if reverse
+
+        for i in n:-1:1
+            outlier_idx = f(data, i)
+            if length(outlier_idx) != 0
+                return(i, outlier_idx)
+            end
         end
+    else
+
+        for i in 1:n
+            outlier_idx = f(data, i)
+            if length(outlier_idx) != 0
+                return(i, outlier_idx)
+            end
+         end
     end
     return 0, Int64[]
 end

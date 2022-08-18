@@ -49,7 +49,8 @@ export build_future_df,
        univariate_tietjenmoore,
        test_tietjenmoore,
        try_outliers,
-       unstack_techreplicates
+       unstack_techreplicates,
+       build_metadata_prediction_df
 
 using Reexport
 using ReTest
