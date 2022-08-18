@@ -291,10 +291,12 @@ function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; al
         outlier_indexes = sortperm(r_all)[(n-k+1):end]
         return outlier_indexes
     else
-        @info "Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))\n
-            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))\n
+        @info """
+            Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))
+            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))
             L_set > L_critical !
-            **CANNOT REJECT H0** with confidence level $alpha"
+            **CANNOT REJECT H0** with confidence level $alpha
+            """
         return Int64[]
     end # endif L_set < L_critical
 end # end function
