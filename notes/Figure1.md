@@ -31,6 +31,8 @@ kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
 kos = filter(!hastaxon, kos)
 
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
+brain = Resonance.load(Neuroimaging())
+
 
 @assert all(samplenames(species) .== samplenames(unirefs))
 @assert all(samplenames(species) .== samplenames(ecs))
@@ -150,7 +152,6 @@ Bb = Axis(B[1,2]; alignmode=Outside())
 Bc = Axis(B[2,2]; alignmode=Outside())
 Label(B[1,3], "Under 6mo"; tellwidth=true, tellheight=false, rotation=-π/2)
 Label(B[2,3], "Over 18mo"; tellwidth=true, tellheight=false, rotation=-π/2)
-colwidth!(B, 1, Relative=(1/2))
 
 perms = let permout = outputfiles("permanovas_u6mo.csv")
     if isfile(permout)
@@ -243,21 +244,27 @@ Label(BC[0,2], "Mantel"; tellwidth=false)
 D = Axis(DEF[1,1])
 
 spepco = fit(MDS, spedm; distances=true)
-plot_pcoa!(D, spepco; color=get(species, :ageMonths))
 
-E = Axis(DEF[2,1])
+sc = plot_pcoa!(D, spepco; color=get(species, :ageMonths))
+Colorbar(DEF[1, 2], sc; label="Age (months)", flipaxis=true)
 
-unipco = fit(MDS, unidm; distances=true)
-plot_pcoa!(E, unipco; color=get(unirefs, :ageMonths))
+E = GridLayout(DEF[2,1])
+Ea = Axis(E[1,1]; title = "Bacteroidetes")
+Eb = Axis(E[1,2]; title = "Firmicutes")
+Ec = Axis(E[1,3]; title = "Actinobacteria")
+
+
+plot_pcoa!(Ea, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])), colormap=:Purples)
+plot_pcoa!(Eb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
+pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
+
+Colorbar(DEF[2, 2], pco; label="Relative abundance (%)")
 
 # F = Axis(DEF[3,1])
 
 metpco = fit(MDS, metdm; distances=true)
 plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
 
-Label(DEF[1,0], "species"; tellheight=false, tellwidth=true)
-Label(DEF[2,0], "UniRef90"; tellheight=false, tellwidth=true)
-Colorbar(DEF[1:2, 2], sc; label="Age (months)", flipaxis=true)
 
 save(figurefiles("Figure1.svg"), figure)
 save(figurefiles("Figure1.png"), figure)
@@ -267,6 +274,35 @@ figure
 ![](figures/Figure1.png)
 
 ## Supplement
+
+```julia
+fig = Figure()
+ax = Axis(fig[1,1], title = "Bacteroidetes")
+ax2 = Axis(fig[1,2], title = "Prevotella")
+ax3 = Axis(fig[2,1], title = "Bacteroides")
+ax4 = Axis(fig[2,2], title = "Alistipes")
+plot_pcoa!(ax, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+plot_pcoa!(ax2, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, taxa)[r"Prevotella", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+plot_pcoa!(ax3, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, taxa)[r"Bacteroides", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+plot_pcoa!(ax4, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, taxa)[r"Alistipes", :])),
+        colormap=:Purples,
+        strokecolor=:black,
+        strokewidth=1
+)
+fig
+```
 
 ### Multivariate permanovas
 
