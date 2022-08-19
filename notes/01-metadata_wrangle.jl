@@ -87,15 +87,47 @@ count(!ismissing, fmp_alltp.bfcalculated)
 
 # Add info about brain data (just if it's there)
 
-brain = let 
-    fcleft = brain_ingest(datafiles("brain", "freesurfer_curvature_leftHemi_oct2021.csv"); label="curvature_leftHemi")
-    fcright = brain_ingest(datafiles("brain", "freesurfer_curvature_rightHemi_oct2021.csv"); label="curvature_rightHemi")
-    ftleft = brain_ingest(datafiles("brain", "freesurfer_thickness_leftHemi_oct2021.csv"); label="thickness_leftHemi")
-    ftright = brain_ingest(datafiles("brain", "freesurfer_thickness_rightHemi_oct2021.csv"); label="thickness_rightHemi")
-    seg = brain_ingest(datafiles("brain", "segmentationVolumeMeasurements_oct2021.csv"); label="segmentation")
+brain = XLSX.readxlsx(datafiles("brain", "AllResonanceVols_Resonance_only.xlsx"))
+volumes = let 
+    tb = brain["RESONANCE"]["A2:CW1181"]
 
-    outerjoin(fcleft, fcright, ftleft, ftright, seg, on=[:subject, :timepoint], makeunique=true)
+    df = DataFrame(tb[2:end, :], string.(vec(tb[1, :])))
+    contains(brain["RESONANCE"]["CZ2"], "CSF") || error("CSF col missing")
+    contains(brain["RESONANCE"]["DA2"], "GM") || error("GM col missing")
+    contains(brain["RESONANCE"]["DB2"], "WM") || error("GM col missing")
+
+    df."CSF" = vec(brain["RESONANCE"]["CZ3:CZ1181"])
+    df."Gray-matter" = vec(brain["RESONANCE"]["DA3:DA1181"])
+    df."White-matter" = vec(brain["RESONANCE"]["DB3:DB1181"])
+
+    rename!(df, "missing" => "Sex")
+    for col in ["Cohort", "ID", "Session", "Sex"]
+        df[!, col] = String.(df[!, col])
+    end
+    df.AgeInDays = Float64[ismissing(x) ? missing : x for x in df.AgeInDays]
+
+    for (cidx, row) in zip(vec(brain["Tissue Labels"]["B2:B97"]), eachrow(brain["Tissue Labels"]["C2:F97"]))
+        lab = join(strip.(coalesce.(row, ""), '“'), ' ')
+        lab = replace(lab, " missing"=> "", " "=>"-")
+        rename!(df, string(cidx) => lab)
+        df[!, lab] = map(x-> ismissing(x) ? 0. : x, df[!, lab])
+    end
+
+
+    df.subject = map(df.ID) do id
+        m = match(r"^sub-BAMBAM(\d+)$", id)
+        isnothing(m) && error("$id is wrong format")
+        parse(Int, m.captures[1])
+    end
+
+    df.timepoint = map(df.Session) do s
+        m = match(r"^ses-(\d+)$", s)
+        isnothing(m) && error("$s is wrong format")
+        parse(Int, m.captures[1])
+    end
+    df
 end
+
 brain.has_segmentation .= true
 
 ## Validation
