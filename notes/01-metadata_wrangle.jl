@@ -85,27 +85,68 @@ codebreastfeeding!(fmp_alltp)
 
 count(!ismissing, fmp_alltp.bfcalculated)
 
+# ## Dealing with ages
+
+fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
+    if ismissing(row.scanAgeMonths)
+        (row.assessmentAgeDays ./ 365 .* 12) .+ row.assessmentAgeMonths
+    else
+        (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
+    end
+end
+
 # Add info about brain data (just if it's there)
 
-brain = let 
-    fcleft = brain_ingest(datafiles("brain", "freesurfer_curvature_leftHemi_oct2021.csv"); label="curvature_leftHemi")
-    fcright = brain_ingest(datafiles("brain", "freesurfer_curvature_rightHemi_oct2021.csv"); label="curvature_rightHemi")
-    ftleft = brain_ingest(datafiles("brain", "freesurfer_thickness_leftHemi_oct2021.csv"); label="thickness_leftHemi")
-    ftright = brain_ingest(datafiles("brain", "freesurfer_thickness_rightHemi_oct2021.csv"); label="thickness_rightHemi")
-    seg = brain_ingest(datafiles("brain", "segmentationVolumeMeasurements_oct2021.csv"); label="segmentation")
+brain = XLSX.readxlsx(datafiles("brain", "AllResonanceVols_Resonance_only.xlsx"))
+volumes = let 
+    tb = brain["RESONANCE"]["A2:CW1181"]
 
-    outerjoin(fcleft, fcright, ftleft, ftright, seg, on=[:subject, :timepoint], makeunique=true)
+    df = DataFrame(tb[2:end, :], string.(vec(tb[1, :])))
+    contains(brain["RESONANCE"]["CZ2"], "CSF") || error("CSF col missing")
+    contains(brain["RESONANCE"]["DA2"], "GM") || error("GM col missing")
+    contains(brain["RESONANCE"]["DB2"], "WM") || error("GM col missing")
+
+    df."CSF" = vec(brain["RESONANCE"]["CZ3:CZ1181"])
+    df."Gray-matter" = vec(brain["RESONANCE"]["DA3:DA1181"])
+    df."White-matter" = vec(brain["RESONANCE"]["DB3:DB1181"])
+
+    rename!(df, "missing" => "Sex")
+    for col in ["Cohort", "ID", "Session", "Sex"]
+        df[!, col] = String.(df[!, col])
+    end
+    df.AgeInDays = Float64[ismissing(x) ? missing : x for x in df.AgeInDays]
+
+    for (cidx, row) in zip(vec(brain["Tissue Labels"]["B2:B97"]), eachrow(brain["Tissue Labels"]["C2:F97"]))
+        lab = join(strip.(coalesce.(row, ""), Ref(['“', '”'])), ' ')
+        lab = replace(lab, " missing"=> "", r" $"=> "", " "=>"-")
+        rename!(df, string(cidx) => lab)
+        df[!, lab] = Float64[ismissing(x) ? 0. : x for x in df[!, lab]]
+    end
+
+
+    df.subject = map(df.ID) do id
+        m = match(r"^sub-BAMBAM(\d+)$", id)
+        isnothing(m) && error("$id is wrong format")
+        parse(Int, m.captures[1])
+    end
+
+    df.timepoint = map(df.Session) do s
+        m = match(r"^ses-(\d+)$", s)
+        isnothing(m) && error("$s is wrong format")
+        parse(Int, m.captures[1])
+    end
+    df
 end
-brain.has_segmentation .= true
+
+volumes.has_segmentation .= true
 
 ## Validation
 
-for row in eachrow(brain)
-    all(h-> !ismissing(h) && h, row[r"has_"]) || @info row[r"has_"]
-end
+@assert all(volumes.Cohort .== "RESONANCE")
 
-fmp_alltp = leftjoin(fmp_alltp, brain, on=[:subject, :timepoint])
+fmp_alltp = leftjoin(fmp_alltp, select(volumes, [:subject, :timepoint, :AgeInDays, :Sex, :has_segmentation]), on=[:subject, :timepoint])
 fmp_alltp.has_segmentation = [ismissing(x) ? false : x for x in fmp_alltp.has_segmentation]
+
 
 ## transform!(fmp_alltp, :sid_old => ByRow(id-> ismissing(id) ? id : replace(id, r"_(\d+)F_"=>s"_\1E_")) => :sid_old_etoh)
 ## etoh_map = Dict((old=>new for (old, new) in zip(samplemeta.sid_old, samplemeta.sample)))
@@ -170,17 +211,6 @@ fmp_alltp.has_everbreast = .!ismissing.(fmp_alltp."everBreastFed")
 fmp_alltp.has_bfperc = .!ismissing.(fmp_alltp."breastFedPercent")
 
 
-# ## Dealing with ages
-
-fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
-    if ismissing(row.scanAgeMonths)
-        (row.assessmentAgeDays ./ 365 .* 12) .+ row.assessmentAgeMonths
-    else
-        (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
-    end
-end
-
-
 
 for n in names(fmp_alltp)
     fmp_alltp[!, n] = map(fmp_alltp[!, n]) do v
@@ -191,6 +221,7 @@ end
 CSV.write(datafiles("wrangled", "timepoints.csv"), fmp_alltp)
 CSV.write(datafiles("wrangled", "omnisamples.csv"), subset(samplemeta, "Fecal_EtOH" => ByRow(==("F")), "Mgx_batch"=> ByRow(!ismissing)))
 CSV.write(datafiles("wrangled", "etohsamples.csv"), subset(samplemeta, "Fecal_EtOH" => ByRow(==("E")), "Metabolomics_batch"=> ByRow(!ismissing)))
+CSV.write(datafiles("wrangled", "brain.csv"), select(volumes, Cols(:subject, :timepoint, Not(["Cohort", "ID", "Session"]))))
 CSV.write(datafiles("wrangled", "covid.csv"), fmp_covid)
 
 # ## Uploading to Airtable
