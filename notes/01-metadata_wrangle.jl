@@ -147,11 +147,6 @@ volumes.has_segmentation .= true
 fmp_alltp = leftjoin(fmp_alltp, select(volumes, [:subject, :timepoint, :AgeInDays, :Sex, :has_segmentation]), on=[:subject, :timepoint])
 fmp_alltp.has_segmentation = [ismissing(x) ? false : x for x in fmp_alltp.has_segmentation]
 
-select(filter(subset(fmp_alltp, :has_segmentation=> identity)) do row
-    ismissing(row.ageMonths) ||
-    ismissing(row.childGender) ||
-    row.Sex != row.childGender
-end, [:subject, :timepoint])
 
 ## transform!(fmp_alltp, :sid_old => ByRow(id-> ismissing(id) ? id : replace(id, r"_(\d+)F_"=>s"_\1E_")) => :sid_old_etoh)
 ## etoh_map = Dict((old=>new for (old, new) in zip(samplemeta.sid_old, samplemeta.sample)))
