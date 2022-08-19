@@ -89,15 +89,6 @@ function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))
 end
 
 function load(::Neuroimaging)
-    df = CSV.read(datafiles("exports", "raw_brain_measures.csv"), DataFrame) ## Have the raw_brain_measures.csv file in your exports directory.
-    stps = DataFrame(split_tp.(df."Measure:volume"))
-        ## Combining columns with the same data
-        all(row-> (row."Left-Thalamus" == 0) ⊻ (row."Left-Thalamus-Proper" == 0), eachrow(df)) || error("At least one row has values on both columns containing Left Thalamus") # ensures only one of the columns is not zero
-        df."Left-Thalamus"  .+= df."Left-Thalamus-Proper"
-        all(row-> (row."Right-Thalamus" == 0) ⊻ (row."Right-Thalamus-Proper" == 0), eachrow(df)) || error("At least one row has values on both columns containing Right Thalamus")
-        df."Right-Thalamus" .+= df."Right-Thalamus-Proper"
-        all(row-> (row."IntraCranialVol" == 0) ⊻ (row."EstimatedTotalIntraCranialVol" == 0), eachrow(df)) || error("At least one row has values on both columns containing Intracranial Volume")
-        df."IntraCranialVol" .+= df."EstimatedTotalIntraCranialVol"
-        df = hcat(stps, select(df, _reduced_braincols))
+    CSV.read(datafiles("wrangled", "brain.csv"), DataFrame)
     return sort!(df, [:subject, :timepoint])
 end
