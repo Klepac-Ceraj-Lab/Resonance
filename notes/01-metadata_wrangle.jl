@@ -85,6 +85,16 @@ codebreastfeeding!(fmp_alltp)
 
 count(!ismissing, fmp_alltp.bfcalculated)
 
+# ## Dealing with ages
+
+fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
+    if ismissing(row.scanAgeMonths)
+        (row.assessmentAgeDays ./ 365 .* 12) .+ row.assessmentAgeMonths
+    else
+        (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
+    end
+end
+
 # Add info about brain data (just if it's there)
 
 brain = XLSX.readxlsx(datafiles("brain", "AllResonanceVols_Resonance_only.xlsx"))
@@ -107,10 +117,10 @@ volumes = let
     df.AgeInDays = Float64[ismissing(x) ? missing : x for x in df.AgeInDays]
 
     for (cidx, row) in zip(vec(brain["Tissue Labels"]["B2:B97"]), eachrow(brain["Tissue Labels"]["C2:F97"]))
-        lab = join(strip.(coalesce.(row, ""), '“'), ' ')
-        lab = replace(lab, " missing"=> "", " "=>"-")
+        lab = join(strip.(coalesce.(row, ""), Ref(['“', '”'])), ' ')
+        lab = replace(lab, " missing"=> "", r" $"=> "", " "=>"-")
         rename!(df, string(cidx) => lab)
-        df[!, lab] = map(x-> ismissing(x) ? 0. : x, df[!, lab])
+        df[!, lab] = Float64[ismissing(x) ? 0. : x for x in df[!, lab]]
     end
 
 
@@ -128,16 +138,20 @@ volumes = let
     df
 end
 
-brain.has_segmentation .= true
+volumes.has_segmentation .= true
 
 ## Validation
 
-for row in eachrow(brain)
-    all(h-> !ismissing(h) && h, row[r"has_"]) || @info row[r"has_"]
-end
+@assert all(volumes.Cohort .== "RESONANCE")
 
-fmp_alltp = leftjoin(fmp_alltp, brain, on=[:subject, :timepoint])
+fmp_alltp = leftjoin(fmp_alltp, select(volumes, [:subject, :timepoint, :AgeInDays, :Sex, :has_segmentation]), on=[:subject, :timepoint])
 fmp_alltp.has_segmentation = [ismissing(x) ? false : x for x in fmp_alltp.has_segmentation]
+
+select(filter(subset(fmp_alltp, :has_segmentation=> identity)) do row
+    ismissing(row.ageMonths) ||
+    ismissing(row.childGender) ||
+    row.Sex != row.childGender
+end, [:subject, :timepoint])
 
 ## transform!(fmp_alltp, :sid_old => ByRow(id-> ismissing(id) ? id : replace(id, r"_(\d+)F_"=>s"_\1E_")) => :sid_old_etoh)
 ## etoh_map = Dict((old=>new for (old, new) in zip(samplemeta.sid_old, samplemeta.sample)))
@@ -202,17 +216,6 @@ fmp_alltp.has_everbreast = .!ismissing.(fmp_alltp."everBreastFed")
 fmp_alltp.has_bfperc = .!ismissing.(fmp_alltp."breastFedPercent")
 
 
-# ## Dealing with ages
-
-fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
-    if ismissing(row.scanAgeMonths)
-        (row.assessmentAgeDays ./ 365 .* 12) .+ row.assessmentAgeMonths
-    else
-        (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
-    end
-end
-
-
 
 for n in names(fmp_alltp)
     fmp_alltp[!, n] = map(fmp_alltp[!, n]) do v
@@ -223,6 +226,7 @@ end
 CSV.write(datafiles("wrangled", "timepoints.csv"), fmp_alltp)
 CSV.write(datafiles("wrangled", "omnisamples.csv"), subset(samplemeta, "Fecal_EtOH" => ByRow(==("F")), "Mgx_batch"=> ByRow(!ismissing)))
 CSV.write(datafiles("wrangled", "etohsamples.csv"), subset(samplemeta, "Fecal_EtOH" => ByRow(==("E")), "Metabolomics_batch"=> ByRow(!ismissing)))
+CSV.write(datafiles("wrangled", "brain.csv"), select(volumes, Cols(:subject, :timepoint, Not(["Cohort", "ID", "Session"]))))
 CSV.write(datafiles("wrangled", "covid.csv"), fmp_covid)
 
 # ## Uploading to Airtable
