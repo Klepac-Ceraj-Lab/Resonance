@@ -96,11 +96,13 @@ We'll calculate them once for each profile rather
 rather than separately for each test.
 
 ```julia
-isdefined(Main, :spedm) || (spedm = braycurtis(species))
-isdefined(Main, :unidm) || (unidm = braycurtis(unirefs))
-isdefined(Main, :ecsdm) || (ecsdm = braycurtis(ecs))
-isdefined(Main, :kosdm) || (kosdm = braycurtis(kos))
-isdefined(Main, :metdm) || (metdm = braycurtis(metabolites))
+isdefined(Main, :spedm) || (spedm = Microbiome.braycurtis(species))
+isdefined(Main, :unidm) || (unidm = Microbiome.braycurtis(unirefs))
+isdefined(Main, :ecsdm) || (ecsdm = Microbiome.braycurtis(ecs))
+isdefined(Main, :kosdm) || (kosdm = Microbiome.braycurtis(kos))
+isdefined(Main, :metdm) || (metdm = Microbiome.braycurtis(metabolites))
+isdefined(Main, :brndm) || (metdm = pairwise(BrayCurtis(), Matrix(brain[!, Not(["subject", "timepoint", "AgeInDays", "Sex"])])))
+
 ```
 
 #### PERMANOVA
@@ -227,7 +229,26 @@ mdf = let mantout = outputfiles("mantel_all.csv")
             m, p = mantel(dm1[ol1, ol1], metdm[ol2, ol2])
             push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
         end
-        append!(mdf, m2)
+
+        (ol3, ol4) = stp_overlap(
+                collect(zip(get(species, :subject), get(species, :timepoint)))
+                collect(zip(brain.subject, brain.timepoint)),
+        )
+        m3 = DataFrame()
+        for (i, dm1) in enumerate([spedm, unidm, ecsdm, kosdm])
+            m, p = mantel(dm1[ol3, ol3], brn[ol4, ol4])
+            push!(m3, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="neuroimaging"))
+        end
+        append!(mdf, m3)
+        
+        (ol5, ol6) = stp_overlap(
+                collect(zip(get(metabolites, :subject), get(metabolites, :timepoint)))
+                collect(zip(brain.subject, brain.timepoint)),
+        )
+
+        m, p = mantel(metdm[ol5, ol5], brndm[ol6, ol6])
+        push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimaging"))        
+        
         CSV.write(mantout, mdf)
     end
     mdf

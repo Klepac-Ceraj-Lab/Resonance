@@ -89,6 +89,12 @@ function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))
 end
 
 function load(::Neuroimaging)
-    CSV.read(datafiles("wrangled", "brain.csv"), DataFrame)
+    df = CSV.read(datafiles("wrangled", "brain.csv"), DataFrame)
+    tbv = df."White-matter" .+ df."Gray-matter"
+    select!(df, Not("CSF"))
+    for col in names(df, Not(["subject", "timepoint", "Sex", "AgeInDays"]))
+        df[!, col] ./= tbv
+    end
+    rename!(df, rstrip.(names(df), '-'))
     return sort!(df, [:subject, :timepoint])
 end

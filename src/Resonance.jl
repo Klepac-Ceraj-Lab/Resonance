@@ -12,6 +12,7 @@ export datafiles,
        KOProfiles,
        ECProfiles,
        MetabolicProfiles,
+       Neuroimaging,
        startup
 
 # Data wrangling
