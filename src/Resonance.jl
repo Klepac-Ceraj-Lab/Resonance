@@ -49,7 +49,12 @@ export build_future_df,
        univariate_tietjenmoore,
        test_tietjenmoore,
        try_outliers,
-       unstack_techreplicates
+       unstack_techreplicates,
+       report_classification_merit,
+       report_regression_merit,
+       build_confusion_matrix,
+       average_confusion_matrix,
+       confmatrix2barplot
 
 using Reexport
 using ReTest
