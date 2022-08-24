@@ -103,6 +103,7 @@ function train_randomforest_current_regressor(df; n_trials = 2, min_age = 0.0, m
                 trial_test_mapes[this_trial] = mape(test_y_hat, y[test])
                 trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
                 trial_machines[this_trial] = deepcopy(rf_machine)
+                trial_slopecorrections[this_trial] = slope_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid)
@@ -149,7 +150,7 @@ prediction_df = @chain cogscore_taxa_df begin
     subset(:ageMonths => x -> x .<= max_prediction_ageMonths)
 end
 
-RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
+RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 
 regression_currentCogScores_00to06_fromtaxa_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 0.0, max_age=6.0, split_proportion=0.75, train_rng=ml_rng)
 JLD2.@save "models/regression_currentCogScores_00to06_fromtaxa_results.jld" regression_currentCogScores_00to06_fromtaxa_results
