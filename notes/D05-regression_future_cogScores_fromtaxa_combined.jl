@@ -67,7 +67,7 @@ function train_randomforest_future_regressor(df; n_trials = 2, max_stool_ageMont
 
     # ## 6. Actual training loop
 
-    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples between $(min_age) and $(max_age) months"
+    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples with stool collection before $(max_stool_ageMonths) and next evaluation before $(max_future_ageMonths) months"
 
     for this_trial in 1:n_trials
 
@@ -150,7 +150,7 @@ end # end function
 include("D00-collect_taxonomic_cogscore_data.jl")
 
 RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
-regression_combined_results = train_randomforest_future_regressor(cogscore_taxa_df; n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
+regression_futureCogScores_allselected_fromtaxa_results = train_randomforest_future_regressor(cogscore_taxa_df; n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
 
 using JLD2
-JLD2.@save "models/results_regression_futureCogScores_combined_onlytaxa.jld" regression_combined_results
+JLD2.@save "models/regression_futureCogScores_allselected_fromtaxa_results.jld" regression_futureCogScores_allselected_fromtaxa_results
