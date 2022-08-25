@@ -54,7 +54,8 @@ export build_future_df,
        report_regression_merit,
        build_confusion_matrix,
        average_confusion_matrix,
-       confmatrix2barplot
+       confmatrix2barplot,
+       regression_bestprediction
 
 using Reexport
 using ReTest
@@ -76,6 +77,8 @@ using SparseArrays
 using Statistics
 using Tables
 using ThreadsX
+using MLJ
+using GLM
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
