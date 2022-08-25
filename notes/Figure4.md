@@ -49,11 +49,8 @@ report_regression_merit(regression_currentCogScores_18to24_fromtaxa_results)
 ## Building Figure
 
 ```julia
-
-figure = Figure(resolution = (1200, 800))
+figure = Figure(resolution = (1200, 900))
 confplot_colors = [:blue3, :red3, :tomato2, :dodgerblue2]
-scatterplot
-
 ```
 
 ### Plot group 1 - Concurrent cogScore classification
@@ -64,15 +61,15 @@ scatterplot
 # Axis
 ax1_1 = Axis(
     figure[1,1];
-    xlabel = "Classifications",
+    # xlabel = "Classifications",
     xticks = (1:2, ["Correct", "Incorrect"]),
     ylabel = "Proportion",
-    title = "0 to 6 months"
+    title = "0 to 6 months (n = 73)"
 )
 ylims!(ax1_1, [0.0, 1.0])
 
 # Plot
-tbl1_1 = confmatrix2barplot(classification_00to06_results)
+tbl1_1 = confmatrix2barplot(classification_currentCogScores_00to06_fromtaxa_results)
 barplot!(ax1_1, tbl1_1.x, tbl1_1.value,
         stack = tbl1_1.grp,
         color = confplot_colors[tbl1_1.color])
@@ -83,15 +80,15 @@ barplot!(ax1_1, tbl1_1.x, tbl1_1.value,
 # Axis
 ax1_2 = Axis(
     figure[1,2];
-    xlabel = "Classifications",
+    # xlabel = "Classifications",
     xticks = (1:2, ["Correct", "Incorrect"]),
     ylabel = "Proportion",
-    title = "6 to 12 months"
+    title = "6 to 12 months (n = 61)"
 )
 ylims!(ax1_2, [0.0, 1.0])
 
 # Plot
-tbl1_2 = confmatrix2barplot(classification_06to12_results)
+tbl1_2 = confmatrix2barplot(classification_currentCogScores_06to12_fromtaxa_results)
 barplot!(ax1_2, tbl1_2.x, tbl1_2.value,
         stack = tbl1_2.grp,
         color = confplot_colors[tbl1_2.color])
@@ -102,15 +99,15 @@ barplot!(ax1_2, tbl1_2.x, tbl1_2.value,
 # Axis
 ax1_3 = Axis(
     figure[1,3];
-    xlabel = "Classifications",
+    # xlabel = "Classifications",
     xticks = (1:2, ["Correct", "Incorrect"]),
     ylabel = "Proportion",
-    title = "12 to 18 months"
+    title = "12 to 18 months (n = 39)"
 )
 ylims!(ax1_3, [0.0, 1.0])
 
 # Plot
-tbl1_3 = confmatrix2barplot(classification_12to18_results)
+tbl1_3 = confmatrix2barplot(classification_currentCogScores_12to18_fromtaxa_results)
 barplot!(ax1_3, tbl1_3.x, tbl1_3.value,
         stack = tbl1_3.grp,
         color = confplot_colors[tbl1_3.color])
@@ -121,15 +118,15 @@ barplot!(ax1_3, tbl1_3.x, tbl1_3.value,
 # Axis
 ax1_4 = Axis(
     figure[1,4];
-    xlabel = "Classifications",
+    # xlabel = "Classifications",
     xticks = (1:2, ["Correct", "Incorrect"]),
     ylabel = "Proportion",
-    title = "18 to 24 months"
+    title = "18 to 24 months (n = 50)"
 )
 ylims!(ax1_4, [0.0, 1.0])
 
 # Plot
-tbl1_4 = confmatrix2barplot(classification_18to24_results)
+tbl1_4 = confmatrix2barplot(classification_currentCogScores_18to24_fromtaxa_results)
 barplot!(ax1_4, tbl1_4.x, tbl1_4.value,
         stack = tbl1_4.grp,
         color = confplot_colors[tbl1_4.color])
@@ -137,9 +134,9 @@ barplot!(ax1_4, tbl1_4.x, tbl1_4.value,
 
 #### Plot group 1 - Legend and title
 ```julia
-Label(fig[1, :, Top()], "Average figures of merit for binary classification of cogScore (above/below average for age bracket)\nat the time of stool collection, for the independent test set", valign = :bottom,
+Label(figure[1, :, Top()], "Average figures of merit for binary classification of concurrent cogScore (above/below average for age bracket)\nat the time of stool collection, for the independent test set of each split", valign = :bottom,
     # font = "TeX Gyre Heros Bold",
-    padding = (0, 0, 5, 0))
+    padding = (0, 0, 30, 0))
 
 labels = ["True Negatives", "False Positives", "False Negatives", "True Positives"]
 elements = [PolyElement(polycolor = confplot_colors[i]) for i in 1:length(labels)]
@@ -156,25 +153,82 @@ ax3_1 = Axis(
     figure[3,1];
     xlabel = "Ground Truth cogScore",
     ylabel = "Predicted cogScore",
-    title = "0 to 6 months"
+    title = "0 to 6 months (n = 73)"
 )
 
 # Plot
 y, yhat, train, test = regression_bestprediction(regression_currentCogScores_00to06_fromtaxa_results)
-sc_train = scatter!(ax, y[train], train_y_hat; color=:orange)
-sc_test = scatter!(ax, y[test], test_y_hat; color=:purple)
-ablines!(ax, 0, 1; color=:grey)
-annotations!( ax, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 95)], textsize = 40)
+sc_train = scatter!(ax3_1, y[train], yhat[train]; color=:orange)
+sc_test = scatter!(ax3_1, y[test], yhat[test]; color=:purple)
+ablines!(ax3_1, 0, 1; color=:grey)
+annotations!( ax3_1, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 110)], textsize = 20)
+```
+
+#### Plot 2.2 - Predictions vs ground truth for 06 to 12 months
+
+```julia
+# Axis
+ax3_2 = Axis(
+    figure[3,2];
+    xlabel = "Ground Truth cogScore",
+    ylabel = "Predicted cogScore",
+    title = "6 to 12 months (n = 61)"
+)
+
+# Plot
+y, yhat, train, test = regression_bestprediction(regression_currentCogScores_06to12_fromtaxa_results)
+sc_train = scatter!(ax3_2, y[train], yhat[train]; color=:orange)
+sc_test = scatter!(ax3_2, y[test], yhat[test]; color=:purple)
+ablines!(ax3_2, 0, 1; color=:grey)
+annotations!( ax3_2, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 110)], textsize = 20)
+```
+
+#### Plot 2.3 - Predictions vs ground truth for 12 to 18 months
+
+```julia
+# Axis
+ax3_3 = Axis(
+    figure[3,3];
+    xlabel = "Ground Truth cogScore",
+    ylabel = "Predicted cogScore",
+    title = "12 to 18 months (n = 39)"
+)
+
+# Plot
+y, yhat, train, test = regression_bestprediction(regression_currentCogScores_12to18_fromtaxa_results)
+sc_train = scatter!(ax3_3, y[train], yhat[train]; color=:orange)
+sc_test = scatter!(ax3_3, y[test], yhat[test]; color=:purple)
+ablines!(ax3_3, 0, 1; color=:grey)
+annotations!( ax3_3, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 98)], textsize = 20)
+```
+
+#### Plot 2.4 - Predictions vs ground truth for 18 to 24 months
+
+```julia
+# Axis
+ax3_4 = Axis(
+    figure[3,4];
+    xlabel = "Ground Truth cogScore",
+    ylabel = "Predicted cogScore",
+    title = "18 to 24 months (n = 50)"
+)
+
+# Plot
+y, yhat, train, test = regression_bestprediction(regression_currentCogScores_18to24_fromtaxa_results)
+sc_train = scatter!(ax3_4, y[train], yhat[train]; color=:orange)
+sc_test = scatter!(ax3_4, y[test], yhat[test]; color=:purple)
+ablines!(ax3_4, 0, 1; color=:grey)
+annotations!( ax3_4, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(50, 102)], textsize = 20)
 ```
 
 #### Plot Group 2 - Legend and Title
 ```julia
-Label(fig[1, :, Top()], "Predicted vs ground truth values for regression of cogScore\nat the time of stool collection for the best validated model", valign = :bottom,
+Label(figure[3, :, Top()], "Predicted vs ground truth values for regression of concurrent cogScore at the time of stool collection for the best (split + validated model) combination", valign = :bottom,
     # font = "TeX Gyre Heros Bold",
-    padding = (0, 0, 5, 0))
+    padding = (0, 0, 30, 0))
 
-labels = ["True Negatives", "False Positives", "False Negatives", "True Positives"]
-elements = [PolyElement(polycolor = confplot_colors[i]) for i in 1:length(labels)]
-Legend(figure[4,1:4], elements, labels, "Classification result", orientation=:horizontal)
-save("figure.png", figure)
+labels = ["Training samples", "Test samples"]
+elements = [PolyElement(polycolor = el) for el in [:orange, :purple]]
+Legend(figure[4,1:4], elements, labels, "Sample set", orientation=:horizontal)
+save("figures/Figure4.png", figure); save("figures/Figure4.svg", figure)
 ```
