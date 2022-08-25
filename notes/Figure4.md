@@ -26,9 +26,9 @@ JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_06to12_
 JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_12to18_fromtaxa_results.jld"
 JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_18to24_fromtaxa_results.jld"
 # future cogScore classification
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_18to24_fromtaxa_results.jld"
+JLD2.@load "/home/guilherme/Documents/models/classification_futureCogScores_allselected_fromtaxa_results.jld"
 # future cogScore regression
-JLD2.@load "/home/guilherme/Documents/models/results_regression_futureCogScores_combined_onlytaxa.jld"
+JLD2.@load "/home/guilherme/Documents/models/regression_futureCogScores_allselected_fromtaxa_results.jld"
 ```
 
 ## Reporting the Figures of Merit for Classification
@@ -46,7 +46,7 @@ report_regression_merit(regression_currentCogScores_12to18_fromtaxa_results)
 report_regression_merit(regression_currentCogScores_18to24_fromtaxa_results)
 ```
 
-## Building Figure
+## Building Figure 4.1 - current cogscores from taxonomic profiles
 
 ```julia
 figure = Figure(resolution = (1200, 900))
@@ -230,5 +230,68 @@ Label(figure[3, :, Top()], "Predicted vs ground truth values for regression of c
 labels = ["Training samples", "Test samples"]
 elements = [PolyElement(polycolor = el) for el in [:orange, :purple]]
 Legend(figure[4,1:4], elements, labels, "Sample set", orientation=:horizontal)
-save("figures/Figure4.png", figure); save("figures/Figure4.svg", figure)
+save("figures/Figure4_current_taxa.png", figure); save("figures/Figure4_current_taxa.svg", figure)
+```
+
+## Building Figure 4.2 - future cogscores from taxonomic profiles
+
+```julia
+figure = Figure(resolution = (900, 600))
+confplot_colors = [:blue3, :red3, :tomato2, :dodgerblue2]
+```
+
+#### Plot 2.1 - Confusion Matrix / Accuracies for all ages
+
+```julia
+# Axis
+ax1_1 = Axis(
+    figure[1,1];
+    # xlabel = "Classifications",
+    xticks = (1:2, ["Correct", "Incorrect"]),
+    ylabel = "Proportion",
+    title = "All qualifying samples (n = 112)"
+)
+ylims!(ax1_1, [0.0, 1.0])
+
+# Plot
+tbl1_1 = confmatrix2barplot(classification_futureCogScores_allselected_fromtaxa_results)
+barplot!(ax1_1, tbl1_1.x, tbl1_1.value,
+        stack = tbl1_1.grp,
+        color = confplot_colors[tbl1_1.color])
+```
+
+#### Plot 2.2 - Predictions vs ground truth for 06 to 12 months
+
+```julia
+# Axis
+ax3_2 = Axis(
+    figure[1,2];
+    xlabel = "Ground Truth cogScore",
+    ylabel = "Predicted cogScore",
+    title = "All qualifying samples (n = 112)"
+)
+
+# Plot
+y, yhat, train, test = regression_bestprediction(regression_futureCogScores_allselected_fromtaxa_results)
+sc_train = scatter!(ax3_2, y[train], yhat[train]; color=:orange)
+sc_test = scatter!(ax3_2, y[test], yhat[test]; color=:purple)
+ablines!(ax3_2, 0, 1; color=:grey)
+annotations!( ax3_2, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 110)], textsize = 20)
+```
+
+#### Legends and title
+```julia
+labels = ["True Negatives", "False Positives", "False Negatives", "True Positives"]
+elements = [PolyElement(polycolor = confplot_colors[i]) for i in 1:length(labels)]
+Legend(figure[2,1], elements, labels, "Classification result", nbanks = 2, orientation = :horizontal, valign = :top)
+
+labels = ["Training samples", "Test samples"]
+elements = [PolyElement(polycolor = el) for el in [:orange, :purple]]
+Legend(figure[2,2], elements, labels, "Sample set", nbanks = 1, orientation=:horizontal, valign = :top)
+
+Label(figure[1, :, Top()], "Binary classification and regression results for prediction of future cognitive scores from present taxonomic profiles for all\nqualifying samples with stool collection under 12 months and at least one future cognitive assessment before 24 months", valign = :bottom,
+    # font = "TeX Gyre Heros Bold",
+    padding = (0, 50, 40, 0))
+
+save("figures/Figure4_future_taxa.png", figure); save("figures/Figure4_future_taxa.svg", figure)
 ```
