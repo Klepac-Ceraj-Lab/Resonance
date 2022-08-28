@@ -101,7 +101,7 @@ isdefined(Main, :unidm) || (unidm = Microbiome.braycurtis(unirefs))
 isdefined(Main, :ecsdm) || (ecsdm = Microbiome.braycurtis(ecs))
 isdefined(Main, :kosdm) || (kosdm = Microbiome.braycurtis(kos))
 isdefined(Main, :metdm) || (metdm = Microbiome.braycurtis(metabolites))
-isdefined(Main, :brndm) || (metdm = pairwise(BrayCurtis(), Matrix(brain[!, Not(["subject", "timepoint", "AgeInDays", "Sex"])])))
+isdefined(Main, :brndm) || (brndm = pairwise(Euclidean(), Matrix(brain[!, Not(["subject", "timepoint", "AgeInDays", "Sex", "White-matter", "Gray-matter"])]), dims=1))
 
 ```
 
@@ -229,20 +229,21 @@ mdf = let mantout = outputfiles("mantel_all.csv")
             m, p = mantel(dm1[ol1, ol1], metdm[ol2, ol2])
             push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
         end
+        append!(mdf, m2)
 
         (ol3, ol4) = stp_overlap(
-                collect(zip(get(species, :subject), get(species, :timepoint)))
-                collect(zip(brain.subject, brain.timepoint)),
+                collect(zip(get(species, :subject), get(species, :timepoint))),
+                collect(zip(brain.subject, brain.timepoint))
         )
         m3 = DataFrame()
         for (i, dm1) in enumerate([spedm, unidm, ecsdm, kosdm])
-            m, p = mantel(dm1[ol3, ol3], brn[ol4, ol4])
+            m, p = mantel(dm1[ol3, ol3], brndm[ol4, ol4])
             push!(m3, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="neuroimaging"))
         end
         append!(mdf, m3)
         
         (ol5, ol6) = stp_overlap(
-                collect(zip(get(metabolites, :subject), get(metabolites, :timepoint)))
+                collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))),
                 collect(zip(brain.subject, brain.timepoint)),
         )
 
@@ -283,8 +284,8 @@ Colorbar(DEF[2, 2], pco; label="Relative abundance (%)")
 
 # F = Axis(DEF[3,1])
 
-metpco = fit(MDS, metdm; distances=true)
-plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
+# metpco = fit(MDS, metdm; distances=true)
+# plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
 
 
 save(figurefiles("Figure1.svg"), figure)
@@ -295,6 +296,8 @@ figure
 ![](figures/Figure1.png)
 
 ## Supplement
+
+### More Taxa PCoA
 
 ```julia
 fig = Figure()
@@ -322,6 +325,16 @@ plot_pcoa!(ax4, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, ta
         strokecolor=:black,
         strokewidth=1
 )
+fig
+```
+
+### Brain PCoA
+
+```julia
+fig = Figure()
+brain_pco = fit(MDS, brndm; distances=true)
+ax = Axis(fig[1,1])
+plot_pcoa!(ax, brain_pco; color=brain.AgeInDays)
 fig
 ```
 

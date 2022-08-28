@@ -25,6 +25,11 @@ metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata=mdata)
 metabolites = metabolites[:, [!ismissing(a) && a < 14 for a in get(metabolites, :ageMonths)]]
 isdefined(Main, :metdm) || (metdm = braycurtis(metabolites))
 metpco = fit(MDS, metdm; distances=true)
+
+brain = Resonance.load(Neuroimaging())
+isdefined(Main, :braindm) || (braindm = Microbiome.pairwise(Microbiome.BrayCurtis(), Matrix(brain[!, Not(["subject", "timepoint", "AgeInDays", "Sex", "Gray-matter", "White-matter", "has_segmentation"])]); dims=1))
+brainpco = fit(MDS, braindm; distances=true)
+
 ```
 
 ## Calculate correlations
@@ -191,7 +196,7 @@ Resonance.plot_fsea!(A, cs, acs; label=gs)
 
 gs = "Isovaleric acid synthesis I (KADH pathway)"
 ixs = neuroactive_full[gs]
-cs = filter(!isnan, cors[ixs])
+cs = filrater(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
 Resonance.plot_fsea!(B, cs, acs; label=gs)
@@ -251,7 +256,10 @@ rowsize!(CDEF, 4, Relative(1/8))
 bmoi = [ # metabolites of interest
     "pyridoxine", # vit B6
     "gaba",
-    "glutamate"
+    "glutamate",
+    "acetate",
+    "propionate",
+    "butyrate"
 ]
 mfeats = commonname.(features(metabolites))
 pyrdidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"pyridoxine"i), mfeats))
@@ -274,8 +282,8 @@ pcom = plot_pcoa!(Ga, metpco; color=get(metabolites, :ageMonths))
 sc = scatter!(Gb, log.(gaba), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
 Colorbar(G[1, 3], sc; label = "Age (Months)")
 
-save(figurefiles("Figure3.svg"), figure)
-save(figurefiles("Figure3.png"), figure)
+save(figurefiles("Figure2.svg"), figure)
+save(figurefiles("Figure2.png"), figure)
 figure
 
 ```
