@@ -12,10 +12,9 @@ export datafiles,
        KOProfiles,
        ECProfiles,
        MetabolicProfiles,
-       Neuroimaging,
-       startup
+       Neuroimaging
 
-# Data wrangling
+       # Data wrangling
 export airtable_metadata,
        brain_ingest,
        findprevstool,
@@ -88,7 +87,6 @@ include("wrangle.jl")
 include("metabolites.jl")
 include("genefamilies.jl")
 include("plotting.jl")
-include("startup.jl")
 include("kneaddata.jl")
 include("omnibus.jl")
 include("prediction.jl")
