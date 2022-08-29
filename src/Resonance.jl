@@ -49,7 +49,13 @@ export build_future_df,
        univariate_tietjenmoore,
        test_tietjenmoore,
        try_outliers,
-       unstack_techreplicates
+       unstack_techreplicates,
+       report_classification_merit,
+       report_regression_merit,
+       build_confusion_matrix,
+       average_confusion_matrix,
+       confmatrix2barplot,
+       regression_bestprediction
 
 using Reexport
 using ReTest
@@ -71,6 +77,8 @@ using SparseArrays
 using Statistics
 using Tables
 using ThreadsX
+using MLJ
+using GLM
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames

@@ -291,3 +291,85 @@ function unstack_techreplicates(raw_data, retain_first=true)
 
     return unstackedDf
 end #end function
+
+function report_classification_merit(classification_results::Dict)
+    classification_merits = DataFrame(
+    :Trial => collect(1:classification_results[:n_trials]),
+    :Train_ACC => classification_results[:train_accuracies],
+    :Test_ACC => classification_results[:test_accuracies],
+    )
+
+    push!(classification_merits, Dict(
+        :Trial => 0,
+        :Train_ACC => mean(classification_merits.Train_ACC),
+        :Test_ACC => mean(classification_merits.Test_ACC)
+    ))
+
+    return classification_merits
+end
+
+function report_regression_merit(regression_results::Dict)
+    regression_merits = DataFrame(
+        :Trial => collect(1:regression_results[:n_trials]),
+        :Train_MAE => regression_results[:train_maes],
+        :Test_MAE => regression_results[:test_maes],
+        :Train_MAPE => regression_results[:train_mapes],
+        :Test_MAPE => regression_results[:test_mapes],
+        :Train_COR => regression_results[:train_correlations],
+        :Test_COR => regression_results[:test_correlations]
+        )
+
+    push!(regression_merits, Dict(
+        :Trial => 0,
+        :Train_MAE => mean(regression_merits.Train_MAE),
+        :Test_MAE => mean(regression_merits.Test_MAE),
+        :Train_MAPE => mean(regression_merits.Train_MAPE),
+        :Test_MAPE => mean(regression_merits.Test_MAPE),
+        :Train_COR => mean(regression_merits.Train_COR),
+        :Test_COR => mean(regression_merits.Test_COR)
+    ))
+    
+    return regression_merits
+end
+
+function build_confusion_matrix(classification_results::Dict, trial::Int)
+
+    y = classification_results[:inputs_outputs][2][classification_results[:dataset_partitions][trial][2]]
+    yhat = MLJ.predict_mode(classification_results[:models][trial], classification_results[:inputs_outputs][1][classification_results[:dataset_partitions][trial][2],:])
+    confmat = ConfusionMatrix()(yhat, y)
+
+    return confmat
+end
+
+function average_confusion_matrix(classification_results::Dict)
+
+    matrix_vector = [ build_confusion_matrix(classification_results, i).mat for i in 1:classification_results[:n_trials] ]
+    concatenated_matrix = vcat([ vec(mat)' for mat in matrix_vector ]...) # Column order is TN, FP, FN, TP !
+    averages = [ sum(concatenated_matrix[:,i])/sum(concatenated_matrix) for i in 1:4]
+
+    return averages
+end
+
+function confmatrix2barplot(classification_results::Dict)
+
+    confmat_inputs = (
+        x = [1, 2, 2, 1], # Column order is TN, FP, FN, TP !
+        value = average_confusion_matrix(classification_results),
+        grp = [1, 2, 2, 1],
+        color = [1, 2, 3, 4]
+    )
+
+    return confmat_inputs
+end
+
+function regression_bestprediction(regression_results::Dict)
+
+    selected_trial = regression_results[:selected_trial][2]
+    X, y = regression_results[:inputs_outputs]
+    train, test = regression_results[:dataset_partitions][selected_trial]
+    slope_correction = regression_results[:slope_corrections][selected_trial]
+    selected_machine = regression_results[:models][selected_trial]
+    yhat = GLM.predict(slope_correction, DataFrame( :yhat => MLJ.predict(selected_machine, X)))
+
+    return y, yhat, train, test
+end
