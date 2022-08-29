@@ -196,7 +196,7 @@ Resonance.plot_fsea!(A, cs, acs; label=gs)
 
 gs = "Isovaleric acid synthesis I (KADH pathway)"
 ixs = neuroactive_full[gs]
-cs = filrater(!isnan, cors[ixs])
+cs = filter(!isnan, cors[ixs])
 acs = filter(!isnan, cors[Not(ixs)])
 
 Resonance.plot_fsea!(B, cs, acs; label=gs)
@@ -211,10 +211,6 @@ Resonance.plot_fsea!(C, cs, acs; label=gs)
 fig
 ```
 
-
-```julia
-k = kde(hcat(vec(prevalence(unirefs[keepuni, allages.sample])), cors))
-```
 
 ```julia
 figure = Figure(resolution=(900, 900))
@@ -234,8 +230,9 @@ G = GridLayout(figure[3,1:2])
 aax = Axis(A[1,1])
 pco = plot_pcoa!(aax, unipco; color=get(unirefs, :ageMonths))
 Colorbar(A[1,2], pco; label="Age (months)")
-ax, hm = heatmap(B[1,1],k.x,k.y, k.density .^ (1/4); colormap=:plasma, axis = (;xlabel = "prevalence", ylabel="correlation"))
-Colorbar(B[1,2], hm; label=L"$Density^{\frac{1}{4}}$")
+bax = Axis(B[1,1])
+bpco = plot_pcoa!(bax, brainpco; color=brain.AgeInDays ./ 365 .* 12)
+Colorbar(B[1,2], bpco; label="Age (months)")
 
 for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
     ixs = neuroactive_full[gs]
@@ -248,6 +245,7 @@ end
 Resonance.plot_corrband!(F, cors)
 
 rowsize!(CDEF, 4, Relative(1/8))
+figure
 ```
 
 ## Metabolites
@@ -261,15 +259,22 @@ bmoi = [ # metabolites of interest
     "propionate",
     "butyrate"
 ]
+
 mfeats = commonname.(features(metabolites))
 pyrdidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"pyridoxine"i), mfeats))
 gabaidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"gamma-aminobutyric"i), mfeats))
 glutidx = ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^glutamic"i), mfeats)
+butyidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^buty"i), mfeats))
+propidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^propio"i), mfeats))
+isovidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^isoval"i), mfeats))
 
 pyrd = vec(abundances(metabolites[pyrdidx, :]))
 gaba = vec(abundances(metabolites[gabaidx, :]))
 glut1 = vec(abundances(metabolites[glutidx[1], :]))
 glut2 = vec(abundances(metabolites[glutidx[2], :]))
+buty = vec(abundances(metabolites[butyidx, :]))
+prop = vec(abundances(metabolites[propidx, :]))
+isov = vec(abundances(metabolites[isovidx, :]))
 
 ```
 
@@ -330,4 +335,16 @@ ax = Axis(fig[1,1])
 
 scatter!(ax, vec(abundances(ur[ixs[10], :])), log.((glut1[mtbol] .+ glut2[mtbol]) ./ 2))
 fig
+```
+
+
+## Gene / metabolite correspondance
+
+```julia
+gs = "GABA synthesis I"
+ixs = neuroactive_full[gs]
+
+
+
+
 ```
