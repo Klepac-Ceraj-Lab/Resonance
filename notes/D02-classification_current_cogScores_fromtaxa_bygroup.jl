@@ -12,6 +12,7 @@ using ProgressMeter
 using MLJ
 using CairoMakie
 using DecisionTree
+using JLD2
 ml_rng = StableRNG(0)
 
 #####
@@ -59,7 +60,7 @@ function train_randomforest_current_classifier(df; n_trials = 2, min_age = 0.0, 
 
     # ## 6. Actual training loop
 
-    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples between $(min_age) and $(max_age) years"
+    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples between $(min_age) and $(max_age) months"
 
     for this_trial in 1:n_trials
 
@@ -106,8 +107,8 @@ function train_randomforest_current_classifier(df; n_trials = 2, min_age = 0.0, 
 
     # ## 7. Returning optimization results
     results = Dict(
-        :input_data => prediction_df,
         :n_trials => n_trials,
+        :inputs_outputs => (X,y),
         :selected_trial => findmax(trial_test_accuracies),
         :models => trial_machines,
         :dataset_partitions => trial_partitions,
@@ -134,15 +135,12 @@ prediction_df = @chain cogscore_taxa_df begin
     subset(:ageMonths => x -> x .<= max_prediction_ageMonths)
 end
 
-RandomForestClassifier= @load RandomForestClassifier pkg=DecisionTree
-classification_00to06_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 0.0, max_age=6.0, split_proportion=0.75, train_rng=ml_rng)
-classification_06to12_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 6.0, max_age=12.0, split_proportion=0.75, train_rng=ml_rng)
-classification_12to18_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 12.0, max_age=18.0, split_proportion=0.75, train_rng=ml_rng)
-classification_18to24_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 18.0, max_age=24.0, split_proportion=0.75, train_rng=ml_rng)
-
-using JLD2
-
-JLD2.@save "models/results_classification_currentCogScores_00to06_onlytaxa.jld" classification_00to06_results
-JLD2.@save "models/results_classification_currentCogScores_06to12_onlytaxa.jld" classification_06to12_results
-JLD2.@save "models/results_classification_currentCogScores_12to18_onlytaxa.jld" classification_12to18_results
-JLD2.@save "models/results_classification_currentCogScores_18to24_onlytaxa.jld" classification_18to24_results
+RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
+classification_currentCogScores_00to06_fromtaxa_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 0.0, max_age=6.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/classification_currentCogScores_00to06_fromtaxa_results.jld" classification_currentCogScores_00to06_fromtaxa_results
+classification_currentCogScores_06to12_fromtaxa_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 6.0, max_age=12.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/classification_currentCogScores_06to12_fromtaxa_results.jld" classification_currentCogScores_06to12_fromtaxa_results
+classification_currentCogScores_12to18_fromtaxa_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 12.0, max_age=18.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/classification_currentCogScores_12to18_fromtaxa_results.jld" classification_currentCogScores_12to18_fromtaxa_results
+classification_currentCogScores_18to24_fromtaxa_results = train_randomforest_current_classifier(prediction_df; n_trials = 5, min_age = 18.0, max_age=24.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/classification_currentCogScores_18to24_fromtaxa_results.jld" classification_currentCogScores_18to24_fromtaxa_results

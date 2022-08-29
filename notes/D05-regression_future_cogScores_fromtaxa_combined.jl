@@ -67,7 +67,7 @@ function train_randomforest_future_regressor(df; n_trials = 2, max_stool_ageMont
 
     # ## 6. Actual training loop
 
-    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples with stool collection before $(max_stool_ageMonths) and next evaluation at $(max_future_ageMonths) months"
+    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples with stool collection before $(max_stool_ageMonths) and next evaluation before $(max_future_ageMonths) months"
 
     for this_trial in 1:n_trials
 
@@ -108,6 +108,7 @@ function train_randomforest_future_regressor(df; n_trials = 2, max_stool_ageMont
                 trial_test_mapes[this_trial] = mape(test_y_hat, y[test])
                 trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
                 trial_machines[this_trial] = deepcopy(rf_machine)
+                trial_slopecorrections[this_trial] = slope_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid)
@@ -121,9 +122,9 @@ function train_randomforest_future_regressor(df; n_trials = 2, max_stool_ageMont
 
     # ## 7. Returning optimization results
     results = Dict(
-        :input_data => prediction_df,
+        :inputs_outputs => (X,y),
         :n_trials => n_trials,
-        :selected_trial => findmax(trial_test_maes),
+        :selected_trial => findmin(trial_test_maes),
         :models => trial_machines,
         :dataset_partitions => trial_partitions,
         :slope_corrections => trial_slopecorrections,
@@ -149,17 +150,7 @@ end # end function
 include("D00-collect_taxonomic_cogscore_data.jl")
 
 RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
-regression_combined_results = train_randomforest_future_regressor(cogscore_taxa_df; n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
+regression_futureCogScores_allselected_fromtaxa_results = train_randomforest_future_regressor(cogscore_taxa_df; n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
 
 using JLD2
-JLD2.@save "models/results_regression_futureCogScores_combined_onlytaxa.jld" regression_combined_results
-
-# merit_report_df = DataFrame( #TODO
-#     :Iteration => collect(1:n_trials),
-#     :Train_MAE => trial_train_mae,
-#     :Test_MAE => trial_test_mae,
-#     :Train_MAPE => trial_train_mape,
-#     :Test_MAPE => trial_test_mape,
-#     :Train_COR => trial_train_cor,
-#     :Test_COR => trial_test_cor
-# )
+JLD2.@save "models/regression_futureCogScores_allselected_fromtaxa_results.jld" regression_futureCogScores_allselected_fromtaxa_results

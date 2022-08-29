@@ -13,6 +13,7 @@ using MLJ
 using CairoMakie
 using DecisionTree
 using GLM
+using JLD2
 ml_rng = StableRNG(0)
 
 #####
@@ -61,7 +62,7 @@ function train_randomforest_current_regressor(df; n_trials = 2, min_age = 0.0, m
 
     # ## 6. Actual training loop
 
-    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples between $(min_age) and $(max_age) years"
+    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples between $(min_age) and $(max_age) months"
 
     for this_trial in 1:n_trials
 
@@ -102,6 +103,7 @@ function train_randomforest_current_regressor(df; n_trials = 2, min_age = 0.0, m
                 trial_test_mapes[this_trial] = mape(test_y_hat, y[test])
                 trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
                 trial_machines[this_trial] = deepcopy(rf_machine)
+                trial_slopecorrections[this_trial] = slope_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid)
@@ -115,9 +117,9 @@ function train_randomforest_current_regressor(df; n_trials = 2, min_age = 0.0, m
 
     # ## 7. Returning optimization results
     results = Dict(
-        :input_data => prediction_df,
+        :inputs_outputs => (X,y),
         :n_trials => n_trials,
-        :selected_trial => findmax(trial_test_maes),
+        :selected_trial => findmin(trial_test_maes),
         :models => trial_machines,
         :dataset_partitions => trial_partitions,
         :slope_corrections => trial_slopecorrections,
@@ -148,18 +150,13 @@ prediction_df = @chain cogscore_taxa_df begin
     subset(:ageMonths => x -> x .<= max_prediction_ageMonths)
 end
 
-RandomForestRegressor = @load RandomForestRegressor pkg=DecisionTree
+RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 
-using JLD2
-
-regression_00to06_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 0.0, max_age=6.0, split_proportion=0.75, train_rng=ml_rng)
-JLD2.@save "models/results_regression_currentCogScores_00to06_onlytaxa.jld" regression_00to06_results
-
-regression_06to12_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 6.0, max_age=12.0, split_proportion=0.75, train_rng=ml_rng)
-JLD2.@save "models/results_regression_currentCogScores_06to12_onlytaxa.jld" regression_06to12_results
-
-regression_12to18_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 12.0, max_age=18.0, split_proportion=0.75, train_rng=ml_rng)
-JLD2.@save "models/results_regression_currentCogScores_12to18_onlytaxa.jld" regression_12to18_results
-
-regression_18to24_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 18.0, max_age=24.0, split_proportion=0.75, train_rng=ml_rng)
-JLD2.@save "models/results_regression_currentCogScores_18to24_onlytaxa.jld" regression_18to24_results
+regression_currentCogScores_00to06_fromtaxa_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 0.0, max_age=6.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/regression_currentCogScores_00to06_fromtaxa_results.jld" regression_currentCogScores_00to06_fromtaxa_results
+regression_currentCogScores_06to12_fromtaxa_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 6.0, max_age=12.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/regression_currentCogScores_06to12_fromtaxa_results.jld" regression_currentCogScores_06to12_fromtaxa_results
+regression_currentCogScores_12to18_fromtaxa_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 12.0, max_age=18.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/regression_currentCogScores_12to18_fromtaxa_results.jld" regression_currentCogScores_12to18_fromtaxa_results
+regression_currentCogScores_18to24_fromtaxa_results = train_randomforest_current_regressor(prediction_df; n_trials = 5, min_age = 18.0, max_age=24.0, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/regression_currentCogScores_18to24_fromtaxa_results.jld" regression_currentCogScores_18to24_fromtaxa_results

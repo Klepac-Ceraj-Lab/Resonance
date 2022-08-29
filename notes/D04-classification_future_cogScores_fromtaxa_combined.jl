@@ -66,7 +66,7 @@ function train_randomforest_future_classifier(df; n_trials = 2, max_stool_ageMon
 
     # ## 6. Actual training loop
 
-    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples with stool collection before $(max_stool_ageMonths) and next evaluation at $(max_future_ageMonths) months"
+    @info "Performing $(n_trials) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples with stool collection before $(max_stool_ageMonths) and next evaluation before $(max_future_ageMonths) months"
 
     for this_trial in 1:n_trials
 
@@ -113,8 +113,8 @@ function train_randomforest_future_classifier(df; n_trials = 2, max_stool_ageMon
 
     # ## 7. Returning optimization results
     results = Dict(
-        :input_data => prediction_df,
         :n_trials => n_trials,
+        :inputs_outputs => (X,y),
         :selected_trial => findmax(trial_test_accuracies),
         :models => trial_machines,
         :dataset_partitions => trial_partitions,
@@ -136,7 +136,7 @@ end # end function
 include("D00-collect_taxonomic_cogscore_data.jl")
 
 RandomForestClassifier= @load RandomForestClassifier pkg=DecisionTree
-classification_combined_results = train_randomforest_future_classifier(cogscore_taxa_df; n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
+classification_futureCogScores_allselected_fromtaxa_results = train_randomforest_future_classifier(cogscore_taxa_df; n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
 
 using JLD2
-JLD2.@save "models/results_classification_futureCogScores_combined_onlytaxa.jld" classification_combined_results
+JLD2.@save "models/classification_futureCogScores_allselected_fromtaxa_results.jld" classification_futureCogScores_allselected_fromtaxa_results
