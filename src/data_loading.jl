@@ -1,3 +1,68 @@
+# Microbiome.jl compat with neuroimaging
+
+abstract type Hemisphere end
+
+struct Left <: Hemisphere end
+struct Right <: Hemisphere end
+
+function Hemisphere(h::Symbol)
+    h == :left && return Left()
+    h == :right && return Right()
+    throw(ArgumentError("Hemisphere must be left or right"))
+end
+
+Base.String(::Left) = "left"
+Base.String(::Right) = "right"
+
+
+struct BrainVolume <: Microbiome.AbstractFeature
+    name::String
+    hemisphere::Union{Missing, Hemisphere}
+    
+    BrainVolume(s::AbstractString, ::Missing) = new(s, missing)
+    BrainVolume(s::AbstractString, h::Symbol) = new(s, Hemisphere(h))
+end
+
+Microbiome.name(bv::BrainVolume) = bv.name
+hemisphere(bv::BrainVolume) = bv.hemisphere
+hashemisphere(bv::BrainVolume) = !ismissing(hemisphere(bv))
+
+function Base.String(bv::BrainVolume)
+    if !hashemisphere(bv)
+        return name(bv)
+    else
+        return join((String(hemisphere(bv)), name(bv)), "-")
+    end
+end
+
+function brainvolume(s::String)
+    if startswith(s, r"(left|right)-")
+        parts = split(s, '-')
+        BrainVolume(join(parts[2:end], '-'), Symbol(first(parts)))
+    else
+        BrainVolume(s, missing)
+    end
+end
+
+@testset "Brain Volumes" begin
+    bv1 = brainvolume("left-lateral-ventricle")
+    bv2 = brainvolume("right-pericalcarine")
+    bv3 = brainvolume("Brain-stem")
+
+    @test hemisphere(bv1) isa Left
+    @test hemisphere(bv2) isa Right
+    @test ismissing(hemisphere(bv3))
+    @test hashemisphere(bv1)
+    @test hashemisphere(bv2)
+    @test !hashemisphere(bv3)
+    @test name(bv1) == "lateral-ventricle"
+    @test name(bv2) == "pericalcarine"
+    @test name(bv3) == "Brain-stem"
+    @test String(bv1) == "left-lateral-ventricle"
+    @test String(bv2) == "right-pericalcarine"
+    @test String(bv3) == "Brain-stem"
+end
+
 abstract type Dataset end
 
 struct Metadata <: Dataset end
@@ -22,22 +87,30 @@ struct Neuroimaging <: Dataset end
 
 load(ds::Dataset; kwargs...) = MethodError("load has not been implemented for $(typeof(ds))")
 
-load(::Metadata) = CSV.read(datafiles("exports", "timepoint_metadata.csv"), DataFrame;
-    types = [
-        Int64,                   # subject
-        Int64,                   # timepoint
-        Union{Missing, Float64}, # ageMonths
-        Union{Missing, String},  # race
-        Union{Missing, String},  # maternalEd
-        Union{Missing, Date},    # assessmentDate
-        Union{Missing, Date},    # scanDate
-        Union{Missing, Float64}, # cogScore
-        Union{Missing, String},  # omni
-        Union{Missing, String},  # etoh
-        Bool,                    # has_segmentation
-        Union{Missing, Float64}  # read_depth
-    ]        
-)
+function load(::Metadata)
+    df = CSV.read(datafiles("exports", "timepoint_metadata.csv"), DataFrame;
+        types = [
+            Int64,                   # subject
+            Int64,                   # timepoint
+            Union{Missing, Float64}, # ageMonths
+            String,                  # sex
+            String,                  # race
+            Union{Missing, String},  # education
+            Union{Missing, Date},    # assessmentDate
+            Union{Missing, Date},    # scanDate
+            Union{Missing, Float64}, # cogScore
+            Union{Missing, String},  # omni
+            Union{Missing, String},  # etoh
+            Bool,                    # has_segmentation
+            Union{Missing, Float64}  # read_depth
+        ]        
+    )
+
+    df.sex = categorical(df.sex)
+    df.race = categorical(df.race)
+    df.education = categorical(df.education; ordered = true, levels = ["Junior high school", "Some high school", "High school grad", "Some college", "College grad", "Grad/professional school"])
+    return df
+end
 
 function load(::TaxonomicProfiles; timepoint_metadata = load(Metadata()))
     tbl = Arrow.Table(datafiles("exports", "taxa.arrow"))
@@ -88,7 +161,39 @@ function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))
     return comm
 end
 
-function load(::Neuroimaging)
-    CSV.read(datafiles("wrangled", "brain.csv"), DataFrame)
-    return sort!(df, [:subject, :timepoint])
+function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield = "omni")
+    df = CSV.read(datafiles("wrangled", "brain.csv"), DataFrame)
+    tbv = df."White-matter" .+ df."Gray-matter"
+    select!(df, Not("CSF"))
+    cols = names(df, Not(["subject", "timepoint", "Sex", "AgeInDays"]))
+
+    for col in cols
+        df[!, col] ./= tbv
+    end
+
+    mat = Matrix(select(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))' |> collect
+    feats = brainvolume.(cols)
+    
+    grp = groupby(timepoint_metadata, ["subject", "timepoint"])
+
+    samps = map(eachrow(df)) do row
+        g = get(grp, (; subject=row.subject, timepoint=row.timepoint), nothing)
+        sidx = isnothing(g) ? nothing : findfirst(!ismissing, g[!, samplefield])
+        if isnothing(sidx)
+            s = MicrobiomeSample("sub$(row.subject)_tp$(row.timepoint)")
+            set!(s, :subject, row.subject)
+            set!(s, :timepoint, row.timepoint)
+            set!(s, :ageMonths, row.AgeInDays / 365 * 12)
+            set!(s, :sex, row.Sex)
+            set!(s, :hassample, false)
+        else
+            s = MicrobiomeSample(g[sidx, samplefield])
+            set!(s, :hassample, true)
+        end
+        return s
+    end
+
+    comm = CommunityProfile(mat, feats, samps)
+    set!(comm, timepoint_metadata; namecol=Symbol(samplefield))
+    return comm
 end
