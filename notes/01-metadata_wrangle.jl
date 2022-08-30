@@ -106,7 +106,7 @@ volumes = let
     contains(brain["RESONANCE"]["DA2"], "GM") || error("GM col missing")
     contains(brain["RESONANCE"]["DB2"], "WM") || error("GM col missing")
 
-    df."CSF" = vec(brain["RESONANCE"]["CZ3:CZ1181"])
+    df."CSF (ignore)" = vec(brain["RESONANCE"]["CZ3:CZ1181"])
     df."Gray-matter" = vec(brain["RESONANCE"]["DA3:DA1181"])
     df."White-matter" = vec(brain["RESONANCE"]["DB3:DB1181"])
 
@@ -119,7 +119,8 @@ volumes = let
     for (cidx, row) in zip(vec(brain["Tissue Labels"]["B2:B97"]), eachrow(brain["Tissue Labels"]["C2:F97"]))
         lab = join(strip.(coalesce.(row, ""), Ref(['“', '”'])), ' ')
         lab = replace(lab, " missing"=> "", r" $"=> "", " "=>"-")
-        rename!(df, string(cidx) => lab)
+        lab = strip(lab, '-')
+        cidx isa Number && rename!(df, string(cidx) => lab)
         df[!, lab] = Float64[ismissing(x) ? 0. : x for x in df[!, lab]]
     end
 
