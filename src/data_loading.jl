@@ -23,7 +23,7 @@ struct BrainVolume <: Microbiome.AbstractFeature
     BrainVolume(s::AbstractString, h::Symbol) = new(s, Hemisphere(h))
 end
 
-name(bv::BrainVolume) = bv.name
+Microbiome.name(bv::BrainVolume) = bv.name
 hemisphere(bv::BrainVolume) = bv.hemisphere
 hashemisphere(bv::BrainVolume) = !ismissing(hemisphere(bv))
 
