@@ -12,7 +12,10 @@ export datafiles,
        KOProfiles,
        ECProfiles,
        MetabolicProfiles,
-       Neuroimaging
+       Neuroimaging,
+       BrainVolume,
+       hemisphere,
+       hashemisphere
 
        # Data wrangling
 export airtable_metadata,
