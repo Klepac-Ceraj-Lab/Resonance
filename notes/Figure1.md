@@ -58,7 +58,7 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 
 ```julia
-figure = Figure(; resolution = (1600, 1200))
+figure = Figure(; resolution = (2000, 1200))
 A = GridLayout(figure[1,1])
 BC = GridLayout(figure[2,1:2])
 DEF = GridLayout(figure[1,2]);
@@ -239,7 +239,7 @@ end
 
 plot_permanovas!(Bc, perms)
 
-colsize!(BC, 1, Relative(2/3))
+colsize!(BC, 1, Relative(1/2))
 Label(BC[0,1], "PERMANOVAs")
 ```
 
@@ -402,8 +402,13 @@ mdfo18 = let mantout = outputfiles("mantel_o18.csv")
     mdf
 end
 
-plot_mantel!(C, mdf)
+plot_mantel!(Ca, mdf)
+plot_mantel!(Cb, mdfu6)
+plot_mantel!(Cc, mdfo18)
+
 Label(BC[0,2], "Mantel"; tellwidth=false)
+Label(C[1,3], "Under 6mo"; tellwidth=true, tellheight=false, rotation=-π/2)
+Label(C[2,3], "Over 18mo"; tellwidth=true, tellheight=false, rotation=-π/2)
 
 ```
 

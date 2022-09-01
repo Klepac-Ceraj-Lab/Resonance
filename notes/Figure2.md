@@ -18,17 +18,13 @@ mdata = Resonance.load(Metadata())
 
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
 unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
-isdefined(Main, :unidm) || (unidm = braycurtis(unirefs))
-unipco = fit(MDS, unidm; distances=true)
 
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata=mdata)
 metabolites = metabolites[:, [!ismissing(a) && a < 14 for a in get(metabolites, :ageMonths)]]
 isdefined(Main, :metdm) || (metdm = braycurtis(metabolites))
 metpco = fit(MDS, metdm; distances=true)
 
-brain = Resonance.load(Neuroimaging())
-isdefined(Main, :braindm) || (braindm = Microbiome.pairwise(Microbiome.BrayCurtis(), Matrix(brain[!, Not(["subject", "timepoint", "AgeInDays", "Sex", "Gray-matter", "White-matter", "has_segmentation"])]); dims=1))
-brainpco = fit(MDS, braindm; distances=true)
+brain = Resonance.load(Neuroimaging(); timepoint_metadata=mdata)
 
 ```
 
@@ -104,6 +100,81 @@ fsdf2 = let
     tmp
 end
 ```
+
+
+
+```julia
+figure = Figure(resolution=(900, 900))
+
+A = GridLayout(figure[1,1])
+B = GridLayout(figure[2,1])
+CDEF = GridLayout(figure[1:2,2])
+C = GridLayout(CDEF[1,1])
+D = GridLayout(CDEF[2,1])
+E = GridLayout(CDEF[3,1])
+F = Axis(CDEF[4,1])
+G = GridLayout(figure[3,1:2])
+```
+
+
+```julia
+aax = Axis(A[1,1])
+
+bax = Axis(B[1,1])
+bpco = plot_pcoa!(bax, brainpco; color=brain.AgeInDays ./ 365 .* 12)
+Colorbar(B[1,2], bpco; label="Age (months)")
+
+for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
+    ixs = neuroactive_full[gs]
+    cs = filter(!isnan, cors[ixs])
+    acs = filter(!isnan, cors[Not(ixs)])
+
+    Resonance.plot_fsea!(panel, cs, acs; label=replace(gs, "degradation"=> "degr.", "synthesis"=> "synth."))
+end
+
+Resonance.plot_corrband!(F, cors)
+
+rowsize!(CDEF, 4, Relative(1/8))
+figure
+```
+
+```julia
+mfeats = commonname.(features(metabolites))
+pyrdidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"pyridoxine"i), mfeats))
+gabaidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"gamma-aminobutyric"i), mfeats))
+glutidx = ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^glutamic"i), mfeats)
+butyidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^buty"i), mfeats))
+propidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^propio"i), mfeats))
+isovidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^isoval"i), mfeats))
+
+pyrd = vec(abundances(metabolites[pyrdidx, :]))
+gaba = vec(abundances(metabolites[gabaidx, :]))
+glut1 = vec(abundances(metabolites[glutidx[1], :]))
+glut2 = vec(abundances(metabolites[glutidx[2], :]))
+buty = vec(abundances(metabolites[butyidx, :]))
+prop = vec(abundances(metabolites[propidx, :]))
+isov = vec(abundances(metabolites[isovidx, :]))
+
+```
+
+```julia
+
+Ga = Axis(G[1,1])
+Gb = Axis(G[1,2]; xlabel = L"log_e(GABA)", ylabel = L"log_e(Glutamate)")
+
+pcom = plot_pcoa!(Ga, metpco; color=get(metabolites, :ageMonths))
+sc = scatter!(Gb, log.(gaba), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
+Colorbar(G[1, 3], sc; label = "Age (Months)")
+
+save(figurefiles("Figure2.svg"), figure)
+save(figurefiles("Figure2.png"), figure)
+figure
+
+```
+
+## Supplement
+
+### Other FSEA Plots
 
 ```julia
 fig = Figure(resolution=(800, 2000))
@@ -181,6 +252,7 @@ Resonance.plot_fsea!(D, cs, acs; label=gs)
 fig
 ```
 
+
 ```julia
 fig = Figure(resolution=(800, 1600))
 A = GridLayout(fig[1,1])
@@ -210,45 +282,7 @@ Resonance.plot_fsea!(C, cs, acs; label=gs)
 
 fig
 ```
-
-
-```julia
-figure = Figure(resolution=(900, 900))
-
-A = GridLayout(figure[1,1])
-B = GridLayout(figure[2,1])
-CDEF = GridLayout(figure[1:2,2])
-C = GridLayout(CDEF[1,1])
-D = GridLayout(CDEF[2,1])
-E = GridLayout(CDEF[3,1])
-F = Axis(CDEF[4,1])
-G = GridLayout(figure[3,1:2])
-```
-
-
-```julia
-aax = Axis(A[1,1])
-pco = plot_pcoa!(aax, unipco; color=get(unirefs, :ageMonths))
-Colorbar(A[1,2], pco; label="Age (months)")
-bax = Axis(B[1,1])
-bpco = plot_pcoa!(bax, brainpco; color=brain.AgeInDays ./ 365 .* 12)
-Colorbar(B[1,2], bpco; label="Age (months)")
-
-for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
-    ixs = neuroactive_full[gs]
-    cs = filter(!isnan, cors[ixs])
-    acs = filter(!isnan, cors[Not(ixs)])
-
-    Resonance.plot_fsea!(panel, cs, acs; label=replace(gs, "degradation"=> "degr.", "synthesis"=> "synth."))
-end
-
-Resonance.plot_corrband!(F, cors)
-
-rowsize!(CDEF, 4, Relative(1/8))
-figure
-```
-
-## Metabolites
+### Metabolites
 
 ```julia
 bmoi = [ # metabolites of interest
@@ -344,7 +378,5 @@ fig
 gs = "GABA synthesis I"
 ixs = neuroactive_full[gs]
 
-
-
-
 ```
+
