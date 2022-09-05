@@ -42,7 +42,7 @@ export loadings,
        commonname
 
 # Machine Learning
-export build_future_df,
+export build_metadata_prediction_df,
        check_longdata_metaduplicates!,
        microbiome_predictors,
        tryparsecol,
