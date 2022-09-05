@@ -1,5 +1,5 @@
 #####
-# Notebook D13 - Classification of binary future CogScores above/below average from current taxonomic data
+# Notebook D05 - Regression of continuous future CogScores from current taxonomic data
 #####
 
 using Resonance
@@ -13,6 +13,7 @@ using ProgressMeter
 using MLJ
 using CairoMakie
 using DecisionTree
+using GLM
 using JLD2
 ml_rng = StableRNG(0)
 
@@ -20,9 +21,7 @@ ml_rng = StableRNG(0)
 # Functions
 #####
 
-meanclass(x::Vector{T} where T <: Real) = x .>= mean(x)
-
-function train_randomforest_future_classifier(df, featurenames::Vector{Symbol}; n_trials = 2, max_stool_ageMonths = 12.0, max_future_ageMonths=24.0, split_proportion=0.75, train_rng=Random.GLOBAL_RNG)
+function train_randomforest_future_regressor(df, featurenames::Vector{Symbol}; n_trials = 2, max_stool_ageMonths = 12.0, max_future_ageMonths=24.0, split_proportion=0.75, train_rng=Random.GLOBAL_RNG)
 
     # ## 1. Subsetting Data
     prediction_df = @chain df begin
@@ -36,13 +35,10 @@ function train_randomforest_future_classifier(df, featurenames::Vector{Symbol}; 
         unique([:subject, :futureTimepoint])
         dropmissing()
     end
-    
+
     # ## 2. Separating inputs/outputs
     X = prediction_df[:, 9:end]
-    y = @chain prediction_df.futureCogScore begin
-        meanclass
-        coerce(OrderedFactor)
-    end
+    y = prediction_df.futureCogScore
 
     # ## 4. Declaring hyperparameter tuning grid
     nodesize_range = collect(1:1:15)
@@ -63,8 +59,13 @@ function train_randomforest_future_classifier(df, featurenames::Vector{Symbol}; 
 
     trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_trials)
     trial_machines = Vector{Machine}(undef, n_trials)
-    trial_train_accuracies = zeros(Float64, n_trials)
-    trial_test_accuracies = zeros(Float64, n_trials)
+    trial_slopecorrections = Vector{T where T <: RegressionModel}(undef, n_trials)
+    trial_train_maes = repeat([Inf], n_trials)
+    trial_train_mapes = repeat([Inf], n_trials)
+    trial_train_cors = repeat([-1.0], n_trials)
+    trial_test_maes = repeat([Inf], n_trials)
+    trial_test_mapes = repeat([Inf], n_trials)
+    trial_test_cors = repeat([-1.0], n_trials)
 
     # ## 6. Actual training loop
 
@@ -80,7 +81,7 @@ function train_randomforest_future_classifier(df, featurenames::Vector{Symbol}; 
         @showprogress for i in 1:length(tuning_grid)
             Random.seed!(train_rng, 0)
 
-            rf_model = RandomForestClassifier(
+            rf_model = RandomForestRegressor(
                 min_samples_leaf = tuning_grid[i][1],
                 max_depth = tuning_grid[i][2],
                 sampling_fraction = tuning_grid[i][3],
@@ -92,16 +93,24 @@ function train_randomforest_future_classifier(df, featurenames::Vector{Symbol}; 
             rf_machine = machine(rf_model, X[train, :], y[train])
             MLJ.fit!(rf_machine, verbosity=0)
 
-            train_y_hat = MLJ.predict_mode(rf_machine, X[train, :]) 
-            train_acc = mean(train_y_hat .== y[train])
+            train_y_hat = MLJ.predict(rf_machine, X[train, :])
+            slope_correction_df = DataFrame([ train_y_hat, y[train] ], [:yhat, :y])
+            slope_correction = lm(@formula(y ~ yhat), slope_correction_df)
+            train_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => train_y_hat))
+            train_mae = mae(train_y_hat, y[train])
 
-            test_y_hat = MLJ.predict_mode(rf_machine, X[test, :]) 
-            test_acc = mean(test_y_hat .== y[test])
+            test_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => MLJ.predict(rf_machine, X[test, :])))
+            test_mae = mae(test_y_hat, y[test])
 
-            test_acc > trial_test_accuracies[this_trial] ? begin
-                trial_test_accuracies[this_trial] = test_acc
-                trial_train_accuracies[this_trial] = train_acc
+            test_mae < trial_test_maes[this_trial] ? begin
+                trial_train_maes[this_trial] = train_mae
+                trial_train_mapes[this_trial] = mape(train_y_hat, y[train])
+                trial_train_cors[this_trial] = Statistics.cor(train_y_hat, y[train])
+                trial_test_maes[this_trial] = test_mae
+                trial_test_mapes[this_trial] = mape(test_y_hat, y[test])
+                trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
                 trial_machines[this_trial] = deepcopy(rf_machine)
+                trial_slopecorrections[this_trial] = slope_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid)
@@ -110,18 +119,23 @@ function train_randomforest_future_classifier(df, featurenames::Vector{Symbol}; 
 
     average_importances = DataFrame(
         :Variable => names(X),
-        :Importance => map(mean, eachrow(reduce(hcat, [ impurity_importance(trial_machines[i].fitresult[1]) for i in 1:n_trials ])))
+        :Importance => map(mean, eachrow(reduce(hcat, [ impurity_importance(trial_machines[i].fitresult) for i in 1:n_trials ])))
         ); sort!(average_importances, :Importance, rev = true)
 
     # ## 7. Returning optimization results
     results = Dict(
-        :n_trials => n_trials,
         :inputs_outputs => (X,y),
-        :selected_trial => findmax(trial_test_accuracies),
+        :n_trials => n_trials,
+        :selected_trial => findmin(trial_test_maes),
         :models => trial_machines,
         :dataset_partitions => trial_partitions,
-        :train_accuracies => trial_train_accuracies,
-        :test_accuracies => trial_test_accuracies,
+        :slope_corrections => trial_slopecorrections,
+        :train_maes => trial_train_maes,
+        :train_mapes => trial_train_mapes,
+        :train_correlations => trial_train_cors,
+        :test_maes => trial_test_maes,
+        :test_mapes => trial_test_mapes,
+        :test_correlations => trial_test_cors,
         :importance_df => average_importances
     )
 
@@ -151,7 +165,7 @@ insertcols!(ecs_df, 1, :sample => collect(keys(ecs.sidx))[collect(values(ecs.sid
 cogscore_function_df = leftjoin(mdata, ecs_df, on = :omni => :sample, matchmissing=:notequal) |>  y -> rename!(y, :omni => :sample) |>  y -> sort(y, [ :subject, :timepoint ]);
 
 ## Training models and exporting results
-RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
+RandomForestRegressor= MLJ.@load RandomForestRegressor pkg=DecisionTree
 
-classification_futureCogScores_allselected_fromfunctions_results = train_randomforest_future_classifier(cogscore_function_df, map( x -> Symbol(x), ecs.features); n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
-JLD2.@save "models/classification_futureCogScores_allselected_fromfunctions_results.jld" classification_futureCogScores_allselected_fromfunctions_results
+regression_futureCogScores_allselected_fromfunctions_results = train_randomforest_future_regressor(cogscore_function_df, map( x -> Symbol(x), ecs.features); n_trials = 10, split_proportion=0.75, train_rng=ml_rng)
+JLD2.@save "models/regression_futureCogScores_allselected_fromfunctions_results.jld" regression_futureCogScores_allselected_fromfunctions_results
