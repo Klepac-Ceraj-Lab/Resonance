@@ -12,9 +12,12 @@ export datafiles,
        KOProfiles,
        ECProfiles,
        MetabolicProfiles,
-       startup
+       Neuroimaging,
+       BrainVolume,
+       hemisphere,
+       hashemisphere
 
-# Data wrangling
+       # Data wrangling
 export airtable_metadata,
        brain_ingest,
        findprevstool,
@@ -44,7 +47,6 @@ export loadings,
 # Machine Learning
 export build_metadata_prediction_df,
        check_longdata_metaduplicates!,
-       microbiome_predictors,
        tryparsecol,
        univariate_tietjenmoore,
        test_tietjenmoore,
@@ -56,7 +58,6 @@ export build_metadata_prediction_df,
        average_confusion_matrix,
        confmatrix2barplot,
        regression_bestprediction,
-       build_metadata_prediction_df,
        non_na_mean
 
 using Reexport
@@ -96,8 +97,6 @@ include("wrangle.jl")
 include("metabolites.jl")
 include("genefamilies.jl")
 include("plotting.jl")
-include("brain.jl")
-include("startup.jl")
 include("kneaddata.jl")
 include("omnibus.jl")
 include("prediction.jl")

@@ -16,7 +16,7 @@ sort!(mdata, ["subject", "timepoint"])
 knead = Resonance.load_knead()
 knead.omni = replace.(knead.Sample, r"_S\d+_kneaddata"=>"")
 let keep = Set(skipmissing(mdata.omni))
-    subset!(knead, :sample=> ByRow(s-> s in keep))
+    subset!(knead, :omni=> ByRow(s-> s in keep))
 end
 unique!(knead, :omni)
 transform!(knead, AsTable(r"final") => ByRow(sum) => "read_depth")
@@ -24,15 +24,11 @@ leftjoin!(mdata, select(knead, "omni", "read_depth"); on="omni", matchmissing=:e
 
 CSV.write(datafiles("exports", "timepoint_metadata.csv"), select(mdata,
     "subject", "timepoint", # Identifiers
-    "ageMonths", "race", "mother_HHS_Education" => "maternalEd", # Demographics
+    "ageMonths", "sex", "race", "education", # Demographics
     "assessmentDate", "scanDate", # Dates 
     "cogScore", "omni", "etoh", "has_segmentation", "read_depth" # Measurements
 ))
 
-CSV.write(datafiles("exports", "brain_measures.csv"), select(mdata, 
-    "subject", "timepoint",
-    Resonance.brainmeta...
-))
 
 metabolites = CSV.read(datafiles("wrangled", "metabolites.csv"), DataFrame)
 
