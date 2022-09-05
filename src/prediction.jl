@@ -153,6 +153,8 @@ const microbiome_predictors = [
     "Weissella_cibaria", "Weissella_confusa", # W - 2 species
 ]
 
+non_na_mean(vv) = mean(vv[.!(isnan.(vv))])
+
 function fix_metadata_colnames!(longdata_df::DataFrame)
 
     ## This function was created to fix small inconsistencies and typos on the longdata table.
@@ -185,41 +187,37 @@ function check_longdata_metaduplicates!(longdata_df::DataFrame; remove_duplicate
     end # end if n_unique_rows
 end # end function
 
-function build_future_df(base_df, to_predict::Symbol)
+function build_metadata_prediction_df(base_df, inputs::Vector{Symbol}, targets::Vector{Symbol})
 
     subjects = unique(base_df.subject)
-    result_lines = Vector{DataFrame}()
+    has_stool = findall(.!(ismissing.(base_df.sample)))
+    has_cogscore = findall(.!(ismissing.(base_df.cogScore)))
 
-    for this_subject in subjects
-        subject_df = base_df[ base_df.subject .== this_subject ,:]
-        if (size(subject_df, 1) == 1)
-            continue;
-        else
-            for origin_idx in 1:(size(subject_df, 1) - 1)
-                if (ismissing(subject_df[origin_idx, :Absiella_dolichum]))
-                    continue;
-                else
-                    for target_idx in (origin_idx + 1):size(subject_df, 1)
-                        if (ismissing(subject_df[target_idx, to_predict]))
-                            continue;
-                        else
-                            origin_df = DataFrame()
-                            push!(origin_df, copy(subject_df[origin_idx, :]))
-                            target_df = subject_df[target_idx, :]
-                            insertcols!(origin_df, 1, :target => parse(Float64, target_df[to_predict]))
-                            insertcols!(origin_df, 1, :futureAgeMonths => parse(Float64, target_df[:ageMonths]))
-                            insertcols!(origin_df, 1, :ageMonthsDelta => parse(Float64, target_df[:ageMonths]) - parse(Float64, origin_df[1, :ageMonths]))
-                            insertcols!(origin_df, 1, :futureTimepoint => subject_df[target_idx, :timepoint])
-                            insertcols!(origin_df, 1, :timepointDelta => subject_df[target_idx, :timepoint] - subject_df[origin_idx, :timepoint])
-                            push!(result_lines, origin_df)
-                        end # end if ismissing(to_predict from irigin_idx)
-                    end # end for target_idx
-                end # end if ismissing(stool from irigin_idx)
-            end # end for origin_idx
-        end # end if size == 1
-    end # end for subject
-    return(reduce(vcat, result_lines))
-end # end function1
+    subjects_stool_idx = [ intersect(findall(base_df.subject .== el), has_stool) for el in subjects ]
+    subjects_cogscore_idx = [ intersect(findall(base_df.subject .== el), has_cogscore) for el in subjects ]
+
+    line_combinations = vcat( [ vec(collect(Base.product(subjects_stool_idx[i], subjects_cogscore_idx[i]))) for i in 1:length(subjects) ]... )
+    line_combinations = line_combinations[ [ el[2] > el[1] for el in line_combinations ] ]
+
+    targets_df = @chain base_df[ [el[2] for el in line_combinations], :] begin
+        select( [:subject, :timepoint, :ageMonths, targets...] )
+        rename!( [:timepoint => :futureTimepoint, :ageMonths => :futureAgeMonths, (targets .=> Symbol.("future" .* uppercasefirst.(String.(targets))))...] )
+    end
+
+    inputs_df = @chain base_df[ [el[1] for el in line_combinations], :] begin
+        select( Not(:subject) )
+    end
+
+    prediction_df = hcat(targets_df, inputs_df)
+    prediction_df.ageMonthsDelta = prediction_df.futureAgeMonths .- prediction_df.ageMonths 
+    prediction_df.timepointDelta = prediction_df.futureTimepoint .- prediction_df.timepoint 
+    
+    select!(prediction_df, [:subject, :ageMonths, :timepoint, :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta, targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...])
+    sort!(prediction_df, [:subject, :timepoint, :futureTimepoint])
+    
+    return prediction_df
+
+end
 
 function tryparsecol(T, col)
     newcol = tryparse.(T, col)

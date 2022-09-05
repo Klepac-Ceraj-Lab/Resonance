@@ -55,7 +55,9 @@ export build_future_df,
        build_confusion_matrix,
        average_confusion_matrix,
        confmatrix2barplot,
-       regression_bestprediction
+       regression_bestprediction,
+       build_metadata_prediction_df,
+       non_na_mean
 
 using Reexport
 using ReTest
