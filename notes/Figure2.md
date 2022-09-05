@@ -1,403 +1,350 @@
-# Figure 2 - Per-feature, cross-sectional tests on cognitive function scores
-
-First, load packages that will be used throughout this notebook.
+# Figure3 - functional analysis
 
 ```julia
 using Resonance
-using CairoMakie # for plotting
-using GLM
+using CairoMakie
 using Statistics
+using HypothesisTests
 using MultipleTesting
-using CategoricalArrays
+using KernelDensity
+using MultivariateStats
 using ThreadsX
 ```
 
-Then, we'll load in the different data sources.
+## Data Loading
 
 ```julia
 mdata = Resonance.load(Metadata())
 
-mdata.maternalEd = categorical([ismissing(m) || m == "-8" ? missing : parse(Int, m) for m in mdata.maternalEd]; ordered=true)
-droplevels!(mdata.maternalEd)
+unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
+unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
+isdefined(Main, :unidm) || (unidm = braycurtis(unirefs))
+unipco = fit(MDS, unidm; distances=true)
 
-let (lq, uq) = quantile(collect(skipmissing(mdata.cogScore)), [0.25, 0.75])
-    mdata.quartile = categorical(map(mdata.cogScore) do cs
-        ismissing(cs) && return missing
-        cs <= lq && return "lower"
-        cs >= uq && return "upper"
-        return "middle"
-    end; levels = ["lower", "middle", "upper"], ordered = true)
-end
+metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata=mdata)
+metabolites = metabolites[:, [!ismissing(a) && a < 14 for a in get(metabolites, :ageMonths)]]
+isdefined(Main, :metdm) || (metdm = braycurtis(metabolites))
+metpco = fit(MDS, metdm; distances=true)
 
-# https://github.com/JuliaStats/GLM.jl/issues/431
-mdata.read_depth ./= 1e6
-```
-
-```julia
-
-taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
-species = filter(t-> taxrank(t) == :species, taxa)
-
-kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
-kos = filter(!hastaxon, kos)
+brain = Resonance.load(Neuroimaging())
+isdefined(Main, :braindm) || (braindm = Microbiome.pairwise(Microbiome.BrayCurtis(), Matrix(brain[!, Not(["subject", "timepoint", "AgeInDays", "Sex", "Gray-matter", "White-matter", "has_segmentation"])]); dims=1))
+brainpco = fit(MDS, braindm; distances=true)
 
 ```
 
-## Data filtering
-
-Because there is a major shift in microbial composition
-upon the introduction of solid foods,
-we are going to split the datasets into stools collected prior to 6 months old
-(most kids are on liquid diets, breast milk and/or formula)
-and over 18 months old (most kids are eating solid foods).
+## Calculate correlations
 
 ```julia
-specmdata = select(DataFrame(Microbiome.metadata(species)),
-                ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
-)
 
-specmdata.sample = samplenames(species)
-sort!(specmdata, ["subject", "timepoint"])
+unimdata = DataFrame(metadata(unirefs))
+allages = unique(subset(unimdata, :cogScore => ByRow(!ismissing)), :subject)
+u6 = unique(subset(unimdata, :ageMonths => ByRow(<(6)), :cogScore => ByRow(!ismissing)), :subject)
+o18 = unique(subset(unimdata, :ageMonths => ByRow(>(18)), :cogScore => ByRow(!ismissing)), :subject)
 
-specu6 = subset(specmdata, "ageMonths" => ByRow(<(6)), "cogScore"=> ByRow(!ismissing))
-unique!(specu6, "subject")
+keepuni = vec(prevalence(unirefs[:, allages.sample]) .> 0)
 
-speco18 = subset(specmdata, "ageMonths" => ByRow(>(18)), "cogScore"=> ByRow(!ismissing))
-unique!(speco18, "subject")
-
-komdata = select(DataFrame(Microbiome.metadata(kos)),
-                ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
-)
-komdata.sample = samplenames(kos)
-sort!(komdata, ["subject", "timepoint"])
-
-kou6 = subset(komdata, "ageMonths" => ByRow(<(6)), "cogScore"=> ByRow(!ismissing))
-unique!(kou6, "subject")
-
-koo18 = subset(komdata, "ageMonths" => ByRow(>(18)), "cogScore"=> ByRow(!ismissing))
-unique!(koo18, "subject")
+cors = vec(cor(allages.cogScore, abundances(unirefs[keepuni, allages.sample]), dims=2))
+neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs[keepuni, :])))
+neuroactive_full = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs[keepuni, :])); consolidate=false)
 ```
 
-## Adding features
-
 ```julia
-for f in features(species)
-    colu6 = vec(abundances(species[f, specu6.sample]))
-    specu6[!, name(f)] = colu6
-
-    colo18 = vec(abundances(species[f, speco18.sample]))
-    speco18[!, name(f)] = colo18
-end
-
-for f in features(kos)
-    colu6 = vec(abundances(kos[f, kou6.sample]))
-    kou6[!, name(f)] = colu6
-
-    colo18 = vec(abundances(kos[f, koo18.sample]))
-    koo18[!, name(f)] = colo18
-end
-
-```
-
-## Running the models
-
-### Kids under 6mo, species
-
-```julia
-specu6_lmresults = DataFrame()
-
-
-for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
-    count(>(0), specu6[!, spc]) / size(specu6, 1) > 0.1 || continue
-    
-    @info spc
-    over0 = specu6[!, spc] .> 0
-    ab = collect(specu6[over0, spc] .+ (minimum(filter(>(0), specu6[!, spc])) / 2)) # add half-minimum non-zerovalue
-
-    df = specu6[over0, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
-    df.bug = log2.(ab)
-
-    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
-    ct = DataFrame(coeftable(mod))
-    ct.species .= spc
-    ct.kind .= "cogScore"
-    append!(specu6_lmresults, ct)
-    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
-    droplevels!(df.quartile)
-    length(unique(df.quartile)) > 1 || continue 
-
-    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
-    ct = DataFrame(coeftable(mod))
-    ct.species .= spc
-    ct.kind .= "quartile"
-    append!(specu6_lmresults, ct)
-
-end    
-select!(specu6_lmresults, Cols(:species, :Name, :))
-rename!(specu6_lmresults, "Pr(>|t|)"=>"pvalue");
-
-```
-
-
-
-```julia
-@chain specu6_lmresults begin
-    subset!(:Name => ByRow(x->
-        !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
-            )
-        )
-    )
-
-    groupby(:kind)
-    transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
-    sort!(:qvalue)
-end
-
-CSV.write(outputfiles("lms_u6mo_species.csv"), specu6_lmresults)
-specu6_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-```
-
-### Kids over 18mo, species
-
-
-```julia
-speco18_lmresults = DataFrame()
-
-
-for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
-    count(>(0), speco18[!, spc]) / size(speco18, 1) > 0.1 || continue
-    
-    @info spc
-    over0 = speco18[!, spc] .> 0
-    ab = collect(speco18[over0, spc] .+ (minimum(filter(>(0), speco18[!, spc])) / 2)) # add half-minimum non-zerovalue
-
-    df = speco18[over0, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
-    df.bug = log2.(ab)
-
-    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
-    ct = DataFrame(coeftable(mod))
-    ct.species .= spc
-    ct.kind .= "cogScore"
-    append!(speco18_lmresults, ct)
-    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
-    droplevels!(df.quartile)
-    length(unique(df.quartile)) > 1 || continue 
-
-    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
-    ct = DataFrame(coeftable(mod))
-    ct.species .= spc
-    ct.kind .= "quartile"
-    append!(speco18_lmresults, ct)
-
-end    
-select!(speco18_lmresults, Cols(:species, :Name, :))
-rename!(speco18_lmresults, "Pr(>|t|)"=>"pvalue");
-
-```
-
-
-
-```julia
-@chain speco18_lmresults begin
-    subset!(:Name => ByRow(x->
-        !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
-            )
-        )
-    )
-
-    groupby(:kind)
-    transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
-    sort!(:qvalue)
-end
-
-CSV.write(outputfiles("lms_o18mo_species.csv"), speco18_lmresults)
-speco18_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-```
-
-
-### Kids under 6mo, ko
-
-```julia
-kou6_lmresults = DataFrame()
-
-for ko in names(kou6, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
-    count(>(0), kou6[!, ko]) / size(kou6, 1) > 0.1 || continue
-    
-    @info ko
-
-    ab = kou6[!, ko] .+ (minimum(filter(>(0), kou6[!, ko])) / 2) # add half-minimum non-zerovalue
-
-    df = kou6[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
-    df.func = log2.(ab)
-
-    mod = lm(@formula(func ~ cogScore + ageMonths + read_depth + maternalEd), df)
-    ct = DataFrame(coeftable(mod))
-    ct.ko .= ko
-    ct.kind .= "cogScore"
-    append!(kou6_lmresults, ct)
-
-    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
-    droplevels!(df.quartile)
-
-    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + maternalEd), df)
-    ct = DataFrame(coeftable(mod))
-    ct.ko .= ko
-    ct.kind .= "quartile"
-    append!(kou6_lmresults, ct)
-
-end    
-select!(kou6_lmresults, Cols(:ko, :Name, :))
-rename!(kou6_lmresults, "Pr(>|t|)"=>"pvalue");
-
-```
-
-
-
-```julia
-@chain kou6_lmresults begin
-    subset!(:Name => ByRow(x->
-        !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
-            )
-        )
-    )
-
-    groupby(:kind)
-    transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
-    sort!(:qvalue)
-end
-
-CSV.write(outputfiles("lms_u6mo_ko.csv"), kou6_lmresults)
-kou6_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-```
-
-### Kids over 18mo, ko
-
-
-```julia
-koo18_lmresults = DataFrame()
-
-for ko in names(koo18, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
-    count(>(0), koo18[!, ko]) / size(koo18, 1) > 0.1 || continue
-    
-    @info ko
-
-    ab = koo18[!, ko] .+ (minimum(filter(>(0), koo18[!, ko])) / 2) # add half-minimum non-zerovalue
-
-    df = koo18[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
-    df.func = log2.(ab)
-
-    mod = lm(@formula(func ~ cogScore + ageMonths + read_depth + maternalEd), df)
-    ct = DataFrame(coeftable(mod))
-    ct.ko .= ko
-    ct.kind .= "cogScore"
-    append!(koo18_lmresults, ct)
-
-    subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
-    droplevels!(df.quartile)
-
-    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + maternalEd), df)
-    ct = DataFrame(coeftable(mod))
-    ct.ko .= ko
-    ct.kind .= "quartile"
-    append!(koo18_lmresults, ct)
-
-end    
-select!(koo18_lmresults, Cols(:ko, :Name, :))
-rename!(koo18_lmresults, "Pr(>|t|)"=>"pvalue");
-
-```
-
-
-
-```julia
-@chain koo18_lmresults begin
-    subset!(:Name => ByRow(x->
-        !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
-            )
-        )
-    )
-
-    groupby(:kind)
-    transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
-    sort!(:qvalue)
-end
-
-CSV.write(outputfiles("lms_o18mo_ko.csv"), koo18_lmresults)
-koo18_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-```
-
-## Plots
-
-Then, we will start constructing the figure.
-See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layout-tutorial/) for more information.
-
-```julia
-figure = Figure(; resolution = (1200, 800))
-
-Alo = GridLayout(figure[1,1])
-
-A = Axis(Alo[1,1]; xlabel="Age (months)", ylabel="Cognitive function score")
-
-scatter!(A, mdata.ageMonths, mdata.cogScore;
-    color = map(mdata.omni) do s
-        if ismissing(s)
-            return (:gray, 0.4)
-        elseif s in specu6.sample
-            return :purple
-        elseif s in speco18.sample
-            return :dodgerblue
-        else
-            return (:seagreen, 0.4)
-        end
+fsdf = let 
+    if isfile(outputfiles("fsea_consolidated.csv"))
+        tmp = CSV.read(outputfiles("fsea_consolidated.csv"), DataFrame)
+    else
+        tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
+            ixs = neuroactive[gs]
+            isempty(ixs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+
+            cs = filter(!isnan, cors[ixs])
+            isempty(cs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+
+            acs = filter(!isnan, cors[Not(ixs)])
+            mwu = MannWhitneyUTest(cs, acs)
+
+            return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        end)
+
+        subset!(tmp, :pvalue=> ByRow(!isnan))
+        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+        sort!(tmp, :qvalue)
+        CSV.write(outputfiles("fsea_consolidated.csv"), tmp)
     end
-)
+    tmp
+end
 
-Legend(Alo[1,2], 
-    [MarkerElement(; color, marker=:circle) for color in (:purple, :dodgerblue, (:seagreen, 0.4), (:gray, 0.4))],
-    ["Under 6mo", "over 18mo", "not included", "no stool"])
+```
 
+```julia
+fsdf2 = let
+    if isfile(outputfiles("fsea_all.csv"))
+        tmp = CSV.read(outputfiles("fsea_all.csv"), DataFrame)
+    else
+        tmp = DataFrame(
+            ThreadsX.map(collect(keys(neuroactive_full))) do gs
+                ixs = neuroactive_full[gs]
+                isempty(ixs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+
+                cs = filter(!isnan, cors[ixs])
+                isempty(cs) && return (; geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+
+                acs = filter(!isnan, cors[Not(ixs)])
+                mwu = MannWhitneyUTest(cs, acs)
+
+                return (; geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+            end
+        )
+
+        subset!(tmp, :pvalue=> ByRow(!isnan))
+        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+        sort!(tmp, :qvalue)
+        CSV.write(outputfiles("fsea_all.csv"), tmp)
+    end
+    tmp
+end
+```
+
+```julia
+fig = Figure(resolution=(800, 2000))
+A = GridLayout(fig[1,1])
+B = GridLayout(fig[2,1])
+C = GridLayout(fig[3,1])
+D = GridLayout(fig[4,1])
+
+gs = "GABA synthesis"
+ixs = neuroactive[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(A, cs, acs; label=gs)
+
+gs = "GABA synthesis I"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(B, cs, acs; label=gs)
+
+gs = "GABA synthesis II"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(C, cs, acs; label=gs)
+
+
+gs = "GABA synthesis III"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(D, cs, acs; label=gs)
+fig
+```
+
+```julia
+fig = Figure(resolution=(800, 2000))
+A = GridLayout(fig[1,1])
+B = GridLayout(fig[2,1])
+C = GridLayout(fig[3,1])
+D = GridLayout(fig[4,1])
+
+gs = "Propionate synthesis"
+ixs = neuroactive[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(A, cs, acs; label=gs)
+
+gs = "Propionate synthesis I"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(B, cs, acs; label=gs)
+
+gs = "Propionate synthesis II"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(C, cs, acs; label=gs)
+
+
+gs = "Propionate synthesis III"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(D, cs, acs; label=gs)
+fig
+```
+
+```julia
+fig = Figure(resolution=(800, 1600))
+A = GridLayout(fig[1,1])
+B = GridLayout(fig[2,1])
+C = GridLayout(fig[3,1])
+
+gs = "Isovaleric acid synthesis"
+ixs = neuroactive[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(A, cs, acs; label=gs)
+
+gs = "Isovaleric acid synthesis I (KADH pathway)"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(B, cs, acs; label=gs)
+
+gs = "Isovaleric acid synthesis II (KADC pathway)"
+ixs = neuroactive_full[gs]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+
+Resonance.plot_fsea!(C, cs, acs; label=gs)
+
+fig
+```
+
+
+```julia
+figure = Figure(resolution=(900, 900))
+
+A = GridLayout(figure[1,1])
+B = GridLayout(figure[2,1])
+CDEF = GridLayout(figure[1:2,2])
+C = GridLayout(CDEF[1,1])
+D = GridLayout(CDEF[2,1])
+E = GridLayout(CDEF[3,1])
+F = Axis(CDEF[4,1])
+G = GridLayout(figure[3,1:2])
+```
+
+
+```julia
+aax = Axis(A[1,1])
+pco = plot_pcoa!(aax, unipco; color=get(unirefs, :ageMonths))
+Colorbar(A[1,2], pco; label="Age (months)")
+bax = Axis(B[1,1])
+bpco = plot_pcoa!(bax, brainpco; color=brain.AgeInDays ./ 365 .* 12)
+Colorbar(B[1,2], bpco; label="Age (months)")
+
+for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
+    ixs = neuroactive_full[gs]
+    cs = filter(!isnan, cors[ixs])
+    acs = filter(!isnan, cors[Not(ixs)])
+
+    Resonance.plot_fsea!(panel, cs, acs; label=replace(gs, "degradation"=> "degr.", "synthesis"=> "synth."))
+end
+
+Resonance.plot_corrband!(F, cors)
+
+rowsize!(CDEF, 4, Relative(1/8))
 figure
 ```
 
+## Metabolites
+
 ```julia
-using RCall
-spc = "Romboutsia_ilealis"
+bmoi = [ # metabolites of interest
+    "pyridoxine", # vit B6
+    "gaba",
+    "glutamate",
+    "acetate",
+    "propionate",
+    "butyrate"
+]
 
-df = speco18[:, ["ageMonths", "cogScore", "read_depth", "subject", "maternalEd"]]
+mfeats = commonname.(features(metabolites))
+pyrdidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"pyridoxine"i), mfeats))
+gabaidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"gamma-aminobutyric"i), mfeats))
+glutidx = ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^glutamic"i), mfeats)
+butyidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^buty"i), mfeats))
+propidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^propio"i), mfeats))
+isovidx = only(ThreadsX.findall(f-> !ismissing(f) && contains(f, r"^isoval"i), mfeats))
 
-halfmin = minimum(filter(>(0), speco18[:, spc])) / 2
-df.bug = collect(log2.((speco18[:, spc] .+ halfmin)))
-
-mod1 = lm(@formula(cogScore ~ ageMonths + read_depth), df)
-mod2 = lm(@formula(cogScore ~ bug + ageMonths + read_depth), df)
-
-reval("library('lme4')")
-@rput df
-
-reval("mod3 <- lm(cogScore ~ 1 + bug + ageMonths + read_depth, df)")
-reval("summary(mod3)")
+pyrd = vec(abundances(metabolites[pyrdidx, :]))
+gaba = vec(abundances(metabolites[gabaidx, :]))
+glut1 = vec(abundances(metabolites[glutidx[1], :]))
+glut2 = vec(abundances(metabolites[glutidx[2], :]))
+buty = vec(abundances(metabolites[butyidx, :]))
+prop = vec(abundances(metabolites[propidx, :]))
+isov = vec(abundances(metabolites[isovidx, :]))
 
 ```
 
 ```julia
-cc = completecases(speco18, ["ageMonths", "cogScore", "read_depth", "subject"])
 
-scatter(predict(mod1), df[cc, "cogScore"])
-abline!(0,1)
+Ga = Axis(G[1,1])
+Gb = Axis(G[1,2]; xlabel = L"log_e(GABA)", ylabel = L"log_e(Glutamate)")
 
-scatter!(predict(mod2), df[cc, "cogScore"]; color=:orange)
-current_figure()
+pcom = plot_pcoa!(Ga, metpco; color=get(metabolites, :ageMonths))
+sc = scatter!(Gb, log.(gaba), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
+Colorbar(G[1, 3], sc; label = "Age (Months)")
 
-cor(predict(mod1), df[cc, "cogScore"])
-cor(predict(mod2), df[cc, "cogScore"])
+save(figurefiles("Figure2.svg"), figure)
+save(figurefiles("Figure2.png"), figure)
+figure
 
-df2 = copy(df)
-df2.bug .= 0
+```
 
-scatter!(predict(mod2, df2[cc, :]), df[cc, "cogScore"]; color=:purple)
-current_figure()
+
+```julia
+fig = Figure()
+ax1 = Axis(fig[1,1]; xlabel = L"log_e(pyridoxine)", ylabel = L"log_e(GABA)")
+ax2 = Axis(fig[1,2]; xlabel = L"log_e(pyridoxine)", ylabel = L"log_e(Glutamate)")
+ax3 = Axis(fig[2,1]; xlabel = L"log_e(GABA)", ylabel = L"log_e(Glutamate)")
+ax4 = Axis(fig[2,2]; xlabel = L"log_e(GABA[1])", ylabel = L"log_e(Glutamate[2])")
+
+sc1 = scatter!(ax1, log.(pyrd), log.(gaba); color = get(metabolites, :ageMonths))
+sc2 = scatter!(ax2, log.(pyrd), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
+
+sc4 = scatter!(ax4, log.(glut1), log.(glut2); color = get(metabolites, :ageMonths))
+
+
+```
+
+## GABA and GABA genes
+
+```julia
+mtbsubtp = collect(zip(get(metabolites, :subject), get(metabolites, :timepoint)))
+uniol = findall(stp -> stp in mtbsubtp, collect(zip(get(unirefs, :subject), get(unirefs, :timepoint))))
+ur = unirefs[:, uniol]
+ursubtp = collect(zip(get(ur, :subject), get(ur, :timepoint)))
+mtbol = findall(stp -> stp in ursubtp, collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))))
+
+cors = vec(cor(glut1[mtbol] .+ glut2[mtbol], abundances(ur), dims=2))
+
+ixs = neuroactive_full["Glutamate degradation II"]
+cs = filter(!isnan, cors[ixs])
+acs = filter(!isnan, cors[Not(ixs)])
+mwu = MannWhitneyUTest(cs, acs)
+
+Resonance.plot_fsea(cs, acs; label="Glutamate synthesis II")
+
+```
+
+```julia
+fig = Figure()
+ax = Axis(fig[1,1])
+
+scatter!(ax, vec(abundances(ur[ixs[10], :])), log.((glut1[mtbol] .+ glut2[mtbol]) ./ 2))
+fig
+```
+
+
+## Gene / metabolite correspondance
+
+```julia
+gs = "GABA synthesis I"
+ixs = neuroactive_full[gs]
+
+
+
+
 ```

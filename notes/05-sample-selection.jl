@@ -1,5 +1,55 @@
 using Resonance
-omni, etoh, tps = startup(; dfs = [:omni, :etoh, :tps])
+using CategoricalArrays
+
+omni = CSV.read(datafiles("wrangled", "omnisamples.csv"), DataFrame)
+etoh = CSV.read(datafiles("wrangled", "etohsamples.csv"), DataFrame)
+tps  = CSV.read(datafiles("wrangled", "timepoints.csv"), DataFrame)
+
+DataFrames.transform!(groupby(tps, :subject), :mother_HHS_Education => (r->coalesce(r...)) => :hhs)
+
+tps.education = let
+    ed = categorical(tps.hhs; levels=[-8 , 2:7...], ordered=true)
+    ed = recode(ed,
+    -8 => missing,
+    2 => "Junior high school",
+    3 => "Some high school",
+    4 => "High school grad",
+    5 => "Some college",
+    6 => "College grad",
+    7 => "Grad/professional school")
+    ed
+end
+
+DataFrames.transform!(groupby(tps, :subject), :race => (r->coalesce(r...)) => :race)
+
+tps.race = let
+    race = categorical(tps.race; ordered=true)
+    race = recode(race, 
+        "American Indian or Alaska Native"=> "Other",
+        "Some other race"                 => "Other",
+        "Asian Indian"                    => "Asian",
+        "Black or African American"       => "Black",
+        missing                           => "Unknown"
+    )
+    droplevels!(race)
+    levels!(race, ["White","Black","Asian","Mixed","Other","Unknown"])
+    race
+end
+
+
+select!(tps, "subject", "timepoint",  
+                "ageMonths",
+                "childGender" => "sex",
+                "race",
+                "education",
+                "cogScore",
+                "has_segmentation",
+                "ECHOTPCoded",
+                "assessmentDate",
+                "scanDate"
+)
+
+
 
 subset!(omni, "Mgx_batch" => ByRow(!ismissing))
 subset!(etoh, "Metabolomics_batch" => ByRow(m-> m==1))

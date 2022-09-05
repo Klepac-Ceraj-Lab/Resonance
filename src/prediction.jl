@@ -1,7 +1,5 @@
 non_na_mean(vv) = mean(vv[.!(isnan.(vv))])
 
-non_na_mean(vv) = mean(vv[.!(isnan.(vv))])
-
 function fix_metadata_colnames!(longdata_df::DataFrame)
 
     ## This function was created to fix small inconsistencies and typos on the longdata table.
@@ -14,7 +12,6 @@ function fix_metadata_colnames!(longdata_df::DataFrame)
     return(longdata_df)
     
 end
-
 
 function check_longdata_metaduplicates!(longdata_df::DataFrame; remove_duplicates=true)
     n_unique_rows = size(unique(longdata_df[:, 1:3]),1)    
@@ -89,35 +86,50 @@ end
 
 function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 100000)
 
-    @info "----- Begin Tietjen-Moore Outlier test -----"
-    @info "H0: There are no outliers in the data set."
-    @info "H1: There are exactly k outliers in the data set\n"
+    @info "----- Begin Tietjen-Moore Outlier test -----\n
+        H0: There are no outliers in the data set.\n
+        H1: There are exactly k outliers in the data set"
 
     n = length(values)
-
     L_set, L_critical = test_tietjenmoore(values, k, n, alpha, sim_trials)
-    @info "Set L-statistic for $n samples and $k outliers with mode $(mode): $(round(L_set, digits = 4))"
-    @info "Critical L for $n samples and $k outliers with mode $(mode): $(round(L_critical, digits = 4))\n"
 
     if L_set < L_critical
-        @info "L_set < L_critical !"
-        @info "**SUCCESSFUL REJECTION OF H0** with confidence level $alpha" 
+        @info "Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))\n
+            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))\n
+            L_set < L_critical\n
+            **SUCCESSFUL REJECTION OF H0** with confidence level $alpha" 
         r_all = abs.(values .- mean(values))
         outlier_indexes = sortperm(r_all)[(n-k+1):end]
         return outlier_indexes
     else
-        @warn "L_set > L_critical !"
-        @warn "**CANNOT REJECT H0** with confidence level $alpha"
+        @info """
+            Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))
+            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))
+            L_set > L_critical !
+            **CANNOT REJECT H0** with confidence level $alpha
+            """
         return Int64[]
     end # endif L_set < L_critical
 end # end function
 
-function try_outliers(f, data, n)
-    for i in n:-1:1
-        outlier_idx = f(data, i)
-        if length(outlier_idx) != 0
-            return(i, outlier_idx)
+function try_outliers(f, data, n; reverse=true)
+
+    if reverse
+
+        for i in n:-1:1
+            outlier_idx = f(data, i)
+            if length(outlier_idx) != 0
+                return(i, outlier_idx)
+            end
         end
+    else
+
+        for i in 1:n
+            outlier_idx = f(data, i)
+            if length(outlier_idx) != 0
+                return(i, outlier_idx)
+            end
+         end
     end
     return 0, Int64[]
 end
