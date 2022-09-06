@@ -45,15 +45,20 @@ export loadings,
        commonname
 
 # Machine Learning
-export build_future_df,
+export build_metadata_prediction_df,
        check_longdata_metaduplicates!,
-       microbiome_predictors,
        tryparsecol,
        univariate_tietjenmoore,
        test_tietjenmoore,
        try_outliers,
        unstack_techreplicates,
-       build_metadata_prediction_df
+       report_classification_merit,
+       report_regression_merit,
+       build_confusion_matrix,
+       average_confusion_matrix,
+       confmatrix2barplot,
+       regression_bestprediction,
+       non_na_mean
 
 using Reexport
 using ReTest
@@ -75,6 +80,8 @@ using SparseArrays
 using Statistics
 using Tables
 using ThreadsX
+using MLJ
+using GLM
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
