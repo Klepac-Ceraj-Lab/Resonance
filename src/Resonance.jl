@@ -81,6 +81,8 @@ export  # structs/types
         confmatrix2barplot,
         regression_bestprediction,
         # plotting functions
+        singlemodel_merit_barplot!,
+        singlemodel_merit_scatterplot!,
         singlemodel_avgimportance_barplot!,
         multimodel_avgimportance_barplot!
 

@@ -27,7 +27,7 @@ mutable struct UnivariateRandomForestRegressor <: ResonanceUnivariatePredictor
     n_splits::Int64
     dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
     models::Vector{Machine}
-    slope_correction::Vector{}
+    slope_corrections::Vector{}
     selected_split::Tuple{Float64, Int64}
     train_maes::Vector{Float64}
     test_maes::Vector{Float64}
@@ -520,14 +520,25 @@ function confmatrix2barplot(classification_results::Dict)
     return confmat_inputs
 end
 
-function regression_bestprediction(regression_results::Dict)
+function predict_bestsplit(regression_results::UnivariateRandomForestRegressor)
 
-    selected_trial = regression_results[:selected_trial][2]
-    X, y = regression_results[:inputs_outputs]
-    train, test = regression_results[:dataset_partitions][selected_trial]
-    slope_correction = regression_results[:slope_corrections][selected_trial]
-    selected_machine = regression_results[:models][selected_trial]
+    selected_split = regression_results.selected_split[2]
+    X, y = regression_results.inputs_outputs
+    train, test = regression_results.dataset_partitions[selected_split]
+    slope_correction = regression_results.slope_corrections[selected_split]
+    selected_machine = regression_results.models.[selected_split]
     yhat = GLM.predict(slope_correction, DataFrame( :yhat => MLJ.predict(selected_machine, X)))
+
+    return y, yhat, train, test
+end
+
+function predict_bestsplit(regression_results::UnivariateRandomForestClassifier)
+
+    selected_split = regression_results.selected_split[2]
+    X, y = regression_results.inputs_outputs
+    train, test = regression_results.dataset_partitions[selected_split]
+    selected_machine = regression_results.models.[selected_split]
+    yhat = MLJ.predict(selected_machine, X)
 
     return y, yhat, train, test
 end
@@ -558,6 +569,56 @@ function singlemodel_avgimportance_barplot!(
 
     # Plot barplot
     barplot!(ax1_1, reverse(collect(1:n)), plot_df.AvgImportance[1:n], color = :blue, direction=:x)
+
+    return figure
+
+end # end function
+
+function singlemodel_merit_barplot!(
+    figure::Figure,
+    res::UnivariateRandomForestRegressor,
+    pos::Tuple{Int64, Int64},
+    plot_title::String)
+
+    # Build the axis
+    ax = Axis(
+        figure[pos[1],pos[2]];
+        xlabel = "Ground Truth",
+        ylabel = "Prediction",
+        title = plot_title
+    )
+
+    # Plot barplot
+    y, yhat, train, test = predict_bestsplit(res)
+    scatter!(ax, y[train], yhat[train]; color=:orange)
+    scatter!(ax, y[test], yhat[test]; color=:purple)
+    ablines!(ax, 0, 1; color=:grey)
+    annotations!( ax, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(1.1*min(y), 0.9*max(yhat))], textsize = 20)
+
+    return figure
+
+end # end function
+
+function singlemodel_merit_scatterplot!(
+    figure::Figure,
+    res::UnivariateRandomForestRegressor,
+    pos::Tuple{Int64, Int64},
+    plot_title::String)
+
+    # Build the axis
+    ax = Axis(
+        figure[pos[1],pos[2]];
+        xlabel = "Ground Truth",
+        ylabel = "Prediction",
+        title = plot_title
+    )
+
+    # Plot barplot
+    y, yhat, train, test = predict_bestsplit(res)
+    scatter!(ax, y[train], yhat[train]; color=:orange)
+    scatter!(ax, y[test], yhat[test]; color=:purple)
+    ablines!(ax, 0, 1; color=:grey)
+    annotations!( ax, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(1.1*min(y), 0.9*max(yhat))], textsize = 20)
 
     return figure
 
