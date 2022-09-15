@@ -30,7 +30,6 @@ export airtable_metadata,
        stp_overlap,
        comm_overlap
 
-
 # Plotting
 export loadings,
        varexplained,
@@ -45,20 +44,45 @@ export loadings,
        commonname
 
 # Machine Learning
-export build_metadata_prediction_df,
-       check_longdata_metaduplicates!,
-       tryparsecol,
-       univariate_tietjenmoore,
-       test_tietjenmoore,
-       try_outliers,
-       unstack_techreplicates,
-       report_classification_merit,
-       report_regression_merit,
-       build_confusion_matrix,
-       average_confusion_matrix,
-       confmatrix2barplot,
-       regression_bestprediction,
-       non_na_mean
+export  # structs/types
+        Prediction,
+        Classification,
+        Regression,
+        ResonancePredictor,
+        ResonanceUnivariatePredictor,
+        ResonanceMultivariatePredictor,
+        UnivariateRandomForestClassifier,
+        UnivariateRandomForestRegressor,
+        UnivariatePredictorEnsemble,
+        # preprocessing functions
+        non_na_mean,
+        myxor,
+        tryparsecol,
+        check_longdata_metaduplicates!,
+        unstack_techreplicates,
+        build_metadata_prediction_df,
+        univariate_tietjenmoore,
+        test_tietjenmoore,
+        try_outliers,
+        # training functions
+        train_randomforest,
+        # postprocessing functions
+        report_merits,
+        get_singlemodel_singlesplit_importance,
+        get_singlemodel_allsplits_importances,
+        get_singlemodel_summary_importances,
+        get_singlemodel_binarytopn_importances,
+        get_multimodel_individual_summaryimportances,
+        get_multimodel_individual_binarytopns,
+        get_multimodel_aggregate_summaryimportances,
+        get_multimodel_aggregate_binarytopns,
+        build_confusion_matrix,
+        average_confusion_matrix,
+        confmatrix2barplot,
+        regression_bestprediction,
+        # plotting functions
+        singlemodel_avgimportance_barplot!,
+        multimodel_avgimportance_barplot!
 
 using Reexport
 using ReTest
@@ -69,6 +93,7 @@ using AlgebraOfGraphics
 using CairoMakie
 using CategoricalArrays
 using CodecZlib
+using ColorSchemes
 using Combinatorics
 using Dates
 using Dictionaries
@@ -82,6 +107,7 @@ using Tables
 using ThreadsX
 using MLJ
 using GLM
+using DecisionTree
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames

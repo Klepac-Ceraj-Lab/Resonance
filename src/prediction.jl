@@ -1,35 +1,64 @@
-non_na_mean(vv) = mean(vv[.!(isnan.(vv))])
+########################################
+# 0. Hierarchical Structures and Types #
+########################################
 
-function fix_metadata_colnames!(longdata_df::DataFrame)
+abstract type Prediction end
+struct Classification <: Prediction end
+struct Regression <: Prediction end
 
-    ## This function was created to fix small inconsistencies and typos on the longdata table.
-    ## As original data cleanup and wrangling progresses, it will be altered and ultimately deprecated.
-    ## Comments are provided to help review transformations
+abstract type ResonancePredictor end
+abstract type ResonanceUnivariatePredictor <: ResonancePredictor end
+abstract type ResonanceMultivariatePredictor <: ResonancePredictor end
 
-    # 1. Rename "[Collinsella]_massiliensis" to "Collinsella_massiliensis"
-    longdata_df[longdata_df.variable .== "[Collinsella]_massiliensis", :variable] .= "Collinsella_massiliensis"
-
-    return(longdata_df)
-    
+mutable struct UnivariateRandomForestClassifier <: ResonanceUnivariatePredictor
+    name::String
+    inputs_outputs::Tuple{DataFrame, CategoricalArrays.CategoricalVector{Bool, UInt32, Bool, CategoricalArrays.CategoricalValue{Bool, UInt32}, Union{}}}
+    n_splits::Int64
+    dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
+    models::Vector{Machine}
+    selected_split::Tuple{Float64, Int64}
+    train_accuracies::Vector{Float64}
+    test_accuracies::Vector{Float64}
 end
 
-function check_longdata_metaduplicates!(longdata_df::DataFrame; remove_duplicates=true)
-    n_unique_rows = size(unique(longdata_df[:, 1:3]),1)    
-    
-    if (n_unique_rows != size(longdata_df, 1))
-        n_nonunique = size(longdata_df, 1) - n_unique_rows
+mutable struct UnivariateRandomForestRegressor <: ResonanceUnivariatePredictor
+    name::String
+    inputs_outputs::Tuple{DataFrame, Vector{Float64}}
+    n_splits::Int64
+    dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
+    models::Vector{Machine}
+    slope_correction::Vector{}
+    selected_split::Tuple{Float64, Int64}
+    train_maes::Vector{Float64}
+    test_maes::Vector{Float64}
+    train_mapes::Vector{Float64}
+    test_mapes::Vector{Float64}
+    train_cor::Vector{Float64}
+    test_cor::Vector{Float64}
+end
 
-        if remove_duplicates    
-            @warn "Long Dataframe contains non-unique rows! Argument `remove_duplicates` set to `true`. Removing duplicated data."
-            @warn "After removal, $(n_unique_rows) will remain. $(n_nonunique) rows were rmoved from the original $(size(longdata_df, 1))"
-            rawDf = unique!(longdata_df)
-            return(longdata_df)
-        else
-            @warn "Long Dataframe contains non-unique rows! Argument `remove_duplicates` set to `false`. Returning source data."
-            return(longdata_df)
-        end #end if remove_duplicates
-    end # end if n_unique_rows
-end # end function
+mutable struct UnivariatePredictorEnsemble
+    screen_names::Vector{String}
+    col_names::Vector{Symbol}
+    predictors::Vector{T where T <: ResonanceUnivariatePredictor}
+end
+
+########################################
+# 1. Preprocessing/Wrangling Functions #
+########################################
+
+non_na_mean(vv) = mean(vv[.!(isnan.(vv))])
+
+function myxor(a::Float64, b::Float64)
+    a == b && (return a)
+    a > b && (return a)
+    a < b && (return b)
+end
+
+function tryparsecol(T, col)
+    newcol = tryparse.(T, col)
+    return any(isnothing, newcol) ? col : newcol
+end
 
 function build_metadata_prediction_df(base_df, inputs::Vector{Symbol}, targets::Vector{Symbol})
 
@@ -61,11 +90,6 @@ function build_metadata_prediction_df(base_df, inputs::Vector{Symbol}, targets::
     
     return prediction_df
 
-end
-
-function tryparsecol(T, col)
-    newcol = tryparse.(T, col)
-    return any(isnothing, newcol) ? col : newcol
 end
 
 function compute_tietjenmoore(data, k, n)
@@ -149,44 +173,321 @@ function unstack_techreplicates(raw_data, retain_first=true)
     return unstackedDf
 end #end function
 
-function report_classification_merit(classification_results::Dict)
-    classification_merits = DataFrame(
-    :Trial => collect(1:classification_results[:n_trials]),
-    :Train_ACC => classification_results[:train_accuracies],
-    :Test_ACC => classification_results[:test_accuracies],
+####################################
+# 2. Training/Processing Functions #
+####################################
+
+RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
+RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
+
+function train_randomforest(
+    type::Regression,
+    ref_name::String,
+    original_df,
+    input_cols,
+    output_col;
+    n_splits = 2,
+    data_preparation_fun = identity,
+    tuning_space = (
+        maxnodes_range = [ -1 ] ,
+        nodesize_range = [ 0 ],
+        sampsize_range = [ 0.7 ],
+        mtry_range = [ 5 ],
+        ntrees_range = [ 10 ]
+    ),
+    split_proportion=0.75,
+    train_rng=Random.GLOBAL_RNG
     )
 
-    push!(classification_merits, Dict(
-        :Trial => 0,
-        :Train_ACC => mean(classification_merits.Train_ACC),
-        :Test_ACC => mean(classification_merits.Test_ACC)
+    # ## 1. Subsetting Data
+    prediction_df = data_preparation_fun(original_df)
+    
+    # ## 2. Separating inputs/outputs
+    X = prediction_df[:, input_cols]
+    y = prediction_df[:, output_col]
+
+    # ## 3. Building hyperparameter tuning grid
+    tuning_grid = vec(collect(Base.product(
+        tuning_space.maxnodes_range,
+        tuning_space.nodesize_range,
+        tuning_space.sampsize_range,
+        tuning_space.mtry_range,
+        tuning_space.ntrees_range
+    )))
+
+    # ## 4. Initializing meta-arrays to record tuning results for each split
+    trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
+    trial_machines = Vector{Machine}(undef, n_splits)
+    trial_slopecorrections = Vector{T where T <: RegressionModel}(undef, n_splits)
+    trial_train_maes = repeat([Inf], n_splits)
+    trial_train_mapes = repeat([Inf], n_splits)
+    trial_train_cors = repeat([-1.0], n_splits)
+    trial_test_maes = repeat([Inf], n_splits)
+    trial_test_mapes = repeat([Inf], n_splits)
+    trial_test_cors = repeat([-1.0], n_splits)
+
+    # ## 5. Tuning/training loop
+    @info "Performing $(n_splits) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples."
+
+    for this_trial in 1:n_splits
+
+        ## 5.1. Splitting training data between train and test
+        Random.seed!(train_rng, this_trial)
+        train, test = partition(eachindex(1:nrow(X)), split_proportion, shuffle=true, rng=train_rng)
+        trial_partitions[this_trial] = (train, test)
+
+        ## 5.2. Tuning hyperparameter for this split
+        for i in eachindex(tuning_grid)
+            Random.seed!(train_rng, 0)
+
+            ## 5.2.1. Construct model with a candidate set of hyperparameters
+            rf_model = RandomForestRegressor(
+                max_depth = tuning_grid[i][1],
+                min_samples_leaf = tuning_grid[i][2],
+                sampling_fraction = tuning_grid[i][3],
+                n_subfeatures = tuning_grid[i][4],
+                n_trees = tuning_grid[i][5],
+                rng=train_rng
+            )
+
+            ## 5.2.2. Fit model on training data
+            rf_machine = machine(rf_model, X[train, :], y[train])
+            MLJ.fit!(rf_machine, verbosity=0)
+            ## 5.2.2.1. Fit slope correction on training data
+
+            train_y_hat = MLJ.predict(rf_machine, X[train, :])
+            slope_correction_df = DataFrame([ train_y_hat, y[train] ], [:yhat, :y])
+            slope_correction = lm(@formula(y ~ yhat), slope_correction_df)
+            train_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => train_y_hat))
+            train_mape = mape(train_y_hat, y[train])
+
+            ## 5.2.3. Benchmark model on independent testing data
+            test_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => MLJ.predict(rf_machine, X[test, :])))
+            test_mape = mape(test_y_hat, y[test])
+
+            ## 5.2.4. Compare benchmark results with previous best model
+            test_mape < trial_test_mapes[this_trial] ? begin
+                trial_train_maes[this_trial] = mae(train_y_hat, y[train])
+                trial_train_mapes[this_trial] = train_mape
+                trial_train_cors[this_trial] = Statistics.cor(train_y_hat, y[train])
+                trial_test_maes[this_trial] = mae(test_y_hat, y[test])
+                trial_test_mapes[this_trial] = test_mape
+                trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
+                trial_machines[this_trial] = deepcopy(rf_machine)
+                trial_slopecorrections[this_trial] = slope_correction
+            end : continue
+
+        end # end for i in 1:length(tuning_grid) - each set of hyperparameters
+
+    end # end for this_trial - each different train/test split
+
+    # ## 6. Returning optimization results
+    results = UnivariateRandomForestRegressor(
+        ref_name,                   #name::String
+        (X,y),                      #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
+        n_splits,                   #n_splits::Int64
+        trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
+        trial_machines,             #models::Vector{Machine}
+        trial_slopecorrections,     #slope_correction::Vector{}
+        findmin(trial_test_mapes),  #selected_split::Tuple{Float64, Int64}
+        trial_train_maes,           #train_maes::Vector{Float64}
+        trial_test_maes,            #test_maes::Vector{Float64}
+        trial_train_mapes,          #train_mapes::Vector{Float64}
+        trial_test_mapes,           #test_mapes::Vector{Float64}
+        trial_train_cors,           #train_cor::Vector{Float64}
+        trial_test_cors,            #test_cor::Vector{Float64}
+    )
+
+    @info "Done!"
+    return results
+
+end # end function
+
+#########################################
+# 3. Post-processing/Analysis Functions #
+#########################################
+
+function report_merits(res::UnivariateRandomForestClassifier)
+
+    merits = DataFrame(
+    :Split => collect(1:res.n_splits),
+    :Train_ACC => res.train_accuracies,
+    :Test_ACC => res.test_accuracies,
+    )
+
+    push!(merits, Dict(
+        :Split => 0,
+        :Train_ACC => mean(merits.Train_ACC),
+        :Test_ACC => mean(merits.Test_ACC)
     ))
 
-    return classification_merits
+    return merits
 end
 
-function report_regression_merit(regression_results::Dict)
-    regression_merits = DataFrame(
-        :Trial => collect(1:regression_results[:n_trials]),
-        :Train_MAE => regression_results[:train_maes],
-        :Test_MAE => regression_results[:test_maes],
-        :Train_MAPE => regression_results[:train_mapes],
-        :Test_MAPE => regression_results[:test_mapes],
-        :Train_COR => regression_results[:train_correlations],
-        :Test_COR => regression_results[:test_correlations]
+function report_merits(res::UnivariateRandomForestRegressor)
+    
+    merits = DataFrame(
+        :Split => collect(1:res.n_splits),
+        :Train_MAE => res.train_maes,
+        :Test_MAE => res.test_maes,
+        :Train_MAPE => res.train_mapes,
+        :Test_MAPE => res.test_mapes,
+        :Train_COR => res.train_cor,
+        :Test_COR => res.test_cor
         )
 
-    push!(regression_merits, Dict(
-        :Trial => 0,
-        :Train_MAE => mean(regression_merits.Train_MAE),
-        :Test_MAE => mean(regression_merits.Test_MAE),
-        :Train_MAPE => mean(regression_merits.Train_MAPE),
-        :Test_MAPE => mean(regression_merits.Test_MAPE),
-        :Train_COR => mean(regression_merits.Train_COR),
-        :Test_COR => mean(regression_merits.Test_COR)
+    push!(merits, Dict(
+        :Split => 0,
+        :Train_MAE => mean(merits.Train_MAE),
+        :Test_MAE => mean(merits.Test_MAE),
+        :Train_MAPE => mean(merits.Train_MAPE),
+        :Test_MAPE => mean(merits.Test_MAPE),
+        :Train_COR => mean(merits.Train_COR),
+        :Test_COR => mean(merits.Test_COR)
     ))
     
-    return regression_merits
+    return merits
+end
+
+function get_singlemodel_singlesplit_importance(res::UnivariateRandomForestClassifier; split_index=0)
+
+    (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
+    (split_index == 0) && (split_index = res.selected_split[2])
+
+    importance_df = DataFrame(
+        :Variable => names(res.inputs_outputs[1]),
+        :Importance => DecisionTree.impurity_importance(res.models[split_index].fitresult[1])
+    )
+
+    sort!(importance_df, :Importance, rev = true)
+
+    return importance_df
+
+end
+
+function get_singlemodel_singlesplit_importance(res::UnivariateRandomForestRegressor; split_index = 0 )
+
+    (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
+    (split_index == 0) && (split_index = res.selected_split[2])
+
+    importance_df = DataFrame(
+        :Variable => names(res.inputs_outputs[1]),
+        :Importance => DecisionTree.impurity_importance(res.models[split_index].fitresult)
+    )
+
+    sort!(importance_df, :Importance, rev = true)
+
+    return importance_df
+    
+end
+
+function get_singlemodel_allsplits_importances(res::T where T <: ResonanceUnivariatePredictor)
+
+    singlesplit_importances = [ get_singlemodel_singlesplit_importance(res; split_index = i) for i in 1:length(res.models) ]
+    concatenated_importances_df = reduce((x, y) -> DataFrames.outerjoin(x, y, on = :Variable, makeunique = true), singlesplit_importances)
+
+    return concatenated_importances_df
+
+end
+
+function get_singlemodel_summary_importances(res::T where T <: ResonanceUnivariatePredictor, colname = :AvgImportance, fun = non_na_mean)
+
+    concatenated_importances_df = get_singlemodel_allsplits_importances(res)
+    summarised_importances_df = DataFrame(
+       :Variable => concatenated_importances_df.Variable,
+       colname => map(fun, eachrow(Matrix(concatenated_importances_df[:, 2:end])))
+    )
+
+    sort!(summarised_importances_df, colname, rev = true)
+
+    return summarised_importances_df
+
+end
+
+function get_singlemodel_binarytopn_importances(res::T where T <: ResonanceUnivariatePredictor, importance_colname = :AvgImportance, topn_colname = :TopN, fun = non_na_mean; n=50)
+
+    summarised_importances_df = @chain get_singlemodel_summary_importances(res, importance_colname, fun) begin
+        insertcols!( _ , 2, topn_colname => vcat(ones(Int64, n), zeros(Int64, nrow( _ )-n)) )
+        select!( Not(importance_colname) )
+    end
+    
+    return(summarised_importances_df)
+
+end
+
+function get_multimodel_individual_summaryimportances(ens::UnivariatePredictorEnsemble, col_prefix = "meanImportance_", fun = non_na_mean)
+
+    singlemodel_summaries = [ 
+        get_singlemodel_summary_importances(
+            ens.predictors[i],
+            Symbol(col_prefix * string(ens.col_names[i])),
+            fun
+        ) for i in 1:length(ens.predictors)
+    ]
+
+    concatenated_summaries_df = reduce((x, y) -> DataFrames.outerjoin(x, y, on = :Variable, makeunique = true), singlemodel_summaries)
+
+    return concatenated_summaries_df
+
+end
+
+function get_multimodel_individual_binarytopns(ens::UnivariatePredictorEnsemble, col_prefix = "topN_", fun = non_na_mean; n=50)
+
+    singlemodel_summaries = [ 
+        get_singlemodel_binarytopn_importances(
+            ens.predictors[i],
+            :AvgImportance,
+            Symbol(col_prefix * string(ens.col_names[i])),
+            fun;
+            n=n
+        ) for i in 1:length(ens.predictors)
+    ]
+
+    concatenated_summaries_df = reduce((x, y) -> DataFrames.outerjoin(x, y, on = :Variable, makeunique = true), singlemodel_summaries)
+
+    return concatenated_summaries_df
+
+end
+
+function get_multimodel_aggregate_summaryimportances(
+    ens::UnivariatePredictorEnsemble,
+    singlemodel_col_prefix = "meanImportance_",
+    aggregate_colname = :AvgMultimodelImportance,
+    singlemodel_summary_fun = non_na_mean,
+    multimodel_summary_fun = non_na_mean)
+
+    concatenated_summaries_df = get_multimodel_individual_summaryimportances(ens, singlemodel_col_prefix, singlemodel_summary_fun)
+
+    summarised_importances_df = DataFrame(
+        :Variable => concatenated_summaries_df.Variable,
+        aggregate_colname => map(multimodel_summary_fun, eachrow(Matrix(concatenated_summaries_df[:, 2:end])))
+    )
+
+    sort!(summarised_importances_df, aggregate_colname, rev = true)
+
+    return summarised_importances_df
+
+end
+
+function get_multimodel_aggregate_binarytopns(
+    ens::UnivariatePredictorEnsemble,
+    singlemodel_col_prefix = "topN_",
+    aggregate_colname = :SumTopN,
+    singlemodel_summary_fun = non_na_mean,
+    multimodel_summary_fun = sum;
+    n=30)
+
+    concatenated_summaries_df = get_multimodel_individual_binarytopns(ens, singlemodel_col_prefix, singlemodel_summary_fun; n=n)
+
+    summarised_importances_df = DataFrame(
+        :Variable => concatenated_summaries_df.Variable,
+        aggregate_colname => map(multimodel_summary_fun, eachrow(Matrix(concatenated_summaries_df[:, 2:end])))
+    )
+
+    sort!(summarised_importances_df, aggregate_colname, rev = true)
+
+    return summarised_importances_df
+
 end
 
 function build_confusion_matrix(classification_results::Dict, trial::Int)
@@ -230,3 +531,75 @@ function regression_bestprediction(regression_results::Dict)
 
     return y, yhat, train, test
 end
+
+#########################
+# 4. Plotting functions #
+#########################
+
+function singlemodel_avgimportance_barplot!(
+    figure::Figure,
+    res::T where T <: ResonanceUnivariatePredictor,
+    pos::Tuple{Int64, Int64},
+    plot_title::String;
+    n = 30)
+
+    # Collect the importances
+    plot_df = get_singlemodel_summary_importances(res)
+
+    # Build the axis
+    ax1_1 = Axis(
+        figure[pos[1],pos[2]];
+        ylabel = "Most important Taxa",
+        yticks = (reverse(collect(1:n)), plot_df.Variable[1:n]),
+        #yticklabelrotation=-pi/4,
+        xlabel = "Mean Decrease in Impurity (Gini) Importance",
+        title = plot_title
+    )
+
+    # Plot barplot
+    barplot!(ax1_1, reverse(collect(1:n)), plot_df.AvgImportance[1:n], color = :blue, direction=:x)
+
+    return figure
+
+end # end function
+
+function multimodel_avgimportance_barplot!(
+    figure::Figure,
+    ens::UnivariatePredictorEnsemble,
+    pos::Tuple{Int64, Int64},
+    plot_title::String;
+    n_consider = 50,
+    n_plot = 50)
+
+    ## Building Figure
+
+    average_importances = get_multimodel_aggregate_summaryimportances(ens)
+    sum_topns = get_multimodel_aggregate_binarytopns(ens; n = n_consider)
+    plot_df = leftjoin(average_importances, sum_topns, on = :Variable)
+
+    dropmissing!(plot_df);
+    sort!(plot_df, :AvgMultimodelImportance; rev = true)
+
+    ## Building Figure
+    bar_colors = ColorSchemes.viridis.colors[floor.(Int64, collect(range(256, 1, length = 1+maximum(plot_df.SumTopN))))]
+
+    # Build the axis
+    ax = Axis(
+        figure[pos[1],pos[2]];
+        ylabel = "Most important Taxa",
+        yticks = (reverse(collect(1:n_plot)), plot_df.Variable[1:n_plot]),
+        xlabel = "Average MDI (Gini) Importance over all ($(length(ens.predictors))) models",
+        title = plot_title
+    )
+    
+    # Plot barplot
+    barplot!(ax, reverse(collect(1:n_plot)), plot_df.AvgMultimodelImportance[1:n_plot], color = bar_colors[plot_df.SumTopN[1:n_plot] .+ 1], direction=:x)
+    
+    # Plot Legend
+    labels = string.( collect(0:1:maximum(plot_df.SumTopN)) )
+    elements = [ PolyElement(polycolor = bar_colors[i]) for i in 1:length(labels) ]
+    Legend(figure[pos[1]+1,pos[2]], elements, labels, "Predictors for which this taxon is among the top $(n_consider) important factors", orientation=:horizontal)
+
+    return figure
+
+end # end function
