@@ -42,9 +42,9 @@ JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_06to12_
 JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_12to18_fromfunctions_results.jld"
 JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_18to24_fromfunctions_results.jld"
 # future cogScore classification from taxonomic profiles
-#JLD2.@load "/home/guilherme/Documents/models/classification_futureCogScores_allselected_fromfunctions_results.jld"
+JLD2.@load "/home/guilherme/Documents/models/classification_futureCogScores_allselected_fromfunctions_results.jld"
 # future cogScore regression from taxonomic profiles
-#JLD2.@load "/home/guilherme/Documents/models/regression_futureCogScores_allselected_fromfunctions_results.jld"
+JLD2.@load "/home/guilherme/Documents/models/regression_futureCogScores_allselected_fromfunctions_results.jld"
 ```
 
 ## Reporting the Figures of Merit for Classification
@@ -70,6 +70,12 @@ report_regression_merit(regression_currentCogScores_00to06_fromfunctions_results
 report_regression_merit(regression_currentCogScores_06to12_fromfunctions_results)
 report_regression_merit(regression_currentCogScores_12to18_fromfunctions_results)
 report_regression_merit(regression_currentCogScores_18to24_fromfunctions_results)
+# 
+report_classification_merit(classification_currentCogScores_12to18_fromfunctions_results)
+report_regression_merit(regression_futureCogScores_allselected_fromtaxa_results)
+#
+report_classification_merit(classification_futureCogScores_allselected_fromfunctions_results)
+report_regression_merit(regression_futureCogScores_allselected_fromfunctions_results)
 ```
 
 ## Building Figure 4.1 - current cogscores from taxonomic profiles
@@ -439,43 +445,6 @@ Legend(figure[8,1:4], elements, labels, "Sample set", orientation=:horizontal)
 save("figures/Figure4_current.png", figure); save("figures/Figure4_current.svg", figure)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #####
 # FUTURE
 #####
@@ -484,7 +453,7 @@ save("figures/Figure4_current.png", figure); save("figures/Figure4_current.svg",
 ## Building Figure 4.2 - future cogscores from taxonomic profiles
 
 ```julia
-figure = Figure(resolution = (900, 600))
+figure = Figure(resolution = (1600, 600))
 confplot_colors = [:blue3, :red3, :tomato2, :dodgerblue2]
 ```
 
@@ -508,12 +477,12 @@ barplot!(ax1_1, tbl1_1.x, tbl1_1.value,
         color = confplot_colors[tbl1_1.color])
 ```
 
-#### Plot 2.2 - Predictions vs ground truth for 06 to 12 months
+#### Plot 2.2 - Predictions vs ground truth for all ages
 
 ```julia
 # Axis
-ax3_2 = Axis(
-    figure[1,2];
+ax1_2 = Axis(
+    figure[1,3];
     xlabel = "Ground Truth cogScore",
     ylabel = "Predicted cogScore",
     title = "All qualifying samples (n = 112)"
@@ -521,23 +490,62 @@ ax3_2 = Axis(
 
 # Plot
 y, yhat, train, test = regression_bestprediction(regression_futureCogScores_allselected_fromtaxa_results)
-sc_train = scatter!(ax3_2, y[train], yhat[train]; color=:orange)
-sc_test = scatter!(ax3_2, y[test], yhat[test]; color=:purple)
-ablines!(ax3_2, 0, 1; color=:grey)
-annotations!( ax3_2, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 110)], textsize = 20)
+sc_train = scatter!(ax1_2, y[train], yhat[train]; color=:orange)
+sc_test = scatter!(ax1_2, y[test], yhat[test]; color=:purple)
+ablines!(ax1_2, 0, 1; color=:grey)
+annotations!( ax1_2, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 110)], textsize = 20)
+```
+
+#### Plot 2.3 - Confusion Matrix / Accuracies for all ages - Functional profiles
+
+```julia
+# Axis
+ax1_3 = Axis(
+    figure[1,2];
+    # xlabel = "Classifications",
+    xticks = (1:2, ["Correct", "Incorrect"]),
+    ylabel = "Proportion",
+    title = "All qualifying samples (n = 112)"
+)
+ylims!(ax1_3, [0.0, 1.0])
+
+# Plot
+tbl1_3 = confmatrix2barplot(classification_futureCogScores_allselected_fromfunctions_results)
+barplot!(ax1_3, tbl1_3.x, tbl1_3.value,
+        stack = tbl1_3.grp,
+        color = confplot_colors[tbl1_3.color])
+```
+
+#### Plot 2.4 - Predictions vs ground truth for all ages - Functional profiles
+
+```julia
+# Axis
+ax1_4 = Axis(
+    figure[1,4];
+    xlabel = "Ground Truth cogScore",
+    ylabel = "Predicted cogScore",
+    title = "All qualifying samples (n = 112)"
+)
+
+# Plot
+y, yhat, train, test = regression_bestprediction(regression_futureCogScores_allselected_fromfunctions_results)
+sc_train = scatter!(ax1_4, y[train], yhat[train]; color=:orange)
+sc_test = scatter!(ax1_4, y[test], yhat[test]; color=:purple)
+ablines!(ax1_4, 0, 1; color=:grey)
+annotations!( ax1_4, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(60, 105)], textsize = 20)
 ```
 
 #### Legends and title
 ```julia
 labels = ["True Negatives", "False Positives", "False Negatives", "True Positives"]
 elements = [PolyElement(polycolor = confplot_colors[i]) for i in 1:length(labels)]
-Legend(figure[2,1], elements, labels, "Classification result", nbanks = 2, orientation = :horizontal, valign = :top)
+Legend(figure[2,1:2], elements, labels, "Classification result", nbanks = 2, orientation = :horizontal, valign = :top)
 
 labels = ["Training samples", "Test samples"]
 elements = [PolyElement(polycolor = el) for el in [:orange, :purple]]
-Legend(figure[2,2], elements, labels, "Sample set", nbanks = 1, orientation=:horizontal, valign = :top)
+Legend(figure[2,3:4], elements, labels, "Sample set", nbanks = 1, orientation=:horizontal, valign = :top)
 
-Label(figure[1, :, Top()], "Binary classification and regression results for prediction of future cognitive scores from present taxonomic profiles for all\nqualifying samples with stool collection under 12 months and at least one future cognitive assessment before 24 months", valign = :bottom,
+Label(figure[1, :, Top()], "Binary classification and regression results for prediction of future cognitive scores from present taxonomic profiles and functional profiles for all\nqualifying samples with stool collection under 12 months and at least one future cognitive assessment before 24 months", valign = :bottom,
     # font = "TeX Gyre Heros Bold",
     padding = (0, 50, 40, 0))
 
