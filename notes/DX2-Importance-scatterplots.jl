@@ -7,8 +7,6 @@ using JLD2
 using StableRNGs
 using GLM
 
-non_na_mean(a) = mean(a[.!(isnan.(a))])
-
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore classification from taxonomic profiles
@@ -26,20 +24,9 @@ JLD2.@load "/home/guilherme/Documents/models/classification_futureCogScores_alls
 # future cogScore regression from taxonomic profiles
 JLD2.@load "/home/guilherme/Documents/models/regression_futureCogScores_allselected_fromtaxa_results.jld"
 
-# concurrent cogScore classification from taxonomic profiles
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_00to06_fromfunctions_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_06to12_fromfunctions_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_12to18_fromfunctions_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_18to24_fromfunctions_results.jld"
-# concurrent cogScore regression from taxonomic profiles
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_00to06_fromfunctions_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_06to12_fromfunctions_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_12to18_fromfunctions_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_18to24_fromfunctions_results.jld"
-# future cogScore classification from taxonomic profiles
-#JLD2.@load "/home/guilherme/Documents/models/classification_futureCogScores_allselected_fromfunctions_results.jld"
-# future cogScore regression from taxonomic profiles
-#JLD2.@load "/home/guilherme/Documents/models/regression_futureCogScores_allselected_fromfunctions_results.jld"
+#####
+# Individual model importances averaged over all splits
+#####
 
 # Axis
 function average_classification_importances(res::Dict)
