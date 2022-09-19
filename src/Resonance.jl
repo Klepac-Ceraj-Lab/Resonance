@@ -55,7 +55,11 @@ export  # structs/types
         UnivariateRandomForestRegressor,
         UnivariatePredictorEnsemble,
         # preprocessing functions
-        non_na_mean,
+        dropmissing,
+        dropnan,
+        nonna_mean,
+        nonmissing_mean,
+        nonna_nonmissing_mean,
         myxor,
         tryparsecol,
         check_longdata_metaduplicates!,

@@ -47,7 +47,11 @@ end
 # 1. Preprocessing/Wrangling Functions #
 ########################################
 
-non_na_mean(vv) = mean(vv[.!(isnan.(vv))])
+Resonance.dropmissing(vv) = vv[.!(ismissing.(vv))]
+dropnan(vv) = vv[.!(isnan.(vv))]
+nonna_mean(vv) = mean(dropnan(vv))
+nonmissing_mean(vv) = mean(dropmissing(vv))
+nonna_nonmissing_mean(vv) = mean(dropnan(dropmissing(vv)))
 
 function myxor(a::Float64, b::Float64)
     a == b && (return a)
@@ -525,8 +529,8 @@ function predict_bestsplit(regression_results::UnivariateRandomForestRegressor)
     selected_split = regression_results.selected_split[2]
     X, y = regression_results.inputs_outputs
     train, test = regression_results.dataset_partitions[selected_split]
-    slope_correction = regression_results.slope_corrections[selected_split]
-    selected_machine = regression_results.models.[selected_split]
+    slope_correction = regression_results.slope_correction[selected_split]
+    selected_machine = regression_results.models[selected_split]
     yhat = GLM.predict(slope_correction, DataFrame( :yhat => MLJ.predict(selected_machine, X)))
 
     return y, yhat, train, test
@@ -537,7 +541,7 @@ function predict_bestsplit(regression_results::UnivariateRandomForestClassifier)
     selected_split = regression_results.selected_split[2]
     X, y = regression_results.inputs_outputs
     train, test = regression_results.dataset_partitions[selected_split]
-    selected_machine = regression_results.models.[selected_split]
+    selected_machine = regression_results.models[selected_split]
     yhat = MLJ.predict(selected_machine, X)
 
     return y, yhat, train, test
