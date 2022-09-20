@@ -227,94 +227,114 @@ function multimodel_individual_correlations(ens::UnivariatePredictorEnsemble, co
 
 end
 
+function descript_inputs(res::T where T <: ResonancePredictor)
 
+    X = res.inputs_outputs[1]
 
+    bug_names = names(X)
+    bug_prevalences = map( x -> sum( x .> 0.0) / length(x), eachcol(X) )
+    bug_averages_withzero = map(x -> mean(x), eachcol(X) )
+    bug_averages_nonzero = map(x -> mean(x[x .> 0.0]), eachcol(X) )
+    bug_std_withzeros = map( x -> Statistics.std(x), eachcol(X) )
+    bug_std_nonzeros = map( x -> Statistics.std(x[x .> 0.0]), eachcol(X) )
 
+    descript_df = DataFrame(
+        :Variable => bug_names,
+        :Prevalence => bug_prevalences,
+        :MeanAbundanceConsideringZeros => bug_averages_withzero,
+        :MeanAbundanceExcludingZeros => bug_averages_nonzero,
+        :MeanSdevConsideringZeros => bug_std_withzeros,
+        :MeanSdevExcludingZeros => bug_std_nonzeros
+    )
 
-function build_classification_importance_correlations_df(res)
-
-    importance_correlation_dfs = [ process_model_correlations(res, i, model_X, model_y) for i in 1:length(res[:models]) ]
-    importance_correlation_dfs = reduce(vcat, importance_correlation_dfs) 
-
-    combined_importance_correlation_df = @chain importance_correlation_dfs begin
-        groupby(:Variable)
-        combine([:Importance, :MeanCorrelation] .=> non_na_mean; renamecols=false)
-    end
-
-    insertcols!(combined_importance_correlation_df, :MeanCorSign => sign.(combined_importance_correlation_df.MeanCorrelation) )
-    sort!(combined_importance_correlation_df, :Importance, rev=true)
-
-
-    return combined_importance_correlation_df
+    return descript_df
 
 end
 
-function build_classification_summary_plot_df(result_set; result_type="classification", n = 50)
+function singlemodel_summary_prevalences(res::T where T <: ResonanceUnivariatePredictor, colname = :Prevalence)
 
-    importance_correlations_dfs = [ build_classification_importance_correlations_df(res) for res in result_set ]
-    importance_correlations_dfs = map(x -> insertcols!(x, 3, :TopN => vcat(ones(n), zeros(nrow(x)-n))), importance_correlations_dfs)
-
-    ## Processing Importances
-
-    joined_importances = reduce(
-        (x, y) -> outerjoin(x, y, on = :Variable, makeunique = true),
-        map(df -> select(df, [:Variable, :Importance]), importance_correlations_dfs)
-    )
-    average_importances = DataFrame(
-        :Variable => joined_importances.Variable,
-        :AvgImportance => map(x -> mean(x[.!(ismissing.(x))]), eachrow(Matrix(joined_importances[:, 2:end])))
+    descript_df = descript_inputs(res)
+    prevalence_df = DataFrame(
+        :Variable => descript_df.Variable,
+        colname => descript_df.Prevalence
     )
 
-    ## Processing Correlations
+    return prevalence_df
 
-    joined_correlations = reduce(
-        (x, y) -> outerjoin(x, y, on = :Variable, makeunique = true),
-        map(df -> select(df, [:Variable, :MeanCorrelation]), importance_correlations_dfs)
-    )
-    average_correlations = DataFrame(
-        :Variable => joined_correlations.Variable,
-        :AvgCorrelation => map(x -> non_na_mean(x[.!(ismissing.(x))]), eachrow(Matrix(joined_correlations[:, 2:end])))
-    )
-    n_poscorrs = DataFrame(
-        :Variable => joined_correlations.Variable,
-        :NPosCorr => map(x -> sum(x .> 0.1), eachrow(Matrix(joined_correlations[:, 2:end])))
-    )
-    n_zerocorrs = DataFrame(
-        :Variable => joined_correlations.Variable,
-        :NZeroCorr => map(x -> sum((x .< 0.1) .& (x .> -0.1)), eachrow(Matrix(joined_correlations[:, 2:end])))
-    )
-    n_negcorrs = DataFrame(
-        :Variable => joined_correlations.Variable,
-        :NNegCorr => map(x -> sum(x .< -0.1), eachrow(Matrix(joined_correlations[:, 2:end])))
-    )
-    sd_correlations = DataFrame(
-        :Variable => joined_correlations.Variable,
-        :SdevCorrelation => map(x -> std(x[.!(isnan.(x))]), eachrow(Matrix(joined_correlations[:, 2:end])))
-    )
+end
 
-    joined_topns = reduce(
-        (x, y) -> outerjoin(x, y, on = :Variable, makeunique = true),
-        map(df -> select(df, [:Variable, :TopN]), importance_correlations_dfs)
-    )
-    sum_topns = DataFrame(
-        :Variable => joined_topns.Variable,
-        :SumTopN => map(x -> floor(Int64, sum(x[.!(ismissing.(x))])), eachrow(Matrix(joined_topns[:, 2:end])))
-    )
+function singlemodel_summary_abundances(res::T where T <: ResonanceUnivariatePredictor, colname = :MeanAbundance; exclude_zeros=true)
 
-    individual_summary_dfs = [
-        average_importances,
-        average_correlations,
-        sum_topns,
-        n_poscorrs,
-        n_zerocorrs,
-        n_negcorrs,
-        sd_correlations,
+    descript_df = descript_inputs(res)
+
+    if exclude_zeros
+        abundances_df = DataFrame(
+            :Variable => descript_df.Variable,
+            colname => descript_df.MeanAbundanceExcludingZeros
+        )
+    else
+        abundances_df = DataFrame(
+            :Variable => descript_df.Variable,
+            colname => descript_df.MeanAbundanceConsideringZeros
+        )
+    end    
+
+    abundances_df[isnan.(abundances_df[:, colname]), colname] .= 0.0
+
+    return abundances_df
+
+end
+
+function singlemodel_summary_sdevs(res::T where T <: ResonanceUnivariatePredictor, colname = :MeanSdev; exclude_zeros=true)
+
+    descript_df = descript_inputs(res)
+
+    if exclude_zeros
+        sdevs_df = DataFrame(
+            :Variable => descript_df.Variable,
+            colname => descript_df.MeanSdevExcludingZeros
+        )
+    else
+        sdevs_df = DataFrame(
+            :Variable => descript_df.Variable,
+            colname => descript_df.MeanSdevConsideringZeros
+        )
+    end    
+
+    sdevs_df[isnan.(sdevs_df[:, colname]), colname] .= 0.0
+
+    return sdevs_df
+    
+end
+
+function multimodel_individual_prevalences(ens::UnivariatePredictorEnsemble, col_prefix = "Prevalence_")
+
+    singlemodel_prevalences = [ 
+        singlemodel_summary_prevalences(
+            ens.predictors[i],
+            Symbol(col_prefix * string(ens.col_names[i]))
+        ) for i in 1:length(ens.predictors)
     ]
 
-    joined_summaries = reduce( (x, y) -> outerjoin(x, y, on = :Variable, makeunique = true), individual_summary_dfs)
-    sort!(joined_summaries, :AvgImportance; rev=true)
+    concatenated_prevalences_df = reduce((x, y) -> DataFrames.outerjoin(x, y, on = :Variable, makeunique = true), singlemodel_prevalences)
 
-    return joined_summaries
+    return concatenated_prevalences_df
+
+end
+
+function multimodel_individual_abundances(ens::UnivariatePredictorEnsemble, col_prefix = "Abundance_"; exclude_zeros=true)
+
+    singlemodel_abundances = [ 
+        singlemodel_summary_abundances(
+            ens.predictors[i],
+            Symbol(col_prefix * string(ens.col_names[i]))
+            ;exclude_zeros=exclude_zeros
+        ) for i in 1:length(ens.predictors)
+    ]
+
+    concatenated_abundances_df = reduce((x, y) -> DataFrames.outerjoin(x, y, on = :Variable, makeunique = true), singlemodel_abundances)
+
+    return concatenated_abundances_df
 
 end
 
@@ -322,46 +342,120 @@ end
 # Computation
 #####
 
-RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
-RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-# concurrent cogScore classification from taxonomic profiles
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_00to06_fromtaxa_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_06to12_fromtaxa_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_12to18_fromtaxa_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/classification_currentCogScores_18to24_fromtaxa_results.jld"
-# concurrent cogScore regression from taxonomic profiles
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_00to06_fromtaxa_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_06to12_fromtaxa_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_12to18_fromtaxa_results.jld"
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_18to24_fromtaxa_results.jld"
-# future cogScore classification from taxonomic profiles
-JLD2.@load "/home/guilherme/Documents/models/classification_futureCogScores_allselected_fromtaxa_results.jld"
-# future cogScore regression from taxonomic profiles
-JLD2.@load "/home/guilherme/Documents/models/regression_futureCogScores_allselected_fromtaxa_results.jld"
+## Classification
 
-# Axis
+classification_individual_abundances = multimodel_individual_abundances(ensemble_classification_models)
+classification_individual_prevalences = multimodel_individual_prevalences(ensemble_classification_models)
+classification_individual_correlations = multimodel_individual_correlations(ensemble_classification_models)
+classification_aggregate_importances = get_multimodel_aggregate_summaryimportances(ensemble_classification_models)
+classification_aggregate_importances.Order = 1:nrow(classification_aggregate_importances)
 
-classification_result_set = [
-    classification_currentCogScores_00to06_fromtaxa_results,
-    classification_currentCogScores_06to12_fromtaxa_results,
-    classification_currentCogScores_12to18_fromtaxa_results,
-    classification_currentCogScores_18to24_fromtaxa_results,
-    classification_futureCogScores_allselected_fromtaxa_results,    
-]
+plot_aggregate_df = DataFrames.outerjoin(classification_aggregate_importances, classification_individual_correlations, on = :Variable, makeunique = true)
+plot_aggregate_df = DataFrames.outerjoin(plot_aggregate_df, classification_individual_prevalences, on = :Variable, makeunique = true)
+plot_aggregate_df = DataFrames.outerjoin(plot_aggregate_df, classification_individual_abundances, on = :Variable, makeunique = true)
+sort!(plot_aggregate_df, :Order)
 
-regression_result_set = [
-    regression_currentCogScores_00to06_fromtaxa_results,
-    regression_currentCogScores_06to12_fromtaxa_results,
-    regression_currentCogScores_12to18_fromtaxa_results,
-    regression_currentCogScores_18to24_fromtaxa_results,
-    regression_futureCogScores_allselected_fromtaxa_results,    
-]
-
-classification_summary_plot = build_classification_summary_plot_df(classification_result_set)
-
-# combined_importance_correlation_df = build_classification_importance_correlations_df(regression_currentCogScores_00to06_fromtaxa_results)
 
 #####
 # Plotting
 #####
 
+ens = ensemble_classification_models
+n_plot = 50
+heatmap_figure = Figure(resolution = (1800, 1800) )
+
+## Correlation
+
+correlation_colormap = cgrad(
+    [:red, :white, :blue],
+    [0.0, 0.5, 1.0]
+)
+
+ax_correlation = Axis(
+    heatmap_figure[1,1];
+    ylabel = "Most important Taxa",
+    yticks = (collect(1:n_plot), plot_aggregate_df.Variable[1:n_plot]),
+    xlabel = "Model",
+    xticks = (collect(1:5), ens.screen_names),
+    title = "Average Point-biserial correlation through the $(length(ens.predictors)) models",
+    xticklabelrotation = pi/2,
+    yreversed = true
+)
+
+corr_mat = permutedims(Matrix(plot_aggregate_df[1:n_plot, 4:8]))
+
+correlation_hm = heatmap!(ax_correlation, corr_mat; colormap=correlation_colormap, colorrange=(-0.8, 0.8), highclip = :blue, lowclip = :red)
+
+for ci in CartesianIndices(corr_mat)
+    text!(ax_correlation,
+    string(round(corr_mat[ci], digits=2)),
+    ; position=(ci[1],ci[2]),
+    align=(:center, :center)
+    )
+end
+
+## Prevalence
+
+prevalence_colormap = :viridis
+
+ax_prevalence = Axis(
+    heatmap_figure[1,2];
+    #ylabel = "Most important Taxa",
+    yticks = (collect(1:n_plot), plot_aggregate_df.Variable[1:n_plot]),
+    yticksvisible = false,
+    yticklabelsvisible = false,
+    xlabel = "Model",
+    xticks = (collect(1:5), ens.screen_names),
+    title = "Average feature Prevalence through the $(length(ens.predictors)) models",
+    xticklabelrotation = pi/2,
+    yreversed = true
+)
+
+prevalence_mat = permutedims(Matrix(plot_aggregate_df[1:n_plot, 9:13]))
+
+prevalence_hm = heatmap!(ax_prevalence, prevalence_mat; colormap=prevalence_colormap)
+
+for ci in CartesianIndices(prevalence_mat)
+    text!(ax_prevalence,
+    string(round(prevalence_mat[ci], digits=4)),
+    ; position=(ci[1],ci[2]),
+    align=(:center, :center)
+    )
+end
+
+## Prevalence
+
+abundance_colormap = :viridis
+
+ax_abundance = Axis(
+    heatmap_figure[1,3];
+    #ylabel = "Most important Taxa",
+    yticks = (collect(1:n_plot), plot_aggregate_df.Variable[1:n_plot]),
+    yticksvisible = false,
+    yticklabelsvisible = false,
+    xlabel = "Model",
+    xticks = (collect(1:5), ens.screen_names),
+    title = "Average feature Abundance through the $(length(ens.predictors)) models",
+    xticklabelrotation = pi/2,
+    yreversed = true
+)
+
+abundance_mat = permutedims(Matrix(plot_aggregate_df[1:n_plot, 14:18]))
+
+abundance_hm = heatmap!(ax_abundance, abundance_mat; colormap=abundance_colormap)
+
+for ci in CartesianIndices(abundance_mat)
+    text!(ax_abundance,
+    string(round(abundance_mat[ci], digits=4)),
+    ; position=(ci[1],ci[2]),
+    align=(:center, :center)
+    )
+end
+
+Colorbar(heatmap_figure[2, 1], correlation_hm, label = "Point-Biserial correlation", vertical = false)
+Colorbar(heatmap_figure[2, 2], prevalence_hm, label = "Prevalence", vertical = false)
+Colorbar(heatmap_figure[2, 3], abundance_hm, label = "Abundance", vertical = false)
+
+heatmap_figure
+
+save("figures/correlation_prevalence_abundance_classification_heatmap.png", heatmap_figure)

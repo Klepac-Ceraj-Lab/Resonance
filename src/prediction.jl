@@ -394,7 +394,7 @@ function get_singlemodel_allsplits_importances(res::T where T <: ResonanceUnivar
 
 end
 
-function get_singlemodel_summary_importances(res::T where T <: ResonanceUnivariatePredictor, colname = :AvgImportance, fun = non_na_mean)
+function get_singlemodel_summary_importances(res::T where T <: ResonanceUnivariatePredictor, colname = :AvgImportance, fun = nonna_mean)
 
     concatenated_importances_df = get_singlemodel_allsplits_importances(res)
     summarised_importances_df = DataFrame(
@@ -408,7 +408,7 @@ function get_singlemodel_summary_importances(res::T where T <: ResonanceUnivaria
 
 end
 
-function get_singlemodel_binarytopn_importances(res::T where T <: ResonanceUnivariatePredictor, importance_colname = :AvgImportance, topn_colname = :TopN, fun = non_na_mean; n=50)
+function get_singlemodel_binarytopn_importances(res::T where T <: ResonanceUnivariatePredictor, importance_colname = :AvgImportance, topn_colname = :TopN, fun = nonna_mean; n=50)
 
     summarised_importances_df = @chain get_singlemodel_summary_importances(res, importance_colname, fun) begin
         insertcols!( _ , 2, topn_colname => vcat(ones(Int64, n), zeros(Int64, nrow( _ )-n)) )
@@ -419,7 +419,7 @@ function get_singlemodel_binarytopn_importances(res::T where T <: ResonanceUniva
 
 end
 
-function get_multimodel_individual_summaryimportances(ens::UnivariatePredictorEnsemble, col_prefix = "meanImportance_", fun = non_na_mean)
+function get_multimodel_individual_summaryimportances(ens::UnivariatePredictorEnsemble, col_prefix = "meanImportance_", fun = nonna_mean)
 
     singlemodel_summaries = [ 
         get_singlemodel_summary_importances(
@@ -435,7 +435,7 @@ function get_multimodel_individual_summaryimportances(ens::UnivariatePredictorEn
 
 end
 
-function get_multimodel_individual_binarytopns(ens::UnivariatePredictorEnsemble, col_prefix = "topN_", fun = non_na_mean; n=50)
+function get_multimodel_individual_binarytopns(ens::UnivariatePredictorEnsemble, col_prefix = "topN_", fun = nonna_mean; n=50)
 
     singlemodel_summaries = [ 
         get_singlemodel_binarytopn_importances(
@@ -457,8 +457,8 @@ function get_multimodel_aggregate_summaryimportances(
     ens::UnivariatePredictorEnsemble,
     singlemodel_col_prefix = "meanImportance_",
     aggregate_colname = :AvgMultimodelImportance,
-    singlemodel_summary_fun = non_na_mean,
-    multimodel_summary_fun = non_na_mean)
+    singlemodel_summary_fun = nonna_mean,
+    multimodel_summary_fun = nonna_mean)
 
     concatenated_summaries_df = get_multimodel_individual_summaryimportances(ens, singlemodel_col_prefix, singlemodel_summary_fun)
 
@@ -477,7 +477,7 @@ function get_multimodel_aggregate_binarytopns(
     ens::UnivariatePredictorEnsemble,
     singlemodel_col_prefix = "topN_",
     aggregate_colname = :SumTopN,
-    singlemodel_summary_fun = non_na_mean,
+    singlemodel_summary_fun = nonna_mean,
     multimodel_summary_fun = sum;
     n=30)
 
