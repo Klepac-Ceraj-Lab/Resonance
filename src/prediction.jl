@@ -414,7 +414,7 @@ end # end function
 function predict(model::UnivariateRandomForestClassifier, newx=nothing; split_index=0)
 
     (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
-    (split_index == 0) && (split_index = res.selected_split[2]))
+    (split_index == 0) && (split_index = res.selected_split[2])
 
     if newx isa Nothing
         return MLJ.predict_mode(model.models[split_index], model.inputs_outputs[1])
@@ -428,7 +428,7 @@ end
 function predict(model::UnivariateRandomForestRegressor, newx=nothing; split_index=0)
 
     (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
-    (split_index == 0) && (split_index = res.selected_split[2]))
+    (split_index == 0) && (split_index = res.selected_split[2])
 
     if newx isa Nothing
         return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
