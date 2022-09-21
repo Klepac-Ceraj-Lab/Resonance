@@ -12,6 +12,7 @@ abstract type ResonanceMultivariatePredictor <: ResonancePredictor end
 
 mutable struct UnivariateRandomForestClassifier <: ResonanceUnivariatePredictor
     name::String
+    original_data::DataFrame
     inputs_outputs::Tuple{DataFrame, CategoricalArrays.CategoricalVector{Bool, UInt32, Bool, CategoricalArrays.CategoricalValue{Bool, UInt32}, Union{}}}
     n_splits::Int64
     dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
@@ -23,6 +24,7 @@ end
 
 mutable struct UnivariateRandomForestRegressor <: ResonanceUnivariatePredictor
     name::String
+    original_data::DataFrame
     inputs_outputs::Tuple{DataFrame, Vector{Float64}}
     n_splits::Int64
     dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
@@ -265,6 +267,7 @@ function train_randomforest(
     # ## 6. Returning optimization results
     results = UnivariateRandomForestClassifier(
         ref_name,                   #name::String
+        original_df,                #original_data::DataFrame
         (X,y),                      #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
         n_splits,                   #n_splits::Int64
         trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
@@ -383,6 +386,7 @@ function train_randomforest(
     # ## 6. Returning optimization results
     results = UnivariateRandomForestRegressor(
         ref_name,                   #name::String
+        original_df,                #original_data::DataFrame
         (X,y),                      #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
         n_splits,                   #n_splits::Int64
         trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
