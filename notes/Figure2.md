@@ -8,6 +8,8 @@ using HypothesisTests
 using MultipleTesting
 using KernelDensity
 using MultivariateStats
+using Distributions
+using CategoricalArrays
 using ThreadsX
 ```
 
@@ -17,6 +19,8 @@ using ThreadsX
 mdata = Resonance.load(Metadata())
 
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
+unirefs = unirefs[:, map(s-> !ismissing(s) && s < 120, get(unirefs, :ageMonths))]
+unistrat =  filter(f-> hastaxon(f) || name(f) == "UNMAPPED", unirefs)
 unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
 
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata=mdata)
@@ -31,7 +35,6 @@ brain = Resonance.load(Neuroimaging(); timepoint_metadata=mdata)
 ## Calculate correlations
 
 ```julia
-
 unimdata = DataFrame(metadata(unirefs))
 allages = unique(subset(unimdata, :cogScore => ByRow(!ismissing)), :subject)
 u6 = unique(subset(unimdata, :ageMonths => ByRow(<(6)), :cogScore => ByRow(!ismissing)), :subject)
@@ -102,7 +105,6 @@ end
 ```
 
 
-
 ```julia
 figure = Figure(resolution=(900, 900))
 
@@ -118,11 +120,29 @@ G = GridLayout(figure[3,1:2])
 
 
 ```julia
-aax = Axis(A[1,1])
+aax = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore")
 
-bax = Axis(B[1,1])
-bpco = plot_pcoa!(bax, brainpco; color=brain.AgeInDays ./ 365 .* 12)
-Colorbar(B[1,2], bpco; label="Age (months)")
+scatter!(aax, get(unirefs, :ageMonths), collect(replace(get(unirefs, :cogScore), missing=> NaN)))
+vlines!(aax, [6, 12, 18, 24]; linestyle=:dash, color=:gray)
+# TODO: add colors for training/test sets in later models
+
+bax = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:4, ["0-6", "6-12", "12-18", "18-24"]))
+let
+    df = DataFrame(age = get(unirefs, :ageMonths), score = get(unirefs, :cogScore))
+    subset!(df, AsTable(["age", "score"]) => ByRow(row-> all(!ismissing, values(row))), "age" => ByRow(<(24)))
+    df.grp = categorical(map(df.age) do a
+        a < 6 && return "0-6"
+        a < 12 && return "6-12"
+        a < 18 && return "12-18"
+        return "18-24"
+    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24"])
+
+    grp = groupby(df, "grp")
+    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
+    scatter!(bax, df.x .+ rand(Normal(0, 0.05), size(df, 1)), df.score; color = [x ? :blue : :orange for x in df.low])
+end
+
+
 
 for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
     ixs = neuroactive_full[gs]
@@ -137,6 +157,29 @@ Resonance.plot_corrband!(F, cors)
 rowsize!(CDEF, 4, Relative(1/8))
 figure
 ```
+
+
+```julia
+geneset_bugdf = let df = DataFrame()
+    for fset in subset(fsdf2, "qvalue" => ByRow(<(0.1))).geneset
+        @info fset
+        fs = featurenames(unirefs[keepuni, :])[neuroactive_full[fset]]
+        strt = filter(f-> name(f) in fs, unistrat)
+        newdf = DataFrame(species = replace.(name.(taxon.(features(strt))), r".+\.s__" => "") |> unique)
+        newdf.geneset .= fset
+        append!(df, newdf)
+    end
+    df
+end
+
+CSV.write(datafiles("geneset_bugs.csv"), 
+            sort(DataFrames.combine(groupby(geneset_bugdf, "species"), 
+                                  "geneset"=> length => "n genesets"), 
+                "n genesets"; rev=true)
+)
+```
+
+
 
 ```julia
 mfeats = commonname.(features(metabolites))
