@@ -41,10 +41,13 @@ function airtable_metadata()
         metabbatch = findall(batch-> Airtable.id(batch) ∈ metabids, metabbatches)
         metabbatch = isempty(metabbatch) ? missing : metabbatches[first(metabbatch)][:Name]
 
+        doc = get(samp, :DOC, missing)
+
         rec =  (; :airtable_id        => Airtable.id(samp),
                   (kf=> get(samp, kf, missing) for kf in _keep_fields)...,
                   :Mgx_batch          => mgxbatch, 
-                  :Metabolomics_batch => metabbatch, 
+                  :Metabolomics_batch => metabbatch,
+                  :DOC                => doc 
                   )
         push!(df, rec, cols=:union)
     end
