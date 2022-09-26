@@ -57,7 +57,7 @@ nonmissing_mean(vv) = mean(dropmissing(vv))
 nonna_nonmissing_mean(vv) = mean(dropnan(dropmissing(vv)))
 
 ## 1.2. Meanclass (true/false if above/below vector mean)
-meanclass(x::Vector{T} where T <: Real) = x .>= mean(x)
+meanclass(x::Vector{T} where T <: Real) = coerce(x .>= mean(x), OrderedFactor)
 
 ## 1.3. \xor used to aggregate columns that contain parts of the same original data
 function myxor(a::Float64, b::Float64)
@@ -67,7 +67,7 @@ function myxor(a::Float64, b::Float64)
 end
 
 ## 1.4. Build a DataFrame for prediction of future target variables from mdata
-function build_metadata_prediction_df(base_df, inputs::Vector{Symbol}, targets::Vector{Symbol})
+function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol})
 
     subjects = unique(base_df.subject)
     has_stool = findall(.!(ismissing.(base_df.sample)))
@@ -96,6 +96,25 @@ function build_metadata_prediction_df(base_df, inputs::Vector{Symbol}, targets::
     sort!(prediction_df, [:subject, :timepoint, :futureTimepoint])
     
     return prediction_df
+
+end
+
+### 1.4.1. process dataframe built by function 1.4.
+function prepare_future_prediction_df(df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}, max_stool_ageMonths = 12.0, max_future_ageMonths = 24.0)
+
+    future_prediction_df = @chain df begin
+        build_metadata_prediction_df(inputs, targets)
+        select( Not(:cogScore) ) # Toggle this and the next line for dropping/filtering original cogScore
+    #    subset(:cogScore => x -> .!(ismissing.(x)))
+        subset(:ageMonths => x -> .!(ismissing.(x)))
+        subset(:futureAgeMonths => x -> x .<= max_future_ageMonths)
+        subset(:ageMonths => x -> x .<= max_stool_ageMonths)
+        unique([:subject, :timepoint])
+        unique([:subject, :futureTimepoint])
+        dropmissing()
+    end
+
+    return future_prediction_df
 
 end
 
@@ -173,18 +192,26 @@ end
 # 2. Training/Processing Functions #
 ####################################
 
+function filter_age_bracket(df, min_age, max_age)
+    prediction_df = @chain df begin
+        subset(:ageMonths => x -> x .>= min_age)
+        subset(:ageMonths => x -> x .< max_age)    
+    end
+    return prediction_df
+end
+
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 
 function train_randomforest(
     type::Classification,
     ref_name::String,
-    original_df,
+    original_df::DataFrame,
+    data_preparation_fun::Function,
+    class_function::Function,
     input_cols,
     output_col;
     n_splits = 2,
-    data_preparation_fun = identity,
-    class_function = meanclass,
     tuning_space = (
         maxnodes_range = [ -1 ] ,
         nodesize_range = [ 0 ],
@@ -215,8 +242,8 @@ function train_randomforest(
     # ## 4. Initializing meta-arrays to record tuning results for each split
     trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
     trial_machines = Vector{Machine}(undef, n_splits)
-    trial_train_accuracies = zeros(Float64, n_trials)
-    trial_test_accuracies = zeros(Float64, n_trials)
+    trial_train_accuracies = zeros(Float64, n_splits)
+    trial_test_accuracies = zeros(Float64, n_splits)
 
     # ## 5. Tuning/training loop
     @info "Performing $(n_splits) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples."
@@ -254,7 +281,7 @@ function train_randomforest(
             test_acc = mean(test_y_hat .== y[test])
 
             ## 5.2.4. Compare benchmark results with previous best model
-            test_acc < trial_test_accuracies[this_trial] ? begin
+            test_acc > trial_test_accuracies[this_trial] ? begin
                 trial_train_accuracies[this_trial] = train_acc
                 trial_test_accuracies[this_trial] = test_acc
                 trial_machines[this_trial] = deepcopy(rf_machine)
@@ -266,15 +293,15 @@ function train_randomforest(
 
     # ## 6. Returning optimization results
     results = UnivariateRandomForestClassifier(
-        ref_name,                   #name::String
-        original_df,                #original_data::DataFrame
-        (X,y),                      #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
-        n_splits,                   #n_splits::Int64
-        trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
-        trial_machines,             #models::Vector{Machine}
-        findmin(trial_test_mapes),  #selected_split::Tuple{Float64, Int64}
-        trial_train_accuracies,     #train_accuracies::Vector{Float64}
-        trial_test_accuracies,      #test_accuracies::Vector{Float64}
+        ref_name,                       #name::String
+        prediction_df,                  #original_data::DataFrame
+        (X,y),                          #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
+        n_splits,                       #n_splits::Int64
+        trial_partitions,               #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
+        trial_machines,                 #models::Vector{Machine}
+        findmax(trial_test_accuracies),  #selected_split::Tuple{Float64, Int64}
+        trial_train_accuracies,         #train_accuracies::Vector{Float64}
+        trial_test_accuracies,          #test_accuracies::Vector{Float64}
     )
 
     @info "Done!"
@@ -285,11 +312,11 @@ end # end function
 function train_randomforest(
     type::Regression,
     ref_name::String,
-    original_df,
+    original_df::DataFrame,
+    data_preparation_fun::Function,
     input_cols,
     output_col;
     n_splits = 2,
-    data_preparation_fun = identity,
     tuning_space = (
         maxnodes_range = [ -1 ] ,
         nodesize_range = [ 0 ],
@@ -386,7 +413,7 @@ function train_randomforest(
     # ## 6. Returning optimization results
     results = UnivariateRandomForestRegressor(
         ref_name,                   #name::String
-        original_df,                #original_data::DataFrame
+        prediction_df,              #original_data::DataFrame
         (X,y),                      #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
         n_splits,                   #n_splits::Int64
         trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}

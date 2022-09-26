@@ -63,11 +63,13 @@ export  # structs/types
         meanclass,
         myxor,
         build_metadata_prediction_df,
+        prepare_future_prediction_df,
         compute_tietjenmoore,
         test_tietjenmoore,
         univariate_tietjenmoore,
         try_outliers,
         # training functions
+        filter_age_bracket,
         train_randomforest,
         # postprocessing functions
         report_merits,
