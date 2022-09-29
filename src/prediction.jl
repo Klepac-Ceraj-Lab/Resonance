@@ -6,9 +6,9 @@ abstract type Prediction end
 struct Classification <: Prediction end
 struct Regression <: Prediction end
 
-abstract type Resonance.Predictor end
-abstract type Resonance.UnivariatePredictor <: Resonance.Predictor end
-abstract type Resonance.MultivariatePredictor <: Resonance.Predictor end
+abstract type Predictor end
+abstract type UnivariatePredictor <: Resonance.Predictor end
+abstract type MultivariatePredictor <: Resonance.Predictor end
 
 mutable struct UnivariateRandomForestClassifier <: Resonance.UnivariatePredictor
     name::String
@@ -53,9 +53,6 @@ end
 
 dropmissing(vv::AbstractArray) = vv[.!(ismissing.(vv))]
 dropnan(vv) = vv[.!(isnan.(vv))]
-nonna_mean(vv) = mean(dropnan(vv))
-nonmissing_mean(vv) = mean(dropmissing(vv))
-nonna_nonmissing_mean(vv) = mean(dropnan(dropmissing(vv)))
 
 ## 1.1.1. \xor used to aggregate columns that contain parts of the same original data
 function myxor(a::Float64, b::Float64)
