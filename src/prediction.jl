@@ -66,8 +66,7 @@ end
 ### 1.2.1. Age bracket filtering for concurrent prediction
 function filter_age_bracket(df, min_age, max_age)
     prediction_df = @chain df begin
-        subset(:ageMonths => x -> x .>= min_age)
-        subset(:ageMonths => x -> x .< max_age)    
+        subset(:ageMonths => x -> min_age .<= x .< max_age)    
     end
     return prediction_df
 end
