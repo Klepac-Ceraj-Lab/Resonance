@@ -30,7 +30,6 @@ export airtable_metadata,
        stp_overlap,
        comm_overlap
 
-
 # Plotting
 export loadings,
        varexplained,
@@ -45,20 +44,49 @@ export loadings,
        commonname
 
 # Machine Learning
-export build_metadata_prediction_df,
-       check_longdata_metaduplicates!,
-       tryparsecol,
-       univariate_tietjenmoore,
-       test_tietjenmoore,
-       try_outliers,
-       unstack_techreplicates,
-       report_classification_merit,
-       report_regression_merit,
-       build_confusion_matrix,
-       average_confusion_matrix,
-       confmatrix2barplot,
-       regression_bestprediction,
-       non_na_mean
+export  # structs/types
+        Prediction,
+        Classification,
+        Regression,
+        UnivariateRandomForestClassifier,
+        UnivariateRandomForestRegressor,
+        UnivariatePredictorEnsemble,
+        # preprocessing functions
+        dropmissing,
+        dropnan,
+        nonna_mean,
+        nonmissing_mean,
+        nonna_nonmissing_mean,
+        meanclass,
+        myxor,
+        build_metadata_prediction_df,
+        prepare_future_prediction_df,
+        compute_tietjenmoore,
+        test_tietjenmoore,
+        univariate_tietjenmoore,
+        try_outliers,
+        # training functions
+        filter_age_bracket,
+        train_randomforest,
+        # postprocessing functions
+        report_merits,
+        singlemodel_singlesplit_importance,
+        singlemodel_allsplits_importances,
+        singlemodel_summary_importances,
+        singlemodel_binarytopn_importances,
+        multimodel_individual_summaryimportances,
+        multimodel_individual_binarytopns,
+        multimodel_aggregate_summaryimportances,
+        multimodel_aggregate_binarytopns,
+        build_confusion_matrix,
+        average_confusion_matrix,
+        confmatrix2barplot,
+        regression_bestprediction,
+        # plotting functions
+        singlemodel_merit_barplot!,
+        singlemodel_merit_scatterplot!,
+        singlemodel_avgimportance_barplot!,
+        multimodel_avgimportance_barplot!
 
 using Reexport
 using ReTest
@@ -69,6 +97,7 @@ using AlgebraOfGraphics
 using CairoMakie
 using CategoricalArrays
 using CodecZlib
+using ColorSchemes
 using Combinatorics
 using Dates
 using Dictionaries
@@ -82,6 +111,7 @@ using Tables
 using ThreadsX
 using MLJ
 using GLM
+using DecisionTree
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
