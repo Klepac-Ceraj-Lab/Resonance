@@ -30,7 +30,6 @@ export airtable_metadata,
        stp_overlap,
        comm_overlap
 
-
 # Plotting
 export loadings,
        varexplained,
@@ -45,20 +44,60 @@ export loadings,
        commonname
 
 # Machine Learning
-export build_metadata_prediction_df,
-       check_longdata_metaduplicates!,
-       tryparsecol,
-       univariate_tietjenmoore,
-       test_tietjenmoore,
-       try_outliers,
-       unstack_techreplicates,
-       report_classification_merit,
-       report_regression_merit,
-       build_confusion_matrix,
-       average_confusion_matrix,
-       confmatrix2barplot,
-       regression_bestprediction,
-       non_na_mean
+export  # 0. structs/types
+        Prediction,
+        Classification,
+        Regression,
+        UnivariateRandomForestClassifier,
+        UnivariateRandomForestRegressor,
+        UnivariatePredictorEnsemble,
+        # 1. preprocessing functions
+        dropmissing,
+        dropnan,
+        myxor,
+        filter_age_bracket,
+        build_metadata_prediction_df,
+        prepare_future_prediction_df,
+        meanclass,
+        compute_tietjenmoore,
+        test_tietjenmoore,
+        univariate_tietjenmoore,
+        try_outliers,
+        # 2. training functions
+        train_randomforest,
+        # postprocessing functions
+        predict,
+        report_merits,
+        singlemodel_singlesplit_importance,
+        singlemodel_allsplits_importances,
+        singlemodel_summary_importances,
+        multimodel_individual_summaryimportances,
+        multimodel_aggregate_summaryimportances,
+        singlemodel_binarytopn_importances,
+        multimodel_individual_binarytopns,
+        multimodel_aggregate_binarytopns,
+        descript_inputs,
+        singlemodel_summary_prevalences,
+        singlemodel_summary_abundances,
+        singlemodel_summary_sdevs,
+        multimodel_individual_prevalences,
+        multimodel_individual_abundances,
+        biserial_correlation,
+        feature_split_correlation_analysis,
+        singlemodel_singlesplit_correlations,
+        singlemodel_allsplits_correlations,
+        singlemodel_allsplits_correlationsummary,
+        multimodel_individual_correlations,
+        # plotting functions
+        build_confusion_matrix,
+        average_confusion_matrix,
+        confmatrix2barplot,
+        # singlemodel_merit_barplot!, # TODO
+        singlemodel_merit_scatterplot!,
+        singlemodel_avgimportance_barplot!,
+        multimodel_avgimportance_barplot!,
+        singlemodel_logistic_regression!,
+        multimodel_logistic_regression!
 
 using Reexport
 using ReTest
@@ -69,6 +108,7 @@ using AlgebraOfGraphics
 using CairoMakie
 using CategoricalArrays
 using CodecZlib
+using ColorSchemes
 using Combinatorics
 using Dates
 using Dictionaries
@@ -82,6 +122,7 @@ using Tables
 using ThreadsX
 using MLJ
 using GLM
+using DecisionTree
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
