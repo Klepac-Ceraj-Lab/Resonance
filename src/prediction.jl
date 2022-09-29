@@ -217,7 +217,7 @@ function train_randomforest(
     output_col;
     n_splits = 2,
     tuning_space = (;
-        maxnodes_range = [ -1 ] ,
+        maxnodes_range = [ -1 ],
         nodesize_range = [ 0 ],
         sampsize_range = [ 0.7 ],
         mtry_range = [ 5 ],
