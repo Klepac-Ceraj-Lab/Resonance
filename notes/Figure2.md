@@ -456,7 +456,6 @@ end
 
 
 ```julia
-
 let
     genesets = union(subset(allfsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
                      subset(u6fsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
