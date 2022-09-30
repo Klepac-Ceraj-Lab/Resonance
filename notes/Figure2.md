@@ -72,17 +72,7 @@ o18comm = let keepuni = vec(prevalence(unirefs[:, o18.sample]) .> 0)
     unirefs[keepuni, o18.sample]
 end
 
-allcors = let 
-    df = DataFrame("cog" => get(allcomm, :cogScore),
-                   "age" => get(allcomm, :cogScore),
-                   ThreadsX.map(features(allcomm)) do f
-                       v = vec(abundances(allcomm[f, :]))
-                       v .+= (minimum(filter(>(0), v)) / 2)
-                       (name(f) => v)
-                   end...
-                   )
-
-end
+allcors = vec(cor(get(allcomm, :cogScore), abundances(allcomm), dims=2))
 
 u6cors = vec(cor(get(u6comm, :cogScore), abundances(u6comm), dims=2))
 o18cors = vec(cor(get(o18comm, :cogScore), abundances(o18comm), dims=2))
