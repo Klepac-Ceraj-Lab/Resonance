@@ -50,8 +50,6 @@ end
 ########################################
 
 ## 1.1. Helper/utility functions
-
-dropmissing(vv::AbstractArray) = vv[.!(ismissing.(vv))]
 dropnan(vv) = vv[.!(isnan.(vv))]
 
 ## 1.1.1. \xor used to aggregate columns that contain parts of the same original data
@@ -898,7 +896,7 @@ function singlemodel_singlesplit_correlations(
 
     model_trees = res.models[split_index].fitresult[1].trees
     feature_correlations_matrix = feature_split_correlation_analysis(model_X, model_y, model_trees)
-    feature_mean_correlations = map( x -> mean(dropnan(dropmissing(x))), eachcol(feature_correlations_matrix))
+    feature_mean_correlations = map( x -> mean(dropnan(collect(skipmissing(x)))), eachcol(feature_correlations_matrix))
 
     correlations_df = DataFrame(
         :Variable => names(model_X),
@@ -924,7 +922,7 @@ function singlemodel_singlesplit_correlations(
 
     model_trees = res.models[split_index].fitresult.trees
     feature_correlations_matrix = feature_split_correlation_analysis(model_X, model_y, model_trees)
-    feature_mean_correlations = map( x -> mean(dropnan(dropmissing(x))), eachcol(feature_correlations_matrix))
+    feature_mean_correlations = map( x -> mean(dropnan(collect(skipmissing(x)))), eachcol(feature_correlations_matrix))
 
     correlations_df = DataFrame(
         :Variable => names(model_X),
