@@ -13,6 +13,7 @@ using CategoricalArrays
 using ThreadsX
 using ColorSchemes
 using GLM
+using Dates
 ```
 
 ## Data Loading
@@ -348,6 +349,186 @@ o18fsdf2 = let
 end
 ```
 
+
+## Plotting
+
+```julia
+figure = Figure(resolution=(900, 900))
+
+A = GridLayout(figure[1,1])
+B = GridLayout(figure[2,1])
+Label(figure[1:2, 2], "Enrichment score"; rotation= π/2, tellheight=false, tellwidth=true)
+DEFG = GridLayout(figure[1:2,3])
+C = GridLayout(DEFG[1,1])
+D = GridLayout(DEFG[2,1])
+E = GridLayout(DEFG[3,1])
+F = GridLayout(DEFG[4,1])
+G = GridLayout(figure[3,1:3])
+```
+
+
+```julia
+aax1 = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
+aax2 = Axis(A[1,2]; xlabel = "Age (years)")
+hideydecorations!(aax2)
+linkyaxes!(aax1, aax2)
+colgap!(A, Fixed(4))
+figure
+let
+    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(get(unirefs, :ageMonths), get(unirefs, :cogScore))))
+    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(get(unirefs, :ageMonths), get(unirefs, :cogScore))))
+
+    scatter!(aax1, get(unirefs, :ageMonths)[u2y], get(unirefs, :cogScore)[u2y])
+    scatter!(aax2, get(unirefs, :ageMonths)[o2y] ./ 12, get(unirefs, :cogScore)[o2y])
+    
+    vlines!(aax1, [6, 12, 18]; linestyle=:dash, color=:gray)
+    # TODO: add colors for training/test sets in later models
+end
+
+bax = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
+let
+    df = DataFrame(age = get(unirefs, :ageMonths), score = get(unirefs, :cogScore), date = get(unirefs, :assessmentDate))
+    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
+    df.grp = categorical(map(df.age) do a
+        a < 6 && return "0-6"
+        a < 12 && return "6-12"
+        a < 18 && return "12-18"
+        a < 24 && return "18-24"
+        return "> 24"
+    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
+
+    grp = groupby(df, "grp")
+    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
+    scatter!(bax, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
+            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
+end
+
+
+let
+    gs = "Acetate synthesis"
+    panel = C
+    ixs = u6_neuroactive[gs]
+    cs = filter(!isnan, u6cors[ixs])
+    acs = filter(!isnan, u6cors[Not(ixs)])
+
+    Resonance.plot_fsea!(panel, cs, acs;
+        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
+        ylabel = "")
+end
+
+let
+    gs = "Menaquinone synthesis (vitamin K2) I"
+    panel = D
+    ixs = u6_neuroactive_full[gs]
+    cs = filter(!isnan, u6cors[ixs])
+    acs = filter(!isnan, u6cors[Not(ixs)])
+
+    Resonance.plot_fsea!(panel, cs, acs;
+        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
+        ylabel = "")
+end
+
+let
+    gs = "Propionate degradation I"
+    panel = E
+    ixs = u6_neuroactive_full[gs]
+    cs = filter(!isnan, u6cors[ixs])
+    acs = filter(!isnan, u6cors[Not(ixs)])
+
+    Resonance.plot_fsea!(panel, cs, acs;
+        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
+        ylabel = "")
+end
+
+let
+    gs = "Propionate synthesis I"
+    panel = F
+    ixs = u6_neuroactive_full[gs]
+    cs = filter(!isnan, u6cors[ixs])
+    acs = filter(!isnan, u6cors[Not(ixs)])
+
+    Resonance.plot_fsea!(panel, cs, acs;
+        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
+        ylabel = "")
+end
+
+```
+
+
+```julia
+
+let
+    genesets = union(subset(allfsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(u6fsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(o18fsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset
+    )
+  
+    df = sort(subset(allfsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
+    ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="correlation", title="All ages")
+    m = median(allcors)
+    colors = ColorSchemes.colorschemes[:RdBu_7]
+
+    for (i, row) in enumerate(eachrow(df))
+        sign = row.median < m ? "neg" : "pos"
+        c = row.qvalue > 0.2 ? :gray : 
+            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
+            sign == "neg" ? colors[1] : colors[7]
+
+        y = filter(!isnan, allcors[all_neuroactive_full[row.geneset]])
+        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
+    end
+    vlines!(ax, m; linestyle=:dash, color=:darkgray)
+
+    ####
+
+    df = sort(subset(u6fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
+    ax = Axis(G[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="correlation", title="Under 6mo")
+    hideydecorations!(ax)
+
+    m = median(u6cors)
+    colors = ColorSchemes.colorschemes[:RdBu_7]
+
+    for (i, row) in enumerate(eachrow(df))
+        sign = row.median < m ? "neg" : "pos"
+        c = row.qvalue > 0.2 ? :gray : 
+            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
+            sign == "neg" ? colors[1] : colors[7]
+
+        y = filter(!isnan, u6cors[u6_neuroactive_full[row.geneset]])
+        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
+    end
+    vlines!(ax, m; linestyle=:dash, color=:darkgray)
+
+    ####
+
+    df = sort(subset(o18fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
+    ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="correlation", title="over 18")
+    hideydecorations!(ax)
+    m = median(o18cors)
+    colors = ColorSchemes.colorschemes[:RdBu_7]
+
+    for (i, row) in enumerate(eachrow(df))
+        sign = row.median < m ? "neg" : "pos"
+        c = row.qvalue > 0.2 ? :gray : 
+            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
+            sign == "neg" ? colors[1] : colors[7]
+
+        y = filter(!isnan, o18cors[o18_neuroactive_full[row.geneset]])
+        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
+    end
+    vlines!(ax, m; linestyle=:dash, color=:darkgray)
+end
+
+rowsize!(figure.layout, 3, Relative(1/2))
+figure
+```
+
 ### Brain
 
 
@@ -416,104 +597,7 @@ end
 ```
 
 
-```julia
-figure = Figure(resolution=(900, 900))
-
-A = GridLayout(figure[1,1])
-B = GridLayout(figure[2,1])
-CDEF = GridLayout(figure[1:2,2])
-C = GridLayout(CDEF[1,1])
-D = GridLayout(CDEF[2,1])
-E = GridLayout(CDEF[3,1])
-F = Axis(CDEF[4,1])
-G = GridLayout(figure[3,1:2])
-```
-
-
-```julia
-aax = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore")
-
-scatter!(aax, get(unirefs, :ageMonths), collect(replace(get(unirefs, :cogScore), missing=> NaN)))
-vlines!(aax, [6, 12, 18, 24]; linestyle=:dash, color=:gray)
-# TODO: add colors for training/test sets in later models
-
-bax = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:4, ["0-6", "6-12", "12-18", "18-24"]))
-let
-    df = DataFrame(age = get(unirefs, :ageMonths), score = get(unirefs, :cogScore))
-    subset!(df, AsTable(["age", "score"]) => ByRow(row-> all(!ismissing, values(row))), "age" => ByRow(<(24)))
-    df.grp = categorical(map(df.age) do a
-        a < 6 && return "0-6"
-        a < 12 && return "6-12"
-        a < 18 && return "12-18"
-        return "18-24"
-    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24"])
-
-    grp = groupby(df, "grp")
-    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax, df.x .+ rand(Normal(0, 0.05), size(df, 1)), df.score; color = [x ? :blue : :orange for x in df.low])
-end
-
-
-
-for (gs, panel) in zip(("Propionate degradation I", "Glutamate degradation I", "GABA synthesis I"), (C,D,E))
-    ixs = neuroactive_full[gs]
-    cs = filter(!isnan, cors[ixs])
-    acs = filter(!isnan, cors[Not(ixs)])
-
-    Resonance.plot_fsea!(panel, cs, acs; label=replace(gs, "degradation"=> "degr.", "synthesis"=> "synth."))
-end
-
-Resonance.plot_corrband!(F, cors)
-
-rowsize!(CDEF, 4, Relative(1/8))
-figure
-```
-
-
-```julia
-geneset_bugdf = let df = DataFrame()
-    for fset in subset(fsdf2, "qvalue" => ByRow(<(0.1))).geneset
-        @info fset
-        fs = featurenames(unirefs[keepuni, :])[neuroactive_full[fset]]
-        strt = filter(f-> name(f) in fs, unistrat)
-        newdf = DataFrame(species = replace.(name.(taxon.(features(strt))), r".+\.s__" => "") |> unique)
-        newdf.geneset .= fset
-        append!(df, newdf)
-    end
-    df
-end
-
-CSV.write(datafiles("geneset_bugs.csv"), 
-            sort(DataFrames.combine(groupby(geneset_bugdf, "species"), 
-                                  "geneset"=> length => "n genesets"), 
-                "n genesets"; rev=true)
-)
-```
-
-```julia
-
-let df = sort(fsdf2, :geneset)
-    ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "")), xlabel="correlation")
-
-    m = median(cors)
-    colors = ColorSchemes.colorschemes[:RdBu_7]
-
-    for (i, row) in enumerate(eachrow(df))
-        sign = row.median < m ? "neg" : "pos"
-        c = row.qvalue > 0.1 ? :gray : 
-            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
-            sign == "neg" ? colors[1] : colors[7]
-
-        y = filter(!isnan, cors[neuroactive_full[row.geneset]])
-        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-    end
-    vlines!(ax, m; linestyle=:dash, color=:darkgray)
-end
-
-
-
-```
+## Other
 
 ```julia
 mfeats = commonname.(features(metabolites))
