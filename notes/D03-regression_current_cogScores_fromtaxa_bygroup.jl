@@ -8,7 +8,6 @@ using Statistics
 using Random
 using DataFrames
 using StableRNGs
-using ProgressMeter
 using MLJ
 using CairoMakie
 using DecisionTree
