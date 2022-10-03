@@ -65,7 +65,7 @@ end
 
 original_prediction_segments = [
     # "left-lateral-ventricle", "right-lateral-ventricle",
-    "left-inferior-lateral-ventricle", "right-inferior-lateral-ventricle",
+    # "left-inferior-lateral-ventricle", "right-inferior-lateral-ventricle",
     "left-cerebellum-exterior", "right-cerebellum-exterior",
     "left-cerebellum-white-matter", "right-cerebellum-white-matter",
     "left-thalamus-proper", "right-thalamus-proper",
