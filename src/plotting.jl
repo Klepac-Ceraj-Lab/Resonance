@@ -155,13 +155,13 @@ function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf
     return hm
 end
 
-function plot_fsea(setcors, notcors; label="")
+function plot_fsea(setcors, notcors; label="", ylabel="enrichment score")
     fig = Figure()
-    plot_fsea!(fig.layout, setcors, notcors; label)
+    plot_fsea!(fig.layout, setcors, notcors; label, ylabel)
     fig
 end
 
-function plot_fsea!(grid, setcors, notcors; label="")
+function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment score")
     fullcors = [setcors; notcors]
     ncors = length(fullcors)
 
@@ -178,7 +178,7 @@ function plot_fsea!(grid, setcors, notcors; label="")
     t = "Enrichment score: $(round(enrichment_score(setcors, notcors), digits=3))"
     !isempty(label) && (t = string(label, " ", t))
 
-    ax1 = Axis(grid[1,1]; title=t, ylabel="enrichment score")
+    ax1 = Axis(grid[1,1]; title=t, ylabel)
     hidexdecorations!(ax1)
 
     ax2 = Axis(grid[2,1])

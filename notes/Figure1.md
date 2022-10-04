@@ -15,23 +15,26 @@ Then, we'll load in the different data sources.
 
 ```julia
 mdata = Resonance.load(Metadata())
-mdata.maternalEd = categorical(map(e-> e == "-8" ? missing : parse(Int, e), mdata.maternalEd); ordered=true)
-    
+subset!(mdata, "ageMonths"=> ByRow(<(120)))
 
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+taxa = taxa[:, findall(!ismissing, get(taxa, :ageMonths))]
 species = filter(t-> taxrank(t) == :species, taxa)
 
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
+unirefs = unirefs[:, findall(!ismissing, get(unirefs, :ageMonths))]
 unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
 
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
+ecs = ecs[:, findall(!ismissing, get(ecs, :ageMonths))]
 ecs = filter(!hastaxon, ecs)
 
 kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
+kos = kos[:, findall(!ismissing, get(kos, :ageMonths))]
 kos = filter(!hastaxon, kos)
 
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
-brain = Resonance.load(Neuroimaging())
+brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
 
 
 @assert all(samplenames(species) .== samplenames(unirefs))
@@ -42,8 +45,30 @@ uidx = let md = DataFrame(Microbiome.metadata(taxa))
     smp = Set(unique(md, :subject).sample)
     findall(s-> s in smp, samplenames(taxa))
 end
+
+buidx = let md = DataFrame(Microbiome.metadata(brain))
+    grp = groupby(md, :subject)
+    smp = map(keys(grp)) do g
+        idx = findfirst(grp[g].hassample)
+        return isnothing(idx) ? first(grp[g].sample) : grp[g].sample[idx]
+    end
+    findall(s-> s in smp, samplenames(brain))
+end
 ```
 
+Both PERMANOVA and Mantel tests
+require beta diversity distance metrics.
+We'll calculate them once for each profile rather
+rather than separately for each test.
+
+```julia
+spedm = CSV.read(outputfiles("spedm.csv"), DataFrame) |> Matrix
+unidm = CSV.read(outputfiles("unidm.csv"), DataFrame) |> Matrix
+ecsdm = CSV.read(outputfiles("ecsdm.csv"), DataFrame) |> Matrix
+kosdm = CSV.read(outputfiles("kosdm.csv"), DataFrame) |> Matrix
+metdm = CSV.read(outputfiles("metdm.csv"), DataFrame) |> Matrix
+brndm = CSV.read(outputfiles("brndm.csv"), DataFrame) |> Matrix
+```
 
 
 Then, we will start constructing the figure.
@@ -51,16 +76,14 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 
 ```julia
-figure = Figure(; resolution = (1600, 1200))
-A = GridLayout(figure[1,1])
-BC = GridLayout(figure[2,1:2])
-DEF = GridLayout(figure[1,2]);
+figure = Figure(; resolution = (2000, 1200))
+A = GridLayout(figure[1,1]; alignmode=Outside())
+BC = GridLayout(figure[2,1:2]; alignmode=Outside())
+DEF = GridLayout(figure[1,2]; alignmode=Outside());
 ```
 
 
 ## Summaries
-
-
 
 ### 1A - Cohort diagram and ages
 
@@ -84,26 +107,11 @@ colsize!(A, 2, Relative(1/3))
 linkyaxes!(A_histleft, A_histright)
 
 colsize!(figure.layout, 1, Relative(3/7))
-A_histleft.xticks = ([0,3,6,12], ["", "", "", ""])
+A_histleft.xticks = ([0,3,6,12], ["birth", "3m", "6m", "12m"])
 figure
 ```
 
 ### 1B-C: Omnibus tests
-
-Both PERMANOVA and Mantel tests
-require beta diversity distance metrics.
-We'll calculate them once for each profile rather
-rather than separately for each test.
-
-```julia
-isdefined(Main, :spedm) || (spedm = Microbiome.braycurtis(species))
-isdefined(Main, :unidm) || (unidm = Microbiome.braycurtis(unirefs))
-isdefined(Main, :ecsdm) || (ecsdm = Microbiome.braycurtis(ecs))
-isdefined(Main, :kosdm) || (kosdm = Microbiome.braycurtis(kos))
-isdefined(Main, :metdm) || (metdm = Microbiome.braycurtis(metabolites))
-isdefined(Main, :brndm) || (brndm = pairwise(Euclidean(), Matrix(brain[!, Not(["subject", "timepoint", "AgeInDays", "Sex", "White-matter", "Gray-matter"])]), dims=1))
-
-```
 
 #### PERMANOVA
 
@@ -111,101 +119,18 @@ This is a permutation test of variance
 
 ```julia
 B = GridLayout(BC[1,1])
-Ba = Axis(B[1:2,1]; alignmode=Outside())
-
-commlabels = ["taxa", "UniRef90s", "ECs", "KOs"]
-mdlabels = ["Cog. score", "Age", "Race", "Maternal Edu."]
-
-
-perms = let permout = outputfiles("permanovas_all.csv")
-    if isfile(permout)
-        p = CSV.read(permout, DataFrame)
-    else
-        p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[uidx, uidx]], [
-                                get(species, :cogScore)[uidx], 
-                                get(species, :ageMonths)[uidx], 
-                                get(species, :race)[uidx], 
-                                get(species, :maternalEd)[uidx]
-                    ]; commlabels, mdlabels
-        )
-        p2 = permanovas(metdm, [
-                                get(metabolites, :cogScore), 
-                                get(metabolites, :ageMonths), 
-                                get(metabolites, :race), 
-                                get(metabolites, :maternalEd)
-                    ]; mdlabels
-        )
-        p2.label .= "metabolites"
-
-        append!(p, p2)
-
-        CSV.write(permout, p)
-    end
-    p
-end
-
-CSV.write("output/permanovas_all.csv", perms)
-
-plot_permanovas!(Ba, perms)
+# Ba = Axis(B[1:2,1]; alignmode=Outside())
+Bb = Axis(B[1,1]; title="Under 6mo")
+Bc = Axis(B[1,2]; title="Over 18mo")
 ```
 
 ```julia
-Bb = Axis(B[1,2]; alignmode=Outside())
-Bc = Axis(B[2,2]; alignmode=Outside())
-Label(B[1,3], "Under 6mo"; tellwidth=true, tellheight=false, rotation=-π/2)
-Label(B[2,3], "Over 18mo"; tellwidth=true, tellheight=false, rotation=-π/2)
+# plot_permanovas!(Ba, CSV.read(outputfiles("permanovas_all.csv"), DataFrame))
+plot_permanovas!(Bb, CSV.read(outputfiles("permanovas_u6mo.csv"), DataFrame))
+hideydecorations!(Bc)
+plot_permanovas!(Bc, CSV.read(outputfiles("permanovas_o18mo.csv"), DataFrame))
 
-perms = let permout = outputfiles("permanovas_u6mo.csv")
-    if isfile(permout)
-        p = CSV.read(permout, DataFrame)
-    else
-        idx = findall(<(6), get(species, :ageMonths))
-        p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
-                                get(species, :cogScore)[idx], 
-                                get(species, :ageMonths)[idx], 
-                                get(species, :race)[idx], 
-                                get(species, :maternalEd)[idx]
-                    ]; commlabels=["taxa", "UniRef90s"], mdlabels
-        )
-        idx = findall(<(6), get(metabolites, :ageMonths))
-        p2 = permanovas(metdm[idx,idx], [
-                                get(metabolites, :cogScore)[idx], 
-                                get(metabolites, :ageMonths)[idx], 
-                                get(metabolites, :race)[idx], 
-                                get(metabolites, :maternalEd)[idx]
-                    ]; mdlabels
-        )
-        p2.label .= "metabolites"
-
-        append!(p, p2)
-
-        CSV.write(permout, p)
-    end
-    p
-end
-
-plot_permanovas!(Bb, perms)
-perms = let permout = outputfiles("permanovas_o12mo.csv")
-    if isfile(permout)
-        p = CSV.read(permout, DataFrame)
-    else
-        idx = findall(>(18), get(species, :ageMonths))
-        p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
-                                get(species, :cogScore)[idx], 
-                                get(species, :ageMonths)[idx], 
-                                get(species, :race)[idx], 
-                                get(species, :maternalEd)[idx]
-                    ]; commlabels=["taxa", "UniRef90s"], mdlabels
-        )
-
-        CSV.write(permout, p)
-    end
-    p
-end
-
-plot_permanovas!(Bc, perms)
-
-colsize!(BC, 1, Relative(2/3))
+colsize!(BC, 1, Relative(1/2))
 Label(BC[0,1], "PERMANOVAs")
 ```
 
@@ -213,80 +138,45 @@ Label(BC[0,1], "PERMANOVAs")
 ### 1C - Mantel tests
 
 ```julia
-C = Axis(BC[1,2]; alignmode=Outside())
-mdf = let mantout = outputfiles("mantel_all.csv")
-    if isfile(mantout)
-        mdf = CSV.read(mantout, DataFrame)
-    else
-        mdf = mantel([spedm, unidm, ecsdm, kosdm]; commlabels)
+C = GridLayout(BC[1,2])
 
-        (ol1, ol2) = stp_overlap(
-                collect(zip(get(species, :subject), get(species, :timepoint))),
-                collect(zip(get(metabolites, :subject), get(metabolites, :timepoint)))
-        )
-        m2 = DataFrame()
-        for (i, dm1) in enumerate([spedm, unidm, ecsdm, kosdm])
-            m, p = mantel(dm1[ol1, ol1], metdm[ol2, ol2])
-            push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
-        end
-        append!(mdf, m2)
+# Ca = Axis(C[1:2, 1]; alignmode=Outside())
+Cb = Axis(C[1,1]; title="Under 6mo")
+Cc = Axis(C[1,2]; title="Over 18mo")
 
-        (ol3, ol4) = stp_overlap(
-                collect(zip(get(species, :subject), get(species, :timepoint))),
-                collect(zip(brain.subject, brain.timepoint))
-        )
-        m3 = DataFrame()
-        for (i, dm1) in enumerate([spedm, unidm, ecsdm, kosdm])
-            m, p = mantel(dm1[ol3, ol3], brndm[ol4, ol4])
-            push!(m3, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="neuroimaging"))
-        end
-        append!(mdf, m3)
-        
-        (ol5, ol6) = stp_overlap(
-                collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))),
-                collect(zip(brain.subject, brain.timepoint)),
-        )
+# plot_mantel!(Ca, CSV.read(outputfiles("mantel_all.csv"), DataFrame))
+plot_mantel!(Cb, CSV.read(outputfiles("mantel_u6.csv"), DataFrame))
+plot_mantel!(Cc, CSV.read(outputfiles("mantel_o18.csv"), DataFrame))
 
-        m, p = mantel(metdm[ol5, ol5], brndm[ol6, ol6])
-        push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimaging"))        
-        
-        CSV.write(mantout, mdf)
-    end
-    mdf
-end
-
-plot_mantel!(C, mdf)
 Label(BC[0,2], "Mantel"; tellwidth=false)
-
 ```
 
 ## Ordinations
 
 ```julia
-D = Axis(DEF[1,1])
-
+D = Axis(DEF[1,1]; title = "Taxa")
 spepco = fit(MDS, spedm; distances=true)
-
 sc = plot_pcoa!(D, spepco; color=get(species, :ageMonths))
-Colorbar(DEF[1, 2], sc; label="Age (months)", flipaxis=true)
 
 E = GridLayout(DEF[2,1])
 Ea = Axis(E[1,1]; title = "Bacteroidetes")
 Eb = Axis(E[1,2]; title = "Firmicutes")
-Ec = Axis(E[1,3]; title = "Actinobacteria")
-
+# Ec = Axis(E[1,3]; title = "Actinobacteria")
 
 plot_pcoa!(Ea, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])), colormap=:Purples)
 plot_pcoa!(Eb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
-pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
+# pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
+F = Axis(DEF[1,2]; title = "Functions")
 
-Colorbar(DEF[2, 2], pco; label="Relative abundance (%)")
+unipco = fit(MDS, unidm; distances=true)
+plot_pcoa!(F, unipco; color=get(unirefs, :ageMonths))
 
-# F = Axis(DEF[3,1])
+G = Axis(DEF[2,2]; title = "Neuroimaging")
 
-# metpco = fit(MDS, metdm; distances=true)
-# plot_pcoa!(F, metpco; color=get(metabolites, :ageMonths))
+brnpco = fit(MDS, brndm; distances=true)
+plot_pcoa!(G, brnpco; color=get(brain, :ageMonths))
 
+Colorbar(DEF[1:2, 3], sc; label="Age (months)", flipaxis=true)
 
 save(figurefiles("Figure1.svg"), figure)
 save(figurefiles("Figure1.png"), figure)
@@ -345,11 +235,11 @@ Maternal education & race.
 ```julia
 using PERMANOVA
 
-df = DataFrame(maternalEd = get(species, :maternalEd)[uidx], 
+df = DataFrame(education = get(species, :education)[uidx], 
                race       = get(species, :race)[uidx])
-oidx = findall(.!ismissing.(df.maternalEd) .& .!ismissing.(df.race))
+oidx = findall(.!ismissing.(df.education) .& .!ismissing.(df.race))
 df = df[oidx, :]
 
-permanova(df, spedm[uidx[oidx], uidx[oidx]], @formula(1 ~ maternalEd + race), 1000)
+permanova(df, spedm[uidx[oidx], uidx[oidx]], @formula(1 ~ education + race), 1000)
 
 ```
