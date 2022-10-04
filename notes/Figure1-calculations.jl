@@ -7,18 +7,23 @@ using CategoricalArrays
 
 #-
 
-mdata = Resonance.load(Metadata())    
+mdata = Resonance.load(Metadata())
+subset!(mdata, "ageMonths"=> ByRow(<(120)))
 
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+taxa = taxa[:, findall(!ismissing, get(taxa, :ageMonths))]
 species = filter(t-> taxrank(t) == :species, taxa)
 
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
+unirefs = unirefs[:, findall(!ismissing, get(unirefs, :ageMonths))]
 unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
 
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
+ecs = ecs[:, findall(!ismissing, get(ecs, :ageMonths))]
 ecs = filter(!hastaxon, ecs)
 
 kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
+kos = kos[:, findall(!ismissing, get(kos, :ageMonths))]
 kos = filter(!hastaxon, kos)
 
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)

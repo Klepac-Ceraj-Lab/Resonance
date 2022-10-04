@@ -14,18 +14,23 @@ using CategoricalArrays
 Then, we'll load in the different data sources.
 
 ```julia
-mdata = Resonance.load(Metadata())    
+mdata = Resonance.load(Metadata())
+subset!(mdata, "ageMonths"=> ByRow(<(120)))
 
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+taxa = taxa[:, findall(!ismissing, get(taxa, :ageMonths))]
 species = filter(t-> taxrank(t) == :species, taxa)
 
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
+unirefs = unirefs[:, findall(!ismissing, get(unirefs, :ageMonths))]
 unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
 
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
+ecs = ecs[:, findall(!ismissing, get(ecs, :ageMonths))]
 ecs = filter(!hastaxon, ecs)
 
 kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
+kos = kos[:, findall(!ismissing, get(kos, :ageMonths))]
 kos = filter(!hastaxon, kos)
 
 metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
@@ -72,9 +77,9 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 ```julia
 figure = Figure(; resolution = (2000, 1200))
-A = GridLayout(figure[1,1])
-BC = GridLayout(figure[2,1:2])
-DEF = GridLayout(figure[1,2]);
+A = GridLayout(figure[1,1]; alignmode=Outside())
+BC = GridLayout(figure[2,1:2]; alignmode=Outside())
+DEF = GridLayout(figure[1,2]; alignmode=Outside());
 ```
 
 
@@ -102,7 +107,7 @@ colsize!(A, 2, Relative(1/3))
 linkyaxes!(A_histleft, A_histright)
 
 colsize!(figure.layout, 1, Relative(3/7))
-A_histleft.xticks = ([0,3,6,12], ["", "", "", ""])
+A_histleft.xticks = ([0,3,6,12], ["birth", "3m", "6m", "12m"])
 figure
 ```
 

@@ -1,4 +1,4 @@
-# Figure3 - functional analysis
+# Figure2 - functional analysis
 
 ```julia
 using Resonance
@@ -92,261 +92,16 @@ o18_neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), 
 o18_neuroactive_full = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(o18comm)); consolidate=false)
 ```
 
-## Run FSEA
+## Load FSEA
 
-### All ages
-
-```julia
-allfsdf = let 
-    if isfile(outputfiles("fsea_all_consolidated.csv"))
-        tmp = CSV.read(outputfiles("fsea_all_consolidated.csv"), DataFrame)
-    else
-        tmp = DataFrame(ThreadsX.map(collect(keys(all_neuroactive))) do gs
-            ixs = all_neuroactive[gs]
-            isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, allcors[ixs])
-            isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, allcors[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        tmp2 = DataFrame(ThreadsX.map(collect(keys(all_neuroactive))) do gs
-            ixs = all_neuroactive[gs]
-            isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, allcors_age[ixs])
-            isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, allcors_age[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        append!(tmp, tmp2)
-        subset!(tmp, :pvalue=> ByRow(!isnan))
-        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-        sort!(tmp, :qvalue)
-        CSV.write(outputfiles("fsea_all_consolidated.csv"), tmp)
-    end
-    tmp
-end
-
-```
 
 ```julia
-allfsdf2 = let 
-    if isfile(outputfiles("fsea_all.csv"))
-        tmp = CSV.read(outputfiles("fsea_all.csv"), DataFrame)
-    else
-        tmp = DataFrame(ThreadsX.map(collect(keys(all_neuroactive_full))) do gs
-            ixs = all_neuroactive_full[gs]
-            isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, allcors[ixs])
-            isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, allcors[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        tmp2 = DataFrame(ThreadsX.map(collect(keys(all_neuroactive_full))) do gs
-            ixs = all_neuroactive_full[gs]
-            isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, allcors_age[ixs])
-            isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, allcors_age[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        append!(tmp, tmp2)
-        subset!(tmp, :pvalue=> ByRow(!isnan))
-        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-        sort!(tmp, :qvalue)
-        CSV.write(outputfiles("fsea_all.csv"), tmp)
-    end
-    tmp
-end
-```
-
-### Kids Under 6 months
-
-```julia
-u6fsdf = let 
-    if isfile(outputfiles("fsea_u6_consolidated.csv"))
-        tmp = CSV.read(outputfiles("fsea_u6_consolidated.csv"), DataFrame)
-    else
-        tmp = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive))) do gs
-            ixs = u6_neuroactive[gs]
-            isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, u6cors[ixs])
-            isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, u6cors[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        tmp2 = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive))) do gs
-            ixs = u6_neuroactive[gs]
-            isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, u6cors_age[ixs])
-            isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, u6cors_age[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        append!(tmp, tmp2)
-        subset!(tmp, :pvalue=> ByRow(!isnan))
-        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-        sort!(tmp, :qvalue)
-        CSV.write(outputfiles("fsea_u6_consolidated.csv"), tmp)
-    end
-    tmp
-end
-
-```
-
-```julia
-u6fsdf2 = let 
-    if isfile(outputfiles("fsea_u6.csv"))
-        tmp = CSV.read(outputfiles("fsea_u6.csv"), DataFrame)
-    else
-        tmp = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive_full))) do gs
-            ixs = u6_neuroactive_full[gs]
-            isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, u6cors[ixs])
-            isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, u6cors[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        tmp2 = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive_full))) do gs
-            ixs = u6_neuroactive_full[gs]
-            isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, u6cors_age[ixs])
-            isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, u6cors_age[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        append!(tmp, tmp2)
-        subset!(tmp, :pvalue=> ByRow(!isnan))
-        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-        sort!(tmp, :qvalue)
-        CSV.write(outputfiles("fsea_u6.csv"), tmp)
-    end
-    tmp
-end
-```
-
-### Kids over 18 months
-
-```julia
-o18fsdf = let 
-    if isfile(outputfiles("fsea_o18_consolidated.csv"))
-        tmp = CSV.read(outputfiles("fsea_o18_consolidated.csv"), DataFrame)
-    else
-        tmp = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive))) do gs
-            ixs = o18_neuroactive[gs]
-            isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, o18cors[ixs])
-            isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, o18cors[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        tmp2 = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive))) do gs
-            ixs = o18_neuroactive[gs]
-            isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, o18cors_age[ixs])
-            isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, o18cors_age[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        append!(tmp, tmp2)
-        subset!(tmp, :pvalue=> ByRow(!isnan))
-        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-        sort!(tmp, :qvalue)
-        CSV.write(outputfiles("fsea_o18_consolidated.csv"), tmp)
-    end
-    tmp
-end
-
-```
-
-```julia
-o18fsdf2 = let 
-    if isfile(outputfiles("fsea_o18.csv"))
-        tmp = CSV.read(outputfiles("fsea_o18.csv"), DataFrame)
-    else
-        tmp = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive_full))) do gs
-            ixs = o18_neuroactive_full[gs]
-            isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, o18cors[ixs])
-            isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, o18cors[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        tmp2 = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive_full))) do gs
-            ixs = o18_neuroactive_full[gs]
-            isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            cs = filter(!isnan, o18cors_age[ixs])
-            isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-            acs = filter(!isnan, o18cors_age[Not(ixs)])
-            mwu = MannWhitneyUTest(cs, acs)
-
-            return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-        end)
-
-        append!(tmp, tmp2)
-        subset!(tmp, :pvalue=> ByRow(!isnan))
-        tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-        sort!(tmp, :qvalue)
-        CSV.write(outputfiles("fsea_o18.csv"), tmp)
-    end
-    tmp
-end
+allfsdf = CSV.read(outputfiles("fsea_all_consolidated.csv"), DataFrame)
+allfsdf2 = CSV.read(outputfiles("fsea_all.csv"), DataFrame)
+u6fsdf = CSV.read(outputfiles("fsea_u6_consolidated.csv"), DataFrame)
+u6fsdf2 = CSV.read(outputfiles("fsea_u6.csv"), DataFrame)
+o18fsdf = CSV.read(outputfiles("fsea_o18_consolidated.csv"), DataFrame)
+o18fsdf2 = CSV.read(outputfiles("fsea_o18.csv"), DataFrame)
 ```
 
 
@@ -355,15 +110,15 @@ end
 ```julia
 figure = Figure(resolution=(900, 900))
 
-A = GridLayout(figure[1,1])
-B = GridLayout(figure[2,1])
-Label(figure[1:2, 2], "Enrichment score"; rotation= π/2, tellheight=false, tellwidth=true)
-DEFG = GridLayout(figure[1:2,3])
+A = GridLayout(figure[1,1]; alignmode=Outside())
+B = GridLayout(figure[2,1]; alignmode=Outside())
+Label(figure[1:3, 2], "Enrichment score"; rotation= π/2, tellheight=false, tellwidth=true)
+DEFG = GridLayout(figure[1:3,3]; alignmode=Outside())
 C = GridLayout(DEFG[1,1])
 D = GridLayout(DEFG[2,1])
 E = GridLayout(DEFG[3,1])
 F = GridLayout(DEFG[4,1])
-G = GridLayout(figure[3,1:3])
+G = GridLayout(figure[4,1:3]; alignmode=Outside())
 ```
 
 
@@ -403,6 +158,14 @@ let
             color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
 end
 
+Legend(figure[3,1], [MarkerElement(; color = :dodgerblue, marker=:circle), MarkerElement(; color = :orangered, marker=:circle)],
+               ["Pre-covid", "Post-covid"]; orientation=:horizontal, tellheight=true, tellwidth=false, framevisible=false)
+rowgap!(figure.layout, 2, Fixed(0))
+```
+
+
+
+```julia
 
 let
     gs = "Acetate synthesis"
@@ -485,7 +248,7 @@ let
     df = sort(subset(u6fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="Under 6mo")
-    hideydecorations!(ax)
+    hideydecorations!(ax, grid=false)
 
     m = median(u6cors)
     colors = ColorSchemes.colorschemes[:RdBu_7]
@@ -507,7 +270,7 @@ let
     df = sort(subset(o18fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="over 18")
-    hideydecorations!(ax)
+    hideydecorations!(ax, grid=false)
     m = median(o18cors)
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
@@ -524,7 +287,10 @@ let
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 end
 
-rowsize!(figure.layout, 3, Relative(1/2))
+rowsize!(figure.layout, 4, Relative(2/5))
+colgap!(G, Fixed(4))
+save(figurefiles("Figure2.svg"), figure)
+save(figurefiles("Figure2.png"), figure)
 figure
 ```
 
@@ -625,10 +391,6 @@ Gb = Axis(G[1,2]; xlabel = L"log_e(GABA)", ylabel = L"log_e(Glutamate)")
 pcom = plot_pcoa!(Ga, metpco; color=get(metabolites, :ageMonths))
 sc = scatter!(Gb, log.(gaba), log.((glut1 .+ glut2) ./ 2); color = get(metabolites, :ageMonths))
 Colorbar(G[1, 3], sc; label = "Age (Months)")
-
-save(figurefiles("Figure2.svg"), figure)
-save(figurefiles("Figure2.png"), figure)
-figure
 
 ```
 
