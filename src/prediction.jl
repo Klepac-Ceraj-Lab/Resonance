@@ -446,8 +446,8 @@ end # end function
 ## 3.1.1. Generate Predictions with the UnivariateRandomForestClassifier
 function predict(model::UnivariateRandomForestClassifier, newx=nothing; split_index=0)
 
-    (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
-    (split_index == 0) && (split_index = res.selected_split[2])
+    (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
+    (split_index == 0) && (split_index = model.selected_split[2])
 
     if newx isa Nothing
         return MLJ.predict_mode(model.models[split_index], model.inputs_outputs[1])
@@ -460,13 +460,21 @@ end
 ## 3.1.2. Generate Predictions with the UnivariateRandomForestRegressor
 function predict(model::UnivariateRandomForestRegressor, newx=nothing; split_index=0)
 
-    (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
-    (split_index == 0) && (split_index = res.selected_split[2])
+    (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
+    (split_index == 0) && (split_index = model.selected_split[2])
+
+    slope_correction = model.slope_corrections[split_index]
 
     if newx isa Nothing
-        return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
+        return GLM.predict(
+            slope_correction,
+            DataFrame(:yhat => MLJ.predict(model.models[split_index], model.inputs_outputs[1]))
+        )
     else
-        return MLJ.predict(model.models[split_index], newx)
+        return GLM.predict(
+            slope_correction,
+            DataFrame(:yhat => MLJ.predict(model.models[split_index], newx))
+        )
     end
 
 end
@@ -565,7 +573,7 @@ function singlemodel_allsplits_importances(res::T where T <: Resonance.Univariat
 end
 
 ### 3.3.4. Averaged MDI importances for all features in all train/test splits of a single UnivariatePredictor model
-function singlemodel_summary_importances(res::T where T <: Resonance.UnivariatePredictor, colname = :AvgImportance, fun = nonna_mean)
+function singlemodel_summary_importances(res::T where T <: Resonance.UnivariatePredictor, colname = :AvgImportance, fun = vv -> mean(dropnan(collect(skipmissing(vv)))))
 
     concatenated_importances_df = singlemodel_allsplits_importances(res)
     summarised_importances_df = DataFrame(
@@ -580,7 +588,7 @@ function singlemodel_summary_importances(res::T where T <: Resonance.UnivariateP
 end
 
 ### 3.3.5. Concatenated (hcat) averaged MDI importances for all features in all train/test splits of multiple UnivariatePredictor models in an ensemble
-function multimodel_individual_summaryimportances(ens::UnivariatePredictorEnsemble, col_prefix = "meanImportance_", fun = nonna_mean)
+function multimodel_individual_summaryimportances(ens::UnivariatePredictorEnsemble, col_prefix = "meanImportance_", fun = vv -> mean(dropnan(collect(skipmissing(vv)))))
 
     singlemodel_summaries = [ 
         singlemodel_summary_importances(
@@ -601,8 +609,9 @@ function multimodel_aggregate_summaryimportances(
     ens::UnivariatePredictorEnsemble,
     singlemodel_col_prefix = "meanImportance_",
     aggregate_colname = :AvgMultimodelImportance,
-    singlemodel_summary_fun = nonna_mean,
-    multimodel_summary_fun = nonna_mean)
+    singlemodel_summary_fun = vv -> mean(dropnan(collect(skipmissing(vv)))),
+    multimodel_summary_fun = vv -> mean(dropnan(collect(skipmissing(vv))))
+    )
 
     concatenated_summaries_df = multimodel_individual_summaryimportances(ens, singlemodel_col_prefix, singlemodel_summary_fun)
 
@@ -618,7 +627,13 @@ function multimodel_aggregate_summaryimportances(
 end
 
 ### 3.3.7. Binary column (if feature in the top N average importances) for all features in all train/test splits of a single Regressor model
-function singlemodel_binarytopn_importances(res::T where T <: Resonance.UnivariatePredictor, importance_colname = :AvgImportance, topn_colname = :TopN, fun = nonna_mean; n=50)
+function singlemodel_binarytopn_importances(
+    res::T where T <: Resonance.UnivariatePredictor,
+    importance_colname = :AvgImportance,
+    topn_colname = :TopN,
+    fun = vv -> mean(dropnan(collect(skipmissing(vv))));
+    n=50
+    )
 
     summarised_importances_df = @chain singlemodel_summary_importances(res, importance_colname, fun) begin
         insertcols!( _ , 2, topn_colname => vcat(ones(Int64, n), zeros(Int64, nrow( _ )-n)) )
@@ -630,7 +645,12 @@ function singlemodel_binarytopn_importances(res::T where T <: Resonance.Univaria
 end
 
 ### 3.3.8. Concatenated (hcat) binary columns (if feature in the top N average importances) for all features in all train/test splits of multiple UnivariatePredictor models in an ensemble
-function multimodel_individual_binarytopns(ens::UnivariatePredictorEnsemble, col_prefix = "topN_", fun = nonna_mean; n=50)
+function multimodel_individual_binarytopns(
+    ens::UnivariatePredictorEnsemble,
+    col_prefix = "topN_",
+    fun = vv -> mean(dropnan(collect(skipmissing(vv))));
+    n=50
+    )
 
     singlemodel_summaries = [ 
         singlemodel_binarytopn_importances(
@@ -653,7 +673,7 @@ function multimodel_aggregate_binarytopns(
     ens::UnivariatePredictorEnsemble,
     singlemodel_col_prefix = "topN_",
     aggregate_colname = :SumTopN,
-    singlemodel_summary_fun = nonna_mean,
+    singlemodel_summary_fun = vv -> mean(dropnan(collect(skipmissing(vv)))),
     multimodel_summary_fun = sum;
     n=30)
 
@@ -988,7 +1008,7 @@ end
 function build_confusion_matrix(res::UnivariateRandomForestClassifier, selected_split::Int)
 
     y = res.inputs_outputs[2][res.dataset_partitions[selected_split][2]]
-    yhat = MLJ.predict_mode(res.models[selected_split], res.inputs_outputs[1][[res.dataset_partitions[selected_split][2]],:])
+    yhat = MLJ.predict_mode(res.models[selected_split], res.inputs_outputs[1][res.dataset_partitions[selected_split][2],:])
     confmat = ConfusionMatrix()(yhat, y)
 
     return confmat
@@ -997,7 +1017,7 @@ end
 #### 4.1.1.2. Function to average the Confusion Matrices for all train/test splits on a single model.
 function average_confusion_matrix(res::UnivariateRandomForestClassifier)
 
-    matrix_vector = [ build_confusion_matrix(res, i).mat for i in 1:classification_results.n_splits ]
+    matrix_vector = [ build_confusion_matrix(res, i).mat for i in 1:res.n_splits ]
     concatenated_matrix = vcat([ vec(mat)' for mat in matrix_vector ]...) # Column order is TN, FP, FN, TP !
     averages = [ sum(concatenated_matrix[:,i])/sum(concatenated_matrix) for i in 1:4] # 4 columns: TN, FP, FN, TP !
 
@@ -1018,14 +1038,30 @@ function confmatrix2barplot(res::UnivariateRandomForestClassifier)
 end
 
 ### 4.1.1.4. The actual plotting function
-# function singlemodel_merit_barplot!(
-#     figure::Figure,
-#     res::UnivariateRandomForestClassifier,
-#     pos::Tuple{Int64, Int64},
-#     plot_title::String)
-#     ## [TODO] finish updating this function - will do on the next Figure 3/4 PR
-#     return figure
-# end # end function
+function singlemodel_merit_barplot!(
+    figure::Figure,
+    res::UnivariateRandomForestClassifier,
+    pos::Tuple{Int64, Int64},
+    plot_title::String;
+    confplot_colors = [:blue3, :red3, :tomato2, :dodgerblue2]
+    )
+
+    ax = Axis(
+        figure[pos[1],pos[2]];
+        xticks = (1:2, ["Correct", "Incorrect"]),
+        ylabel = "Proportion",
+        title = plot_title
+    )
+    ylims!(ax, [0.0, 1.0])
+    
+    tbl = confmatrix2barplot(res)
+    barplot!(
+        ax, tbl.x, tbl.value,
+        stack = tbl.grp,
+        color = confplot_colors[tbl.color]
+    )
+    return figure
+end # end function
 
 ## 4.1.2. Scatterplot of ground truth vs prediction, for the most performant train/test split, for a single model.
 function singlemodel_merit_scatterplot!(
@@ -1043,11 +1079,19 @@ function singlemodel_merit_scatterplot!(
     )
 
     # Plot barplot
-    y, yhat, train, test = predict_bestsplit(res)
+
+    y = res.inputs_outputs[2]
+    yhat = Resonance.predict(res)
+    train, test = res.dataset_partitions[res.selected_split[2]]
     scatter!(ax, y[train], yhat[train]; color=:orange)
     scatter!(ax, y[test], yhat[test]; color=:purple)
     ablines!(ax, 0, 1; color=:grey)
-    annotations!( ax, ["r = $(round(cor(y, yhat); digits = 2))"], [Point(1.1*min(y), 0.9*max(yhat))], textsize = 20)
+    annotations!(
+        ax,
+        ["r = $(round(cor(y, yhat); digits = 2))"],
+        [Point(1.1*min(minimum(y), minimum(yhat)), 0.9*max(maximum(y), maximum(yhat)))],
+        textsize = 20
+    )
 
     return figure
 
