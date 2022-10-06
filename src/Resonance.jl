@@ -92,7 +92,7 @@ export  # 0. structs/types
         build_confusion_matrix,
         average_confusion_matrix,
         confmatrix2barplot,
-        # singlemodel_merit_barplot!, # TODO
+        singlemodel_merit_barplot!,
         singlemodel_merit_scatterplot!,
         singlemodel_avgimportance_barplot!,
         multimodel_avgimportance_barplot!,
