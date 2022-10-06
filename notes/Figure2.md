@@ -56,7 +56,7 @@ set!(unirefs, brainmeta)
 ## Calculate correlations
 
 ```julia
-unimdata = DataFrame(metadata(unirefs))
+unimdata = DataFrame(Microbiome.metadata(unirefs))
 allages = unique(subset(unimdata, :cogScore => ByRow(!ismissing)), :subject)
 u6 = unique(subset(unimdata, :ageMonths => ByRow(<(6)), :cogScore => ByRow(!ismissing)), :subject)
 o18 = unique(subset(unimdata, :ageMonths => ByRow(>(18)), :cogScore => ByRow(!ismissing)), :subject)
@@ -289,6 +289,17 @@ end
 
 rowsize!(figure.layout, 4, Relative(2/5))
 colgap!(G, Fixed(4))
+```
+
+```julia
+for (label, layout) in zip(["A", "B", "C", "D", "E", "F", "G"], [A, B, C, D, E, F, G])
+    Label(layout[1, 1, TopLeft()], label,
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right)
+end
+
 save(figurefiles("Figure2.svg"), figure)
 save(figurefiles("Figure2.png"), figure)
 figure

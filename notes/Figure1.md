@@ -165,6 +165,7 @@ Eb = Axis(E[1,2]; title = "Firmicutes")
 
 plot_pcoa!(Ea, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])), colormap=:Purples)
 plot_pcoa!(Eb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
+hideydecorations!(Eb)
 # pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
 F = Axis(DEF[1,2]; title = "Functions")
 
@@ -177,6 +178,53 @@ brnpco = fit(MDS, brndm; distances=true)
 plot_pcoa!(G, brnpco; color=get(brain, :ageMonths))
 
 Colorbar(DEF[1:2, 3], sc; label="Age (months)", flipaxis=true)
+```
+
+```julia
+
+Label(A[1, 1, TopLeft()], "A",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
+Label(DEF[1, 1, TopLeft()], "B",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
+Label(DEF[2, 1, TopLeft()], "C",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
+Label(DEF[1, 2, TopLeft()], "D",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
+Label(DEF[2, 2, TopLeft()], "E",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
+
+Label(B[1, 1, TopLeft()], "F",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
+Label(C[1, 1, TopLeft()], "G",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
 
 save(figurefiles("Figure1.svg"), figure)
 save(figurefiles("Figure1.png"), figure)
