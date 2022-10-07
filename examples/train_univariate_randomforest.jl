@@ -45,9 +45,9 @@ function cli_args(args)
     s.epilog = """
     examples:\n
     \n
-    \ua0\ua0julia $(basename(Base.source_path())) -c examples/example_taxonomic_profile.csv 6:554 4 examples/test_classifier_output.jld
+    \ua0\ua0julia $(basename(Base.source_path())) -c examples/example_taxonomic_profile.csv 6:554 4 examples/example_classifier_model.jld
     \n
-    \ua0\ua0julia $(basename(Base.source_path())) -r examples/example_taxonomic_profile.csv 6:554 4 examples/test_regressor_output.jld
+    \ua0\ua0julia $(basename(Base.source_path())) -r examples/example_taxonomic_profile.csv 6:554 4 examples/example_regressor_model.jld
     \n
     The first example will train a classifier model using dhe data in examples/example_taxonomic_profile.csv.
     Columns 6 to 554 are the input features, while column 4 is the desired output.
@@ -111,11 +111,11 @@ if (parsed_args[:classification])
         meanclass,
         eval(Meta.parse(parsed_args[:input_cols])),
         eval(Meta.parse(parsed_args[:output_col]));
-        n_splits = 2,
+        n_splits = 5,
         tuning_space = tuning_space,
         train_rng = ml_rng
     )
-    JLD2.@save replace(ENV["DIRENV_DIR"], '-' => "")*"/models/"*parsed_args[:output_filename] rf_model
+    JLD2.@save replace(ENV["DIRENV_DIR"], '-' => "")*"/"*parsed_args[:output_filename] rf_model
     
 elseif (parsed_args[:regression])
 
@@ -124,11 +124,11 @@ elseif (parsed_args[:regression])
     rf_model = train_randomforest(
         Resonance.Regression(),
         parsed_args[:output_filename],
-        cogscore_taxa_df,
-        x -> dropmissing(filter_age_bracket(x, 6.0, 12.0)),
+        input_df,
+        identity,
         eval(Meta.parse(parsed_args[:input_cols])),
         eval(Meta.parse(parsed_args[:output_col]));
-        n_splits = 2,
+        n_splits = 5,
         tuning_space = tuning_space,
         train_rng = ml_rng
     )

@@ -29,7 +29,7 @@ function cli_args(args)
             help = "The column index range of the input columns (format 5:50)"
             required = true        # makes the argument mandatory
         "output_filename"
-            help = "Filename for the output JLD file"
+            help = "Filename for the output predictions, CSV format"
             required = true        # makes the argument mandatory
     end
 
@@ -38,9 +38,9 @@ function cli_args(args)
     s.epilog = """
     examples:\n
     \n
-    \ua0\ua0julia $(basename(Base.source_path())) models/test_classifier_output.jld examples/example_taxonomic_profile.csv 6:554 classifier_output.csv
+    \ua0\ua0julia $(basename(Base.source_path())) examples/example_classifier_model.jld examples/example_taxonomic_profile.csv 6:554 examples/classifier_output.csv
     \n
-    \ua0\ua0julia $(basename(Base.source_path())) models/test_regressor_output.jld examples/example_taxonomic_profile.csv 6:554 regressor_output.csv
+    \ua0\ua0julia $(basename(Base.source_path())) examples/example_regressor_model.jld examples/example_taxonomic_profile.csv 6:554 examples/regressor_output.csv
     \n
     The first example will train a classifier model using dhe data in examples/example_taxonomic_profile.csv.
     Columns 6 to 554 are the input features, while column 4 is the desired output.
@@ -119,16 +119,8 @@ function arrange_data_for_model(
     $(n_expected_predictors - sum(names_intersection)) expected columns were not provided and will be constructed with zeros."
 
     if print_cols
-
-    @info "Argument print_cols was provided. Printing column names for debug.
-        Received columns matching the model expectations:
-        $(println(received_predictors[names_intersection]))
-        You provided $(n_received_predictors) data columns.
-        The model expects to receive $(n_expected_predictors).
-        From the columns provided, $(sum(names_intersection)) correspond to columns expected by the model.
-        $(n_received_predictors - sum(names_intersection)) provided columns were not recognized by the model and will not be considered.
-        $(n_expected_predictors - sum(names_intersection)) expected columns were not provided and will be constructed with zeros."
-
+        @info "Argument print_cols was provided. Printing column names for debug.\nReceived columns matching the model expectations:"
+        println(received_predictors[names_intersection])
     end
 
     arranged_df = DataFrame()
