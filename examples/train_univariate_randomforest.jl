@@ -8,7 +8,7 @@
 # 0. Command-line Argument parsing function
 #####
 
-using Pkg; Pkg.activate(replace(ENV["DIRENV_DIR"], '-' => "")); Pkg.instantiate();
+using Pkg; Pkg.activate(pwd()); Pkg.instantiate();
 
 using ArgParse
 
@@ -115,7 +115,7 @@ if (parsed_args[:classification])
         tuning_space = tuning_space,
         train_rng = ml_rng
     )
-    JLD2.@save replace(ENV["DIRENV_DIR"], '-' => "")*"/"*parsed_args[:output_filename] rf_model
+    JLD2.@save pwd()*"/"*parsed_args[:output_filename] rf_model
     
 elseif (parsed_args[:regression])
 
@@ -132,6 +132,6 @@ elseif (parsed_args[:regression])
         tuning_space = tuning_space,
         train_rng = ml_rng
     )
-    JLD2.@save replace(ENV["DIRENV_DIR"], '-' => "")*"/"*parsed_args[:output_filename] rf_model
+    JLD2.@save pwd()*"/"*parsed_args[:output_filename] rf_model
 
 end

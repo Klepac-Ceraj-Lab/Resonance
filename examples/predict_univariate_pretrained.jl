@@ -9,7 +9,7 @@
 # 0. Command-line Argument parsing function
 #####
 
-using Pkg; Pkg.activate(replace(ENV["DIRENV_DIR"], '-' => "")); Pkg.instantiate();
+using Pkg; Pkg.activate(pwd()); Pkg.instantiate();
 
 using ArgParse
 
@@ -162,4 +162,4 @@ else
     insertcols!(output_df, :prediction => predictions)
 end
 
-CSV.write(parsed_args[:output_filename], output_df)
+CSV.write(pwd()*"/"*parsed_args[:output_filename], output_df)
