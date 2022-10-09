@@ -55,7 +55,7 @@ end # end function
 
 function plot_all_results!(
     figure::Figure,
-    result_set::Vector{T} where T <: ResonancePredictor,
+    result_set::Vector{T} where T <: Resonance.Predictor,
     plot_positions::Vector{Tuple{Int64, Int64}}
     )
 
@@ -72,7 +72,7 @@ end
 #####
 
 RandomForestRegressor= MLJ.@load RandomForestRegressor pkg=DecisionTree
-JLD2.@load "models/brain_univariate_regression.jld" brain_results
+JLD2.@load "models/brain_univariate_regression_long.jld" brain_results
 
 for m in brain_results
     println(m.name)
@@ -88,4 +88,4 @@ plot_positions = vec(permutedims(collect(Base.product(rows, cols))))
 
 plot_all_results!(fig, brain_results, plot_positions)
 
-save("figures/Brain_univariate_scatterplots.png", fig)
+save("figures/Brain_univariate_scatterplots2.png", fig)

@@ -202,7 +202,7 @@ end
 #####
 
 mdata = @chain Resonance.load(Metadata()) begin
-    select( [ :subject, :timepoint, :ageMonths, :cogScore, :omni ] )
+    select( [ :subject, :timepoint, :ageMonths, :cogScore, :sex, :omni ] )
 end # no dropmissing(:omni) because subjects/timepoints without sample but with assessment must be considered on the prediction routine
 
 brain = Resonance.load(Resonance.Neuroimaging(); timepoint_metadata = mdata)
@@ -215,10 +215,45 @@ mdata_brain_df =  @chain DataFrame(metadata(brain)) begin
 end ## Columns 1:3 are metadata, columns 4:552 are taxonomic profile, columns 553:651 are brain data
 
 #####
-# Computing
+# Computing the curves for cogScore
 #####
 
-tentative_intervals = [ 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 21.0, collect(24.0:6.0:120.0)... ]
+cogscore_df = @chain mdata begin
+    dropmissing([:cogScore])
+    subset(:ageMonths => x -> x .< 120)
+end
+
+cogscore_intervals = [ 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 18.0, 21.0, collect(24.0:6.0:42.0)..., collect(48.0:12.0:120.0)... ]
+# hist(cogscore_df.ageMonths, bins = cogscore_intervals)
+
+cogScoreGrowthCurve = compute_growth_curve(cogscore_df, "cogScore", cogscore_intervals)
+
+fig = Figure(resolution = (1200, 600))
+plot_multiple_growthcurves!(fig, (1,1), cogScoreGrowthCurve, "Male", "Cogscore - MALE")
+plot_multiple_growthcurves!(fig, (1,2), cogScoreGrowthCurve, "Female", "Cogscore - FEMALE")
+
+Label(fig[1, :, Top()], "cogScores growth curves", padding = (0, 50, 40, 0))
+
+Legend( fig[end+1,:],[
+    LineElement(color=:firebrick1, linewidth = 1.0),
+    LineElement(color=:red, linewidth = 2.0),
+    LineElement(color=:red3, linewidth = 3.0),
+    LineElement(color=:black, linewidth = 6.0),
+    LineElement(color=:blue3, linewidth = 3.0),
+    LineElement(color=:blue, linewidth = 2.0),
+    LineElement(color=:dodgerblue2, linewidth = 1.0)],
+    ["min", "10th pctl", "25th pctl", "50th pctl", "75th pctl", "90th pctl", "max"], orientation = :horizontal
+)
+
+fig
+
+#####
+# Computing the curves for Brain
+#####
+
+# brain_intervals = [ 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 21.0, collect(24.0:6.0:120.0)... ]
+brain_intervals = [ 2.0, 4.0, 6.0, 12.0, 18.0, collect(24.0:6.0:42.0)..., collect(48.0:12.0:120.0)... ]
+hist(mdata_brain_df.ageMonths, bins = brain_intervals)
 
 brainGrowthCurves = Dict{String, GrowthCurve}()
 
@@ -271,7 +306,7 @@ original_prediction_segments = [
 
 for segment in original_prediction_segments
     println(segment)
-    gc = compute_growth_curve(mdata_brain_df, segment, tentative_intervals)
+    gc = compute_growth_curve(mdata_brain_df, segment, brain_intervals)
     push!(brainGrowthCurves, segment => gc)
 end
 
