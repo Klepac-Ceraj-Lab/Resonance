@@ -38,9 +38,9 @@ function cli_args(args)
     s.epilog = """
     examples:\n
     \n
-    \ua0\ua0julia $(basename(Base.source_path())) examples/example_classifier_model.jld examples/example_taxonomic_profile.csv 6:554 examples/classifier_output.csv
+    \ua0\ua0julia examples/$(basename(Base.source_path())) examples/example_classifier_model.jld examples/example_taxonomic_profile.csv 6:554 examples/classifier_output.csv
     \n
-    \ua0\ua0julia $(basename(Base.source_path())) examples/example_regressor_model.jld examples/example_taxonomic_profile.csv 6:554 examples/regressor_output.csv
+    \ua0\ua0julia examples/$(basename(Base.source_path())) examples/example_regressor_model.jld examples/example_taxonomic_profile.csv 6:554 examples/regressor_output.csv
     \n
     The first example will train a classifier model using dhe data in examples/example_taxonomic_profile.csv.
     Columns 6 to 554 are the input features, while column 4 is the desired output.
