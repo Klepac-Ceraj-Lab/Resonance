@@ -143,6 +143,7 @@ C = GridLayout(BC[1,2])
 # Ca = Axis(C[1:2, 1]; alignmode=Outside())
 Cb = Axis(C[1,1]; title="Under 6mo")
 Cc = Axis(C[1,2]; title="Over 18mo")
+hideydecorations!(Cc)
 
 # plot_mantel!(Ca, CSV.read(outputfiles("mantel_all.csv"), DataFrame))
 plot_mantel!(Cb, CSV.read(outputfiles("mantel_u6.csv"), DataFrame))
