@@ -142,7 +142,7 @@ tuning_space = (
 ```
 
 to match your desired configuration.
-The names of each hyperparameter reflect the argument names in the proeminent `RandomForest` `R` package, for ease of use.
+The names of each hyperparameter reflect the argument names in the preeminent `RandomForest` `R` package, for ease of use.
 
 ### Generating predictions using pretrained models
 
@@ -151,7 +151,7 @@ This script takes four **mandatory** arguments:
 
 `julia examples/train_univariate_randomforest.jl model_jldpath input_csv input_cols output_filename`
 
-1. The first argument is a path (either absolute or relative to the directory from where you are calling `julia`) to a pretrained `Resonance` univariate predictor (either a downlaoded model, or one output by the example training script).
+1. The first argument is a path (either absolute or relative to the directory from where you are calling `julia`) to a pretrained `Resonance` univariate predictor (either a downloaded model, or one output by the example training script).
 
 2. The second argument is a community profile (with subjects/samples as rows, and features/predictors as columns) on the CSV format.
 The script expects a header for the CSV amd may fail if a header line is not provided. Please refer to the provided `examples/example_taxonomic_profile.csv` for formatting.
@@ -174,4 +174,4 @@ julia examples/predict_univariate_pretrained.jl examples/example_regressor_model
 
 Resonance is work in Progress.
 If you find it useful for your own efforts prior to publication, please cite this Github repository.
-A soon as a publication is available, we will update this secction.
+A soon as a publication is available, we will update this section.
