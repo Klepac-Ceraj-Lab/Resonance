@@ -33,7 +33,7 @@ kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
 kos = kos[:, findall(!ismissing, get(kos, :ageMonths))]
 kos = filter(!hastaxon, kos)
 
-metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
+# metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
 brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
 
 
@@ -66,7 +66,7 @@ spedm = CSV.read(outputfiles("spedm.csv"), DataFrame) |> Matrix
 unidm = CSV.read(outputfiles("unidm.csv"), DataFrame) |> Matrix
 ecsdm = CSV.read(outputfiles("ecsdm.csv"), DataFrame) |> Matrix
 kosdm = CSV.read(outputfiles("kosdm.csv"), DataFrame) |> Matrix
-metdm = CSV.read(outputfiles("metdm.csv"), DataFrame) |> Matrix
+# metdm = CSV.read(outputfiles("metdm.csv"), DataFrame) |> Matrix
 brndm = CSV.read(outputfiles("brndm.csv"), DataFrame) |> Matrix
 ```
 
