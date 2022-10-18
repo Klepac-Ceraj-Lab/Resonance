@@ -50,6 +50,7 @@ subset!(fmp_samples, :subject => ByRow(s-> s in samplemeta.subject),
 )
 
 samplemeta = leftjoin(samplemeta, select(fmp_samples, [:subject, :timepoint, :collectionDate]), on=[:subject, :timepoint])
+
 unique!(samplemeta)
 
 # ## Metadata stored in filemaker pro database
@@ -66,6 +67,10 @@ subset!(fmp_subject, :subject => ByRow(s-> s in samplemeta.subject))
 
 fmp_timepoint = DataFrame(XLSX.readtable(datafiles("resonance_fmp", "Timepoint_Centric_071322.xlsx"), "Sheet1", infer_eltypes=true))
 rename!(fmp_timepoint, Dict(:studyID=>:subject))
+
+fmp_timepoint = let cs_perc = CSV.read(datafiles("cogscore_percentiles.csv"), DataFrame)
+    leftjoin(fmp_timepoint, select(cs_perc, "subject", "timepoint", "cogScorePercentile"), on=["subject", "timepoint"])
+end
 
 # and COVID-specific samples
 

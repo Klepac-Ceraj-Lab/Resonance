@@ -99,6 +99,7 @@ function load(::Metadata)
             Union{Missing, Date},    # assessmentDate
             Union{Missing, Date},    # scanDate
             Union{Missing, Float64}, # cogScore
+            Union{Missing, Float64}, # cogScorePercentile
             Union{Missing, String},  # omni
             Union{Missing, String},  # etoh
             Bool,                    # has_segmentation
