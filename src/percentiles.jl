@@ -35,17 +35,9 @@ function compute_age_bracket(idx, df, variable, lb, ub; sex::Union{Nothing, Stri
     # so maybe we can start with
     # [0.0, 0.10, 0.25, 0.50, 0.75, 0.90, 1.0] # annotation: changed.
 
-    quantiles = Dict(
-        0.00 => quantile(bracket_values, 0.00),
-        0.05 => quantile(bracket_values, 0.05),
-        0.10 => quantile(bracket_values, 0.10),
-        0.25 => quantile(bracket_values, 0.25),
-        0.50 => quantile(bracket_values, 0.50),
-        0.75 => quantile(bracket_values, 0.75),
-        0.90 => quantile(bracket_values, 0.90),
-        0.95 => quantile(bracket_values, 0.95),
-        1.00 => quantile(bracket_values, 1.00)
-    )
+    quantiles = let q = [0.0, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 1.0]
+        Dict(zip(q, quantile(bracket_values, q)))
+    end
 
     spline = CubicSpline(
         sort(collect(values(quantiles))),
@@ -117,7 +109,7 @@ function plot_multiple_growthcurves!(
     plot_title::String;
     xs = 3.0:0.5:100.0)
 
-    ax = Axis(fig[pos[1],pos[2]], title = plot_title)
+    ax = Axis(figure[pos[1],pos[2]], title = plot_title)
     
     lins = [
         # lines!(xs, gc.percentile_growth_curves[0.05][collect(xs)];color=:firebrick1, linewidth = 1.0)
