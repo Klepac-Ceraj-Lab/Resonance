@@ -99,6 +99,16 @@ export  # 0. structs/types
         singlemodel_logistic_regression!,
         multimodel_logistic_regression!
 
+# Percentiles
+export  AgeBracketPercentiles,
+        GrowthCurve,
+        compute_age_bracket,
+        compute_growth_curve,
+        get_cogscore_percentile,
+        get_brain_percentile,
+        plot_multiple_growthcurves!,
+        plot_all_results!
+
 using Reexport
 using ReTest
 
@@ -123,6 +133,7 @@ using ThreadsX
 using MLJ
 using GLM
 using DecisionTree
+using CubicSplines
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
@@ -142,5 +153,6 @@ include("kneaddata.jl")
 include("omnibus.jl")
 include("prediction.jl")
 include("data_loading.jl")
+include("percentiles.jl")
 
 end
