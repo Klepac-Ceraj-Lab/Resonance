@@ -7,124 +7,182 @@ using JLD2
 using StableRNGs
 using GLM
 using ProgressMeter
+using CategoricalArrays
 
-non_na_mean(a) = mean(a[.!(isnan.(a))])
-non_missing_mean(a) = mean(a[.!(ismissing.(a))])
+#####
+# Loading Data
+#####
 
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-# concurrent cogScore classification from taxonomic profiles
-JLD2.@load "/home/guilherme/Documents/models/regression_currentCogScores_00to06_fromtaxa_results.jld"
-result_set = regression_currentCogScores_00to06_fromtaxa_results
+# cogScore classification from taxonomic profiles
+JLD2.@load "models/classification_currentCogScores_00to06_fromtaxa_results.jld"
+JLD2.@load "models/classification_currentCogScores_06to12_fromtaxa_results.jld"
+JLD2.@load "models/classification_currentCogScores_12to18_fromtaxa_results.jld"
+JLD2.@load "models/classification_currentCogScores_18to24_fromtaxa_results.jld"
+JLD2.@load "models/classification_futureCogScores_allselected_fromtaxa_results.jld"
+# cogScore regression from taxonomic profiles
+JLD2.@load "models/regression_currentCogScores_00to06_fromtaxa_results.jld"
+JLD2.@load "models/regression_currentCogScores_06to12_fromtaxa_results.jld"
+JLD2.@load "models/regression_currentCogScores_12to18_fromtaxa_results.jld"
+JLD2.@load "models/regression_currentCogScores_18to24_fromtaxa_results.jld"
+JLD2.@load "models/regression_futureCogScores_allselected_fromtaxa_results.jld"
 
-#m = classification_currentCogScores_00to06_fromtaxa_results[:models][1].fitresult[1]
-m = result_set[:models][1].fitresult
-model_trees = m.trees
-model_X = result_set[:inputs_outputs][1]
-model_y = result_set[:inputs_outputs][2]
-
-function biserial_correlation( ## Borrowed from m3g/XCorrelation.jl (!!!)
-	discreteVariable,
-	continuousArray :: Array{Float64})
-
-	## Sanity check
-	
-	discreteArray = discreteVariable .* 1.
-
-	length(discreteArray) == length(continuousArray) || throw(DimensionMismatch("Size of discrete Array not equal to size of continuous Array"))
-
-	## Computation
-
-	Ntrue = sum(discreteArray .== 1)
-	Nfalse = sum(discreteArray .== 0)
-
-	SmeanTrue = Statistics.mean(continuousArray[discreteArray .== 1])
-	SmeanFalse = Statistics.mean(continuousArray[discreteArray .== 0])
-
-	sdev = Statistics.std(continuousArray, corrected=false)
-
-	bisCorr = ((SmeanTrue - SmeanFalse)/sdev)*sqrt(Ntrue*Nfalse/(length(discreteArray)^2))
-
-	(bisCorr == NaN) && (bisCorr = -1.)
-
-	return( bisCorr )
-
-end
-
-function feature_split_correlation_analysis(X, y, trees)
-
-    feature_correlations_matrix = Matrix{Union{Float64, Missing}}(undef, length(trees), ncol(X))
-
-    @showprogress for tree_idx in 1:length(trees) # For each tree
-
-        sample_feature_rel = zeros(Int64, nrow(X), ncol(X))
-        feature_split_rel = Matrix{Union{Int64, Missing}}(undef, nrow(X), ncol(X))
-        decision_split_feature = zeros(Int64, nrow(X))
-
-        for sample_idx in 1:nrow(X) # For each sample, make a tree pass.
-
-            this_tree = deepcopy(trees[tree_idx])
-
-            while( !( typeof(this_tree) <: DecisionTree.Leaf ) )
-            # while( !( ( typeof(this_tree.left) <: DecisionTree.Leaf ) & ( typeof(this_tree.right) <: DecisionTree.Leaf ) ) )
-
-                if this_tree.featid == 0
-                    this_tree = this_tree.left                
-                elseif X[sample_idx, this_tree.featid] < this_tree.featval
-                    sample_feature_rel[sample_idx, this_tree.featid] = 1
-                    feature_split_rel[sample_idx, this_tree.featid] = 0
-                    decision_split_feature[sample_idx] = this_tree.featid
-                    this_tree = this_tree.left                
-                else
-                    sample_feature_rel[sample_idx, this_tree.featid] = 1
-                    feature_split_rel[sample_idx, this_tree.featid] = 1
-                    this_tree = this_tree.right
-                end # end state update
-        
-            end # end while still a node
-
-        end # end for sample_idx
-
-        for feat_idx in 1:ncol(X)
-
-            samples_to_consider = Bool.(sample_feature_rel[:, feat_idx])
-
-            if sum(samples_to_consider) != 0 # if there are no samples that considered this feature
-                feature_values = X[samples_to_consider, feat_idx]
-                split_values = convert(Vector{Int64}, feature_split_rel[samples_to_consider, feat_idx])
-                target_values = convert(Vector{Float64}, y[samples_to_consider])
-
-                if ( (Statistics.std(feature_values) != 0.0) & (Statistics.std(target_values) != 0.0) )
-                    feature_correlations_matrix[tree_idx, feat_idx] = biserial_correlation(split_values, target_values)
-                end
-            else
-                continue
-            end # end if sum(samples_to_consider) != 0
-
-        end # end for this_feature   
-
-    end # end for this_tree
-
-    return feature_correlations_matrix
-
-end
-
-feature_correlations_matrix = feature_split_correlation_analysis(model_X, model_y, model_trees)
-feature_mean_correlations = map(non_missing_mean, eachcol(feature_correlations_matrix))
-
-importance_correlations_df = DataFrame(
-    :Variable => names(X),
-    :Importance => DecisionTree.impurity_importance(m),
-    :MeanCorrelation => feature_mean_correlations,
-    :MeanCorSign => sign.(feature_mean_correlations)
+ensemble_classification_models = UnivariatePredictorEnsemble(
+    [ "Concurrent, 0-6mo", "Concurrent, 6-12mo", "Concurrent, 12-18mo", "Concurrent, 18-24mo", "Future, all samples" ],
+    [ :concurrent_00to06, :concurrent_06to12, :concurrent_12to18, :concurrent_18to24, :future_allsamples ],
+    [
+        classification_currentCogScores_00to06_fromtaxa_results,
+        classification_currentCogScores_06to12_fromtaxa_results,
+        classification_currentCogScores_12to18_fromtaxa_results,
+        classification_currentCogScores_18to24_fromtaxa_results,
+        classification_futureCogScores_allselected_fromtaxa_results
+    ]
 )
 
-sort!(importance_correlations_df, :Importance, rev=true)
-
-importance_correlations_df = importance_correlations_df[1:30, :]
-
+ensemble_regression_models = UnivariatePredictorEnsemble(
+    [ "Concurrent, 0-6mo", "Concurrent, 6-12mo", "Concurrent, 12-18mo", "Concurrent, 18-24mo", "Future, all samples" ],
+    [ :concurrent_00to06, :concurrent_06to12, :concurrent_12to18, :concurrent_18to24, :future_allsamples ],
+    [
+        regression_currentCogScores_00to06_fromtaxa_results,
+        regression_currentCogScores_06to12_fromtaxa_results,
+        regression_currentCogScores_12to18_fromtaxa_results,
+        regression_currentCogScores_18to24_fromtaxa_results,
+        regression_futureCogScores_allselected_fromtaxa_results
+    ]
+)
 
 #####
-# plotting
+# Computation
 #####
 
+## Classification
+
+classification_individual_abundances = multimodel_individual_abundances(ensemble_classification_models)
+classification_individual_prevalences = multimodel_individual_prevalences(ensemble_classification_models)
+classification_individual_correlations = multimodel_individual_correlations(ensemble_classification_models)
+classification_aggregate_importances = get_multimodel_aggregate_summaryimportances(ensemble_classification_models)
+classification_aggregate_importances.Order = 1:nrow(classification_aggregate_importances)
+
+plot_aggregate_df = DataFrames.outerjoin(classification_aggregate_importances, classification_individual_correlations, on = :Variable, makeunique = true)
+plot_aggregate_df = DataFrames.outerjoin(plot_aggregate_df, classification_individual_prevalences, on = :Variable, makeunique = true)
+plot_aggregate_df = DataFrames.outerjoin(plot_aggregate_df, classification_individual_abundances, on = :Variable, makeunique = true)
+sort!(plot_aggregate_df, :Order)
+
+#####
+# Plotting
+#####
+
+# Logistic Regressions
+
+logistic_regression_fig = Figure(resolution=(2400, 2000))
+
+multimodel_logistic_regression!(
+    logistic_regression_fig,
+    ensemble_classification_models,
+    [ "Gordonibacter_pamelaeae", "Bifidobacterium_breve", "Ruminococcus_gnavus", "Clostridium_innocuum", "Bifidobacterium_longum" ];
+)
+
+save("figures/logistic_regressions.png", logistic_regression_fig)
+
+# Heatmaps
+
+ens = ensemble_classification_models
+n_plot = 50
+heatmap_figure = Figure(resolution = (1800, 1800) )
+
+## Correlation
+
+correlation_colormap = cgrad(
+    [:red, :white, :blue],
+    [0.0, 0.5, 1.0]
+)
+
+ax_correlation = Axis(
+    heatmap_figure[1,1];
+    ylabel = "Most important Taxa",
+    yticks = (collect(1:n_plot), plot_aggregate_df.Variable[1:n_plot]),
+    xlabel = "Model",
+    xticks = (collect(1:5), ens.screen_names),
+    title = "Average Point-biserial correlation through the $(length(ens.predictors)) models",
+    xticklabelrotation = pi/2,
+    yreversed = true
+)
+
+corr_mat = permutedims(Matrix(plot_aggregate_df[1:n_plot, 4:8]))
+
+correlation_hm = heatmap!(ax_correlation, corr_mat; colormap=correlation_colormap, colorrange=(-0.8, 0.8), highclip = :blue, lowclip = :red)
+
+for ci in CartesianIndices(corr_mat)
+    text!(ax_correlation,
+    string(round(corr_mat[ci], digits=2)),
+    ; position=(ci[1],ci[2]),
+    align=(:center, :center)
+    )
+end
+
+## Prevalence
+
+prevalence_colormap = :viridis
+
+ax_prevalence = Axis(
+    heatmap_figure[1,2];
+    #ylabel = "Most important Taxa",
+    yticks = (collect(1:n_plot), plot_aggregate_df.Variable[1:n_plot]),
+    yticksvisible = false,
+    yticklabelsvisible = false,
+    xlabel = "Model",
+    xticks = (collect(1:5), ens.screen_names),
+    title = "Average feature Prevalence through the $(length(ens.predictors)) models",
+    xticklabelrotation = pi/2,
+    yreversed = true
+)
+
+prevalence_mat = permutedims(Matrix(plot_aggregate_df[1:n_plot, 9:13]))
+
+prevalence_hm = heatmap!(ax_prevalence, prevalence_mat; colormap=prevalence_colormap)
+
+for ci in CartesianIndices(prevalence_mat)
+    text!(ax_prevalence,
+    string(round(prevalence_mat[ci], digits=4)),
+    ; position=(ci[1],ci[2]),
+    align=(:center, :center)
+    )
+end
+
+## Prevalence
+
+abundance_colormap = :viridis
+
+ax_abundance = Axis(
+    heatmap_figure[1,3];
+    #ylabel = "Most important Taxa",
+    yticks = (collect(1:n_plot), plot_aggregate_df.Variable[1:n_plot]),
+    yticksvisible = false,
+    yticklabelsvisible = false,
+    xlabel = "Model",
+    xticks = (collect(1:5), ens.screen_names),
+    title = "Average feature Abundance through the $(length(ens.predictors)) models",
+    xticklabelrotation = pi/2,
+    yreversed = true
+)
+
+abundance_mat = permutedims(Matrix(plot_aggregate_df[1:n_plot, 14:18]))
+
+abundance_hm = heatmap!(ax_abundance, abundance_mat; colormap=abundance_colormap)
+
+for ci in CartesianIndices(abundance_mat)
+    text!(ax_abundance,
+    string(round(abundance_mat[ci], digits=4)),
+    ; position=(ci[1],ci[2]),
+    align=(:center, :center)
+    )
+end
+
+Colorbar(heatmap_figure[2, 1], correlation_hm, label = "Point-Biserial correlation", vertical = false)
+Colorbar(heatmap_figure[2, 2], prevalence_hm, label = "Prevalence", vertical = false)
+Colorbar(heatmap_figure[2, 3], abundance_hm, label = "Abundance", vertical = false)
+
+heatmap_figure
+
+save("figures/correlation_prevalence_abundance_classification_heatmap.png", heatmap_figure)

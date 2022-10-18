@@ -71,14 +71,14 @@ commlabels = ["taxa", "UniRef90s", "ECs", "KOs"]
 mdlabels = ["Cog. score", "Age", "Sex", "Maternal Edu."]
 
 p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[uidx, uidx]], [
-                        get(species, :cogScore)[uidx], 
+                        get(species, :cogScorePercentile)[uidx], 
                         get(species, :ageMonths)[uidx], 
                         get(species, :sex)[uidx], 
                         get(species, :education)[uidx]
             ]; commlabels, mdlabels
 )
 # p2 = permanovas(metdm, [
-#                         get(metabolites, :cogScore), 
+#                         get(metabolites, :cogScorePercentile), 
 #                         get(metabolites, :ageMonths), 
 #                         get(metabolites, :sex), 
 #                         get(metabolites, :education)
@@ -88,7 +88,7 @@ p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[u
 # append!(p, p2)
 
 p3 = permanovas(brndm[buidx, buidx], [
-                        get(brain, :cogScore)[buidx], 
+                        get(brain, :cogScorePercentile)[buidx], 
                         get(brain, :ageMonths)[buidx], 
                         get(brain, :sex)[buidx], 
                         get(brain, :education)[buidx]
@@ -103,7 +103,7 @@ CSV.write(outputfiles("permanovas_all.csv"), p)
 
 idx = findall(<(6), get(species, :ageMonths))
 p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
-                        get(species, :cogScore)[idx], 
+                        get(species, :cogScorePercentile)[idx], 
                         get(species, :ageMonths)[idx], 
                         get(species, :sex)[idx], 
                         get(species, :education)[idx]
@@ -112,7 +112,7 @@ p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
 
 # idx = findall(<(6), get(metabolites, :ageMonths))
 # p2 = permanovas(metdm[idx,idx], [
-#                         get(metabolites, :cogScore)[idx], 
+#                         get(metabolites, :cogScorePercentile)[idx], 
 #                         get(metabolites, :ageMonths)[idx], 
 #                         get(metabolites, :sex)[idx], 
 #                         get(metabolites, :education)[idx]
@@ -124,7 +124,7 @@ p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
 
 idx = findall(<(6), get(brain, :ageMonths))
 p3 = permanovas(brndm[idx, idx], [
-                        get(brain, :cogScore)[idx], 
+                        get(brain, :cogScorePercentile)[idx], 
                         get(brain, :ageMonths)[idx], 
                         get(brain, :sex)[idx], 
                         get(brain, :education)[idx]
@@ -140,7 +140,7 @@ CSV.write(outputfiles("permanovas_u6mo.csv"), p)
 
 idx = findall(>(18), get(species, :ageMonths))
 p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
-                        get(species, :cogScore)[idx], 
+                        get(species, :cogScorePercentile)[idx], 
                         get(species, :ageMonths)[idx], 
                         get(species, :sex)[idx], 
                         get(species, :education)[idx]
@@ -148,7 +148,7 @@ p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
 )
 bidx = findall(>(18), get(brain, :ageMonths))
 p3 = permanovas(brndm[bidx, bidx], [
-                        get(brain, :cogScore)[bidx], 
+                        get(brain, :cogScorePercentile)[bidx], 
                         get(brain, :ageMonths)[bidx], 
                         get(brain, :sex)[bidx], 
                         get(brain, :education)[bidx]
