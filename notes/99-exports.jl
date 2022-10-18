@@ -26,7 +26,7 @@ CSV.write(datafiles("exports", "timepoint_metadata.csv"), select(mdata,
     "subject", "timepoint", # Identifiers
     "ageMonths", "sex", "race", "education", # Demographics
     "assessmentDate", "scanDate", # Dates 
-    "cogScore", "omni", "etoh", "has_segmentation", "read_depth" # Measurements
+    "cogScore", "cogScorePercentile", "omni", "etoh", "has_segmentation", "read_depth" # Measurements
 ))
 
 
