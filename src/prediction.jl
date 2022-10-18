@@ -254,7 +254,7 @@ function train_randomforest(
 
         ## 5.1. Splitting training data between train and test
         Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:nrow(X)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
@@ -272,7 +272,11 @@ function train_randomforest(
             )
 
             ## 5.2.2. Fit model on training data
-            rf_machine = machine(rf_model, X[train, :], y[train])
+            if length(collect(input_cols)) == 1
+                rf_machine = machine(rf_model, X[train], y[train])
+            else
+                rf_machine = machine(rf_model, X[train, :], y[train])
+            end
             MLJ.fit!(rf_machine, verbosity=0)
 
             ## 5.2.3. Benchmark model on independent testing data
@@ -366,7 +370,7 @@ function train_randomforest(
 
         ## 5.1. Splitting training data between train and test
         Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:nrow(X)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
