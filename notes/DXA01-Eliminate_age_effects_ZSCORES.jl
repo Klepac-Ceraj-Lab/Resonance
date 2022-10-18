@@ -186,3 +186,5 @@ for segment in original_prediction_segments
         ]
     )
 end
+
+CSV.write("cogscore_percentiles.csv", cogscore_df)
