@@ -155,13 +155,13 @@ function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf
     return hm
 end
 
-function plot_fsea(setcors, notcors; label="", ylabel="enrichment score")
+function plot_fsea(setcors, notcors; label="", ylabel="enrichment", kwargs...)
     fig = Figure()
-    plot_fsea!(fig.layout, setcors, notcors; label, ylabel)
-    fig
+    grid, ax1, ax2 = plot_fsea!(fig.layout, setcors, notcors; label, ylabel, kwargs...)
+    fig, ax1, ax2
 end
 
-function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment score")
+function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", kwargs...)
     fullcors = [setcors; notcors]
     ncors = length(fullcors)
 
@@ -175,10 +175,10 @@ function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment score")
     xs = 1:ncors
     ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
     
-    t = "Enrichment score: $(round(enrichment_score(setcors, notcors), digits=3))"
+    t = "ES: $(round(enrichment_score(setcors, notcors), digits=3))"
     !isempty(label) && (t = string(label, " ", t))
 
-    ax1 = Axis(grid[1,1]; title=t, ylabel)
+    ax1 = Axis(grid[1,1]; title=t, ylabel, kwargs...)
     hidexdecorations!(ax1)
 
     ax2 = Axis(grid[2,1])
@@ -192,7 +192,7 @@ function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment score")
 
     linkxaxes!(ax1, ax2)
     tightlimits!.((ax1, ax2))
-    grid
+    grid, ax1, ax2
 end
 
 function plot_corrband!(ax, cors; bandres=5000)

@@ -117,7 +117,7 @@ C = GridLayout(DEFG[1,1])
 D = GridLayout(DEFG[2,1])
 E = GridLayout(DEFG[3,1])
 F = GridLayout(DEFG[4,1])
-G = GridLayout(figure[4,1:3]; alignmode=Outside())
+G = GridLayout(figure[4,1:2]; alignmode=Outside())
 ```
 
 
@@ -176,6 +176,7 @@ let
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
+
 end
 
 let
@@ -187,7 +188,7 @@ let
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "")
+        ylabel = "", xticks = -0.2:0.1:0.0)
 end
 
 let
@@ -199,7 +200,7 @@ let
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "")
+        ylabel = "", xticks = -0.7:0.2:0.0)
 end
 
 let
@@ -269,7 +270,7 @@ let
     ####
 
     df = sort(subset(o18fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
-    ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+    ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="over 18")
     hideydecorations!(ax, grid=false)
     m = median(o18cors)
