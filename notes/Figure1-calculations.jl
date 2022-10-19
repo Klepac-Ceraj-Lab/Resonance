@@ -26,7 +26,7 @@ kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
 kos = kos[:, findall(!ismissing, get(kos, :ageMonths))]
 kos = filter(!hastaxon, kos)
 
-metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
+# metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
 brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
 
 
@@ -59,8 +59,8 @@ ecsdm = Microbiome.braycurtis(ecs)
 CSV.write(outputfiles("ecsdm.csv"), Tables.table(ecsdm))
 kosdm = Microbiome.braycurtis(kos)
 CSV.write(outputfiles("kosdm.csv"), Tables.table(kosdm))
-metdm = Microbiome.braycurtis(metabolites)
-CSV.write(outputfiles("metdm.csv"), Tables.table(metdm))
+# metdm = Microbiome.braycurtis(metabolites)
+# CSV.write(outputfiles("metdm.csv"), Tables.table(metdm))
 brndm = Microbiome.braycurtis(brain)
 CSV.write(outputfiles("brndm.csv"), Tables.table(brndm))
 
@@ -77,15 +77,15 @@ p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[u
                         get(species, :education)[uidx]
             ]; commlabels, mdlabels
 )
-p2 = permanovas(metdm, [
-                        get(metabolites, :cogScorePercentile), 
-                        get(metabolites, :ageMonths), 
-                        get(metabolites, :sex), 
-                        get(metabolites, :education)
-            ]; mdlabels
-)
-p2.label .= "metabolites"
-append!(p, p2)
+# p2 = permanovas(metdm, [
+#                         get(metabolites, :cogScorePercentile), 
+#                         get(metabolites, :ageMonths), 
+#                         get(metabolites, :sex), 
+#                         get(metabolites, :education)
+#             ]; mdlabels
+# )
+# p2.label .= "metabolites"
+# append!(p, p2)
 
 p3 = permanovas(brndm[buidx, buidx], [
                         get(brain, :cogScorePercentile)[buidx], 
@@ -109,17 +109,18 @@ p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
                         get(species, :education)[idx]
             ]; commlabels=["taxa", "UniRef90s"], mdlabels
 )
-idx = findall(<(6), get(metabolites, :ageMonths))
-p2 = permanovas(metdm[idx,idx], [
-                        get(metabolites, :cogScorePercentile)[idx], 
-                        get(metabolites, :ageMonths)[idx], 
-                        get(metabolites, :sex)[idx], 
-                        get(metabolites, :education)[idx]
-            ]; mdlabels
-)
-p2.label .= "metabolites"
 
-append!(p, p2)
+# idx = findall(<(6), get(metabolites, :ageMonths))
+# p2 = permanovas(metdm[idx,idx], [
+#                         get(metabolites, :cogScorePercentile)[idx], 
+#                         get(metabolites, :ageMonths)[idx], 
+#                         get(metabolites, :sex)[idx], 
+#                         get(metabolites, :education)[idx]
+#             ]; mdlabels
+# )
+# p2.label .= "metabolites"
+
+# append!(p, p2)
 
 idx = findall(<(6), get(brain, :ageMonths))
 p3 = permanovas(brndm[idx, idx], [
@@ -161,16 +162,16 @@ CSV.write(outputfiles("permanovas_o18mo.csv"), p)
 
 mdf = mantel([spedm, unidm, ecsdm, kosdm]; commlabels)
 
-(ol1, ol2) = stp_overlap(
-        collect(zip(get(species, :subject), get(species, :timepoint))),
-        collect(zip(get(metabolites, :subject), get(metabolites, :timepoint)))
-)
-m2 = DataFrame()
-for (i, dm1) in enumerate([spedm, unidm, ecsdm, kosdm])
-    m, p = mantel(dm1[ol1, ol1], metdm[ol2, ol2])
-    push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
-end
-append!(mdf, m2)
+# (ol1, ol2) = stp_overlap(
+#         collect(zip(get(species, :subject), get(species, :timepoint))),
+#         collect(zip(get(metabolites, :subject), get(metabolites, :timepoint)))
+# )
+# m2 = DataFrame()
+# for (i, dm1) in enumerate([spedm, unidm, ecsdm, kosdm])
+#     m, p = mantel(dm1[ol1, ol1], metdm[ol2, ol2])
+#     push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
+# end
+# append!(mdf, m2)
 
 (ol3, ol4) = stp_overlap(
         collect(zip(get(species, :subject), get(species, :timepoint))),
@@ -183,20 +184,20 @@ for (i, dm1) in enumerate([spedm, unidm, ecsdm, kosdm])
 end
 append!(mdf, m3)
 
-(ol5, ol6) = stp_overlap(
-        collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))),
-        collect(zip(get(brain, :subject), get(brain, :timepoint))),
-)
+# (ol5, ol6) = stp_overlap(
+#         collect(zip(get(metabolites, :subject), get(metabolites, :timepoint))),
+#         collect(zip(get(brain, :subject), get(brain, :timepoint))),
+# )
 
-m, p = mantel(metdm[ol5, ol5], brndm[ol6, ol6])
-push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
+# m, p = mantel(metdm[ol5, ol5], brndm[ol6, ol6])
+# push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
 CSV.write(outputfiles("mantel_all.csv"), mdf)
 
 #- Under 6mo -#
 
 speidx = get(species, :ageMonths) .< 6
-metidx = get(metabolites, :ageMonths) .< 6
+# metidx = get(metabolites, :ageMonths) .< 6
 brnidx = get(brain, :ageMonths) .< 6
 
 
@@ -204,29 +205,29 @@ speu6dm = spedm[speidx, speidx]
 uniu6dm = unidm[speidx, speidx]
 ecsu6dm = ecsdm[speidx, speidx]
 kosu6dm = kosdm[speidx, speidx]
-metu6dm = metdm[metidx, metidx]
+# metu6dm = metdm[metidx, metidx]
 brnu6dm = brndm[brnidx, brnidx]
 
 
 mdf = mantel([speu6dm, uniu6dm, ecsu6dm, kosu6dm]; commlabels)
 
-(ol1, ol2) = stp_overlap(
-        collect(zip(get(species, :subject)[speidx],
-                    get(species, :timepoint)[speidx])
-                ),
-        collect(zip(get(metabolites, :subject)[metidx],
-                    get(metabolites, :timepoint)[metidx])
-                )
-)
+# (ol1, ol2) = stp_overlap(
+#         collect(zip(get(species, :subject)[speidx],
+#                     get(species, :timepoint)[speidx])
+#                 ),
+#         collect(zip(get(metabolites, :subject)[metidx],
+#                     get(metabolites, :timepoint)[metidx])
+#                 )
+# )
 
 
 
-m2 = DataFrame()
-for (i, dm1) in enumerate([speu6dm, uniu6dm, ecsu6dm, kosu6dm])
-    m, p = mantel(dm1[ol1, ol1], metu6dm[ol2, ol2])
-    push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
-end
-append!(mdf, m2)
+# m2 = DataFrame()
+# for (i, dm1) in enumerate([speu6dm, uniu6dm, ecsu6dm, kosu6dm])
+#     m, p = mantel(dm1[ol1, ol1], metu6dm[ol2, ol2])
+#     push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
+# end
+# append!(mdf, m2)
 
 
 (ol3, ol4) = stp_overlap(
@@ -244,17 +245,17 @@ for (i, dm1) in enumerate([speu6dm, uniu6dm, ecsu6dm, kosu6dm])
 end
 append!(mdf, m3)
 
-(ol5, ol6) = stp_overlap(
-        collect(zip(get(metabolites, :subject)[metidx],
-                    get(metabolites, :timepoint)[metidx])
-                ),
-        collect(zip(get(brain, :subject)[brnidx],
-                    get(brain, :timepoint)[brnidx])
-                ),
-)
+# (ol5, ol6) = stp_overlap(
+#         collect(zip(get(metabolites, :subject)[metidx],
+#                     get(metabolites, :timepoint)[metidx])
+#                 ),
+#         collect(zip(get(brain, :subject)[brnidx],
+#                     get(brain, :timepoint)[brnidx])
+#                 ),
+# )
 
-m, p = mantel(metu6dm[ol5, ol5], brnu6dm[ol6, ol6])
-push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
+# m, p = mantel(metu6dm[ol5, ol5], brnu6dm[ol6, ol6])
+# push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
 CSV.write(outputfiles("mantel_u6.csv"), mdf)
 
