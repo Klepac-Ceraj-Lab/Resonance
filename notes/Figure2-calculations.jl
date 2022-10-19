@@ -50,9 +50,9 @@ set!(unirefs, brainmeta)
 ## Calculate correlations
 
 unimdata = DataFrame(metadata(unirefs))
-allages = unique(subset(unimdata, :cogScore => ByRow(!ismissing)), :subject)
-u6 = unique(subset(unimdata, :ageMonths => ByRow(<(6)), :cogScore => ByRow(!ismissing)), :subject)
-o18 = unique(subset(unimdata, :ageMonths => ByRow(>(18)), :cogScore => ByRow(!ismissing)), :subject)
+allages = unique(subset(unimdata, :cogScorePercentile => ByRow(!ismissing)), :subject)
+u6 = unique(subset(unimdata, :ageMonths => ByRow(<(6)), :cogScorePercentile => ByRow(!ismissing)), :subject)
+o18 = unique(subset(unimdata, :ageMonths => ByRow(>(18)), :cogScorePercentile => ByRow(!ismissing)), :subject)
 
 allcomm = let keepuni = vec(prevalence(unirefs[:, allages.sample]) .> 0)
     unirefs[keepuni, allages.sample]
@@ -66,10 +66,10 @@ o18comm = let keepuni = vec(prevalence(unirefs[:, o18.sample]) .> 0)
     unirefs[keepuni, o18.sample]
 end
 
-allcors = vec(cor(get(allcomm, :cogScore), abundances(allcomm), dims=2))
+allcors = vec(cor(get(allcomm, :cogScorePercentile), abundances(allcomm), dims=2))
 
-u6cors = vec(cor(get(u6comm, :cogScore), abundances(u6comm), dims=2))
-o18cors = vec(cor(get(o18comm, :cogScore), abundances(o18comm), dims=2))
+u6cors = vec(cor(get(u6comm, :cogScorePercentile), abundances(u6comm), dims=2))
+o18cors = vec(cor(get(o18comm, :cogScorePercentile), abundances(o18comm), dims=2))
 
 allcors_age = vec(cor(get(allcomm, :ageMonths), abundances(allcomm), dims=2))
 u6cors_age = vec(cor(get(u6comm, :ageMonths), abundances(u6comm), dims=2))
@@ -89,33 +89,35 @@ o18_neuroactive_full = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>
 let 
     tmp = DataFrame(ThreadsX.map(collect(keys(all_neuroactive))) do gs
         ixs = all_neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, allcors[ixs])
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, allcors[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScorePercentile", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     tmp2 = DataFrame(ThreadsX.map(collect(keys(all_neuroactive))) do gs
         ixs = all_neuroactive[gs]
-        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, allcors_age[ixs])
-        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, allcors_age[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outputfiles("fsea_all_consolidated.csv"), tmp)
 end
@@ -124,33 +126,35 @@ end
 let 
     tmp = DataFrame(ThreadsX.map(collect(keys(all_neuroactive_full))) do gs
         ixs = all_neuroactive_full[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, allcors[ixs])
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, allcors[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScorePercentile", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     tmp2 = DataFrame(ThreadsX.map(collect(keys(all_neuroactive_full))) do gs
         ixs = all_neuroactive_full[gs]
-        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, allcors_age[ixs])
-        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, allcors_age[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outputfiles("fsea_all.csv"), tmp)
 
@@ -161,33 +165,35 @@ end
 let 
     tmp = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive))) do gs
         ixs = u6_neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, u6cors[ixs])
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, u6cors[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScorePercentile", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     tmp2 = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive))) do gs
         ixs = u6_neuroactive[gs]
-        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, u6cors_age[ixs])
-        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, u6cors_age[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outputfiles("fsea_u6_consolidated.csv"), tmp)
 end
@@ -197,33 +203,35 @@ end
 let 
     tmp = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive_full))) do gs
         ixs = u6_neuroactive_full[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, u6cors[ixs])
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, u6cors[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScorePercentile", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     tmp2 = DataFrame(ThreadsX.map(collect(keys(u6_neuroactive_full))) do gs
         ixs = u6_neuroactive_full[gs]
-        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, u6cors_age[ixs])
-        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, u6cors_age[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outputfiles("fsea_u6.csv"), tmp)
 end
@@ -233,33 +241,35 @@ end
 let 
     tmp = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive))) do gs
         ixs = o18_neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, o18cors[ixs])
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, o18cors[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScorePercentile", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     tmp2 = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive))) do gs
         ixs = o18_neuroactive[gs]
-        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, o18cors_age[ixs])
-        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, o18cors_age[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outputfiles("fsea_o18_consolidated.csv"), tmp)
 end
@@ -268,33 +278,35 @@ end
 let 
     tmp = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive_full))) do gs
         ixs = o18_neuroactive_full[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, o18cors[ixs])
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "cogScorePercentile", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, o18cors[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScorePercentile", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     tmp2 = DataFrame(ThreadsX.map(collect(keys(o18_neuroactive_full))) do gs
         ixs = o18_neuroactive_full[gs]
-        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         cs = filter(!isnan, o18cors_age[ixs])
-        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "age",  geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
 
         acs = filter(!isnan, o18cors_age[Not(ixs)])
         mwu = MannWhitneyUTest(cs, acs)
+        es = Resonance.enrichment_score(cs, acs)
 
-        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "age", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
     end)
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outputfiles("fsea_o18.csv"), tmp)
 end
