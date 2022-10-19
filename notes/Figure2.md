@@ -293,8 +293,8 @@ let
                                     marker=:circle,
                                     strokecolor=:gray,
                                     strokewidth=0.5) for c in colors[[1:3..., 5:7...]]],
-                   ["(-) p < 0.01", "(-) p < 0.05", "(-) p < 0.2", 
-                    "(+) p < 0.01", "(+) p < 0.05", "(+) p < 0.2"])
+                   ["(-) q < 0.01", "(-) q < 0.05", "(-) q < 0.2", 
+                    "(+) q < 0.01", "(+) q < 0.05", "(+) p < 0.2"])
 end
 
 rowsize!(figure.layout, 4, Relative(2/5))
