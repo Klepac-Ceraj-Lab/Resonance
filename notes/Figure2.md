@@ -127,16 +127,30 @@ aax2 = Axis(A[1,2]; xlabel = "Age (years)")
 hideydecorations!(aax2)
 linkyaxes!(aax1, aax2)
 colgap!(A, Fixed(4))
-figure
+
 let
     u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(get(unirefs, :ageMonths), get(unirefs, :cogScore))))
     o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(get(unirefs, :ageMonths), get(unirefs, :cogScore))))
 
-    scatter!(aax1, get(unirefs, :ageMonths)[u2y], get(unirefs, :cogScore)[u2y])
-    scatter!(aax2, get(unirefs, :ageMonths)[o2y] ./ 12, get(unirefs, :cogScore)[o2y])
+    cs = ColorSchemes.colorschemes[:Set2_7]
+    function colorage(age)
+        age <= 36 && return cs[1] # mullen
+        age <= 60 && return cs[2] # WPPSI
+        return cs[3] # WISC
+    end
+    ages = get(unirefs, :ageMonths)[u2y]
+    scatter!(aax1, ages, get(unirefs, :cogScore)[u2y]; color=colorage.(ages))
+
+    ages = get(unirefs, :ageMonths)[o2y]
+    scatter!(aax2, ages ./ 12, get(unirefs, :cogScore)[o2y]; color=colorage.(ages))
     
     vlines!(aax1, [6, 12, 18]; linestyle=:dash, color=:gray)
     # TODO: add colors for training/test sets in later models
+
+    Legend(A[2, 1:2], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
+                      ["Mullen", "WPPSI", "WISC"], "Assessment"; 
+                      orientation=:horizontal, tellheight=true, tellwidth=false
+    )
 end
 
 bax = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
@@ -157,9 +171,8 @@ let
             color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
 end
 
-Legend(figure[3,1], [MarkerElement(; color = :dodgerblue, marker=:circle), MarkerElement(; color = :orangered, marker=:circle)],
-               ["Pre-covid", "Post-covid"]; orientation=:horizontal, tellheight=true, tellwidth=false, framevisible=false)
-rowgap!(figure.layout, 2, Fixed(0))
+Legend(B[2,1], [MarkerElement(; color = :dodgerblue, marker=:circle), MarkerElement(; color = :orangered, marker=:circle)],
+               ["Pre-covid", "Post-covid"]; orientation=:horizontal, tellheight=true, tellwidth=false)
 ```
 
 
