@@ -11,6 +11,7 @@ using ThreadsX
 using ColorSchemes
 using GLM
 using Dates
+using JLD2
 
 ## Data Loading
 
@@ -81,6 +82,15 @@ u6_neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), f
 u6_neuroactive_full = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(u6comm)); consolidate=false)
 o18_neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(o18comm)))
 o18_neuroactive_full = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(o18comm)); consolidate=false)
+
+
+jldsave(outputfiles("figure2_data.jld2");
+    allcors, u6cors, o18cors, 
+    allcors_age, u6cors_age, o18cors_age, 
+    all_neuroactive, u6_neuroactive, o18_neuroactive, 
+    all_neuroactive_full, u6_neuroactive_full, o18_neuroactive_full,
+    unimdata
+)
 
 ## Run FSEA
 
