@@ -16,12 +16,11 @@ Then, we'll load in the different data sources.
 
 ```julia
 mdata = Resonance.load(Metadata())
+mdata.education
 
-mdata.maternalEd = categorical([ismissing(m) || m == "-8" ? missing : parse(Int, m) for m in mdata.maternalEd]; ordered=true)
-droplevels!(mdata.maternalEd)
 
-let (lq, uq) = quantile(collect(skipmissing(mdata.cogScore)), [0.25, 0.75])
-    mdata.quartile = categorical(map(mdata.cogScore) do cs
+let (lq, uq) = [0.25, 0.75]
+    mdata.quartile = categorical(map(mdata.cogScorePercentile) do cs
         ismissing(cs) && return missing
         cs <= lq && return "lower"
         cs >= uq && return "upper"
@@ -53,28 +52,28 @@ and over 18 months old (most kids are eating solid foods).
 
 ```julia
 specmdata = select(DataFrame(Microbiome.metadata(species)),
-                ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
+                ["subject", "timepoint", "ageMonths", "cogScorePercentile", "quartile", "read_depth", "education"]
 )
 
 specmdata.sample = samplenames(species)
 sort!(specmdata, ["subject", "timepoint"])
 
-specu6 = subset(specmdata, "ageMonths" => ByRow(<(6)), "cogScore"=> ByRow(!ismissing))
+specu6 = subset(specmdata, "ageMonths" => ByRow(<(6)), "cogScorePercentile"=> ByRow(!ismissing))
 unique!(specu6, "subject")
 
-speco18 = subset(specmdata, "ageMonths" => ByRow(>(18)), "cogScore"=> ByRow(!ismissing))
+speco18 = subset(specmdata, "ageMonths" => ByRow(>(18)), "cogScorePercentile"=> ByRow(!ismissing))
 unique!(speco18, "subject")
 
 komdata = select(DataFrame(Microbiome.metadata(kos)),
-                ["subject", "timepoint", "ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]
+                ["subject", "timepoint", "ageMonths", "cogScorePercentile", "quartile", "read_depth", "education"]
 )
 komdata.sample = samplenames(kos)
 sort!(komdata, ["subject", "timepoint"])
 
-kou6 = subset(komdata, "ageMonths" => ByRow(<(6)), "cogScore"=> ByRow(!ismissing))
+kou6 = subset(komdata, "ageMonths" => ByRow(<(6)), "cogScorePercentile"=> ByRow(!ismissing))
 unique!(kou6, "subject")
 
-koo18 = subset(komdata, "ageMonths" => ByRow(>(18)), "cogScore"=> ByRow(!ismissing))
+koo18 = subset(komdata, "ageMonths" => ByRow(>(18)), "cogScorePercentile"=> ByRow(!ismissing))
 unique!(koo18, "subject")
 ```
 
@@ -106,27 +105,31 @@ end
 ```julia
 specu6_lmresults = DataFrame()
 
-
-for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
+for spc in names(specu6, Not(["subject", "timepoint", "ageMonths", "cogScorePercentile", "quartile", "sample", "read_depth", "education"]))
     count(>(0), specu6[!, spc]) / size(specu6, 1) > 0.1 || continue
     
     @info spc
     over0 = specu6[!, spc] .> 0
     ab = collect(specu6[over0, spc] .+ (minimum(filter(>(0), specu6[!, spc])) / 2)) # add half-minimum non-zerovalue
 
-    df = specu6[over0, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df = specu6[over0, ["ageMonths", "cogScorePercentile", "quartile", "read_depth", "education"]]
     df.bug = log2.(ab)
 
-    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
+    mod = lm(@formula(bug ~ cogScorePercentile + ageMonths + read_depth + education), df; dropcollinear=false)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
-    ct.kind .= "cogScore"
+    ct.kind .= "cogScorePercentile"
     append!(specu6_lmresults, ct)
     subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
     droplevels!(df.quartile)
     length(unique(df.quartile)) > 1 || continue 
 
-    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
+    try
+        mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + education), df; dropcollinear=false)
+    catch e
+        @info "$spc failed due to $e"
+        continue
+    end
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
     ct.kind .= "quartile"
@@ -144,7 +147,7 @@ rename!(specu6_lmresults, "Pr(>|t|)"=>"pvalue");
 @chain specu6_lmresults begin
     subset!(:Name => ByRow(x->
         !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
+            ("(Intercept)", "ageMonths", "read_depth", "education", r"education")
             )
         )
     )
@@ -165,26 +168,31 @@ specu6_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 speco18_lmresults = DataFrame()
 
 
-for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
+for spc in names(speco18, Not(["subject", "timepoint", "ageMonths", "cogScorePercentile", "quartile", "sample", "read_depth", "education"]))
     count(>(0), speco18[!, spc]) / size(speco18, 1) > 0.1 || continue
     
     @info spc
     over0 = speco18[!, spc] .> 0
     ab = collect(speco18[over0, spc] .+ (minimum(filter(>(0), speco18[!, spc])) / 2)) # add half-minimum non-zerovalue
 
-    df = speco18[over0, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df = speco18[over0, ["ageMonths", "cogScorePercentile", "quartile", "read_depth", "education"]]
     df.bug = log2.(ab)
 
-    mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
+    mod = lm(@formula(bug ~ cogScorePercentile + ageMonths + read_depth + education), df; dropcollinear=false)
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
-    ct.kind .= "cogScore"
+    ct.kind .= "cogScorePercentile"
     append!(speco18_lmresults, ct)
     subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
     droplevels!(df.quartile)
     length(unique(df.quartile)) > 1 || continue 
 
-    mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + maternalEd), df; dropcollinear=false)
+    try
+        mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + education), df; dropcollinear=false)
+    catch e
+        @info "$spc failed due to $e"
+        continue
+    end
     ct = DataFrame(coeftable(mod))
     ct.species .= spc
     ct.kind .= "quartile"
@@ -202,7 +210,7 @@ rename!(speco18_lmresults, "Pr(>|t|)"=>"pvalue");
 @chain speco18_lmresults begin
     subset!(:Name => ByRow(x->
         !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
+            ("(Intercept)", "ageMonths", "read_depth", "education", r"education")
             )
         )
     )
@@ -222,26 +230,26 @@ speco18_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```julia
 kou6_lmresults = DataFrame()
 
-for ko in names(kou6, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
+for ko in names(kou6, Not(["subject", "timepoint", "ageMonths", "cogScorePercentile", "quartile", "sample", "read_depth", "education"]))
     count(>(0), kou6[!, ko]) / size(kou6, 1) > 0.1 || continue
     
     @info ko
 
     ab = kou6[!, ko] .+ (minimum(filter(>(0), kou6[!, ko])) / 2) # add half-minimum non-zerovalue
 
-    df = kou6[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df = kou6[:, ["ageMonths", "cogScorePercentile", "quartile", "read_depth", "education"]]
     df.func = log2.(ab)
 
-    mod = lm(@formula(func ~ cogScore + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(func ~ cogScorePercentile + ageMonths + read_depth + education), df)
     ct = DataFrame(coeftable(mod))
     ct.ko .= ko
-    ct.kind .= "cogScore"
+    ct.kind .= "cogScorePercentile"
     append!(kou6_lmresults, ct)
 
     subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
     droplevels!(df.quartile)
 
-    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + education), df)
     ct = DataFrame(coeftable(mod))
     ct.ko .= ko
     ct.kind .= "quartile"
@@ -259,7 +267,7 @@ rename!(kou6_lmresults, "Pr(>|t|)"=>"pvalue");
 @chain kou6_lmresults begin
     subset!(:Name => ByRow(x->
         !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
+            ("(Intercept)", "ageMonths", "read_depth", "education", r"education")
             )
         )
     )
@@ -279,26 +287,26 @@ kou6_lmresults[:, Not(["Lower 95%", "Upper 95%"])]
 ```julia
 koo18_lmresults = DataFrame()
 
-for ko in names(koo18, Not(["subject", "timepoint", "ageMonths", "cogScore", "quartile", "sample", "read_depth", "maternalEd"]))
+for ko in names(koo18, Not(["subject", "timepoint", "ageMonths", "cogScorePercentile", "quartile", "sample", "read_depth", "education"]))
     count(>(0), koo18[!, ko]) / size(koo18, 1) > 0.1 || continue
     
     @info ko
 
     ab = koo18[!, ko] .+ (minimum(filter(>(0), koo18[!, ko])) / 2) # add half-minimum non-zerovalue
 
-    df = koo18[:, ["ageMonths", "cogScore", "quartile", "read_depth", "maternalEd"]]
+    df = koo18[:, ["ageMonths", "cogScorePercentile", "quartile", "read_depth", "education"]]
     df.func = log2.(ab)
 
-    mod = lm(@formula(func ~ cogScore + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(func ~ cogScorePercentile + ageMonths + read_depth + education), df)
     ct = DataFrame(coeftable(mod))
     ct.ko .= ko
-    ct.kind .= "cogScore"
+    ct.kind .= "cogScorePercentile"
     append!(koo18_lmresults, ct)
 
     subset!(df, :quartile=> ByRow(q-> q in ("upper", "lower")))
     droplevels!(df.quartile)
 
-    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + maternalEd), df)
+    mod = lm(@formula(func ~ quartile + ageMonths + read_depth + education), df)
     ct = DataFrame(coeftable(mod))
     ct.ko .= ko
     ct.kind .= "quartile"
@@ -316,7 +324,7 @@ rename!(koo18_lmresults, "Pr(>|t|)"=>"pvalue");
 @chain koo18_lmresults begin
     subset!(:Name => ByRow(x->
         !any(y-> contains(x, y), 
-            ("(Intercept)", "ageMonths", "read_depth", "maternalEd", r"maternalEd")
+            ("(Intercept)", "ageMonths", "read_depth", "education", r"education")
             )
         )
     )
@@ -342,7 +350,7 @@ Alo = GridLayout(figure[1,1])
 
 A = Axis(Alo[1,1]; xlabel="Age (months)", ylabel="Cognitive function score")
 
-scatter!(A, mdata.ageMonths, mdata.cogScore;
+scatter!(A, mdata.ageMonths, mdata.cogScorePercentile;
     color = map(mdata.omni) do s
         if ismissing(s)
             return (:gray, 0.4)
@@ -367,37 +375,37 @@ figure
 using RCall
 spc = "Romboutsia_ilealis"
 
-df = speco18[:, ["ageMonths", "cogScore", "read_depth", "subject", "maternalEd"]]
+df = speco18[:, ["ageMonths", "cogScorePercentile", "read_depth", "subject", "education"]]
 
 halfmin = minimum(filter(>(0), speco18[:, spc])) / 2
 df.bug = collect(log2.((speco18[:, spc] .+ halfmin)))
 
-mod1 = lm(@formula(cogScore ~ ageMonths + read_depth), df)
-mod2 = lm(@formula(cogScore ~ bug + ageMonths + read_depth), df)
+mod1 = lm(@formula(cogScorePercentile ~ ageMonths + read_depth), df)
+mod2 = lm(@formula(cogScorePercentile ~ bug + ageMonths + read_depth), df)
 
 reval("library('lme4')")
 @rput df
 
-reval("mod3 <- lm(cogScore ~ 1 + bug + ageMonths + read_depth, df)")
+reval("mod3 <- lm(cogScorePercentile ~ 1 + bug + ageMonths + read_depth, df)")
 reval("summary(mod3)")
 
 ```
 
 ```julia
-cc = completecases(speco18, ["ageMonths", "cogScore", "read_depth", "subject"])
+cc = completecases(speco18, ["ageMonths", "cogScorePercentile", "read_depth", "subject"])
 
-scatter(predict(mod1), df[cc, "cogScore"])
+scatter(predict(mod1), df[cc, "cogScorePercentile"])
 abline!(0,1)
 
-scatter!(predict(mod2), df[cc, "cogScore"]; color=:orange)
+scatter!(predict(mod2), df[cc, "cogScorePercentile"]; color=:orange)
 current_figure()
 
-cor(predict(mod1), df[cc, "cogScore"])
-cor(predict(mod2), df[cc, "cogScore"])
+cor(predict(mod1), df[cc, "cogScorePercentile"])
+cor(predict(mod2), df[cc, "cogScorePercentile"])
 
 df2 = copy(df)
 df2.bug .= 0
 
-scatter!(predict(mod2, df2[cc, :]), df[cc, "cogScore"]; color=:purple)
+scatter!(predict(mod2, df2[cc, :]), df[cc, "cogScorePercentile"]; color=:purple)
 current_figure()
 ```
