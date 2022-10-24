@@ -1,4 +1,4 @@
-# Figure4 - RandomForest prediction of cogScores from Taxonomic Profiles
+# Figure3 - RandomForest prediction of cogScores from SES, Taxonomic and Functional Profiles
 
 #```julia
 using Resonance
@@ -17,34 +17,11 @@ using GLM
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore classification from taxonomic profiles
-JLD2.@load "models/classification_currentCogScores_00to06_fromtaxa_results.jld"
-JLD2.@load "models/classification_currentCogScores_06to12_fromtaxa_results.jld"
-JLD2.@load "models/classification_currentCogScores_12to18_fromtaxa_results.jld"
-JLD2.@load "models/classification_currentCogScores_18to24_fromtaxa_results.jld"
-# concurrent cogScore regression from taxonomic profiles
-JLD2.@load "models/regression_currentCogScores_00to06_fromtaxa_results.jld"
-JLD2.@load "models/regression_currentCogScores_06to12_fromtaxa_results.jld"
-JLD2.@load "models/regression_currentCogScores_12to18_fromtaxa_results.jld"
-JLD2.@load "models/regression_currentCogScores_18to24_fromtaxa_results.jld"
-# future cogScore classification from taxonomic profiles
-JLD2.@load "models/classification_futureCogScores_allselected_fromtaxa_results.jld"
-# future cogScore regression from taxonomic profiles
-JLD2.@load "models/regression_futureCogScores_allselected_fromtaxa_results.jld"
-
-# concurrent cogScore classification from taxonomic profiles
-JLD2.@load "models/classification_currentCogScores_00to06_fromfunctions_results.jld"
-JLD2.@load "models/classification_currentCogScores_06to12_fromfunctions_results.jld"
-JLD2.@load "models/classification_currentCogScores_12to18_fromfunctions_results.jld"
-JLD2.@load "models/classification_currentCogScores_18to24_fromfunctions_results.jld"
-# concurrent cogScore regression from taxonomic profiles
-JLD2.@load "models/regression_currentCogScores_00to06_fromfunctions_results.jld"
-JLD2.@load "models/regression_currentCogScores_06to12_fromfunctions_results.jld"
-JLD2.@load "models/regression_currentCogScores_12to18_fromfunctions_results.jld"
-JLD2.@load "models/regression_currentCogScores_18to24_fromfunctions_results.jld"
-# future cogScore classification from taxonomic profiles
-JLD2.@load "models/classification_futureCogScores_allselected_fromfunctions_results.jld"
-# future cogScore regression from taxonomic profiles
-JLD2.@load "models/regression_futureCogScores_allselected_fromfunctions_results.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_onlyses.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_onlytaxa.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_onlyecs.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_sesplusecs.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_sesplustaxa.jld"
 #```
 
 ## Building Figure 4.1 - current cogscores from taxonomic profiles
