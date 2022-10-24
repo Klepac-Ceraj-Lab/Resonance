@@ -80,8 +80,8 @@ taxa_tuning_space = (
     )
 
 ecs_tuning_space = (
-    maxnodes_range = collect(1:1:15) ,
-    nodesize_range = collect(1:1:20),
+    maxnodes_range = [1, 2, 3, 4, 5, 7, 9, 11, 13, 15],
+    nodesize_range = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20],
     sampsize_range = [0.5, 0.6, 0.7, 0.8],
     mtry_range = collect(5:20:500),
     ntrees_range = [100, 300, 500, 700]
