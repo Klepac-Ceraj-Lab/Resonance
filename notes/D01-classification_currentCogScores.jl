@@ -101,7 +101,7 @@ insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.educ
 #     Resonance.Classification(),
 #     "classification_currentCogScores_00to06mo_onlyses",
 #     mdata_df,
-#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
 #     upperhalf_percentile, 
 #     [8,9], # To tackle the problem with AbstractVetor as Input
 #     :cogScorePercentile;
@@ -120,7 +120,7 @@ insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.educ
 #     Resonance.Classification(),
 #     "classification_currentCogScores_00to06mo_onlytaxa",
 #     mdata_taxa_df,
-#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
 #     upperhalf_percentile,
 #     9:557,
 #     :cogScorePercentile;
@@ -139,7 +139,7 @@ insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.educ
 #     Resonance.Classification(),
 #     "classification_currentCogScores_00to06mo_sesplustaxa",
 #     mdata_taxa_df,
-#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
 #     upperhalf_percentile,
 #     8:557,
 #     :cogScorePercentile;
@@ -158,7 +158,7 @@ insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.educ
 #     Resonance.Classification(),
 #     "classification_currentCogScores_00to06mo_onlyecs",
 #     mdata_ecs_df,
-#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
 #     upperhalf_percentile,
 #     9:2441,
 #     :cogScorePercentile;
@@ -177,7 +177,7 @@ insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.educ
 #     Resonance.Classification(),
 #     "classification_currentCogScores_00to06mo_sesplusecs",
 #     mdata_ecs_df,
-#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
 #     upperhalf_percentile,
 #     8:2441,
 #     :cogScorePercentile;
@@ -200,7 +200,7 @@ classification_currentCogScores_18to120mo_onlyses = train_randomforest(
     Resonance.Classification(),
     "classification_currentCogScores_18to120mo_onlyses",
     mdata_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     upperhalf_percentile, 
     [8,9], # To tackle the problem with AbstractVetor as Input
     :cogScorePercentile;
@@ -219,7 +219,7 @@ classification_currentCogScores_18to120mo_onlytaxa = train_randomforest(
     Resonance.Classification(),
     "classification_currentCogScores_18to120mo_onlytaxa",
     mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     upperhalf_percentile,
     9:557,
     :cogScorePercentile;
@@ -238,7 +238,7 @@ classification_currentCogScores_18to120mo_sesplustaxa = train_randomforest(
     Resonance.Classification(),
     "classification_currentCogScores_18to120mo_sesplustaxa",
     mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     upperhalf_percentile,
     8:557,
     :cogScorePercentile;
@@ -257,7 +257,7 @@ classification_currentCogScores_18to120mo_onlyecs = train_randomforest(
     Resonance.Classification(),
     "classification_currentCogScores_18to120mo_onlyecs",
     mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     upperhalf_percentile,
     9:2441,
     :cogScorePercentile;
@@ -276,7 +276,7 @@ classification_currentCogScores_18to120mo_sesplusecs = train_randomforest(
     Resonance.Classification(),
     "classification_currentCogScores_18to120mo_sesplusecs",
     mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     upperhalf_percentile,
     8:2441,
     :cogScorePercentile;
