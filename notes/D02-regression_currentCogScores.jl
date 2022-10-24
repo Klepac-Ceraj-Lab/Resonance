@@ -102,7 +102,6 @@ regression_currentCogScores_00to06mo_onlyses = train_randomforest(
     "regression_currentCogScores_00to06mo_onlyses",
     mdata_df,
     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile, 
     [8,9], # To tackle the problem with AbstractVetor as Input
     :cogScorePercentile;
     n_splits = 10,
@@ -121,7 +120,6 @@ regression_currentCogScores_00to06mo_onlytaxa = train_randomforest(
     "regression_currentCogScores_00to06mo_onlytaxa",
     mdata_taxa_df,
     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
     9:557,
     :cogScorePercentile;
     n_splits = 10,
@@ -140,7 +138,6 @@ regression_currentCogScores_00to06mo_sesplustaxa = train_randomforest(
     "regression_currentCogScores_00to06mo_sesplustaxa",
     mdata_taxa_df,
     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
     8:557,
     :cogScorePercentile;
     n_splits = 10,
@@ -159,8 +156,7 @@ regression_currentCogScores_00to06mo_onlyecs = train_randomforest(
     "regression_currentCogScores_00to06mo_onlyecs",
     mdata_ecs_df,
     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
-    9:2441,
+   9:2441,
     :cogScorePercentile;
     n_splits = 10,
     tuning_space = ecs_tuning_space,
@@ -178,8 +174,7 @@ regression_currentCogScores_00to06mo_sesplusecs = train_randomforest(
     "regression_currentCogScores_00to06mo_sesplusecs",
     mdata_ecs_df,
     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
-    8:2441,
+     8:2441,
     :cogScorePercentile;
     n_splits = 10,
     tuning_space = ecs_tuning_space,
@@ -196,12 +191,11 @@ JLD2.@save "models/regression_currentCogScores_00to06mo_sesplusecs.jld" regressi
 
 ## 6. Only SES
 
-regression_currentCogScores_00to06mo_onlyses = train_randomforest(
+regression_currentCogScores_18to120mo_onlyses = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_18to120mo_onlyses",
     mdata_df,
     x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
-    upperhalf_percentile, 
     [8,9], # To tackle the problem with AbstractVetor as Input
     :cogScorePercentile;
     n_splits = 10,
@@ -220,7 +214,6 @@ regression_currentCogScores_18to120mo_onlytaxa = train_randomforest(
     "regression_currentCogScores_18to120mo_onlytaxa",
     mdata_taxa_df,
     x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
-    upperhalf_percentile,
     9:557,
     :cogScorePercentile;
     n_splits = 10,
@@ -239,7 +232,6 @@ regression_currentCogScores_18to120mo_sesplustaxa = train_randomforest(
     "regression_currentCogScores_18to120mo_sesplustaxa",
     mdata_taxa_df,
     x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
-    upperhalf_percentile,
     8:557,
     :cogScorePercentile;
     n_splits = 10,
@@ -258,7 +250,6 @@ regression_currentCogScores_18to120mo_onlyecs = train_randomforest(
     "regression_currentCogScores_18to120mo_onlyecs",
     mdata_ecs_df,
     x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
-    upperhalf_percentile,
     9:2441,
     :cogScorePercentile;
     n_splits = 10,
@@ -277,7 +268,6 @@ regression_currentCogScores_18to120mo_sesplusecs = train_randomforest(
     "regression_currentCogScores_18to120mo_sesplusecs",
     mdata_ecs_df,
     x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
-    upperhalf_percentile,
     8:2441,
     :cogScorePercentile;
     n_splits = 10,

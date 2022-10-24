@@ -91,112 +91,112 @@ upperhalf_percentile(x::Vector{T} where T <: Real) = coerce(x .>= 0.50, OrderedF
 
 insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.education), type = Int), OrderedFactor)) # To tackle the problem with AbstractVetor as Input
 
+# #####
+# # 00 to 06 months
+# #####
+
+# ## 1. Only SES
+
+# classification_currentCogScores_00to06mo_onlyses = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_00to06mo_onlyses",
+#     mdata_df,
+#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     upperhalf_percentile, 
+#     [8,9], # To tackle the problem with AbstractVetor as Input
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = onlyses_tuning_space,
+#     train_rng = ml_rng
+# )
+
+# report_merits(classification_currentCogScores_00to06mo_onlyses)
+
+# JLD2.@save "models/classification_currentCogScores_00to06mo_onlyses.jld" classification_currentCogScores_00to06mo_onlyses
+
+# ## 2. Only taxonomic profiles
+
+# classification_currentCogScores_00to06mo_onlytaxa = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_00to06mo_onlytaxa",
+#     mdata_taxa_df,
+#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     upperhalf_percentile,
+#     9:557,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = taxa_tuning_space,
+#     train_rng = ml_rng
+# )
+
+# report_merits(classification_currentCogScores_00to06mo_onlytaxa)
+
+# JLD2.@save "models/classification_currentCogScores_00to06mo_onlytaxa.jld" classification_currentCogScores_00to06mo_onlytaxa
+
+# ## 3. SES + taxonomic profiles
+
+# classification_currentCogScores_00to06mo_sesplustaxa = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_00to06mo_sesplustaxa",
+#     mdata_taxa_df,
+#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     upperhalf_percentile,
+#     8:557,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = taxa_tuning_space,
+#     train_rng = ml_rng
+# )
+
+# report_merits(classification_currentCogScores_00to06mo_sesplustaxa)
+
+# JLD2.@save "models/classification_currentCogScores_00to06mo_sesplustaxa.jld" classification_currentCogScores_00to06mo_sesplustaxa
+
+# ## 4. Only functional profiles
+
+# classification_currentCogScores_00to06mo_onlyecs = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_00to06mo_onlyecs",
+#     mdata_ecs_df,
+#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     upperhalf_percentile,
+#     9:2441,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = ecs_tuning_space,
+#     train_rng = ml_rng
+# )
+
+# report_merits(classification_currentCogScores_00to06mo_onlytaxa)
+
+# JLD2.@save "models/classification_currentCogScores_00to06mo_onlyecs.jld" classification_currentCogScores_00to06mo_onlyecs
+
+# ## 5. SES + taxonomic profiles
+
+# classification_currentCogScores_00to06mo_sesplusecs = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_00to06mo_sesplusecs",
+#     mdata_ecs_df,
+#     x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
+#     upperhalf_percentile,
+#     8:2441,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = ecs_tuning_space,
+#     train_rng = ml_rng
+# )
+
+# report_merits(classification_currentCogScores_00to06mo_sesplusecs)
+
+# JLD2.@save "models/classification_currentCogScores_00to06mo_sesplusecs.jld" classification_currentCogScores_00to06mo_sesplusecs
+
 #####
-# 00 to 06 months
-#####
-
-## 1. Only SES
-
-classification_currentCogScores_00to06mo_onlyses = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_00to06mo_onlyses",
-    mdata_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile, 
-    [8,9], # To tackle the problem with AbstractVetor as Input
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = onlyses_tuning_space,
-    train_rng = ml_rng
-)
-
-report_merits(classification_currentCogScores_00to06mo_onlyses)
-
-JLD2.@save "models/classification_currentCogScores_00to06mo_onlyses.jld" classification_currentCogScores_00to06mo_onlyses
-
-## 2. Only taxonomic profiles
-
-classification_currentCogScores_00to06mo_onlytaxa = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_00to06mo_onlytaxa",
-    mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
-    9:557,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = taxa_tuning_space,
-    train_rng = ml_rng
-)
-
-report_merits(classification_currentCogScores_00to06mo_onlytaxa)
-
-JLD2.@save "models/classification_currentCogScores_00to06mo_onlytaxa.jld" classification_currentCogScores_00to06mo_onlytaxa
-
-## 3. SES + taxonomic profiles
-
-classification_currentCogScores_00to06mo_sesplustaxa = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_00to06mo_sesplustaxa",
-    mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
-    8:557,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = taxa_tuning_space,
-    train_rng = ml_rng
-)
-
-report_merits(classification_currentCogScores_00to06mo_sesplustaxa)
-
-JLD2.@save "models/classification_currentCogScores_00to06mo_sesplustaxa.jld" classification_currentCogScores_00to06mo_sesplustaxa
-
-## 4. Only functional profiles
-
-classification_currentCogScores_00to06mo_onlyecs = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_00to06mo_onlyecs",
-    mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
-    9:2441,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = ecs_tuning_space,
-    train_rng = ml_rng
-)
-
-report_merits(classification_currentCogScores_00to06mo_onlytaxa)
-
-JLD2.@save "models/classification_currentCogScores_00to06mo_onlyecs.jld" classification_currentCogScores_00to06mo_onlyecs
-
-## 5. SES + taxonomic profiles
-
-classification_currentCogScores_00to06mo_sesplusecs = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_00to06mo_sesplusecs",
-    mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    upperhalf_percentile,
-    8:2441,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = ecs_tuning_space,
-    train_rng = ml_rng
-)
-
-report_merits(classification_currentCogScores_00to06mo_sesplusecs)
-
-JLD2.@save "models/classification_currentCogScores_00to06mo_sesplusecs.jld" classification_currentCogScores_00to06mo_sesplusecs
-
-#####
-# 00 to 06 months
+# 18 to 120 months
 #####
 
 ## 6. Only SES
 
-classification_currentCogScores_00to06mo_onlyses = train_randomforest(
+classification_currentCogScores_18to120mo_onlyses = train_randomforest(
     Resonance.Classification(),
     "classification_currentCogScores_18to120mo_onlyses",
     mdata_df,
