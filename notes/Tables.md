@@ -19,6 +19,7 @@ isdir(tablefiles()) || mkpath(tablefiles())
 
 ```julia
 mdata = Resonance.load(Metadata())
+taxa = Resonance.load(TaxonomicProfiles())
 subset!(mdata,
     :omni=> ByRow(o-> !ismissing(o) && o in samplenames(taxa)),
     :cogScore=> ByRow(!ismissing),
