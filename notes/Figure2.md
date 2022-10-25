@@ -15,30 +15,25 @@ using ColorSchemes
 using GLM
 using Dates
 using FileIO
+using JLD2
 ```
 
 ## Data Loading
 
 ```julia
-(allcors, u6cors, o18cors, 
-    allcors_age, u6cors_age, o18cors_age, 
-    all_neuroactive, u6_neuroactive, o18_neuroactive, 
-    all_neuroactive_full, u6_neuroactive_full, o18_neuroactive_full,
-    unimdata) = open(outputfiles("figure2_data.jld2")) do dat
-    (dat["allcors"],
-    dat["u6cors"],
-    dat["o18cors"],
-    dat["allcors_age"],
-    dat["u6cors_age"],
-    dat["o18cors_age"],
-    dat["all_neuroactive"],
-    dat["u6_neuroactive"],
-    dat["o18_neuroactive"],
-    dat["all_neuroactive_full"],
-    dat["u6_neuroactive_full"],
-    dat["o18_neuroactive_full"],
-    dat["unimdata"])
-end
+allcors              = JLD2.load(outputfiles("figure2_data.jld2"), "allcors")
+u6cors               = JLD2.load(outputfiles("figure2_data.jld2"), "u6cors")
+o18cors              = JLD2.load(outputfiles("figure2_data.jld2"), "o18cors")
+allcors_age          = JLD2.load(outputfiles("figure2_data.jld2"), "allcors_age")
+u6cors_age           = JLD2.load(outputfiles("figure2_data.jld2"), "u6cors_age")
+o18cors_age          = JLD2.load(outputfiles("figure2_data.jld2"), "o18cors_age")
+all_neuroactive      = JLD2.load(outputfiles("figure2_data.jld2"), "all_neuroactive")
+u6_neuroactive       = JLD2.load(outputfiles("figure2_data.jld2"), "u6_neuroactive")
+o18_neuroactive      = JLD2.load(outputfiles("figure2_data.jld2"), "o18_neuroactive")
+all_neuroactive_full = JLD2.load(outputfiles("figure2_data.jld2"), "all_neuroactive_full")
+u6_neuroactive_full  = JLD2.load(outputfiles("figure2_data.jld2"), "u6_neuroactive_full")
+o18_neuroactive_full = JLD2.load(outputfiles("figure2_data.jld2"), "o18_neuroactive_full")
+unimdata             = JLD2.load(outputfiles("figure2_data.jld2"), "unimdata")
 ```
 
 ## Load FSEA
@@ -289,9 +284,9 @@ Label(G[1, 1, TopLeft()], "G",
 )
 
 # colgap!(figure.layout, 2, -35)
-save(figurefiles("Figure2.svg"), figure)
-save(figurefiles("Figure2.png"), figure)
-figure
+save(figurefiles("Supp_Figure2.svg"), fig)
+save(figurefiles("Supp_Figure2.png"), fig)
+fig
 ```
 
 
@@ -301,8 +296,47 @@ figure
 
 ```julia
 fig = Figure()
+A = GridLayout(fig[1,1])
+B = GridLayout(fig[2,1])
 
-aax = Axis(fig[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
+aax1 = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
+aax2 = Axis(A[1,2]; xlabel = "Age (years)")
+hideydecorations!(aax2)
+linkyaxes!(aax1, aax2)
+
+aax3 = Axis(A[1,3]; xlabel = "Age (months)", ylabel = "cogScorePercentile", xticks=(4:4:24))
+aax4 = Axis(A[1,4]; xlabel = "Age (years)")
+
+let
+    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
+    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
+
+    cs = ColorSchemes.colorschemes[:Set2_7]
+    function colorage(age)
+        age <= 36 && return cs[1] # mullen
+        age <= 60 && return cs[2] # WPPSI
+        return cs[3] # WISC
+    end
+    ages = unimdata.ageMonths[u2y]
+    scatter!(aax1, ages, unimdata.cogScore[u2y]; color=colorage.(ages))
+    scatter!(aax3, ages, unimdata.cogScorePercentile[u2y]; color=colorage.(ages))
+
+    ages = unimdata.ageMonths[o2y]
+    scatter!(aax2, ages ./ 12, unimdata.cogScore[o2y]; color=colorage.(ages))
+    scatter!(aax4, ages ./ 12, unimdata.cogScorePercentile[o2y]; color=colorage.(ages))
+    
+    vlines!(aax1, [6, 12, 18]; linestyle=:dash, color=:gray)
+    vlines!(aax3, [6, 12, 18]; linestyle=:dash, color=:gray)
+    # TODO: add colors for training/test sets in later models
+
+    Legend(A[2, 1:4], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
+                      ["Mullen", "WPPSI", "WISC"]; orientation=:horizontal, tellheight=true, tellwidth=false
+    )
+end
+
+
+
+bax1 = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
 let
     df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScore, date = unimdata.assessmentDate)
     subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
@@ -316,11 +350,11 @@ let
 
     grp = groupby(df, "grp")
     transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(aax, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
+    scatter!(bax1, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
             color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
 end
 
-bax = Axis(fig[1,2]; ylabel = "cogScorePercentile", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
+bax2 = Axis(B[1,2]; ylabel = "cogScorePercentile", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
 let
     df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScorePercentile, date = unimdata.assessmentDate)
     subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
@@ -334,14 +368,15 @@ let
 
     grp = groupby(df, "grp")
     transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
+    scatter!(bax2, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
             color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
 end
 
-Legend(fig[2,1:2], [MarkerElement(; color = :dodgerblue, marker=:circle), 
+Legend(B[2,1:2], [MarkerElement(; color = :dodgerblue, marker=:circle), 
                   MarkerElement(; color = :orangered, marker=:circle)],
             ["Pre-covid", "Post-Covid"]; orientation=:horizontal, tellheight=true, tellwidth=false
 )
+
 
 fig
 ```
