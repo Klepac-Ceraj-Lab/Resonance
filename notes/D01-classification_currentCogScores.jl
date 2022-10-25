@@ -64,7 +64,7 @@ mdata_ecs_df = leftjoin(mdata_df, ecs_df, on = :omni => :sample, matchmissing=:e
 RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
 
 onlyses_tuning_space = (
-    maxnodes_range = collect(1:1:15) ,
+    maxnodes_range = collect(1:1:15),
     nodesize_range = collect(1:1:20),
     sampsize_range = [0.5, 0.6, 0.7, 0.8],
     mtry_range = 1,
@@ -72,19 +72,19 @@ onlyses_tuning_space = (
     )
 
 taxa_tuning_space = (
-    maxnodes_range = collect(1:1:15) ,
-    nodesize_range = collect(1:1:20),
-    sampsize_range = [0.5, 0.6, 0.7, 0.8],
+    maxnodes_range = collect(1:2:9),
+    nodesize_range = collect(1:2:15),
+    sampsize_range = [0.5, 0.6, 0.7],
     mtry_range = collect(5:5:100),
-    ntrees_range = [100, 300, 500, 700]
+    ntrees_range = [100, 300, 500]
     )
 
 ecs_tuning_space = (
-    maxnodes_range = [1, 2, 3, 4, 5, 7, 9, 11, 13, 15],
-    nodesize_range = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20],
-    sampsize_range = [0.5, 0.6, 0.7, 0.8],
-    mtry_range = collect(5:20:500),
-    ntrees_range = [100, 300, 500, 700]
+    maxnodes_range = collect(1:2:9),
+    nodesize_range = collect(1:2:15),
+    sampsize_range = [0.5, 0.6, 0.7],
+    mtry_range = collect(5:25:500),
+    ntrees_range = [100, 300, 500]
     )
 
 upperhalf_percentile(x::Vector{T} where T <: Real) = coerce(x .>= 0.50, OrderedFactor)
@@ -190,66 +190,66 @@ insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.educ
 
 # JLD2.@save "models/classification_currentCogScores_00to06mo_sesplusecs.jld" classification_currentCogScores_00to06mo_sesplusecs
 
-#####
-# 18 to 120 months
-#####
+# #####
+# # 18 to 120 months
+# #####
 
-## 6. Only SES
+# ## 6. Only SES
 
-classification_currentCogScores_18to120mo_onlyses = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_18to120mo_onlyses",
-    mdata_df,
-    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
-    upperhalf_percentile, 
-    [8,9], # To tackle the problem with AbstractVetor as Input
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = onlyses_tuning_space,
-    train_rng = ml_rng
-)
+# classification_currentCogScores_18to120mo_onlyses = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_18to120mo_onlyses",
+#     mdata_df,
+#     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
+#     upperhalf_percentile, 
+#     [8,9], # To tackle the problem with AbstractVetor as Input
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = onlyses_tuning_space,
+#     train_rng = ml_rng
+# )
 
-report_merits(classification_currentCogScores_18to120mo_onlyses)
+# report_merits(classification_currentCogScores_18to120mo_onlyses)
 
-JLD2.@save "models/classification_currentCogScores_18to120mo_onlyses.jld" classification_currentCogScores_18to120mo_onlyses
+# JLD2.@save "models/classification_currentCogScores_18to120mo_onlyses.jld" classification_currentCogScores_18to120mo_onlyses
 
-## 7. Only taxonomic profiles
+# ## 7. Only taxonomic profiles
 
-classification_currentCogScores_18to120mo_onlytaxa = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_18to120mo_onlytaxa",
-    mdata_taxa_df,
-    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
-    upperhalf_percentile,
-    9:557,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = taxa_tuning_space,
-    train_rng = ml_rng
-)
+# classification_currentCogScores_18to120mo_onlytaxa = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_18to120mo_onlytaxa",
+#     mdata_taxa_df,
+#     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
+#     upperhalf_percentile,
+#     9:557,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = taxa_tuning_space,
+#     train_rng = ml_rng
+# )
 
-report_merits(classification_currentCogScores_18to120mo_onlytaxa)
+# report_merits(classification_currentCogScores_18to120mo_onlytaxa)
 
-JLD2.@save "models/classification_currentCogScores_18to120mo_onlytaxa.jld" classification_currentCogScores_18to120mo_onlytaxa
+# JLD2.@save "models/classification_currentCogScores_18to120mo_onlytaxa.jld" classification_currentCogScores_18to120mo_onlytaxa
 
-## 8. SES + taxonomic profiles
+# ## 8. SES + taxonomic profiles
 
-classification_currentCogScores_18to120mo_sesplustaxa = train_randomforest(
-    Resonance.Classification(),
-    "classification_currentCogScores_18to120mo_sesplustaxa",
-    mdata_taxa_df,
-    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
-    upperhalf_percentile,
-    8:557,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = taxa_tuning_space,
-    train_rng = ml_rng
-)
+# classification_currentCogScores_18to120mo_sesplustaxa = train_randomforest(
+#     Resonance.Classification(),
+#     "classification_currentCogScores_18to120mo_sesplustaxa",
+#     mdata_taxa_df,
+#     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
+#     upperhalf_percentile,
+#     8:557,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = taxa_tuning_space,
+#     train_rng = ml_rng
+# )
 
-report_merits(classification_currentCogScores_18to120mo_sesplustaxa)
+# report_merits(classification_currentCogScores_18to120mo_sesplustaxa)
 
-JLD2.@save "models/classification_currentCogScores_18to120mo_sesplustaxa.jld" classification_currentCogScores_18to120mo_sesplustaxa
+# JLD2.@save "models/classification_currentCogScores_18to120mo_sesplustaxa.jld" classification_currentCogScores_18to120mo_sesplustaxa
 
 ## 9. Only functional profiles
 
