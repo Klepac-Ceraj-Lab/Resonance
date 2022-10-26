@@ -284,9 +284,9 @@ Label(G[1, 1, TopLeft()], "G",
 )
 
 # colgap!(figure.layout, 2, -35)
-save(figurefiles("Supp_Figure2.svg"), fig)
-save(figurefiles("Supp_Figure2.png"), fig)
-fig
+save(figurefiles("Figure2.svg"), fig)
+save(figurefiles("Figure2.png"), fig)
+figure
 ```
 
 
@@ -378,6 +378,8 @@ Legend(B[2,1:2], [MarkerElement(; color = :dodgerblue, marker=:circle),
 )
 
 
+save(figurefiles("Supp_Figure2.svg"), fig)
+save(figurefiles("Supp_Figure2.png"), fig)
 fig
 ```
 
