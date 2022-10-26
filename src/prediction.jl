@@ -447,6 +447,19 @@ end # end function
 
 ## 3.1. Generate Predictions (method predict)
 
+function predict_proba(model::UnivariateRandomForestClassifier, newx=nothing; split_index=0)
+
+    (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
+    (split_index == 0) && (split_index = model.selected_split[2])
+
+    if newx isa Nothing
+        return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
+    else
+        return MLJ.predict(model.models[split_index], newx)
+    end
+
+end
+
 ## 3.1.1. Generate Predictions with the UnivariateRandomForestClassifier
 function predict(model::UnivariateRandomForestClassifier, newx=nothing; split_index=0)
 
@@ -1069,35 +1082,39 @@ end # end function
 
 ## 4.1.2. Scatterplot of ground truth vs prediction, for the most performant train/test split, for a single model.
 function singlemodel_merit_scatterplot!(
-    figure::Figure,
-    res::UnivariateRandomForestRegressor,
-    pos::Tuple{Int64, Int64},
-    plot_title::String)
-
-    # Build the axis
-    ax = Axis(
-        figure[pos[1],pos[2]];
-        xlabel = "Ground Truth",
-        ylabel = "Prediction",
-        title = plot_title
-    )
+    ax::Axis,
+    res::UnivariateRandomForestRegressor;
+    split_index=0)
 
     # Plot barplot
-
     y = res.inputs_outputs[2]
-    yhat = Resonance.predict(res)
-    train, test = res.dataset_partitions[res.selected_split[2]]
+
+    (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
+    (split_index == 0) && (split_index = res.selected_split[2])
+
+    yhat = Resonance.predict(res; split_index=split_index)
+    train, test = res.dataset_partitions[split_index]
     scatter!(ax, y[train], yhat[train]; color=:orange)
     scatter!(ax, y[test], yhat[test]; color=:purple)
     ablines!(ax, 0, 1; color=:grey)
+    
     annotations!(
         ax,
-        ["r = $(round(cor(y, yhat); digits = 2))"],
+        ["r = $(round(cor(y[train], yhat[train]); digits = 2))"],
         [Point(1.1*min(minimum(y), minimum(yhat)), 0.9*max(maximum(y), maximum(yhat)))],
+        color = :orange,
         textsize = 20
     )
 
-    return figure
+    annotations!(
+        ax,
+        ["r = $(round(cor(y[test], yhat[test]); digits = 2))"],
+        [Point(1.1*min(minimum(y), minimum(yhat)), 0.8*max(maximum(y), maximum(yhat)))],
+        color = :purple,
+        textsize = 20
+    )
+
+    return ax
 
 end # end function
 

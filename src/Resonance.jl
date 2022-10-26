@@ -66,6 +66,7 @@ export  # 0. structs/types
         # 2. training functions
         train_randomforest,
         # postprocessing functions
+        predict_proba,
         predict,
         report_merits,
         singlemodel_singlesplit_importance,
