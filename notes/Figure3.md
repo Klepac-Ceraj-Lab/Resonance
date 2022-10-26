@@ -42,7 +42,7 @@ function res_auroc(res::UnivariateRandomForestClassifier, split_index::Int; samp
 end
 
 ### Calculate classification measures
-function classification_measures(resvec::Vector{UnivariateRandomForestClassifier})
+function classification_measures(resvec::Vector{UnivariateRandomForestClassifier}; sample_set = "test")
 
     allmodels_measures = DataFrame(
         model = String[],
@@ -67,7 +67,7 @@ function classification_measures(resvec::Vector{UnivariateRandomForestClassifier
 
         for this_split in 1:res.n_splits
 
-            auroc = res_auroc(res, this_split; sample_set = "test")
+            auroc = res_auroc(res, this_split; sample_set = sample_set)
             
             confmat = build_confusion_matrix(res, this_split).mat
             tns = confmat[1,1]
@@ -274,7 +274,7 @@ axB1 = Axis(
     title = "Classification - above/below 50th percentile"
 )
 
-ylims!(axA1, [0.0, 1.0])
+ylims!(axB1, [0.0, 1.0])
 
 axB2 = Axis(
     B_subfig[1,1];
@@ -286,6 +286,28 @@ linkxaxes!(axB1, axB2)
 
 hideydecorations!(axB2)
 hidexdecorations!(axB2, ticklabels = false)
+
+lines!(
+    1:10,
+    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
+    color = :gray
+)
+scatter!(
+    1:10,
+    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
+    color = :gray
+)
+
+lines!(
+    1:10,
+    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
+    color = :gray
+)
+scatter!(
+    1:10,
+    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
+    color = :gray
+)
 
 labels = ["Correlation coefficient (r)", "Mean Absolute Error"]
 elements = [PolyElement(polycolor = c) for c in [:green, :yellow]]
@@ -302,6 +324,8 @@ axC = Axis(
     ylabel = "PCo2",
     title = "C - TAXA Percentile PCA - 0 to 6 months"
 )
+
+hidedecorations!(axC, grid = false)
 
 C_pca_model = fit(
     PCA,
@@ -333,12 +357,12 @@ axD = Axis(
 )
 
 for i in 1:classification_currentCogScores_00to06mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyses, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyses, i; sample_set = "all")
     lines!(axD, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
 for i in 1:classification_currentCogScores_00to06mo_onlytaxa.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlytaxa, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlytaxa, i; sample_set = "all")
     lines!(axD, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
 end
 
@@ -367,6 +391,8 @@ axF = Axis(
     ylabel = "PCo2",
     title = "F - ECS Percentile PCA - 0 to 6 months"
 )
+
+hidedecorations!(axF, grid = false)
 
 F_pca_model = fit(
     PCA,
@@ -399,12 +425,12 @@ axG = Axis(
 )
 
 for i in 1:classification_currentCogScores_00to06mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyses, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyses, i; sample_set = "all")
     lines!(axG, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
 for i in 1:classification_currentCogScores_00to06mo_onlyecs.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyecs, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyecs, i; sample_set = "all")
     lines!(axG, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
 end
 
@@ -437,7 +463,26 @@ axI = Axis(
     title = "I - TAXA Percentile PCA - 18-120 months"
 )
 
-figure
+hidedecorations!(axI, grid = false)
+
+I_pca_model = fit(
+    PCA,
+    transpose(Matrix(classification_currentCogScores_18to120mo_onlytaxa.inputs_outputs[1]));
+    maxoutdim=2,
+    pratio = 1.0
+)
+
+I_prcomps = permutedims(MultivariateStats.predict(
+    I_pca_model,
+    transpose(Matrix(classification_currentCogScores_18to120mo_onlytaxa.inputs_outputs[1]))
+))
+
+scatter!(
+    axI,
+    I_prcomps[:,1], I_prcomps[:,2];
+    color = classification_currentCogScores_18to120mo_onlytaxa.original_data.cogScorePercentile
+)
+
 #```
 
 ### Plot panel J - ROC curves, 18-120 mo, taxonomic profiles
@@ -451,12 +496,12 @@ axJ = Axis(
 )
 
 for i in 1:classification_currentCogScores_18to120mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyses, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyses, i; sample_set = "all")
     lines!(axJ, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
 for i in 1:classification_currentCogScores_18to120mo_onlytaxa.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlytaxa, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlytaxa, i; sample_set = "all")
     lines!(axJ, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
 end
 #```
@@ -485,6 +530,26 @@ axL = Axis(
     title = "L - ECS Percentile PCA - 18-120 months"
 )
 
+hidedecorations!(axL, grid = false)
+
+L_pca_model = fit(
+    PCA,
+    transpose(Matrix(classification_currentCogScores_18to120mo_onlyecs.inputs_outputs[1]));
+    maxoutdim=2,
+    pratio = 1.0
+)
+
+L_prcomps = permutedims(MultivariateStats.predict(
+    L_pca_model,
+    transpose(Matrix(classification_currentCogScores_18to120mo_onlyecs.inputs_outputs[1]))
+))
+
+scatter!(
+    axL,
+    L_prcomps[:,1], L_prcomps[:,2];
+    color = classification_currentCogScores_18to120mo_onlytaxa.original_data.cogScorePercentile
+)
+
 #```
 
 ### Plot panel M - ROC curves, 18-120 mo, functional profiles
@@ -498,12 +563,12 @@ axM = Axis(
 )
 
 for i in 1:classification_currentCogScores_18to120mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyses, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyses, i; sample_set = "all")
     lines!(axM, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
 for i in 1:classification_currentCogScores_18to120mo_onlyecs.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyecs, i; sample_set = "test")
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyecs, i; sample_set = "all")
     lines!(axM, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
 end
 
@@ -523,3 +588,5 @@ singlemodel_merit_scatterplot!(axN, regression_currentCogScores_00to06mo_onlyecs
 
 figure
 #```
+
+save("figures/Figure3.png", figure)
