@@ -45,65 +45,71 @@ demographics = DataFrame(
     ]
 )
 
+function count_perc(pred, vec)
+    c = count(pred, vec)
+    l = length(vec)
+    return "$c ($(round(c / l * 100; digits=1))%)"
+end
+
 let gdf = groupby(mdata, :subject)
-    demographics.all = Real[
+    demographics.all = Any[
         keys(gdf) |> length,
         let scounts = combine(gdf, :omni=> (o-> count(!ismissing, o)) => :samples).samples
-            (count(==(1), scounts), count(==(2), scounts), count(>(2), scounts))
+            (count_perc(==(1), scounts), count_perc(==(2), scounts), count_perc(>(2), scounts))
         end...,
         extrema(combine(gdf, :ageMonths=>identity=> :ageMonths).ageMonths)...,
         median(combine(gdf, :ageMonths=>identity=> :ageMonths).ageMonths),
         let sex = combine(gdf, :sex=> first => :sex).sex
-            (count(==(s), sex) for s in levels(sex))
+            (count_perc(==(s), sex) for s in levels(sex))
         end...,
         
         let race = combine(gdf, :race=> first => :race).race
-            (count(==(r), race) for r in ["White", "Black", "Asian", "Mixed", "Other", "Unknown"])
+            (count_perc(==(r), race) for r in ["White", "Black", "Asian", "Mixed", "Other", "Unknown"])
         end...,
         let education = combine(gdf, :education=> first => :education).education
-            (count(x-> !ismissing(x) && x == e, education) for e in levels(education))
+            (count_perc(x-> !ismissing(x) && x == e, education) for e in levels(education))
         end...,
     ]
 end
 
 let gdf = groupby(subset(mdata, :ageMonths => ByRow(<(6))), :subject)
-    demographics.under6 = Real[
+    demographics.under6 = Any[
         keys(gdf) |> length,
         let scounts = combine(gdf, :omni=> (o-> count(!ismissing, o)) => :samples).samples
-            (count(==(1), scounts), count(==(2), scounts), count(>(2), scounts))
+            (count_perc(==(1), scounts), count_perc(==(2), scounts), count_perc(>(2), scounts))
         end...,
         extrema(combine(gdf, :ageMonths=>identity=> :ageMonths).ageMonths)...,
         median(combine(gdf, :ageMonths=>identity=> :ageMonths).ageMonths),
         let sex = combine(gdf, :sex=> first => :sex).sex
-            (count(==(s), sex) for s in levels(sex))
+            (count_perc(==(s), sex) for s in levels(sex))
         end...,
         
         let race = combine(gdf, :race=> first => :race).race
-            (count(==(r), race) for r in ["White", "Black", "Asian", "Mixed", "Other", "Unknown"])
+            (count_perc(==(r), race) for r in ["White", "Black", "Asian", "Mixed", "Other", "Unknown"])
         end...,
         let education = combine(gdf, :education=> first => :education).education
-            (count(x-> !ismissing(x) && x == e, education) for e in levels(education))
+            (count_perc(x-> !ismissing(x) && x == e, education) for e in levels(education))
         end...,
     ]
 end
 
 let gdf = groupby(subset(mdata, :ageMonths => ByRow(>(18))), :subject)
-    demographics.over18 = Real[
+    demographics.over18 = Any[
         keys(gdf) |> length,
         let scounts = combine(gdf, :omni=> (o-> count(!ismissing, o)) => :samples).samples
-            (count(==(1), scounts), count(==(2), scounts), count(>(2), scounts))
+            (count_perc(==(1), scounts), count_perc(==(2), scounts), count_perc(>(2), scounts))
         end...,
         extrema(combine(gdf, :ageMonths=>identity=> :ageMonths).ageMonths)...,
         median(combine(gdf, :ageMonths=>identity=> :ageMonths).ageMonths),
         let sex = combine(gdf, :sex=> first => :sex).sex
-            (count(==(s), sex) for s in levels(sex))
+            (count_perc(==(s), sex) for s in levels(sex))
         end...,
         
         let race = combine(gdf, :race=> first => :race).race
-            (count(==(r), race) for r in ["White", "Black", "Asian", "Mixed", "Other", "Unknown"])
+            (count_perc(==(r), race) for r in ["White", "Black", "Asian", "Mixed", "Other", "Unknown"])
         end...,
         let education = combine(gdf, :education=> first => :education).education
-            (count(x-> !ismissing(x) && x == e, education) for e in levels(education))
+            (count_perc(x-> !ismissing(x) && x == e, education) for e in levels(education))
         end...,
     ]
 end
