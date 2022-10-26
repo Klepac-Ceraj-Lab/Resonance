@@ -72,80 +72,80 @@ onlyses_tuning_space = (
     )
 
 taxa_tuning_space = (
-    maxnodes_range = collect(1:1:15) ,
-    nodesize_range = collect(1:1:20),
-    sampsize_range = [0.5, 0.6, 0.7, 0.8],
+    maxnodes_range = collect(1:2:9),
+    nodesize_range = collect(1:2:15),
+    sampsize_range = [0.5, 0.6, 0.7],
     mtry_range = collect(5:5:100),
-    ntrees_range = [100, 300, 500, 700]
+    ntrees_range = [100, 300, 500]
     )
 
-    ecs_tuning_space = (
-        maxnodes_range = [1, 2, 3, 4, 5, 7, 9, 11, 13, 15],
-        nodesize_range = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20],
-        sampsize_range = [0.5, 0.6, 0.7, 0.8],
-        mtry_range = collect(5:20:500),
-        ntrees_range = [100, 300, 500, 700]
-        )
+ecs_tuning_space = (
+    maxnodes_range = collect(1:2:9),
+    nodesize_range = collect(1:2:15),
+    sampsize_range = [0.5, 0.6, 0.7],
+    mtry_range = collect(5:25:500),
+    ntrees_range = [100, 300, 500]
+    )
 
 insertcols!(mdata_df, 8, :educationInte => coerce(int.(skipmissing(mdata_df.education), type = Int), OrderedFactor)) # To tackle the problem with AbstractVetor as Input
 
-#####
-# 00 to 06 months
-#####
+# #####
+# # 00 to 06 months
+# #####
 
-## 1. Only SES
+# ## 1. Only SES
 
-regression_currentCogScores_00to06mo_onlyses = train_randomforest(
-    Resonance.Regression(),
-    "regression_currentCogScores_00to06mo_onlyses",
-    mdata_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    [8,9], # To tackle the problem with AbstractVetor as Input
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = onlyses_tuning_space,
-    train_rng = ml_rng
-)
+# regression_currentCogScores_00to06mo_onlyses = train_randomforest(
+#     Resonance.Regression(),
+#     "regression_currentCogScores_00to06mo_onlyses",
+#     mdata_df,
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
+#     [8,9], # To tackle the problem with AbstractVetor as Input
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = onlyses_tuning_space,
+#     train_rng = ml_rng
+# )
 
-report_merits(regression_currentCogScores_00to06mo_onlyses)
+# report_merits(regression_currentCogScores_00to06mo_onlyses)
 
-JLD2.@save "models/regression_currentCogScores_00to06mo_onlyses.jld" regression_currentCogScores_00to06mo_onlyses
+# JLD2.@save "models/regression_currentCogScores_00to06mo_onlyses.jld" regression_currentCogScores_00to06mo_onlyses
 
-## 2. Only taxonomic profiles
+# ## 2. Only taxonomic profiles
 
-regression_currentCogScores_00to06mo_onlytaxa = train_randomforest(
-    Resonance.Regression(),
-    "regression_currentCogScores_00to06mo_onlytaxa",
-    mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    9:557,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = taxa_tuning_space,
-    train_rng = ml_rng
-)
+# regression_currentCogScores_00to06mo_onlytaxa = train_randomforest(
+#     Resonance.Regression(),
+#     "regression_currentCogScores_00to06mo_onlytaxa",
+#     mdata_taxa_df,
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
+#     9:557,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = taxa_tuning_space,
+#     train_rng = ml_rng
+# )
 
-report_merits(regression_currentCogScores_00to06mo_onlytaxa)
+# report_merits(regression_currentCogScores_00to06mo_onlytaxa)
 
-JLD2.@save "models/regression_currentCogScores_00to06mo_onlytaxa.jld" regression_currentCogScores_00to06mo_onlytaxa
+# JLD2.@save "models/regression_currentCogScores_00to06mo_onlytaxa.jld" regression_currentCogScores_00to06mo_onlytaxa
 
-## 3. SES + taxonomic profiles
+# ## 3. SES + taxonomic profiles
 
-regression_currentCogScores_00to06mo_sesplustaxa = train_randomforest(
-    Resonance.Regression(),
-    "regression_currentCogScores_00to06mo_sesplustaxa",
-    mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-    8:557,
-    :cogScorePercentile;
-    n_splits = 10,
-    tuning_space = taxa_tuning_space,
-    train_rng = ml_rng
-)
+# regression_currentCogScores_00to06mo_sesplustaxa = train_randomforest(
+#     Resonance.Regression(),
+#     "regression_currentCogScores_00to06mo_sesplustaxa",
+#     mdata_taxa_df,
+#     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
+#     8:557,
+#     :cogScorePercentile;
+#     n_splits = 10,
+#     tuning_space = taxa_tuning_space,
+#     train_rng = ml_rng
+# )
 
-report_merits(regression_currentCogScores_00to06mo_sesplustaxa)
+# report_merits(regression_currentCogScores_00to06mo_sesplustaxa)
 
-JLD2.@save "models/regression_currentCogScores_00to06mo_sesplustaxa.jld" regression_currentCogScores_00to06mo_sesplustaxa
+# JLD2.@save "models/regression_currentCogScores_00to06mo_sesplustaxa.jld" regression_currentCogScores_00to06mo_sesplustaxa
 
 ## 4. Only functional profiles
 
@@ -153,8 +153,8 @@ regression_currentCogScores_00to06mo_onlyecs = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_00to06mo_onlyecs",
     mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-   9:2441,
+    x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
+    9:2441,
     :cogScorePercentile;
     n_splits = 10,
     tuning_space = ecs_tuning_space,
@@ -171,8 +171,8 @@ regression_currentCogScores_00to06mo_sesplusecs = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_00to06mo_sesplusecs",
     mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 0.0, 6.0)),
-     8:2441,
+    x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
+    8:2441,
     :cogScorePercentile;
     n_splits = 10,
     tuning_space = ecs_tuning_space,
@@ -193,7 +193,7 @@ regression_currentCogScores_18to120mo_onlyses = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_18to120mo_onlyses",
     mdata_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     [8,9], # To tackle the problem with AbstractVetor as Input
     :cogScorePercentile;
     n_splits = 10,
@@ -211,7 +211,7 @@ regression_currentCogScores_18to120mo_onlytaxa = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_18to120mo_onlytaxa",
     mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     9:557,
     :cogScorePercentile;
     n_splits = 10,
@@ -229,7 +229,7 @@ regression_currentCogScores_18to120mo_sesplustaxa = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_18to120mo_sesplustaxa",
     mdata_taxa_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     8:557,
     :cogScorePercentile;
     n_splits = 10,
@@ -247,7 +247,7 @@ regression_currentCogScores_18to120mo_onlyecs = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_18to120mo_onlyecs",
     mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     9:2441,
     :cogScorePercentile;
     n_splits = 10,
@@ -265,7 +265,7 @@ regression_currentCogScores_18to120mo_sesplusecs = train_randomforest(
     Resonance.Regression(),
     "regression_currentCogScores_18to120mo_sesplusecs",
     mdata_ecs_df,
-    x -> dropmissing(filter_age_bracket(x, 18.0, 120.0)),
+    x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     8:2441,
     :cogScorePercentile;
     n_splits = 10,
