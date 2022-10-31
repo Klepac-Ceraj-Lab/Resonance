@@ -70,11 +70,11 @@ function filter_age_bracket(df, min_age, max_age)
 end
 
 ### 1.2.2. Build a DataFrame for prediction of future target variables from mdata
-function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol})
+function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}; keep_demographic = true)
 
     subjects = unique(base_df.subject)
     has_stool = findall(.!(ismissing.(base_df.sample)))
-    has_cogscore = findall(.!(ismissing.(base_df.cogScore)))
+    has_cogscore = findall(.!(ismissing.(base_df.cogScorePercentile)))
 
     subjects_stool_idx = [ intersect(findall(base_df.subject .== el), has_stool) for el in subjects ]
     subjects_cogscore_idx = [ intersect(findall(base_df.subject .== el), has_cogscore) for el in subjects ]
@@ -94,8 +94,26 @@ function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}
     prediction_df = hcat(targets_df, inputs_df)
     prediction_df.ageMonthsDelta = prediction_df.futureAgeMonths .- prediction_df.ageMonths 
     prediction_df.timepointDelta = prediction_df.futureTimepoint .- prediction_df.timepoint 
-    
-    select!(prediction_df, [:subject, :ageMonths, :timepoint, :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta, targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...])
+   
+    if keep_demographic
+        select!(
+            prediction_df,
+            [
+                :subject, :timepoint, :ageMonths, 
+                :sex, :education,
+                :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta,
+                targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...
+            ]
+        )
+    else
+        select!(
+            prediction_df,
+            [
+                :subject, :timepoint, :ageMonths,
+                :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta,
+                targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...
+            ]
+        )    end
     sort!(prediction_df, [:subject, :timepoint, :futureTimepoint])
     
     return prediction_df
@@ -103,11 +121,11 @@ function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}
 end
 
 ### 1.2.3. process dataframe built by function 1.2.2.
-function prepare_future_prediction_df(df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}, max_stool_ageMonths = 12.0, max_future_ageMonths = 24.0)
+function prepare_future_prediction_df(df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}, max_stool_ageMonths = 12.0, max_future_ageMonths = 24.0; filterout = [ :cogScorePercentile ] )
 
     future_prediction_df = @chain df begin
         build_metadata_prediction_df(inputs, targets)
-        select( Not(:cogScore) ) # Toggle this and the next line for dropping/filtering original cogScore
+        select( Not(filterout) ) # Toggle this and the next line for dropping/filtering original cogScore
     #    subset(:cogScore => x -> .!(ismissing.(x)))
         subset(:ageMonths => x -> .!(ismissing.(x)))
         subset(:futureAgeMonths => x -> x .<= max_future_ageMonths)

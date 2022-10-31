@@ -73,28 +73,52 @@ select!(mdata_ecs_df, Not(:read_depth))
 
 RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
 
+# onlydemo_tuning_space = (
+#     maxnodes_range = collect(1:1:15),
+#     nodesize_range = collect(1:1:20),
+#     sampsize_range = [0.5, 0.6, 0.7, 0.8],
+#     mtry_range = [ 1 ],
+#     ntrees_range = [100, 300, 500, 700]
+#     )
+
+# taxa_tuning_space = (
+#     maxnodes_range = collect(1:2:9),
+#     nodesize_range = collect(1:2:15),
+#     sampsize_range = [0.5, 0.6, 0.7],
+#     mtry_range = collect(5:5:100),
+#     ntrees_range = [100, 300, 500]
+#     )
+
+# ecs_tuning_space = (
+#     maxnodes_range = collect(1:2:9),
+#     nodesize_range = collect(1:2:15),
+#     sampsize_range = [0.5, 0.6, 0.7],
+#     mtry_range = collect(25:25:500),
+#     ntrees_range = [100, 300, 500]
+#     )
+
 onlydemo_tuning_space = (
-    maxnodes_range = collect(1:1:15),
-    nodesize_range = collect(1:1:20),
-    sampsize_range = [0.5, 0.6, 0.7, 0.8],
+    maxnodes_range = [1, 2],
+    nodesize_range = [2, 3],
+    sampsize_range = [0.5, 0.6],
     mtry_range = [ 1 ],
-    ntrees_range = [100, 300, 500, 700]
+    ntrees_range = [100, 300]
     )
 
 taxa_tuning_space = (
-    maxnodes_range = collect(1:2:9),
-    nodesize_range = collect(1:2:15),
-    sampsize_range = [0.5, 0.6, 0.7],
-    mtry_range = collect(5:5:100),
-    ntrees_range = [100, 300, 500]
+    maxnodes_range = [1, 2],
+    nodesize_range = [2, 3],
+    sampsize_range = [0.5, 0.6],
+    mtry_range = [ 10, 20 ],
+    ntrees_range = [100, 300]
     )
 
 ecs_tuning_space = (
-    maxnodes_range = collect(1:2:9),
-    nodesize_range = collect(1:2:15),
-    sampsize_range = [0.5, 0.6, 0.7],
-    mtry_range = collect(25:25:500),
-    ntrees_range = [100, 300, 500]
+    maxnodes_range = [1, 2],
+    nodesize_range = [2, 3],
+    sampsize_range = [0.5, 0.6],
+    mtry_range = [ 100, 202 ],
+    ntrees_range = [100, 300]
     )
 
 upperhalf_percentile(x::Vector{T} where T <: Real) = coerce(x .>= 0.50, OrderedFactor)
