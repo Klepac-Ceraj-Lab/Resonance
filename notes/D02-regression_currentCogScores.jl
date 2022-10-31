@@ -67,30 +67,30 @@ select!(mdata_ecs_df, Not(:read_depth))
 # Training models
 #####
 
-RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
+RandomForestRegressor= MLJ.@load RandomForestRegressor pkg=DecisionTree
 
 onlydemo_tuning_space = (
-    maxnodes_range = collect(1:1:15),
-    nodesize_range = collect(1:1:20),
-    sampsize_range = [0.5, 0.6, 0.7, 0.8],
+    maxnodes_range = [1, 2],
+    nodesize_range = [2, 3],
+    sampsize_range = [0.5, 0.6],
     mtry_range = [ 1 ],
-    ntrees_range = [100, 300, 500, 700]
+    ntrees_range = [100, 300]
     )
 
 taxa_tuning_space = (
-    maxnodes_range = collect(1:2:9),
-    nodesize_range = collect(1:2:15),
-    sampsize_range = [0.5, 0.6, 0.7],
-    mtry_range = collect(5:5:100),
-    ntrees_range = [100, 300, 500]
+    maxnodes_range = [1, 2],
+    nodesize_range = [2, 3],
+    sampsize_range = [0.5, 0.6],
+    mtry_range = [ 50, 100, 150, 200, 250 ],
+    ntrees_range = [100, 300]
     )
 
 ecs_tuning_space = (
-    maxnodes_range = collect(1:2:9),
-    nodesize_range = collect(1:2:15),
-    sampsize_range = [0.5, 0.6, 0.7],
-    mtry_range = collect(25:25:500),
-    ntrees_range = [100, 300, 500]
+    maxnodes_range = [1, 2],
+    nodesize_range = [2, 3],
+    sampsize_range = [0.5, 0.6],
+    mtry_range = [ 200, 400, 600, 800, 1000, 1200 ],
+    ntrees_range = [100, 300]
     )
 
 #####
@@ -280,3 +280,22 @@ regression_currentCogScores_18to120mo_demoplusecs = train_randomforest(
 report_merits(regression_currentCogScores_18to120mo_demoplusecs)
 
 JLD2.@save "models/regression_currentCogScores_18to120mo_demoplusecs.jld" regression_currentCogScores_18to120mo_demoplusecs
+
+regression_results = [
+    regression_currentCogScores_00to06mo_onlydemo,
+    regression_currentCogScores_00to06mo_onlytaxa,
+    regression_currentCogScores_00to06mo_demoplustaxa,
+    regression_currentCogScores_00to06mo_onlyecs,
+    regression_currentCogScores_00to06mo_demoplusecs,
+    regression_currentCogScores_18to120mo_onlydemo,
+    regression_currentCogScores_18to120mo_onlytaxa,
+    regression_currentCogScores_18to120mo_demoplustaxa,
+    regression_currentCogScores_18to120mo_onlyecs,
+    regression_currentCogScores_18to120mo_demoplusecs
+]
+
+selected_models = [ findmin(report_merits(m)[1:10, :Test_MAE]) for m in regression_results ]
+selected_models = [ findmax(report_merits(m)[1:10, :Test_COR]) for m in regression_results ]
+selected_maes = [ el[1] for el in selected_models ]
+selected_indexes = [ el[2] for el in selected_models ]
+selected_correlations = [ report_merits(m)[i, :Test_COR] for (m,i) in zip(regression_results, selected_indexes) ]
