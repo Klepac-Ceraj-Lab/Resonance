@@ -1102,7 +1102,9 @@ end # end function
 function singlemodel_merit_scatterplot!(
     ax::Axis,
     res::UnivariateRandomForestRegressor;
-    split_index = 0)
+    split_index = 0,
+    traincorr_pos = Point(0.0, 1.0),
+    testcorr_pos = Point(0.0, 0.9))
 
     # Plot barplot
 
@@ -1122,7 +1124,7 @@ function singlemodel_merit_scatterplot!(
     annotations!(
         ax,
         ["r = $(round(cor(y[train], yhat[train]); digits = 2))"],
-        [Point(1.1*min(minimum(y), minimum(yhat)), 0.9*max(maximum(y), maximum(yhat)))],
+        [traincorr_pos],
         textsize = 20,
         color = :orange
     )
@@ -1130,7 +1132,7 @@ function singlemodel_merit_scatterplot!(
     annotations!(
         ax,
         ["r = $(round(cor(y[test], yhat[test]); digits = 2))"],
-        [Point(1.1*min(minimum(y), minimum(yhat)), 0.85*max(maximum(y), maximum(yhat)))],
+        [testcorr_pos],
         textsize = 20,
         color = :purple
     )
