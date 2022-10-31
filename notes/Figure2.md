@@ -490,4 +490,25 @@ acs = filter(!isnan, cors[Not(ixs)])
 Resonance.plot_fsea!(C, cs, acs; label=gs)
 
 fig
+
+figure = Figure()
+A = GridLayout(figure[1,1])
+B = GridLayout(figure[2,1])
+CDEF = GridLayout(figure[1,2])
+GHIJ = GridLayout(figure[2,2])
+
+Axis(A[1,1])
+Legend(A[2,1], [MarkerElement(; color=c, marker=:rect) for c in (:red,:blue,:orange,:teal)], ["thing$i" for i in 1:4]; orientation=:horizontal, tellheight=true, tellwidth=false)
+Axis(B[1,1])
+Legend(B[2,1], [MarkerElement(; color=c, marker=:rect) for c in (:red,:blue,:orange,:teal)], ["thing$i" for i in 1:4]; orientation=:horizontal, tellheight=true, tellwidth=false)
+
+for (i, j) in zip((1,2,1,2), (1,1,2,2))
+    Axis(CDEF[i,j]; title = "$i and $j")
+end
+for (i, j) in zip((1,2,1,2), (1,1,2,2))
+    Axis(GHIJ[i,j]; title = "$i and $j")
+end
+
+colsize!(figure.layout, 1, Relative(1/3))
+figure
 ```
