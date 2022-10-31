@@ -188,11 +188,15 @@ JLD2.@load "models/regression_currentCogScores_18to120mo_demoplusecs.jld"
 
 #```julia
 figure = Figure(resolution = (1920, 1080))
+left_subfig = GridLayout(figure[1,1])
+right_subfig = GridLayout(figure[1,2])
 
-A_subfig = GridLayout(figure[1,1])
-B_subfig = GridLayout(figure[2,1])
-CDEFGH_subfig = GridLayout(figure[1,2])
-IJKLMN_subfig = GridLayout(figure[2,2])
+A_subfig = GridLayout(left_subfig[1,1])
+B_subfig = GridLayout(left_subfig[2,1])
+
+CDEFGH_subfig = GridLayout(right_subfig[1,1])
+IJKLMN_subfig = GridLayout(right_subfig[2,1])
+Legends_subfig = GridLayout(right_subfig[3,1])
 
 colsize!(figure.layout, 1, Relative(0.4))
 colsize!(figure.layout, 2, Relative(0.6))
@@ -221,8 +225,8 @@ xs, values, grps, colors = confmatrices2barplots(classification_results)
 axA1 = Axis(
     A_subfig[1,1];
     xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
-    ylabel = "Proportion",
-    title = "Classification - above/below 50th percentile"
+    ylabel = "Test set average Proportion",
+    title = "A - Classification - above/below 50th percentile"
 )
 
 ylims!(axA1, [0.0, 1.0])
@@ -269,11 +273,11 @@ regression_results = [
 axB1 = Axis(
     B_subfig[1,1];
     xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
-    ylabel = "Proportion",
-    title = "Classification - above/below 50th percentile"
+    ylabel = "Test set Mean Abssolut Error\nTest set Person's R coefficient",
+    title = "B - Regression - numeric percentile"
 )
 
-ylims!(axB1, [0.0, 1.0])
+#ylims!(axB1, [0.0, 1.0])
 
 axB2 = Axis(
     B_subfig[1,1];
@@ -286,40 +290,56 @@ linkxaxes!(axB1, axB2)
 hideydecorations!(axB2)
 hidexdecorations!(axB2, ticklabels = false)
 
-test_mae_minimums = [
-    minimum(report_merits(m).Test_MAE[1:10]) for m in regression_results
-]
-
-test_cor_maximums = [
-    maximum(report_merits(m).Test_COR[1:10]) for m in regression_results
-]
+maxcorr_splits = [ findmax(report_merits(m)[1:10, :Test_COR]) for m in regression_results ]
+minmaes_splits = [ findmin(report_merits(m)[1:10, :Test_MAE]) for m in regression_results ]
+mediancorr_splits = [ findfirst(report_merits(m)[1:10, :Test_COR] .>= median(report_merits(m)[1:10, :Test_COR]) ) for m in regression_results ]
+medianmae_splits = [ findfirst(report_merits(m)[1:10, :Test_MAE] .<= median(report_merits(m)[1:10, :Test_MAE]) ) for m in regression_results ]
+selected_indexes = [ el[2] for el in maxcorr_splits]
+selected_maes = [ report_merits(m)[i, :Test_MAE] for (m,i) in zip(regression_results, selected_indexes) ]
+selected_correlations = [ report_merits(m)[i, :Test_COR] for (m,i) in zip(regression_results, selected_indexes) ]
 
 lines!(
-    1:10,
-    test_mae_minimums,
-    color = :yellow
+    axB1,
+    1:5,
+    selected_maes[1:5],
+    color = :pink
+)
+lines!(
+    axB1,
+    6:10,
+    selected_maes[6:10],
+    color = :pink
 )
 scatter!(
+    axB1,
     1:10,
-    test_mae_minimums,
-    color = :yellow,
-    size = 3
+    selected_maes,
+    color = :pink,
+    size = 5
 )
 
 lines!(
-    1:10,
-    test_cor_maximums,
+    axB1,
+    1:5,
+    selected_correlations[1:5],
+    color = :green
+)
+lines!(
+    axB1,
+    6:10,
+    selected_correlations[6:10],
     color = :green
 )
 scatter!(
+    axB1,
     1:10,
-    test_cor_maximums,
+    selected_correlations,
     color = :green,
-    size = 3
+    size = 5
 )
 
 labels = ["Correlation coefficient (r)", "Mean Absolute Error"]
-elements = [PolyElement(polycolor = c) for c in [:green, :yellow]]
+elements = [PolyElement(polycolor = c) for c in [:green, :pink]]
 Legend(B_subfig[2,1], elements, labels, "Classification result", orientation=:horizontal)
 
 #```
@@ -334,7 +354,7 @@ axC = Axis(
     title = "C - TAXA Percentile PCA - 0 to 6 months"
 )
 
-hidedecorations!(axC, grid = false)
+hidedecorations!(axC, grid = false, label = false)
 
 C_pca_model = fit(
     PCA,
@@ -387,7 +407,15 @@ axE = Axis(
     title = "E - Scatterplots, 0-6, TAXA"
 )
 
-singlemodel_merit_scatterplot!(axE, regression_currentCogScores_00to06mo_onlytaxa)
+xlims!(axE, [0.0, 1.0])
+ylims!(axE, [0.0, 1.0])
+
+singlemodel_merit_scatterplot!(
+    axE, regression_currentCogScores_00to06mo_onlytaxa;
+    split_index = selected_indexes[2],
+    traincorr_pos = Point(0.05, 0.85),
+    testcorr_pos = Point(0.05, 0.7)
+)
 
 #```
 
@@ -401,7 +429,7 @@ axF = Axis(
     title = "F - ECS Percentile PCA - 0 to 6 months"
 )
 
-hidedecorations!(axF, grid = false)
+hidedecorations!(axF, grid = false, label = false)
 
 F_pca_model = fit(
     PCA,
@@ -456,7 +484,15 @@ axH = Axis(
     title = "H - Scatterplots, 0-6, ECS"
 )
 
-singlemodel_merit_scatterplot!(axH, regression_currentCogScores_00to06mo_onlyecs; split_index = 5)
+xlims!(axH, [0.0, 1.0])
+ylims!(axH, [0.0, 1.0])
+
+singlemodel_merit_scatterplot!(
+    axH, regression_currentCogScores_00to06mo_onlyecs;
+    split_index = selected_indexes[4],
+    traincorr_pos = Point(0.05, 0.85),
+    testcorr_pos = Point(0.05, 0.7)
+)
 
 figure
 #```
@@ -472,7 +508,7 @@ axI = Axis(
     title = "I - TAXA Percentile PCA - 18-120 months"
 )
 
-hidedecorations!(axI, grid = false)
+hidedecorations!(axI, grid = false, label = false)
 
 I_pca_model = fit(
     PCA,
@@ -525,7 +561,15 @@ axK = Axis(
     title = "K - Scatterplots, 18-120, TAXA"
 )
 
-singlemodel_merit_scatterplot!(axK, regression_currentCogScores_00to06mo_onlytaxa)
+xlims!(axK, [0.0, 1.0])
+ylims!(axK, [0.0, 1.0])
+
+singlemodel_merit_scatterplot!(
+    axK, regression_currentCogScores_18to120mo_onlytaxa;
+    split_index = selected_indexes[7],
+    traincorr_pos = Point(0.05, 0.85),
+    testcorr_pos = Point(0.05, 0.7)
+)
 
 #```
 
@@ -539,7 +583,7 @@ axL = Axis(
     title = "L - ECS Percentile PCA - 18-120 months"
 )
 
-hidedecorations!(axL, grid = false)
+hidedecorations!(axL, grid = false, label = false)
 
 L_pca_model = fit(
     PCA,
@@ -593,9 +637,34 @@ axN = Axis(
     title = "N - Scatterplots, 18-120, ECS"
 )
 
-singlemodel_merit_scatterplot!(axN, regression_currentCogScores_00to06mo_onlyecs; split_index = 5)
+xlims!(axN, [0.0, 1.0])
+ylims!(axN, [0.0, 1.0])
+
+singlemodel_merit_scatterplot!(
+    axN, regression_currentCogScores_18to120mo_onlyecs;
+    split_index = selected_indexes[7],
+    traincorr_pos = Point(0.05, 0.85),
+    testcorr_pos = Point(0.05, 0.7)
+)
+
+#```
+
+### Legends
+
+Colorbar(Legends_subfig[1, 1], colorrange = (0.0, 1.0), colormap = :viridis, label="Cogscore Percentile", vertical = false)
+
+labels = [ "Microbiome", "Demographics" ]
+elements = [PolyElement(polycolor = el) for el in [ :blue, :red ] ]
+Legend(Legends_subfig[1, 2], elements, labels, "Model ROC", orientation = :horizontal)
+
+labels = [ "Train set", "Test set" ]
+elements = [PolyElement(polycolor = el) for el in [ :orange, :purple ] ]
+Legend(Legends_subfig[1, 3], elements, labels, "Sample set", orientation = :horizontal)
+
+colsize!(Legends_subfig, 1, Relative(0.3))
+colsize!(Legends_subfig, 2, Relative(0.4))
+colsize!(Legends_subfig, 3, Relative(0.3))
 
 figure
-#```
 
 save("figures/Figure3.png", figure)
