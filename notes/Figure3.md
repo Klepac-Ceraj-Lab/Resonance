@@ -1,4 +1,4 @@
-# Figure3 - RandomForest prediction of cogScores from SES, Taxonomic and Functional Profiles
+# Figure3 - RandomForest prediction of cogScores from DEM, Taxonomic and Functional Profiles
 
 #```julia
 using Resonance
@@ -161,26 +161,27 @@ end
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore classification from taxonomic profiles
-JLD2.@load "models/classification_currentCogScores_00to06mo_onlyses.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_onlydemo.jld"
 JLD2.@load "models/classification_currentCogScores_00to06mo_onlytaxa.jld"
-JLD2.@load "models/classification_currentCogScores_00to06mo_sesplustaxa.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_demoplustaxa.jld"
 JLD2.@load "models/classification_currentCogScores_00to06mo_onlyecs.jld"
-JLD2.@load "models/classification_currentCogScores_00to06mo_sesplusecs.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_onlyses.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_onlydemo.jld"
 JLD2.@load "models/classification_currentCogScores_18to120mo_onlytaxa.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_sesplustaxa.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_demoplustaxa.jld"
 JLD2.@load "models/classification_currentCogScores_18to120mo_onlyecs.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_sesplusecs.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_demoplusecs.jld"
 # concurrent cogScore reression from taxonomic profiles
-JLD2.@load "models/regression_currentCogScores_00to06mo_onlyses.jld"
+JLD2.@load "models/regression_currentCogScores_00to06mo_onlydemo.jld"
 JLD2.@load "models/regression_currentCogScores_00to06mo_onlytaxa.jld"
-JLD2.@load "models/regression_currentCogScores_00to06mo_sesplustaxa.jld"
+JLD2.@load "models/regression_currentCogScores_00to06mo_demoplustaxa.jld"
 JLD2.@load "models/regression_currentCogScores_00to06mo_onlyecs.jld"
-JLD2.@load "models/regression_currentCogScores_00to06mo_sesplusecs.jld"
-JLD2.@load "models/regression_currentCogScores_18to120mo_onlyses.jld"
+JLD2.@load "models/regression_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_onlydemo.jld"
 JLD2.@load "models/regression_currentCogScores_18to120mo_onlytaxa.jld"
-JLD2.@load "models/regression_currentCogScores_18to120mo_sesplustaxa.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_demoplustaxa.jld"
 JLD2.@load "models/regression_currentCogScores_18to120mo_onlyecs.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_demoplusecs.jld"
 #```
 
 ## Initializing Figure 3
@@ -203,23 +204,23 @@ confplot_colors = [:blue3, :red3, :tomato2, :dodgerblue2]
 
 #```julia
 classification_results = [
-    classification_currentCogScores_00to06mo_onlyses,
+    classification_currentCogScores_00to06mo_onlydemo,
     classification_currentCogScores_00to06mo_onlytaxa,
-    classification_currentCogScores_00to06mo_sesplustaxa,
+    classification_currentCogScores_00to06mo_demoplustaxa,
     classification_currentCogScores_00to06mo_onlyecs,
-    classification_currentCogScores_00to06mo_sesplusecs,
-    classification_currentCogScores_18to120mo_onlyses,
+    classification_currentCogScores_00to06mo_demoplusecs,
+    classification_currentCogScores_18to120mo_onlydemo,
     classification_currentCogScores_18to120mo_onlytaxa,
-    classification_currentCogScores_18to120mo_sesplustaxa,
+    classification_currentCogScores_18to120mo_demoplustaxa,
     classification_currentCogScores_18to120mo_onlyecs,
-    classification_currentCogScores_18to120mo_sesplusecs
+    classification_currentCogScores_18to120mo_demoplusecs
 ]
 
 xs, values, grps, colors = confmatrices2barplots(classification_results)
 
 axA1 = Axis(
     A_subfig[1,1];
-    xticks = (1:10, ["SES", "TAXA", "TAXA+SES", "ECS", "ECS+SES", "SES", "TAXA", "TAXA+SES", "ECS", "ECS+SES"]),
+    xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
     ylabel = "Proportion",
     title = "Classification - above/below 50th percentile"
 )
@@ -253,23 +254,21 @@ Legend(A_subfig[2,1], elements, labels, "Classification result", orientation=:ho
 ### Plot panel B - Concurrent cogScore regression
 #```julia
 regression_results = [
-    regression_currentCogScores_00to06mo_onlyses,
+    regression_currentCogScores_00to06mo_onlydemo,
     regression_currentCogScores_00to06mo_onlytaxa,
-    regression_currentCogScores_00to06mo_sesplustaxa,
+    regression_currentCogScores_00to06mo_demoplustaxa,
     regression_currentCogScores_00to06mo_onlyecs,
-    regression_currentCogScores_00to06mo_sesplusecs,
-    regression_currentCogScores_18to120mo_onlyses,
+    regression_currentCogScores_00to06mo_demoplusecs,
+    regression_currentCogScores_18to120mo_onlydemo,
     regression_currentCogScores_18to120mo_onlytaxa,
-    regression_currentCogScores_18to120mo_sesplustaxa,
+    regression_currentCogScores_18to120mo_demoplustaxa,
     regression_currentCogScores_18to120mo_onlyecs,
-    regression_currentCogScores_00to06mo_sesplusecs
+    regression_currentCogScores_18to120mo_demoplusecs
 ]
-
-merits = DataFrame( [ report_merits(regression_results[i])[end, :] for i in eachindex(regression_results) ] )
 
 axB1 = Axis(
     B_subfig[1,1];
-    xticks = (1:10, ["SES", "TAXA", "TAXA+SES", "ECS", "ECS+SES", "SES", "TAXA", "TAXA+SES", "ECS", "ECS+SES"]),
+    xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
     ylabel = "Proportion",
     title = "Classification - above/below 50th percentile"
 )
@@ -287,26 +286,36 @@ linkxaxes!(axB1, axB2)
 hideydecorations!(axB2)
 hidexdecorations!(axB2, ticklabels = false)
 
+test_mae_minimums = [
+    minimum(report_merits(m).Test_MAE[1:10]) for m in regression_results
+]
+
+test_cor_maximums = [
+    maximum(report_merits(m).Test_COR[1:10]) for m in regression_results
+]
+
 lines!(
     1:10,
-    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
-    color = :gray
+    test_mae_minimums,
+    color = :yellow
 )
 scatter!(
     1:10,
-    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
-    color = :gray
+    test_mae_minimums,
+    color = :yellow,
+    size = 3
 )
 
 lines!(
     1:10,
-    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
-    color = :gray
+    test_cor_maximums,
+    color = :green
 )
 scatter!(
     1:10,
-    [ 0.4, 0.2, 0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.2, 0.2 ];
-    color = :gray
+    test_cor_maximums,
+    color = :green,
+    size = 3
 )
 
 labels = ["Correlation coefficient (r)", "Mean Absolute Error"]
@@ -346,7 +355,7 @@ scatter!(
 
 #```
 
-### Plot panel D - Taxonomic profile ROC curves, 0-6 mo, color by Microbiome vs pure SES
+### Plot panel D - Taxonomic profile ROC curves, 0-6 mo, color by Microbiome vs pure DEM
 #```julia
 
 axD = Axis(
@@ -356,8 +365,8 @@ axD = Axis(
     title = "D - ROC Curves, 0-6, TAXA"
 )
 
-for i in 1:classification_currentCogScores_00to06mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyses, i; sample_set = "all")
+for i in 1:classification_currentCogScores_00to06mo_onlydemo.n_splits
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlydemo, i; sample_set = "all")
     lines!(axD, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
@@ -414,7 +423,7 @@ scatter!(
 
 #```
 
-### Plot panel G - Functional profile ROC curves, 0-6 mo, color by Microbiome vs pure SES
+### Plot panel G - Functional profile ROC curves, 0-6 mo, color by Microbiome vs pure DEM
 #```julia
 
 axG = Axis(
@@ -424,8 +433,8 @@ axG = Axis(
     title = "G - ROC Curves, 0-6, ECS"
 )
 
-for i in 1:classification_currentCogScores_00to06mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyses, i; sample_set = "all")
+for i in 1:classification_currentCogScores_00to06mo_onlydemo.n_splits
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlydemo, i; sample_set = "all")
     lines!(axG, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
@@ -495,8 +504,8 @@ axJ = Axis(
     title = "J - ROC Curves, 18-120, TAXA"
 )
 
-for i in 1:classification_currentCogScores_18to120mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyses, i; sample_set = "all")
+for i in 1:classification_currentCogScores_18to120mo_onlydemo.n_splits
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlydemo, i; sample_set = "all")
     lines!(axJ, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
@@ -562,8 +571,8 @@ axM = Axis(
     title = "M - ROC Curves, 18-120, ECS"
 )
 
-for i in 1:classification_currentCogScores_18to120mo_onlyses.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyses, i; sample_set = "all")
+for i in 1:classification_currentCogScores_18to120mo_onlydemo.n_splits
+    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlydemo, i; sample_set = "all")
     lines!(axM, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
 end
 
