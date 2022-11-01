@@ -668,3 +668,40 @@ colsize!(Legends_subfig, 3, Relative(0.3))
 figure
 
 save("figures/Figure3.png", figure)
+
+# Accessory figures
+
+acc_fig3 = Figure(resolution = (1000, 400))
+axO = Axis(
+    acc_fig3[1,1];
+    xlabel = "Ground Truth Percentile",
+    ylabel = "Predicted percentile",
+    title = "O - Scatterplots, 00-06, Demographics"
+)
+
+xlims!(axO, [0.0, 1.0])
+ylims!(axO, [0.0, 1.0])
+
+singlemodel_merit_scatterplot!(
+    axO, regression_currentCogScores_00to06mo_onlydemo;
+    split_index = selected_indexes[1],
+    traincorr_pos = Point(0.05, 0.85),
+    testcorr_pos = Point(0.05, 0.7)
+)
+
+axP = Axis(
+    acc_fig3[1,2];
+    xlabel = "Ground Truth Percentile",
+    ylabel = "Predicted percentile",
+    title = "P - Scatterplots, 18-120, Demographics"
+)
+
+xlims!(axP, [0.0, 1.0])
+ylims!(axP, [0.0, 1.0])
+
+singlemodel_merit_scatterplot!(
+    axP, regression_currentCogScores_18to120mo_onlydemo;
+    split_index = selected_indexes[6],
+    traincorr_pos = Point(0.05, 0.85),
+    testcorr_pos = Point(0.05, 0.7)
+)
