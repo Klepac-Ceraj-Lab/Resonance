@@ -46,7 +46,7 @@ end
 
 # cogscore_intervals = [ 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 18.0, 21.0, collect(24.0:6.0:42.0)..., collect(48.0:12.0:120.0)... ] # OLD version
 cogscore_intervals = [ 0.0, 6.0, 12.0, 18.0, 24.0, 30.0, 36.0, 42.0, collect(48.0:18.0:120.0)... ]
-hist(cogscore_df.ageMonths, bins = cogscore_intervals)
+hist(cogscore_df.ageMonths, bins = cogscore_intervals; color = :aqua, strokewidth = 1, strokecolor = :black)
 
 cogScoreGrowthCurve = compute_growth_curve(cogscore_df, "cogScore", cogscore_intervals, nothing)
 
@@ -65,6 +65,7 @@ Legend( fig[end+1,:],[
 )
 
 fig
+save("figures/cogscore_growthcurve.png", fig)
 
 #####
 # Computing the curves for Brain
