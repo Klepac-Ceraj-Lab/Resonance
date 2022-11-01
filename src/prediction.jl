@@ -1146,29 +1146,17 @@ end # end function
 
 ### 4.2.1. MDI importance for each bug, averaged over all the train/test splits, for a single model, as a barplot
 function singlemodel_avgimportance_barplot!(
-    figure::Figure,
-    res::T where T <: Resonance.UnivariatePredictor,
-    pos::Tuple{Int64, Int64},
-    plot_title::String;
+    ax::Axis,
+    res::T where T <: Resonance.UnivariatePredictor;
     n = 30)
 
     # Collect the importances
     plot_df = singlemodel_summary_importances(res)
 
-    # Build the axis
-    ax1_1 = Axis(
-        figure[pos[1],pos[2]];
-        ylabel = "Most important Taxa",
-        yticks = (reverse(collect(1:n)), plot_df.Variable[1:n]),
-        #yticklabelrotation=-pi/4,
-        xlabel = "Mean Decrease in Impurity (Gini) Importance",
-        title = plot_title
-    )
-
     # Plot barplot
-    barplot!(ax1_1, reverse(collect(1:n)), plot_df.AvgImportance[1:n], color = :blue, direction=:x)
+    barplot!(ax, reverse(collect(1:n)), plot_df.AvgImportance[1:n], color = :blue, direction=:x)
 
-    return figure
+    return ax
 
 end # end function
 
