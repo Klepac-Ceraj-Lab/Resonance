@@ -70,11 +70,11 @@ function filter_age_bracket(df, min_age, max_age)
 end
 
 ### 1.2.2. Build a DataFrame for prediction of future target variables from mdata
-function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol})
+function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}; keep_demographic = true)
 
     subjects = unique(base_df.subject)
     has_stool = findall(.!(ismissing.(base_df.sample)))
-    has_cogscore = findall(.!(ismissing.(base_df.cogScore)))
+    has_cogscore = findall(.!(ismissing.(base_df.cogScorePercentile)))
 
     subjects_stool_idx = [ intersect(findall(base_df.subject .== el), has_stool) for el in subjects ]
     subjects_cogscore_idx = [ intersect(findall(base_df.subject .== el), has_cogscore) for el in subjects ]
@@ -94,8 +94,26 @@ function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}
     prediction_df = hcat(targets_df, inputs_df)
     prediction_df.ageMonthsDelta = prediction_df.futureAgeMonths .- prediction_df.ageMonths 
     prediction_df.timepointDelta = prediction_df.futureTimepoint .- prediction_df.timepoint 
-    
-    select!(prediction_df, [:subject, :ageMonths, :timepoint, :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta, targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...])
+   
+    if keep_demographic
+        select!(
+            prediction_df,
+            [
+                :subject, :timepoint, :ageMonths, 
+                :sex, :education,
+                :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta,
+                targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...
+            ]
+        )
+    else
+        select!(
+            prediction_df,
+            [
+                :subject, :timepoint, :ageMonths,
+                :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta,
+                targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...
+            ]
+        )    end
     sort!(prediction_df, [:subject, :timepoint, :futureTimepoint])
     
     return prediction_df
@@ -103,11 +121,11 @@ function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}
 end
 
 ### 1.2.3. process dataframe built by function 1.2.2.
-function prepare_future_prediction_df(df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}, max_stool_ageMonths = 12.0, max_future_ageMonths = 24.0)
+function prepare_future_prediction_df(df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}, max_stool_ageMonths = 12.0, max_future_ageMonths = 24.0; filterout = [ :cogScorePercentile ] )
 
     future_prediction_df = @chain df begin
         build_metadata_prediction_df(inputs, targets)
-        select( Not(:cogScore) ) # Toggle this and the next line for dropping/filtering original cogScore
+        select( Not(filterout) ) # Toggle this and the next line for dropping/filtering original cogScore
     #    subset(:cogScore => x -> .!(ismissing.(x)))
         subset(:ageMonths => x -> .!(ismissing.(x)))
         subset(:futureAgeMonths => x -> x .<= max_future_ageMonths)
@@ -254,7 +272,7 @@ function train_randomforest(
 
         ## 5.1. Splitting training data between train and test
         Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:nrow(X)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
@@ -272,7 +290,11 @@ function train_randomforest(
             )
 
             ## 5.2.2. Fit model on training data
-            rf_machine = machine(rf_model, X[train, :], y[train])
+            if length(collect(input_cols)) == 1
+                rf_machine = machine(rf_model, X[train], y[train])
+            else
+                rf_machine = machine(rf_model, X[train, :], y[train])
+            end
             MLJ.fit!(rf_machine, verbosity=0)
 
             ## 5.2.3. Benchmark model on independent testing data
@@ -366,7 +388,7 @@ function train_randomforest(
 
         ## 5.1. Splitting training data between train and test
         Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:nrow(X)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
@@ -444,6 +466,19 @@ end # end function
 ## 3.1. Generate Predictions (method predict)
 
 ## 3.1.1. Generate Predictions with the UnivariateRandomForestClassifier
+function predict_proba(model::UnivariateRandomForestClassifier, newx=nothing; split_index=0)
+
+    (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
+    (split_index == 0) && (split_index = model.selected_split[2])
+
+    if newx isa Nothing
+        return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
+    else
+        return MLJ.predict(model.models[split_index], newx)
+    end
+
+end
+
 function predict(model::UnivariateRandomForestClassifier, newx=nothing; split_index=0)
 
     (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
@@ -1065,35 +1100,44 @@ end # end function
 
 ## 4.1.2. Scatterplot of ground truth vs prediction, for the most performant train/test split, for a single model.
 function singlemodel_merit_scatterplot!(
-    figure::Figure,
-    res::UnivariateRandomForestRegressor,
-    pos::Tuple{Int64, Int64},
-    plot_title::String)
-
-    # Build the axis
-    ax = Axis(
-        figure[pos[1],pos[2]];
-        xlabel = "Ground Truth",
-        ylabel = "Prediction",
-        title = plot_title
-    )
+    ax::Axis,
+    res::UnivariateRandomForestRegressor;
+    split_index = 0,
+    traincorr_pos = Point(0.0, 1.0),
+    testcorr_pos = Point(0.0, 0.9))
 
     # Plot barplot
 
     y = res.inputs_outputs[2]
-    yhat = Resonance.predict(res)
-    train, test = res.dataset_partitions[res.selected_split[2]]
+    yhat = Resonance.predict(res, res.inputs_outputs[1]; split_index=split_index)
+
+    if split_index == 0
+        train, test = res.dataset_partitions[res.selected_split[2]]
+    else
+        train, test = res.dataset_partitions[split_index]
+    end
+
     scatter!(ax, y[train], yhat[train]; color=:orange)
     scatter!(ax, y[test], yhat[test]; color=:purple)
     ablines!(ax, 0, 1; color=:grey)
+
     annotations!(
         ax,
-        ["r = $(round(cor(y, yhat); digits = 2))"],
-        [Point(1.1*min(minimum(y), minimum(yhat)), 0.9*max(maximum(y), maximum(yhat)))],
-        textsize = 20
+        ["r = $(round(cor(y[train], yhat[train]); digits = 2))"],
+        [traincorr_pos],
+        textsize = 20,
+        color = :orange
     )
 
-    return figure
+    annotations!(
+        ax,
+        ["r = $(round(cor(y[test], yhat[test]); digits = 2))"],
+        [testcorr_pos],
+        textsize = 20,
+        color = :purple
+    )
+
+    return ax
 
 end # end function
 
@@ -1102,29 +1146,17 @@ end # end function
 
 ### 4.2.1. MDI importance for each bug, averaged over all the train/test splits, for a single model, as a barplot
 function singlemodel_avgimportance_barplot!(
-    figure::Figure,
-    res::T where T <: Resonance.UnivariatePredictor,
-    pos::Tuple{Int64, Int64},
-    plot_title::String;
+    ax::Axis,
+    res::T where T <: Resonance.UnivariatePredictor;
     n = 30)
 
     # Collect the importances
     plot_df = singlemodel_summary_importances(res)
 
-    # Build the axis
-    ax1_1 = Axis(
-        figure[pos[1],pos[2]];
-        ylabel = "Most important Taxa",
-        yticks = (reverse(collect(1:n)), plot_df.Variable[1:n]),
-        #yticklabelrotation=-pi/4,
-        xlabel = "Mean Decrease in Impurity (Gini) Importance",
-        title = plot_title
-    )
-
     # Plot barplot
-    barplot!(ax1_1, reverse(collect(1:n)), plot_df.AvgImportance[1:n], color = :blue, direction=:x)
+    barplot!(ax, reverse(collect(1:n)), plot_df.AvgImportance[1:n], color = :blue, direction=:x)
 
-    return figure
+    return ax
 
 end # end function
 
