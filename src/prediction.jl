@@ -29,14 +29,12 @@ mutable struct UnivariateRandomForestRegressor <: Resonance.UnivariatePredictor
     n_splits::Int64
     dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
     models::Vector{Machine}
-    slope_corrections::Vector{}
+    # slope_corrections::Vector{}
     selected_split::Tuple{Float64, Int64}
-    train_maes::Vector{Float64}
-    test_maes::Vector{Float64}
-    train_mapes::Vector{Float64}
-    test_mapes::Vector{Float64}
-    train_cor::Vector{Float64}
-    test_cor::Vector{Float64}
+    train_rmses::Vector{Float64}
+    test_rmses::Vector{Float64}
+    train_cors::Vector{Float64}
+    test_cors::Vector{Float64}
 end
 
 mutable struct UnivariatePredictorEnsemble
@@ -373,12 +371,10 @@ function train_randomforest(
     # ## 4. Initializing meta-arrays to record tuning results for each split
     trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
     trial_machines = Vector{Machine}(undef, n_splits)
-    trial_slopecorrections = Vector{T where T <: RegressionModel}(undef, n_splits)
-    trial_train_maes = repeat([Inf], n_splits)
-    trial_train_mapes = repeat([Inf], n_splits)
+    # trial_slopecorrections = Vector{T where T <: RegressionModel}(undef, n_splits)
+    trial_train_rmses = repeat([Inf], n_splits)
+    trial_test_rmses = repeat([Inf], n_splits)
     trial_train_cors = repeat([-1.0], n_splits)
-    trial_test_maes = repeat([Inf], n_splits)
-    trial_test_mapes = repeat([Inf], n_splits)
     trial_test_cors = repeat([-1.0], n_splits)
 
     # ## 5. Tuning/training loop
@@ -411,25 +407,24 @@ function train_randomforest(
             ## 5.2.2.1. Fit slope correction on training data
 
             train_y_hat = MLJ.predict(rf_machine, X[train, :])
-            slope_correction_df = DataFrame([ train_y_hat, y[train] ], [:yhat, :y])
-            slope_correction = lm(@formula(y ~ yhat), slope_correction_df)
-            train_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => train_y_hat))
-            train_mape = mape(train_y_hat, y[train])
+            # slope_correction_df = DataFrame([ train_y_hat, y[train] ], [:yhat, :y])
+            # slope_correction = lm(@formula(y ~ yhat), slope_correction_df)
+            # train_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => train_y_hat))
+            train_rmse = rms(train_y_hat, y[train])
 
             ## 5.2.3. Benchmark model on independent testing data
-            test_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => MLJ.predict(rf_machine, X[test, :])))
-            test_mape = mape(test_y_hat, y[test])
+            test_y_hat = MLJ.predict(rf_machine, X[test, :])
+            # test_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => MLJ.predict(rf_machine, X[test, :])))
+            test_rmse = mape(test_y_hat, y[test])
 
             ## 5.2.4. Compare benchmark results with previous best model
-            test_mape < trial_test_mapes[this_trial] ? begin
-                trial_train_maes[this_trial] = mae(train_y_hat, y[train])
-                trial_train_mapes[this_trial] = train_mape
+            test_rmse < trial_test_rmses[this_trial] ? begin
+                trial_train_rmses[this_trial] = train_rmse
                 trial_train_cors[this_trial] = Statistics.cor(train_y_hat, y[train])
-                trial_test_maes[this_trial] = mae(test_y_hat, y[test])
-                trial_test_mapes[this_trial] = test_mape
+                trial_test_rmses[this_trial] = test_rmse
                 trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
                 trial_machines[this_trial] = deepcopy(rf_machine)
-                trial_slopecorrections[this_trial] = slope_correction
+                # trial_slopecorrections[this_trial] = slope_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid) - each set of hyperparameters
@@ -444,12 +439,10 @@ function train_randomforest(
         n_splits,                   #n_splits::Int64
         trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
         trial_machines,             #models::Vector{Machine}
-        trial_slopecorrections,     #slope_correction::Vector{}
-        findmin(trial_test_mapes),  #selected_split::Tuple{Float64, Int64}
-        trial_train_maes,           #train_maes::Vector{Float64}
-        trial_test_maes,            #test_maes::Vector{Float64}
-        trial_train_mapes,          #train_mapes::Vector{Float64}
-        trial_test_mapes,           #test_mapes::Vector{Float64}
+        # trial_slopecorrections,     #slope_correction::Vector{}
+        findmin(trial_test_rmses),  #selected_split::Tuple{Float64, Int64}
+        trial_train_rmses,          #train_rmses::Vector{Float64}
+        trial_test_rmses,           #test_rmses::Vector{Float64}
         trial_train_cors,           #train_cor::Vector{Float64}
         trial_test_cors,            #test_cor::Vector{Float64}
     )
@@ -540,20 +533,16 @@ function report_merits(res::UnivariateRandomForestRegressor)
     
     merits = DataFrame(
         :Split => collect(1:res.n_splits),
-        :Train_MAE => res.train_maes,
-        :Test_MAE => res.test_maes,
-        :Train_MAPE => res.train_mapes,
-        :Test_MAPE => res.test_mapes,
-        :Train_COR => res.train_cor,
-        :Test_COR => res.test_cor
+        :Train_RMSE => res.train_rmses,
+        :Test_RMSE => res.test_rmses,
+        :Train_COR => res.train_cors,
+        :Test_COR => res.test_cors
         )
 
     push!(merits, Dict(
         :Split => 0,
-        :Train_MAE => mean(merits.Train_MAE),
-        :Test_MAE => mean(merits.Test_MAE),
-        :Train_MAPE => mean(merits.Train_MAPE),
-        :Test_MAPE => mean(merits.Test_MAPE),
+        :Train_RMSE => mean(merits.Train_RMSE),
+        :Test_RMSE => mean(merits.Test_RMSE),
         :Train_COR => mean(merits.Train_COR),
         :Test_COR => mean(merits.Test_COR)
     ))
