@@ -59,7 +59,9 @@ insertcols!(ecs_df, 1, :sample => collect(keys(ecs.sidx))[collect(values(ecs.sid
 
 mdata_ecs_df = leftjoin(mdata_df, ecs_df, on = :omni => :sample, matchmissing=:error) |>  y -> rename!(y, :omni => :sample) |>  y -> sort(y, [ :subject, :timepoint ]);
 
-##### IDEA 2022-10-26
+### Prevalence filters
+
+## Normalization by read_depth
 
 for coll in names(mdata_ecs_df)[10:end]
     mdata_ecs_df[:, coll] .= mdata_ecs_df[:, coll] .* 1e6 ./ mdata_ecs_df[:, :read_depth]
@@ -67,12 +69,42 @@ end
 
 select!(mdata_ecs_df, Not(:read_depth))
 
+# ## Actual filter application
+# function filter_prevalence(df, cols_to_filter, prevalence_lower_threshold = 0.1)
+    
+#     keep_df = df[:, Not(cols_to_filter)]
+#     tofilter_df = df[:, cols_to_filter]
+#     prevalences = map( x -> sum(skipmissing(x) .> 0.0)/length(x) , eachcol(df[:, cols_to_filter]) )
+#     inputcols_after_filter = prevalences .>= prevalence_lower_threshold
+#     names(tofilter_df)[inputcols_after_filter] # for debugging
+
+#     return hcat(keep_df, tofilter_df[:, inputcols_after_filter])
+
+# end
+
+# function filter_stdev(df, cols_to_filter, stdev_lower_threshold = 0.1)
+    
+#     keep_df = df[:, Not(cols_to_filter)]
+#     tofilter_df = df[:, cols_to_filter]
+#     stdevs = map( x -> Statistics.std(skipmissing(x)), eachcol(df[:, cols_to_filter]) )
+#     inputcols_after_filter = stdevs .>= stdev_lower_threshold
+#     names(tofilter_df)[inputcols_after_filter] # for debugging
+
+#     return hcat(keep_df, tofilter_df[:, inputcols_after_filter])
+
+# end
+
+# prediction_df = unique(dropmissing(filter_age_bracket(mdata_ecs_df, 0.0, 6.0)), :subject)
+# prediction_df = filter_prevalence(prediction_df, 8:2440)
+# prediction_df = filter_stdev(prediction_df, 8:ncol(prediction_df), 100)
+
 #####
 # Training models
 #####
 
 RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
 
+# # Production Tuning Grid
 # onlydemo_tuning_space = (
 #     maxnodes_range = collect(1:1:15),
 #     nodesize_range = collect(1:1:20),
@@ -85,7 +117,7 @@ RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
 #     maxnodes_range = collect(1:2:9),
 #     nodesize_range = collect(1:2:15),
 #     sampsize_range = [0.5, 0.6, 0.7],
-#     mtry_range = [50, 100, ],
+#     mtry_range = collect(5:5:100),
 #     ntrees_range = [100, 300, 500]
 #     )
 
@@ -97,6 +129,7 @@ RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
 #     ntrees_range = [100, 300, 500]
 #     )
 
+# Local test tuning grid
 onlydemo_tuning_space = (
     maxnodes_range = [1, 2],
     nodesize_range = [2, 3],

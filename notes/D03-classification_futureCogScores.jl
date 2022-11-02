@@ -73,6 +73,7 @@ select!(mdata_ecs_df, Not(:read_depth))
 
 RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
 
+# # Production Tuning Grid
 # onlydemo_tuning_space = (
 #     maxnodes_range = collect(1:1:15),
 #     nodesize_range = collect(1:1:20),
@@ -97,6 +98,7 @@ RandomForestClassifier= MLJ.@load RandomForestClassifier pkg=DecisionTree
 #     ntrees_range = [100, 300, 500]
 #     )
 
+# Local test tuning grid
 onlydemo_tuning_space = (
     maxnodes_range = [1, 2],
     nodesize_range = [2, 3],
@@ -109,16 +111,16 @@ taxa_tuning_space = (
     maxnodes_range = [1, 2],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 10, 20 ],
-    ntrees_range = [100, 300]
+    mtry_range = [ 3, 5, 8, 10, 15 ],
+    ntrees_range = [300, 500, 800]
     )
 
 ecs_tuning_space = (
     maxnodes_range = [1, 2],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 100, 202 ],
-    ntrees_range = [100, 300]
+    mtry_range = [ 10, 20, 30, 40, 50 ],
+    ntrees_range = [300, 500, 800]
     )
 
 upperhalf_percentile(x::Vector{T} where T <: Real) = coerce(x .>= 0.50, OrderedFactor)

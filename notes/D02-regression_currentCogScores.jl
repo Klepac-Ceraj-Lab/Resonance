@@ -1,3 +1,7 @@
+#####
+# Notebook D02 - Regression of current CogScores percentiles
+#####
+
 using Chain
 using CSV
 using Statistics
@@ -69,6 +73,32 @@ select!(mdata_ecs_df, Not(:read_depth))
 
 RandomForestRegressor= MLJ.@load RandomForestRegressor pkg=DecisionTree
 
+# # Production Tuning Grid
+# onlydemo_tuning_space = (
+#     maxnodes_range = collect(1:1:15),
+#     nodesize_range = collect(1:1:20),
+#     sampsize_range = [0.5, 0.6, 0.7, 0.8],
+#     mtry_range = [ 1 ],
+#     ntrees_range = [100, 300, 500, 700]
+#     )
+
+# taxa_tuning_space = (
+#     maxnodes_range = collect(1:2:9),
+#     nodesize_range = collect(1:2:15),
+#     sampsize_range = [0.5, 0.6, 0.7],
+#     mtry_range = collect(5:5:100),
+#     ntrees_range = [100, 300, 500]
+#     )
+
+# ecs_tuning_space = (
+#     maxnodes_range = collect(1:2:9),
+#     nodesize_range = collect(1:2:15),
+#     sampsize_range = [0.5, 0.6, 0.7],
+#     mtry_range = collect(25:25:500),
+#     ntrees_range = [100, 300, 500]
+#     )
+
+# Local test tuning grid
 onlydemo_tuning_space = (
     maxnodes_range = [1, 2],
     nodesize_range = [2, 3],
@@ -81,16 +111,16 @@ taxa_tuning_space = (
     maxnodes_range = [1, 2],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 50, 100, 150, 200, 250 ],
-    ntrees_range = [100, 300]
+    mtry_range = [ 3, 5, 8, 10, 15 ],
+    ntrees_range = [300, 500, 800]
     )
 
 ecs_tuning_space = (
     maxnodes_range = [1, 2],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 200, 400, 600, 800, 1000, 1200 ],
-    ntrees_range = [100, 300]
+    mtry_range = [ 10, 20, 30, 40, 50 ],
+    ntrees_range = [300, 500, 800]
     )
 
 #####
@@ -294,8 +324,8 @@ regression_results = [
     regression_currentCogScores_18to120mo_demoplusecs
 ]
 
-selected_models = [ findmin(report_merits(m)[1:10, :Test_MAE]) for m in regression_results ]
-selected_models = [ findmax(report_merits(m)[1:10, :Test_COR]) for m in regression_results ]
-selected_maes = [ el[1] for el in selected_models ]
-selected_indexes = [ el[2] for el in selected_models ]
-selected_correlations = [ report_merits(m)[i, :Test_COR] for (m,i) in zip(regression_results, selected_indexes) ]
+# selected_models = [ findmin(report_merits(m)[1:10, :Test_RMSE]) for m in regression_results ]
+# selected_models = [ findmax(report_merits(m)[1:10, :Test_COR]) for m in regression_results ]
+# selected_maes = [ el[1] for el in selected_models ]
+# selected_indexes = [ el[2] for el in selected_models ]
+# selected_correlations = [ report_merits(m)[i, :Test_COR] for (m,i) in zip(regression_results, selected_indexes) ]
