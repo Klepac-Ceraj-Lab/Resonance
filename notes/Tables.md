@@ -154,7 +154,15 @@ fsea.group = categorical(fsea.group; levels=["all", "u6", "o18"])
     sort!(["geneset", "group"])
 end
 
-CSV.write(tablefiles("Table2.csv"), fsea)
-h1 = Highlighter((data, i, j) -> data[i,4] < 0.2; bold=true, foreground=:blue)
-pretty_table(fsea; highlighters=(h1,))
+fseaout = DataFrame(geneset=unique(fsea.geneset))
+for g in levels(fsea.group)
+    df = select(subset(fsea, "group"=> ByRow(==(g))), "enrichment", "qvalue")
+    rename!(df, ["$(g)_enrichment", "$(g)_qvalue"])
+    fseaout = hcat(fseaout, df)
+end
+
+
+CSV.write(tablefiles("Table2.csv"), fseaout)
+h1 = Highlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2; bold=true, foreground=:blue)
+pretty_table(fseaout; highlighters=(h1,))
 ```
