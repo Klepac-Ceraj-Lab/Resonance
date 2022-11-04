@@ -163,17 +163,10 @@ function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))
 end
 
 function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield = "omni")
-    df = CSV.read(datafiles("wrangled", "brain.csv"), DataFrame)
-    tbv = df."White-matter" .+ df."Gray-matter"
-    select!(df, Not("CSF"))
-    cols = names(df, Not(["subject", "timepoint", "Sex", "AgeInDays"]))
-
-    for col in cols
-        df[!, col] ./= tbv
-    end
-
+    df = CSV.read(datafiles("exports", "brain_normalized.csv"), DataFrame)
     mat = Matrix(select(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))' |> collect
-    feats = brainvolume.(cols)
+
+    feats = brainvolume.(names(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))
     
     grp = groupby(timepoint_metadata, ["subject", "timepoint"])
 

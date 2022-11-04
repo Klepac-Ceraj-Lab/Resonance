@@ -257,3 +257,15 @@ let
     end
 end
 
+## Normalize and write brain data
+
+brain = CSV.read(datafiles("wrangled", "brain.csv"), DataFrame)
+tbv = brain."White-matter" .+ brain."Gray-matter"
+select!(brain, Not("CSF"))
+cols = names(brain, Not(["subject", "timepoint", "Sex", "AgeInDays"]))
+
+for col in cols
+    brain[!, col] ./= tbv
+end
+
+CSV.write(datafiles("exports", "brain_normalized.csv"), brain)
