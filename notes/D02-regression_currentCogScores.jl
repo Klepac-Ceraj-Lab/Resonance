@@ -100,27 +100,28 @@ RandomForestRegressor= MLJ.@load RandomForestRegressor pkg=DecisionTree
 
 # Local test tuning grid
 onlydemo_tuning_space = (
-    maxnodes_range = [1, 2],
+    maxnodes_range = [2, 4, 6],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
     mtry_range = [ 1 ],
-    ntrees_range = [100, 300]
+    ntrees_range = [10, 30]
     )
 
 taxa_tuning_space = (
-    maxnodes_range = [1, 2],
+    maxnodes_range = [2, 4, 6],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 3, 5, 8, 10, 15 ],
-    ntrees_range = [300, 500, 800]
+    mtry_range = [ 3, 5, 8, 10, 15, 20, 30, 40 ],
+    # mtry_range = [ 3, 5, 8, 10, 15, 20, 30, 40, 50, 60, 80 ],
+    ntrees_range = [10, 20, 30, 40, 50, 60]
     )
 
 ecs_tuning_space = (
-    maxnodes_range = [1, 2],
-    nodesize_range = [2, 3],
+    maxnodes_range = [2, 4, 6, 8, 10, 12],
+    nodesize_range = [2, 3, 4, 5],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 10, 20, 30, 40, 50 ],
-    ntrees_range = [300, 500, 800]
+    mtry_range = [ 10, 30, 50, 70 ],
+    ntrees_range = [10, 20, 30, 40, 50, 60]
     )
 
 #####
@@ -136,7 +137,7 @@ regression_currentCogScores_00to06mo_onlydemo = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     [3,4,5],
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -154,7 +155,7 @@ regression_currentCogScores_00to06mo_onlytaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     8:556,
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -172,7 +173,7 @@ regression_currentCogScores_00to06mo_demoplustaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     [3, 4, 5, collect(8:556)...],
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -190,7 +191,7 @@ regression_currentCogScores_00to06mo_onlyecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     8:2440,
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -208,7 +209,7 @@ regression_currentCogScores_00to06mo_demoplusecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     [3, 4, 5, collect(8:2440)...],
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -230,7 +231,7 @@ regression_currentCogScores_18to120mo_onlydemo = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     [3,4,5],
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -248,7 +249,7 @@ regression_currentCogScores_18to120mo_onlytaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     8:556,
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -266,7 +267,7 @@ regression_currentCogScores_18to120mo_demoplustaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     [3, 4, 5, collect(8:556)...],
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -284,7 +285,7 @@ regression_currentCogScores_18to120mo_onlyecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     8:2440,
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -302,7 +303,7 @@ regression_currentCogScores_18to120mo_demoplusecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     [3, 4, 5, collect(8:2440)...],
     :cogScorePercentile;
-    n_splits = 10,
+    n_splits = 5,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
