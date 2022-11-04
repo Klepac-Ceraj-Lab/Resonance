@@ -1,1 +1,6 @@
-const taxa_gdrive = "1OhSdt5cV6HenpoTCKSBLVft7GxZmEzHz"
+const taxa_gdrive         = "1OhSdt5cV6HenpoTCKSBLVft7GxZmEzHz"
+const genefamilies_gdrive = ""
+const ecs_gdrive          = "13-gsGFoX-4Y3H6BDWBodc9fjMygr_uQr"
+const kos_gdrive          = "1PhHINNDx_DX75piKa_JlBeFL_9JiHwJU"
+const timepoints_gdrive   = "1ge_VwYDgU7ACvVSKwXYz4GbnVvecRsap"
+const brain_gdrive        = "1E8OCZlgTJuX9pO8USXQHNOr_b31OUDT2"
