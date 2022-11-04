@@ -21,10 +21,6 @@
 # export SCRATCH_SPACE="/brewster/kevin/resonance_scratch"
 # export ANALYSIS_FILES="/grace/sequencing/processed/mgx"
 # export DATA_FILES="/brewster/kevin/resonance_data"
-#
-# # pandoc
-# export SOURCE_FORMAT="markdown+pipe_tables+backtick_code_blocks+auto_identifiers+strikeout+yaml_metadata_block+implicit_figures+all_symbols_escapable+link_attributes+smart+fenced_divs"
-# export DATE_COVER=(date "+%d %B %Y")
 # ```
 
 using Resonance
