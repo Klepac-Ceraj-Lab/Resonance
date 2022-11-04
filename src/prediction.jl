@@ -219,6 +219,17 @@ end
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 
+## N-fold CV
+function partitionvec(x,stride,i,longtail::Bool=true)
+    # longtail=true to lengthen the last entry with the leftovers
+    # longtail=false to place the leftovers in their own entry
+    stride > 0 || error("stride must be positive") # doesn't handle negative strides
+    starts = firstindex(x):stride:(lastindex(x)-longtail*stride)+1 # where to start each subvector
+    subvecs = [view(x,starts[i]:get(starts,i+1,lastindex(x)+1)-1) for i in eachindex(starts)]
+    train, test = reduce(vcat, [ collect(subvecs[map(x -> x != i, eachindex(subvecs))]) ]...), collect(subvecs[i])
+    return train, test
+end
+
 ## 2.1. Train Tandom Forest Classifier
 
 function train_randomforest(
@@ -229,7 +240,7 @@ function train_randomforest(
     class_function::Function,
     input_cols,
     output_col;
-    n_splits = 2,
+    n_splits = 5,
     tuning_space = (;
         maxnodes_range = [ -1 ],
         nodesize_range = [ 0 ],
@@ -269,8 +280,9 @@ function train_randomforest(
     for this_trial in 1:n_splits
 
         ## 5.1. Splitting training data between train and test
-        Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
+        # Random.seed!(train_rng, this_trial)
+        # train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partitionvec(collect(1:nrow(prediction_df)),floor(Int64, nrow(prediction_df)/n_splits),this_trial, true)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
@@ -348,7 +360,7 @@ function train_randomforest(
         mtry_range = [ 5 ],
         ntrees_range = [ 10 ]
     ),
-    split_proportion=0.75,
+    split_proportion=0.6,
     train_rng=Random.GLOBAL_RNG
     )
 
@@ -383,8 +395,9 @@ function train_randomforest(
     for this_trial in 1:n_splits
 
         ## 5.1. Splitting training data between train and test
-        Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
+        # Random.seed!(train_rng, this_trial)
+        # train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partitionvec(collect(1:nrow(prediction_df)),floor(Int64, nrow(prediction_df)/n_splits),this_trial, true)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
@@ -415,7 +428,7 @@ function train_randomforest(
             ## 5.2.3. Benchmark model on independent testing data
             test_y_hat = MLJ.predict(rf_machine, X[test, :])
             # test_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => MLJ.predict(rf_machine, X[test, :])))
-            test_rmse = mape(test_y_hat, y[test])
+            test_rmse = rms(test_y_hat, y[test])
 
             ## 5.2.4. Compare benchmark results with previous best model
             test_rmse < trial_test_rmses[this_trial] ? begin
@@ -491,18 +504,24 @@ function predict(model::UnivariateRandomForestRegressor, newx=nothing; split_ind
     (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
     (split_index == 0) && (split_index = model.selected_split[2])
 
-    slope_correction = model.slope_corrections[split_index]
+    # slope_correction = model.slope_corrections[split_index]
+
+    # if newx isa Nothing
+    #     return GLM.predict(
+    #         slope_correction,
+    #         DataFrame(:yhat => MLJ.predict(model.models[split_index], model.inputs_outputs[1]))
+    #     )
+    # else
+    #     return GLM.predict(
+    #         slope_correction,
+    #         DataFrame(:yhat => MLJ.predict(model.models[split_index], newx))
+    #     )
+    # end
 
     if newx isa Nothing
-        return GLM.predict(
-            slope_correction,
-            DataFrame(:yhat => MLJ.predict(model.models[split_index], model.inputs_outputs[1]))
-        )
+        return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
     else
-        return GLM.predict(
-            slope_correction,
-            DataFrame(:yhat => MLJ.predict(model.models[split_index], newx))
-        )
+        return MLJ.predict(model.models[split_index], newx)
     end
 
 end
