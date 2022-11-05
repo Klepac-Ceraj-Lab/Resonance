@@ -1,4 +1,4 @@
-module Processing
+module Setup
 
 using Comonicon
 using Downloads
