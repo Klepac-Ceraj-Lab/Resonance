@@ -15,7 +15,7 @@ struct Timepoints end
 function _downloader(id, dir)
     mkpath(dir)
     tarpath = joinpath(dir, "tmp.tar.gz")
-    Downloads.download("https://drive.google.com/uc?export=download&id=" * id, tarpath)
+    Downloads.download("https://osf.io/download/" * id, tarpath)
     
     run(Cmd(["tar", "xvzf", tarpath, "--directory", dir]))
     rm(tarpath; force=true)
@@ -24,7 +24,7 @@ end
 
 function datadownload(::Taxa; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     if overwrite || any(!isfile, joinpath.(inputdir, ["taxa.arrow", "taxa_features.txt", "samples.txt"]))
-        _downloader(taxa_gdrive, inputdir)
+        _downloader(taxa_osfio, inputdir)
     else
         @info "Taxonomic profiles are already present, skipping!"
     end
@@ -33,7 +33,7 @@ end
 
 function datadownload(::Unirefs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     if overwrite || any(!isfile, joinpath.(inputdir, ["genefamilies.arrow", "genefamilies_features.txt", "samples.txt"]))
-        _downloader(genefamilies_gdrive, inputdir)
+        _downloader(genefamilies_osfio, inputdir)
     else
         @info "Uniref profiles are already present, skipping!"
     end
@@ -42,7 +42,7 @@ end
 
 function datadownload(::KOs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     if overwrite || any(!isfile, joinpath.(inputdir, ["kos.arrow", "kos_features.txt", "samples.txt"]))
-        _downloader(kos_gdrive, inputdir)
+        _downloader(kos_osfio, inputdir)
     else
         @info "KO profiles are already present, skipping!"
     end
@@ -51,7 +51,7 @@ end
 
 function datadownload(::ECs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     if overwrite || any(!isfile, joinpath.(inputdir, ["ecs.arrow", "ecs_features.txt", "samples.txt"]))
-        _downloader(ecs_gdrive, inputdir)
+        _downloader(ecs_osfio, inputdir)
     else
         @info "EC profiles are already present, skipping!"
     end
@@ -60,7 +60,7 @@ end
 
 function datadownload(::Neuro; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     if overwrite || any(!isfile, joinpath.(inputdir, ["brain_normalized.csv"]))
-        _downloader(brain_gdrive, inputdir)
+        _downloader(brain_osfio, inputdir)
     else
         @info "Normalized brain data is already present, skipping!"
     end
@@ -69,7 +69,7 @@ end
 
 function datadownload(::Timepoints; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     if overwrite || any(!isfile, joinpath.(inputdir, ["timepoint_metadata.csv"]))
-        _downloader(timepoints_gdrive, inputdir)
+        _downloader(timepoints_osfio, inputdir)
     else
         @info "Timepoint metadata is already present, skipping!"
     end
