@@ -1,6 +1,0 @@
-name = "Processing"
-uuid = "df7026d2-1fa7-4e92-9c5e-4669e13f0f5c"
-
-[deps]
-Comonicon = "863f3e99-da2a-4334-8734-de3dacbe5542"
-Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
