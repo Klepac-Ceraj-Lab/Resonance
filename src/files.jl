@@ -1,3 +1,4 @@
+inputfiles(args...) = joinpath(get(ENV, "INPUT_FILES", "./input"), args...)
 analysisfiles(args...) = joinpath(get(ENV, "ANALYSIS_FILES", "./analysis"), args...)
 scratchfiles(args...) = joinpath(get(ENV, "SCRATCH_SPACE", "./scratch"), args...)
 datafiles(args...) = joinpath(get(ENV, "DATA_FILES", "./data"), args...)

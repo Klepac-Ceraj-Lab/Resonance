@@ -70,7 +70,7 @@ struct TaxonomicProfiles <: Dataset end
 struct UnirefProfiles <: Dataset end
 struct KOProfiles <: Dataset end
 struct ECProfiles <: Dataset end
-struct MetabolicProfiles <: Dataset end
+# struct MetabolicProfiles <: Dataset end
 struct Neuroimaging <: Dataset end
 
 # function map_string_timepoint(concatstring)::Tuple{Int64, Int64}
@@ -88,7 +88,8 @@ struct Neuroimaging <: Dataset end
 load(ds::Dataset; kwargs...) = MethodError("load has not been implemented for $(typeof(ds))")
 
 function load(::Metadata)
-    df = CSV.read(datafiles("exports", "timepoint_metadata.csv"), DataFrame;
+    Setup.datadownload(Setup.Timepoints(); inputdir=inputfiles())
+    df = CSV.read(inputfiles("timepoint_metadata.csv"), DataFrame;
         types = [
             Int64,                   # subject
             Int64,                   # timepoint
@@ -114,56 +115,61 @@ function load(::Metadata)
 end
 
 function load(::TaxonomicProfiles; timepoint_metadata = load(Metadata()))
-    tbl = Arrow.Table(datafiles("exports", "taxa.arrow"))
+    Setup.datadownload(Setup.Taxa(); inputdir=inputfiles())
+    tbl = Arrow.Table(inputfiles("taxa.arrow"))
     mat = sparse(tbl.fidx, tbl.sidx, tbl.abundance)
-    fs = [taxon(last(split(line, "|"))) for line in eachline(datafiles("exports", "taxa_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(datafiles("exports", "samples.txt"))]
+    fs = [taxon(last(split(line, "|"))) for line in eachline(inputfiles("taxa_features.txt"))]
+    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
     comm = CommunityProfile(mat, fs, ss)
     insert!(comm, timepoint_metadata; namecol=:omni)
     return comm
 end
 
 function load(::UnirefProfiles; timepoint_metadata = load(Metadata()))
-    tbl = Arrow.Table(datafiles("exports", "genefamilies.arrow"))
+    Setup.datadownload(Setup.Unirefs(); inputdir=inputfiles())
+    tbl = Arrow.Table(inputfiles("genefamilies.arrow"))
     mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
-    fs = [genefunction(line) for line in eachline(datafiles("exports", "genefamilies_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(datafiles("exports", "samples.txt"))]
+    fs = [genefunction(line) for line in eachline(inputfiles("genefamilies_features.txt"))]
+    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
     comm = CommunityProfile(mat, fs, ss)
     insert!(comm, timepoint_metadata; namecol=:omni)
     return comm
 end
 
 function load(::KOProfiles; timepoint_metadata = load(Metadata()))
-    tbl = Arrow.Table(datafiles("exports", "kos.arrow"))
+    Setup.datadownload(Setup.KOs(); inputdir=inputfiles())
+    tbl = Arrow.Table(inputfiles("kos.arrow"))
     mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
-    fs = [genefunction(line) for line in eachline(datafiles("exports", "kos_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(datafiles("exports", "samples.txt"))]
+    fs = [genefunction(line) for line in eachline(inputfiles("kos_features.txt"))]
+    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
     comm = CommunityProfile(mat, fs, ss)
     insert!(comm, timepoint_metadata; namecol=:omni)
     return comm
 end
 
 function load(::ECProfiles; timepoint_metadata = load(Metadata()))
-    tbl = Arrow.Table(datafiles("exports", "ecs.arrow"))
+    Setup.datadownload(Setup.ECs(); inputdir=inputfiles())
+    tbl = Arrow.Table(inputfiles("ecs.arrow"))
     mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
-    fs = [genefunction(line) for line in eachline(datafiles("exports", "ecs_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(datafiles("exports", "samples.txt"))]
+    fs = [genefunction(line) for line in eachline(inputfiles("ecs_features.txt"))]
+    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
     comm = CommunityProfile(mat, fs, ss)
     insert!(comm, timepoint_metadata; namecol=:omni)
     return comm
 end
 
-function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))
-    df = CSV.read(datafiles("exports", "metabolites.csv"), DataFrame)
-
-    ms = [Metabolite(row[:uid], row[:Metabolite], row[:MZ], row[:RT]) for row in eachrow(df)]
-    comm = CommunityProfile(Matrix(df[!, r"^FE"]), ms, MicrobiomeSample.(names(df, r"^FE")))
-    set!(comm, timepoint_metadata; namecol=:etoh)
-    return comm
-end
+# function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))
+#     df = CSV.read(inputfiles("metabolites.csv"), DataFrame)
+#
+#     ms = [Metabolite(row[:uid], row[:Metabolite], row[:MZ], row[:RT]) for row in eachrow(df)]
+#     comm = CommunityProfile(Matrix(df[!, r"^FE"]), ms, MicrobiomeSample.(names(df, r"^FE")))
+#     set!(comm, timepoint_metadata; namecol=:etoh)
+#     return comm
+# end
 
 function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield = "omni")
-    df = CSV.read(datafiles("exports", "brain_normalized.csv"), DataFrame)
+    Setup.datadownload(Setup.Neuro(); inputdir=inputfiles())
+    df = CSV.read(inputfiles("brain_normalized.csv"), DataFrame)
     mat = Matrix(select(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))' |> collect
 
     feats = brainvolume.(names(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))

@@ -127,6 +127,7 @@ using LinearAlgebra
 using MultivariateStats
 using PERMANOVA
 using Random
+using Setup # dev package at `./Setup`
 using SparseArrays
 using Statistics
 using Tables
