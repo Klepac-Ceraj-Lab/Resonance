@@ -23,7 +23,7 @@ ml_rng = StableRNG(0)
 
 mdata_df = @chain Resonance.load(Metadata()) begin
     select( [ :subject, :timepoint, :ageMonths, :sex, :education, :cogScorePercentile, :omni, :read_depth] )
-    dropmissing( [ :ageMonths, :sex, :education, :omni ] )
+    dropmissing( [ :ageMonths, :sex, :education ] )
 end
 
 mdata_df.education = coerce(int.(skipmissing(mdata_df.education), type = Int), OrderedFactor)
@@ -42,7 +42,7 @@ taxa_df.Collinsella_massiliensis = myxor.(taxa_df.Collinsella_massiliensis, taxa
 select!(taxa_df, Not("[Collinsella]_massiliensis"))
 insertcols!(taxa_df, 1, :sample => collect(keys(taxa.sidx))[collect(values(taxa.sidx))])
 
-mdata_taxa_df = leftjoin(mdata_df[:, 1:end-1], taxa_df, on = :omni => :sample, matchmissing=:error) |>  y -> rename!(y, :omni => :sample) |>  y -> sort(y, [ :subject, :timepoint ]);
+mdata_taxa_df = leftjoin(mdata_df[:, 1:end-1], taxa_df, on = :omni => :sample, matchmissing=:equal) |>  y -> rename!(y, :omni => :sample) |>  y -> sort(y, [ :subject, :timepoint ]);
 
 ## 3. Functional Profiles
 
@@ -57,7 +57,7 @@ rename!(ecs_df, [ names(ecs_df) .=> replace.(names(ecs_df), "s__" => "")]...)
 
 insertcols!(ecs_df, 1, :sample => collect(keys(ecs.sidx))[collect(values(ecs.sidx))])
 
-mdata_ecs_df = leftjoin(mdata_df, ecs_df, on = :omni => :sample, matchmissing=:error) |>  y -> rename!(y, :omni => :sample) |>  y -> sort(y, [ :subject, :timepoint ]);
+mdata_ecs_df = leftjoin(mdata_df, ecs_df, on = :omni => :sample, matchmissing=:equal) |>  y -> rename!(y, :omni => :sample) |>  y -> sort(y, [ :subject, :timepoint ]);
 
 ##### IDEA 2022-10-26
 
@@ -100,28 +100,28 @@ RandomForestRegressor= MLJ.@load RandomForestRegressor pkg=DecisionTree
 
 # Local test tuning grid
 onlydemo_tuning_space = (
-    maxnodes_range = [1, 2],
+    maxnodes_range = [2, 4],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
     mtry_range = [ 1 ],
-    ntrees_range = [100, 300]
-    )
+    ntrees_range = [10, 30]
+)
 
 taxa_tuning_space = (
-    maxnodes_range = [1, 2],
+    maxnodes_range = [2, 4],
     nodesize_range = [2, 3],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 3, 5, 8, 10, 15 ],
-    ntrees_range = [300, 500, 800]
-    )
+    mtry_range = [ 3, 5, 8, 10, 15, 20, 30, 40 ],
+    ntrees_range = [10, 20, 30, 40]
+)
 
 ecs_tuning_space = (
-    maxnodes_range = [1, 2],
-    nodesize_range = [2, 3],
+    maxnodes_range = [2, 4, 6],
+    nodesize_range = [2, 3, 4],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 10, 20, 30, 40, 50 ],
-    ntrees_range = [300, 500, 800]
-    )
+    mtry_range = [ 100, 200, 300, 400, 500, 600, 700, 800 ],
+    ntrees_range = [10, 20, 30, 40, 50, 60]
+)
 
 upperhalf_percentile(x::Vector{T} where T <: Real) = coerce(x .>= 0.50, OrderedFactor)
 
@@ -138,7 +138,7 @@ regression_futureCogScores_00to12mo_onlydemo = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(taxa_df[:, 1:1])), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     [3,4,5,6],
     :futureCogScorePercentile;
-    n_splits = 10,
+    n_splits = 4,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -156,7 +156,7 @@ regression_futureCogScores_00to12mo_onlytaxa = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(taxa_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     12:560,
     :futureCogScorePercentile;
-    n_splits = 10,
+    n_splits = 4,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -174,7 +174,7 @@ regression_futureCogScores_00to12mo_demoplustaxa = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(taxa_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     [ 3, 4, 5, 6, collect(12:560)... ],
     :futureCogScorePercentile;
-    n_splits = 10,
+    n_splits = 4,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -192,7 +192,7 @@ regression_futureCogScores_00to12mo_onlyecs = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(ecs_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     12:2444,
     :futureCogScorePercentile;
-    n_splits = 10,
+    n_splits = 4,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -210,7 +210,7 @@ regression_futureCogScores_00to12mo_demoplusecs = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(ecs_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     [3, 4, 5, 6, collect(12:2444)... ],
     :futureCogScorePercentile;
-    n_splits = 10,
+    n_splits = 4,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
