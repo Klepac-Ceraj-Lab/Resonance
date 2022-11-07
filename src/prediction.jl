@@ -2,6 +2,13 @@
 # 0. Hierarchical Structures and Types #
 ########################################
 
+struct CustomRangeNormalizer
+    rmin::Float64
+    rmax::Float64
+    tmin::Float64
+    tmax::Float64
+end
+
 abstract type Prediction end
 struct Classification <: Prediction end
 struct Regression <: Prediction end
@@ -29,7 +36,7 @@ mutable struct UnivariateRandomForestRegressor <: Resonance.UnivariatePredictor
     n_splits::Int64
     dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
     models::Vector{Machine}
-    # slope_corrections::Vector{}
+    scale_corrections::Vector{CustomRangeNormalizer}
     selected_split::Tuple{Float64, Int64}
     train_rmses::Vector{Float64}
     test_rmses::Vector{Float64}
@@ -383,7 +390,7 @@ function train_randomforest(
     # ## 4. Initializing meta-arrays to record tuning results for each split
     trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
     trial_machines = Vector{Machine}(undef, n_splits)
-    # trial_slopecorrections = Vector{T where T <: RegressionModel}(undef, n_splits)
+    trial_scalecorrections = Vector{CustomRangeNormalizer}(undef, n_splits)
     trial_train_rmses = repeat([Inf], n_splits)
     trial_test_rmses = repeat([Inf], n_splits)
     trial_train_cors = repeat([-1.0], n_splits)
@@ -417,17 +424,15 @@ function train_randomforest(
             ## 5.2.2. Fit model on training data
             rf_machine = machine(rf_model, X[train, :], y[train])
             MLJ.fit!(rf_machine, verbosity=0)
-            ## 5.2.2.1. Fit slope correction on training data
-
+            ## 5.2.2.1. Fit scale correction on training data
             train_y_hat = MLJ.predict(rf_machine, X[train, :])
-            # slope_correction_df = DataFrame([ train_y_hat, y[train] ], [:yhat, :y])
-            # slope_correction = lm(@formula(y ~ yhat), slope_correction_df)
-            # train_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => train_y_hat))
+            scale_correction = compute_custom_scale(train_y_hat, y[train])
+            train_y_hat = scale_normalization(train_y_hat, scale_correction)
             train_rmse = rms(train_y_hat, y[train])
 
             ## 5.2.3. Benchmark model on independent testing data
             test_y_hat = MLJ.predict(rf_machine, X[test, :])
-            # test_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => MLJ.predict(rf_machine, X[test, :])))
+            test_y_hat = scale_normalization(test_y_hat, scale_correction)
             test_rmse = rms(test_y_hat, y[test])
 
             ## 5.2.4. Compare benchmark results with previous best model
@@ -437,7 +442,7 @@ function train_randomforest(
                 trial_test_rmses[this_trial] = test_rmse
                 trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
                 trial_machines[this_trial] = deepcopy(rf_machine)
-                # trial_slopecorrections[this_trial] = slope_correction
+                trial_scalecorrections[this_trial] = scale_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid) - each set of hyperparameters
@@ -452,7 +457,7 @@ function train_randomforest(
         n_splits,                   #n_splits::Int64
         trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
         trial_machines,             #models::Vector{Machine}
-        # trial_slopecorrections,     #slope_correction::Vector{}
+        trial_scalecorrections,     #scale_correction::Vector{}
         findmin(trial_test_rmses),  #selected_split::Tuple{Float64, Int64}
         trial_train_rmses,          #train_rmses::Vector{Float64}
         trial_test_rmses,           #test_rmses::Vector{Float64}
@@ -468,6 +473,24 @@ end # end function
 #########################################
 # 3. Post-processing/Analysis Functions #
 #########################################
+
+## 3.0. Scale normalization
+function compute_custom_scale(rvector::Vector{Float64}, tvector::Vector{Float64})
+    return CustomRangeNormalizer(
+        minimum(rvector),
+        maximum(rvector),
+        minimum(tvector),
+        maximum(tvector)
+    )
+end
+
+function normalize_number(m, scale::CustomRangeNormalizer)
+    return ( (m - scale.rmin) / (scale.rmax - scale.rmin) * (scale.tmax - scale.tmin) + scale.tmin )
+end
+
+function scale_normalization(inputs::Vector{Float64}, scale::CustomRangeNormalizer)
+    return map(x -> normalize_number(x, scale), inputs)
+end
 
 ## 3.1. Generate Predictions (method predict)
 
@@ -504,25 +527,20 @@ function predict(model::UnivariateRandomForestRegressor, newx=nothing; split_ind
     (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
     (split_index == 0) && (split_index = model.selected_split[2])
 
-    # slope_correction = model.slope_corrections[split_index]
-
-    # if newx isa Nothing
-    #     return GLM.predict(
-    #         slope_correction,
-    #         DataFrame(:yhat => MLJ.predict(model.models[split_index], model.inputs_outputs[1]))
-    #     )
-    # else
-    #     return GLM.predict(
-    #         slope_correction,
-    #         DataFrame(:yhat => MLJ.predict(model.models[split_index], newx))
-    #     )
-    # end
+    scale_correction = model.scale_corrections[split_index]
 
     if newx isa Nothing
-        return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
+        return scale_normalization(MLJ.predict(model.models[split_index], model.inputs_outputs[1]), scale_correction)
     else
-        return MLJ.predict(model.models[split_index], newx)
+        return scale_normalization(MLJ.predict(model.models[split_index], newx), scale_correction)
     end
+
+    # ## Without Scale Correction
+    # if newx isa Nothing
+    #     return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
+    # else
+    #     return MLJ.predict(model.models[split_index], newx)
+    # end
 
 end
 
@@ -542,6 +560,12 @@ function report_merits(res::UnivariateRandomForestClassifier)
         :Split => 0,
         :Train_ACC => mean(merits.Train_ACC),
         :Test_ACC => mean(merits.Test_ACC)
+    ))
+
+    push!(merits, Dict(
+        :Split => -1,
+        :Train_ACC => median(merits.Train_ACC),
+        :Test_ACC => median(merits.Test_ACC)
     ))
 
     return merits
@@ -564,6 +588,14 @@ function report_merits(res::UnivariateRandomForestRegressor)
         :Test_RMSE => mean(merits.Test_RMSE),
         :Train_COR => mean(merits.Train_COR),
         :Test_COR => mean(merits.Test_COR)
+    ))
+
+    push!(merits, Dict(
+        :Split => -1,
+        :Train_RMSE => median(merits.Train_RMSE[1:end-1]),
+        :Test_RMSE => median(merits.Test_RMSE[1:end-1]),
+        :Train_COR => median(merits.Train_COR[1:end-1]),
+        :Test_COR => median(merits.Test_COR[1:end-1])
     ))
     
     return merits

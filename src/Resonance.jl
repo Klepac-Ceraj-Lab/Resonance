@@ -66,6 +66,10 @@ export  # 0. structs/types
         # 2. training functions
         train_randomforest,
         # postprocessing functions
+        CustomRangeNormalizer,
+        compute_custom_scale,
+        normalize_number,
+        scale_normalization,
         predict_proba,
         predict,
         report_merits,
