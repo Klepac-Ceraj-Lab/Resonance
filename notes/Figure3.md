@@ -51,7 +51,10 @@ function classification_measures(resvec::Vector{UnivariateRandomForestClassifier
         TPR = Float64[],
         TNR = Float64[],
         FPR = Float64[],
-        FNR = Float64[]
+        FNR = Float64[],
+        PPV = Float64[],
+        NPV = Float64[],
+        F1 = Float64[]
     )
 
     for (i, res) in enumerate(resvec)
@@ -62,7 +65,10 @@ function classification_measures(resvec::Vector{UnivariateRandomForestClassifier
             TPR = Float64[],
             TNR = Float64[],
             FPR = Float64[],
-            FNR = Float64[]
+            FNR = Float64[],
+            PPV = Float64[],
+            NPV = Float64[],
+            F1 = Float64[]
         )
 
         for this_split in 1:res.n_splits
@@ -84,6 +90,9 @@ function classification_measures(resvec::Vector{UnivariateRandomForestClassifier
                     TNR = ( tns )/( tns + fps ),
                     FPR = ( fps )/( tns + fps ),
                     FNR = ( fns )/( tps + fns ),
+                    PPV = ( tps )/( tps + fps ),
+                    NPV = ( tns )/( tns + fns ),
+                    F1 = ( tps ) / ( tps + 0.5 * (fps + fns) )
                 )
             )
         end
@@ -100,6 +109,9 @@ function classification_measures(resvec::Vector{UnivariateRandomForestClassifier
                 TNR = thismodel_summary[4],
                 FPR = thismodel_summary[5],
                 FNR = thismodel_summary[6],
+                PPV = thismodel_summary[7],
+                NPV = thismodel_summary[8],
+                F1 = thismodel_summary[9],
             )
         )
     end
@@ -119,7 +131,7 @@ function confmatrices2barplots(resvec::Vector{UnivariateRandomForestClassifier})
     for (i, res) in enumerate(resvec)
 
         append!(xs, repeat( [ i ], 4))
-        append!(values, average_confusion_matrix(res))
+        append!(values, average_confusion_matrix(res) .- 0.25)
         append!(grps, [ 1, 2, 2, 1 ] )
         append!(colors, [ 1, 2, 3, 4] )
     end
@@ -166,6 +178,16 @@ JLD2.@load "models/classification_currentCogScores_00to06mo_onlytaxa.jld"
 JLD2.@load "models/classification_currentCogScores_00to06mo_demoplustaxa.jld"
 JLD2.@load "models/classification_currentCogScores_00to06mo_onlyecs.jld"
 JLD2.@load "models/classification_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/classification_currentCogScores_06to12mo_onlydemo.jld"
+JLD2.@load "models/classification_currentCogScores_06to12mo_onlytaxa.jld"
+JLD2.@load "models/classification_currentCogScores_06to12mo_demoplustaxa.jld"
+JLD2.@load "models/classification_currentCogScores_06to12mo_onlyecs.jld"
+JLD2.@load "models/classification_currentCogScores_06to12mo_demoplusecs.jld"
+JLD2.@load "models/classification_currentCogScores_12to18mo_onlydemo.jld"
+JLD2.@load "models/classification_currentCogScores_12to18mo_onlytaxa.jld"
+JLD2.@load "models/classification_currentCogScores_12to18mo_demoplustaxa.jld"
+JLD2.@load "models/classification_currentCogScores_12to18mo_onlyecs.jld"
+JLD2.@load "models/classification_currentCogScores_12to18mo_demoplusecs.jld"
 JLD2.@load "models/classification_currentCogScores_18to120mo_onlydemo.jld"
 JLD2.@load "models/classification_currentCogScores_18to120mo_onlytaxa.jld"
 JLD2.@load "models/classification_currentCogScores_18to120mo_demoplustaxa.jld"
@@ -177,6 +199,16 @@ JLD2.@load "models/regression_currentCogScores_00to06mo_onlytaxa.jld"
 JLD2.@load "models/regression_currentCogScores_00to06mo_demoplustaxa.jld"
 JLD2.@load "models/regression_currentCogScores_00to06mo_onlyecs.jld"
 JLD2.@load "models/regression_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/regression_currentCogScores_06to12mo_onlydemo.jld"
+JLD2.@load "models/regression_currentCogScores_06to12mo_onlytaxa.jld"
+JLD2.@load "models/regression_currentCogScores_06to12mo_demoplustaxa.jld"
+JLD2.@load "models/regression_currentCogScores_06to12mo_onlyecs.jld"
+JLD2.@load "models/regression_currentCogScores_06to12mo_demoplusecs.jld"
+JLD2.@load "models/regression_currentCogScores_12to18mo_onlydemo.jld"
+JLD2.@load "models/regression_currentCogScores_12to18mo_onlytaxa.jld"
+JLD2.@load "models/regression_currentCogScores_12to18mo_demoplustaxa.jld"
+JLD2.@load "models/regression_currentCogScores_12to18mo_onlyecs.jld"
+JLD2.@load "models/regression_currentCogScores_12to18mo_demoplusecs.jld"
 JLD2.@load "models/regression_currentCogScores_18to120mo_onlydemo.jld"
 JLD2.@load "models/regression_currentCogScores_18to120mo_onlytaxa.jld"
 JLD2.@load "models/regression_currentCogScores_18to120mo_demoplustaxa.jld"
@@ -213,6 +245,16 @@ classification_results = [
     classification_currentCogScores_00to06mo_demoplustaxa,
     classification_currentCogScores_00to06mo_onlyecs,
     classification_currentCogScores_00to06mo_demoplusecs,
+    classification_currentCogScores_06to12mo_onlydemo,
+    classification_currentCogScores_06to12mo_onlytaxa,
+    classification_currentCogScores_06to12mo_demoplustaxa,
+    classification_currentCogScores_06to12mo_onlyecs,
+    classification_currentCogScores_06to12mo_demoplusecs,
+    classification_currentCogScores_12to18mo_onlydemo,
+    classification_currentCogScores_12to18mo_onlytaxa,
+    classification_currentCogScores_12to18mo_demoplustaxa,
+    classification_currentCogScores_12to18mo_onlyecs,
+    classification_currentCogScores_12to18mo_demoplusecs,
     classification_currentCogScores_18to120mo_onlydemo,
     classification_currentCogScores_18to120mo_onlytaxa,
     classification_currentCogScores_18to120mo_demoplustaxa,
@@ -224,16 +266,21 @@ xs, values, grps, colors = confmatrices2barplots(classification_results)
 
 axA1 = Axis(
     A_subfig[1,1];
-    xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
+    xticks = (1:20, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
     ylabel = "Test set average Proportion",
     title = "A - Classification - above/below 50th percentile"
 )
 
-ylims!(axA1, [0.0, 1.0])
+ylims!(axA1, [-0.4, 0.4])
 
 axA2 = Axis(
     A_subfig[1,1];
-    xticks = (1:10, ["", "", "Subjects from birth to 6 months", "", "", "", "", "Subjects from 18 months to 120 months", "", ""]),
+    xticks = (1:20, [
+        "", "", "Subjects from birth to 6 months", "", "",
+        "", "", "Subjects from 6 to 12 months", "", "",
+        "", "", "Subjects from 12 to 18 months", "", "",
+        "", "", "Subjects from 18 months to 120 months", "", ""
+        ]),
     xticklabelpad = 30.0
 )
 
@@ -246,7 +293,8 @@ barplot!(
     axA1, xs, values,
     dodge = grps,
     stack = grps,
-    color = confplot_colors[colors]
+    color = confplot_colors[colors],
+    width = 0.7
 )
 
 labels = ["True Negatives", "False Positives", "False Negatives", "True Positives"]
@@ -263,6 +311,16 @@ regression_results = [
     regression_currentCogScores_00to06mo_demoplustaxa,
     regression_currentCogScores_00to06mo_onlyecs,
     regression_currentCogScores_00to06mo_demoplusecs,
+    regression_currentCogScores_06to12mo_onlydemo,
+    regression_currentCogScores_06to12mo_onlytaxa,
+    regression_currentCogScores_06to12mo_demoplustaxa,
+    regression_currentCogScores_06to12mo_onlyecs,
+    regression_currentCogScores_06to12mo_demoplusecs,
+    regression_currentCogScores_12to18mo_onlydemo,
+    regression_currentCogScores_12to18mo_onlytaxa,
+    regression_currentCogScores_12to18mo_demoplustaxa,
+    regression_currentCogScores_12to18mo_onlyecs,
+    regression_currentCogScores_12to18mo_demoplusecs,
     regression_currentCogScores_18to120mo_onlydemo,
     regression_currentCogScores_18to120mo_onlytaxa,
     regression_currentCogScores_18to120mo_demoplustaxa,
@@ -272,7 +330,7 @@ regression_results = [
 
 axB1 = Axis(
     B_subfig[1,1];
-    xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
+        xticks = (1:20, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
     ylabel = "Test set Mean Abssolut Error\nTest set Person's R coefficient",
     title = "B - Regression - numeric percentile"
 )
@@ -281,7 +339,12 @@ axB1 = Axis(
 
 axB2 = Axis(
     B_subfig[1,1];
-    xticks = (1:10, ["", "", "Subjects from birth to 6 months", "", "", "", "", "Subjects from 18 months to 120 months", "", ""]),
+        xticks = (1:20, [
+        "", "", "Subjects from birth to 6 months", "", "",
+        "", "", "Subjects from 6 to 12 months", "", "",
+        "", "", "Subjects from 12 to 18 months", "", "",
+        "", "", "Subjects from 18 months to 120 months", "", ""
+        ]),
     xticklabelpad = 30.0
 )
 
@@ -290,30 +353,64 @@ linkxaxes!(axB1, axB2)
 hideydecorations!(axB2)
 hidexdecorations!(axB2, ticklabels = false)
 
-maxcorr_splits = [ findmax(report_merits(m)[1:10, :Test_COR]) for m in regression_results ]
-minmaes_splits = [ findmin(report_merits(m)[1:10, :Test_MAE]) for m in regression_results ]
-mediancorr_splits = [ findfirst(report_merits(m)[1:10, :Test_COR] .>= median(report_merits(m)[1:10, :Test_COR]) ) for m in regression_results ]
-medianmae_splits = [ findfirst(report_merits(m)[1:10, :Test_MAE] .<= median(report_merits(m)[1:10, :Test_MAE]) ) for m in regression_results ]
-selected_indexes = [ el[2] for el in maxcorr_splits]
-selected_maes = [ report_merits(m)[i, :Test_MAE] for (m,i) in zip(regression_results, selected_indexes) ]
-selected_correlations = [ report_merits(m)[i, :Test_COR] for (m,i) in zip(regression_results, selected_indexes) ]
+# ## Median Version
+plot_points = DataFrame(
+    [
+        report_merits(m)[end, :] for m in regression_results
+    ]
+)
+selected_rmses = plot_points.Test_RMSE
+selected_correlations = plot_points.Test_COR .^ 2
+selected_indexes = Vector{Int64}()
+for i in eachindex(regression_results)
+    bottomdist_models = findall(
+        report_merits(regression_results[i])[1:end-2, :Test_RMSE] .- selected_rmses[i] .< 0.0
+    )
+    plot_model = findmin(
+        abs.(report_merits(regression_results[i])[bottomdist_models, :Test_RMSE] .- selected_rmses[i])
+    )
+    push!(selected_indexes, plot_model[2])
+end
+
+# ## Mean Version
+# plot_points = DataFrame(
+#     [
+#         report_merits(m)[end-1, :] for m in regression_results
+#     ]
+# )
+# selected_maes = plot_points.Test_RMSE
+# selected_correlations = plot_points.Test_COR .^ 2
+# minmse_splits = [ findmin(report_merits(m)[1:end-1, :Test_RMSE]) for m in regression_results ]
+# selected_indexes = [ el[2] for el in minmse_splits]
 
 lines!(
     axB1,
     1:5,
-    selected_maes[1:5],
+    selected_rmses[1:5],
     color = :pink
 )
 lines!(
     axB1,
     6:10,
-    selected_maes[6:10],
+    selected_rmses[6:10],
+    color = :pink
+)
+lines!(
+    axB1,
+    11:15,
+    selected_rmses[11:15],
+    color = :pink
+)
+lines!(
+    axB1,
+    16:20,
+    selected_rmses[16:20],
     color = :pink
 )
 scatter!(
     axB1,
-    1:10,
-    selected_maes,
+    1:20,
+    selected_rmses,
     color = :pink,
     size = 5
 )
@@ -330,9 +427,21 @@ lines!(
     selected_correlations[6:10],
     color = :green
 )
+lines!(
+    axB1,
+    11:15,
+    selected_correlations[11:15],
+    color = :green
+)
+lines!(
+    axB1,
+    16:20,
+    selected_correlations[16:20],
+    color = :green
+)
 scatter!(
     axB1,
-    1:10,
+    1:20,
     selected_correlations,
     color = :green,
     size = 5
