@@ -2,7 +2,7 @@
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "5aeb2aee5266c12779f067c8bfe4c19dce0e6f90"
+project_hash = "6496b00461c558a0e8e2b0c9254b1db75ea1c96d"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -26,12 +26,6 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "195c5505521008abea5aee4f96930717958eac6f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.4.0"
-
-[[deps.Airtable]]
-deps = ["Dates", "HTTP", "JSON3", "ProgressMeter", "ReTest"]
-git-tree-sha1 = "3efb13c9089ffe42b4f4b48903c2cbf514cb9360"
-uuid = "96f7d883-6668-4fbe-bb01-b60427b16035"
-version = "0.2.3"
 
 [[deps.AlgebraOfGraphics]]
 deps = ["Colors", "Dates", "Dictionaries", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "KernelDensity", "Loess", "Makie", "PlotUtils", "PooledArrays", "RelocatableFolders", "StatsBase", "StructArrays", "Tables"]
