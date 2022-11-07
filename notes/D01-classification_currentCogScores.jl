@@ -136,7 +136,7 @@ onlydemo_tuning_space = (
     sampsize_range = [0.5, 0.6],
     mtry_range = [ 1 ],
     ntrees_range = [10, 30]
-    )
+)
 
 taxa_tuning_space = (
     maxnodes_range = [2, 4],
@@ -144,15 +144,15 @@ taxa_tuning_space = (
     sampsize_range = [0.5, 0.6],
     mtry_range = [ 3, 5, 8, 10, 15, 20, 30, 40 ],
     ntrees_range = [10, 20, 30, 40]
-    )
+)
 
 ecs_tuning_space = (
     maxnodes_range = [2, 4, 6],
-    nodesize_range = [2, 3],
+    nodesize_range = [2, 3, 4],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 200, 400, 600, 800, 1000 ],
-    ntrees_range = [10, 20, 30, 40]
-    )
+    mtry_range = [ 100, 200, 300, 400, 500, 600, 700, 800 ],
+    ntrees_range = [10, 20, 30, 40, 50, 60]
+)
 
 upperhalf_percentile(x::Vector{T} where T <: Real) = coerce(x .>= 0.50, OrderedFactor)
 
@@ -170,7 +170,7 @@ classification_currentCogScores_00to06mo_onlydemo = train_randomforest(
     upperhalf_percentile, 
     [3,4,5],
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -189,7 +189,7 @@ classification_currentCogScores_00to06mo_onlytaxa = train_randomforest(
     upperhalf_percentile,
     8:556,
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -208,7 +208,7 @@ classification_currentCogScores_00to06mo_demoplustaxa = train_randomforest(
     upperhalf_percentile,
     [3, 4, 5, collect(8:556)...],
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -227,7 +227,7 @@ classification_currentCogScores_00to06mo_onlyecs = train_randomforest(
     upperhalf_percentile,
     8:2440,
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -246,7 +246,7 @@ classification_currentCogScores_00to06mo_demoplusecs = train_randomforest(
     upperhalf_percentile,
     [3, 4, 5, collect(8:2440)...],
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -269,7 +269,7 @@ classification_currentCogScores_18to120mo_onlydemo = train_randomforest(
     upperhalf_percentile, 
     [3,4,5],
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -288,7 +288,7 @@ classification_currentCogScores_18to120mo_onlytaxa = train_randomforest(
     upperhalf_percentile,
     8:556,
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -307,7 +307,7 @@ classification_currentCogScores_18to120mo_demoplustaxa = train_randomforest(
     upperhalf_percentile,
     [3, 4, 5, collect(8:556)...],
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -326,7 +326,7 @@ classification_currentCogScores_18to120mo_onlyecs = train_randomforest(
     upperhalf_percentile,
     8:2440,
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -345,7 +345,7 @@ classification_currentCogScores_18to120mo_demoplusecs = train_randomforest(
     upperhalf_percentile,
     [3, 4, 5, collect(8:2440)...],
     :cogScorePercentile;
-    n_splits = 5,
+    n_splits = 4,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
