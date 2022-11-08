@@ -116,11 +116,11 @@ taxa_tuning_space = (
 )
 
 ecs_tuning_space = (
-    maxnodes_range = [2, 4, 6],
-    nodesize_range = [2, 3, 4],
+    maxnodes_range = [2, 4, 6, 8, 10, 12],
+    nodesize_range = [2, 3, 4, 6],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 100, 200, 300, 400, 500, 600, 700, 800 ],
-    ntrees_range = [10, 20, 30, 40, 50, 60]
+    mtry_range = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500 ],
+    ntrees_range = [10, 20, 30, 40, 50, 60, 70, 80]
 )
 
 #####
@@ -136,7 +136,7 @@ regression_currentCogScores_00to06mo_onlydemo = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     [3,4,5],
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -154,7 +154,7 @@ regression_currentCogScores_00to06mo_onlytaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     8:556,
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -172,7 +172,7 @@ regression_currentCogScores_00to06mo_demoplustaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     [3, 4, 5, collect(8:556)...],
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -190,7 +190,7 @@ regression_currentCogScores_00to06mo_onlyecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     8:2440,
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -208,7 +208,7 @@ regression_currentCogScores_00to06mo_demoplusecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 0.0, 6.0)), :subject),
     [3, 4, 5, collect(8:2440)...],
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -230,7 +230,7 @@ regression_currentCogScores_18to120mo_onlydemo = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     [3,4,5],
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -248,7 +248,7 @@ regression_currentCogScores_18to120mo_onlytaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     8:556,
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -266,7 +266,7 @@ regression_currentCogScores_18to120mo_demoplustaxa = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     [3, 4, 5, collect(8:556)...],
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -284,7 +284,7 @@ regression_currentCogScores_18to120mo_onlyecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     8:2440,
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -302,7 +302,7 @@ regression_currentCogScores_18to120mo_demoplusecs = train_randomforest(
     x -> unique(dropmissing(filter_age_bracket(x, 18.0, 120.0)), :subject),
     [3, 4, 5, collect(8:2440)...],
     :cogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -311,21 +311,96 @@ report_merits(regression_currentCogScores_18to120mo_demoplusecs)
 
 JLD2.@save "models/regression_currentCogScores_18to120mo_demoplusecs.jld" regression_currentCogScores_18to120mo_demoplusecs
 
-# regression_results = [
-#     regression_currentCogScores_00to06mo_onlydemo,
-#     regression_currentCogScores_00to06mo_onlytaxa,
-#     regression_currentCogScores_00to06mo_demoplustaxa,
-#     regression_currentCogScores_00to06mo_onlyecs,
-#     regression_currentCogScores_00to06mo_demoplusecs,
-#     regression_currentCogScores_18to120mo_onlydemo,
-#     regression_currentCogScores_18to120mo_onlytaxa,
-#     regression_currentCogScores_18to120mo_demoplustaxa,
-#     regression_currentCogScores_18to120mo_onlyecs,
-#     regression_currentCogScores_18to120mo_demoplusecs
-# ]
+#####
+# 00 to 120 months
+#####
 
-# selected_models = [ findmin(report_merits(m)[1:10, :Test_RMSE]) for m in regression_results ]
-# selected_models = [ findmax(report_merits(m)[1:10, :Test_COR]) for m in regression_results ]
-# selected_maes = [ el[1] for el in selected_models ]
-# selected_indexes = [ el[2] for el in selected_models ]
-# selected_correlations = [ report_merits(m)[i, :Test_COR] for (m,i) in zip(regression_results, selected_indexes) ]
+## 11. Only SES
+
+regression_currentCogScores_00to120mo_onlydemo = train_randomforest(
+    Resonance.Regression(),
+    "regression_currentCogScores_00to120mo_onlydemo",
+    mdata_taxa_df[:, 1:8],
+    x -> unique(dropmissing(filter_age_bracket(x, 0.0, 120.0)), :subject),
+    [3,4,5],
+    :cogScorePercentile;
+    n_splits = 10,
+    tuning_space = onlydemo_tuning_space,
+    train_rng = ml_rng
+)
+
+report_merits(regression_currentCogScores_00to120mo_onlydemo)
+
+JLD2.@save "models/regression_currentCogScores_00to120mo_onlydemo.jld" regression_currentCogScores_00to120mo_onlydemo
+
+## 12. Only taxonomic profiles
+
+regression_currentCogScores_00to120mo_onlytaxa = train_randomforest(
+    Resonance.Regression(),
+    "regression_currentCogScores_00to120mo_onlytaxa",
+    mdata_taxa_df,
+    x -> unique(dropmissing(filter_age_bracket(x, 0.0, 120.0)), :subject),
+    8:556,
+    :cogScorePercentile;
+    n_splits = 10,
+    tuning_space = taxa_tuning_space,
+    train_rng = ml_rng
+)
+
+report_merits(regression_currentCogScores_00to120mo_onlytaxa)
+
+JLD2.@save "models/regression_currentCogScores_00to120mo_onlytaxa.jld" regression_currentCogScores_00to120mo_onlytaxa
+
+## 13. SES + taxonomic profiles
+
+regression_currentCogScores_00to120mo_demoplustaxa = train_randomforest(
+    Resonance.Regression(),
+    "regression_currentCogScores_00to120mo_demoplustaxa",
+    mdata_taxa_df,
+    x -> unique(dropmissing(filter_age_bracket(x, 0.0, 120.0)), :subject),
+    [3, 4, 5, collect(8:556)...],
+    :cogScorePercentile;
+    n_splits = 10,
+    tuning_space = taxa_tuning_space,
+    train_rng = ml_rng
+)
+
+report_merits(regression_currentCogScores_00to120mo_demoplustaxa)
+
+JLD2.@save "models/regression_currentCogScores_00to120mo_demoplustaxa.jld" regression_currentCogScores_00to120mo_demoplustaxa
+
+## 14. Only functional profiles
+
+regression_currentCogScores_00to120mo_onlyecs = train_randomforest(
+    Resonance.Regression(),
+    "regression_currentCogScores_00to120mo_onlyecs",
+    mdata_ecs_df,
+    x -> unique(dropmissing(filter_age_bracket(x, 0.0, 120.0)), :subject),
+    8:2440,
+    :cogScorePercentile;
+    n_splits = 10,
+    tuning_space = ecs_tuning_space,
+    train_rng = ml_rng
+)
+
+report_merits(regression_currentCogScores_00to120mo_onlyecs)
+
+JLD2.@save "models/regression_currentCogScores_00to120mo_onlyecs.jld" regression_currentCogScores_00to120mo_onlyecs
+
+## 15. SES + taxonomic profiles
+
+regression_currentCogScores_00to120mo_demoplusecs = train_randomforest(
+    Resonance.Regression(),
+    "regression_currentCogScores_00to120mo_demoplusecs",
+    mdata_ecs_df,
+    x -> unique(dropmissing(filter_age_bracket(x, 0.0, 120.0)), :subject),
+    [3, 4, 5, collect(8:2440)...],
+    :cogScorePercentile;
+    n_splits = 10,
+    tuning_space = ecs_tuning_space,
+    train_rng = ml_rng
+)
+
+report_merits(regression_currentCogScores_00to120mo_demoplusecs)
+
+JLD2.@save "models/regression_currentCogScores_00to120mo_demoplusecs.jld" regression_currentCogScores_00to120mo_demoplusecs
