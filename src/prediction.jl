@@ -1133,7 +1133,8 @@ function singlemodel_merit_barplot!(
     barplot!(
         ax, tbl.x, tbl.value,
         stack = tbl.grp,
-        color = confplot_colors[tbl.color]
+        color = confplot_colors[tbl.color],
+        size = 5
     )
     return figure
 end # end function
