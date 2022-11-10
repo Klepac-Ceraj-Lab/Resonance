@@ -284,7 +284,13 @@ function train_randomforest(
     # ## 5. Tuning/training loop
     @info "Performing $(n_splits) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples."
 
+    # ### Shuffling dataset for extractions of validation regression_futureCogScores_00to12mo_demoplusecs
+    Random.seed!(train_rng, 0)
+    prediction_df = prediction_df[Random.randperm(train_rng, nrow(prediction_df)), :]
+
     for this_trial in 1:n_splits
+
+    fitness_threshold = 0.0
 
         ## 5.1. Splitting training data between train and test
         # Random.seed!(train_rng, this_trial)
@@ -321,14 +327,20 @@ function train_randomforest(
             test_y_hat = MLJ.predict_mode(rf_machine, X[test, :]) 
             test_acc = mean(test_y_hat .== y[test])
 
+            model_fitness = sqrt(Complex(train_acc*test_acc)).re
+            #model_fitness = Complex(train_acc*test_acc*test_acc).re ^ 1.0/3.0
+
             ## 5.2.4. Compare benchmark results with previous best model
-            test_acc > trial_test_accuracies[this_trial] ? begin
+            model_fitness > fitness_threshold ? begin
+                fitness_threshold = model_fitness
                 trial_train_accuracies[this_trial] = train_acc
                 trial_test_accuracies[this_trial] = test_acc
                 trial_machines[this_trial] = deepcopy(rf_machine)
             end : continue
 
         end # end for i in 1:length(tuning_grid) - each set of hyperparameters
+
+        println("Split done!")
 
     end # end for this_trial - each different train/test split
 
@@ -399,7 +411,13 @@ function train_randomforest(
     # ## 5. Tuning/training loop
     @info "Performing $(n_splits) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples."
 
+    # ### Shuffling dataset for extractions of validation regression_futureCogScores_00to12mo_demoplusecs
+    Random.seed!(train_rng, 0)
+    prediction_df = prediction_df[Random.randperm(train_rng, nrow(prediction_df)), :]
+
     for this_trial in 1:n_splits
+
+        fitness_threshold = -1.0
 
         ## 5.1. Splitting training data between train and test
         # Random.seed!(train_rng, this_trial)
@@ -429,23 +447,38 @@ function train_randomforest(
             scale_correction = compute_custom_scale(train_y_hat, y[train])
             train_y_hat = scale_normalization(train_y_hat, scale_correction)
             train_rmse = rms(train_y_hat, y[train])
+            train_cor = Statistics.cor(train_y_hat, y[train])
 
             ## 5.2.3. Benchmark model on independent testing data
             test_y_hat = MLJ.predict(rf_machine, X[test, :])
             test_y_hat = scale_normalization(test_y_hat, scale_correction)
             test_rmse = rms(test_y_hat, y[test])
+            test_cor = Statistics.cor(test_y_hat, y[test])
 
             ## 5.2.4. Compare benchmark results with previous best model
-            test_rmse < trial_test_rmses[this_trial] ? begin
+            # model_fitness = sqrt(Complex(train_rmse*test_rmse))
+            model_fitness = sqrt((train_cor^2)*(test_cor^2)) # Penalizing test_cor to avoid lucky test sets.
+            # model_fitness = Complex(train_cor*test_cor*test_cor).re ^ 1.0/3.0
+
+            ## 5.2.4. Compare benchmark results with previous best model
+            # ((model_fitness.im == 0) & (model_fitness.re > fitness_threshold) & (train_cor != -1.0) & (test_cor != -1.0)) ? begin
+            # ((model_fitness.re < fitness_threshold) & (train_cor > -0.0)) ? begin
+            ((model_fitness > fitness_threshold) & (train_cor > -0.1) & (test_cor > -0.1)) ? begin
+                println(model_fitness)
+                println(train_cor)
+                println(test_cor)
+                fitness_threshold = model_fitness
                 trial_train_rmses[this_trial] = train_rmse
-                trial_train_cors[this_trial] = Statistics.cor(train_y_hat, y[train])
+                trial_train_cors[this_trial] = train_cor
                 trial_test_rmses[this_trial] = test_rmse
-                trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
+                trial_test_cors[this_trial] = test_cor
                 trial_machines[this_trial] = deepcopy(rf_machine)
                 trial_scalecorrections[this_trial] = scale_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid) - each set of hyperparameters
+
+        println("Split done!")
 
     end # end for this_trial - each different train/test split
 

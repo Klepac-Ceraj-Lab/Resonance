@@ -100,27 +100,27 @@ RandomForestRegressor= MLJ.@load RandomForestRegressor pkg=DecisionTree
 
 # Local test tuning grid
 onlydemo_tuning_space = (
-    maxnodes_range = [2, 4],
-    nodesize_range = [2, 3],
+    maxnodes_range = [4, 8, 12, 16, 20],
+    nodesize_range = [2, 3, 4, 6],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 1 ],
-    ntrees_range = [10, 30]
+    mtry_range = [ 2 ],
+    ntrees_range = [ 20, 40, 60, 80 ]
 )
 
 taxa_tuning_space = (
-    maxnodes_range = [2, 4],
-    nodesize_range = [2, 3],
+    maxnodes_range = [4, 8, 12, 16, 20],
+    nodesize_range = [2, 3, 4, 6],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 3, 5, 8, 10, 15, 20, 30, 40 ],
-    ntrees_range = [10, 20, 30, 40]
+    mtry_range = [ 50, 100, 150, 200, 250 ],
+    ntrees_range = [ 20, 40, 60, 80 ]
 )
 
 ecs_tuning_space = (
-    maxnodes_range = [2, 4, 6],
-    nodesize_range = [2, 3, 4],
+    maxnodes_range = [4, 8, 12, 16, 20],
+    nodesize_range = [2, 3, 4, 6],
     sampsize_range = [0.5, 0.6],
-    mtry_range = [ 100, 200, 300, 400, 500, 600, 700, 800 ],
-    ntrees_range = [10, 20, 30, 40, 50, 60]
+    mtry_range = [ 300, 600, 900, 1200, 1500 ],
+    ntrees_range = [ 20, 40, 60, 80 ]
 )
 
 upperhalf_percentile(x::Vector{T} where T <: Real) = coerce(x .>= 0.50, OrderedFactor)
@@ -138,7 +138,7 @@ regression_futureCogScores_00to12mo_onlydemo = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(taxa_df[:, 1:1])), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     [3,4,5,6],
     :futureCogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = onlydemo_tuning_space,
     train_rng = ml_rng
 )
@@ -156,7 +156,7 @@ regression_futureCogScores_00to12mo_onlytaxa = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(taxa_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     12:560,
     :futureCogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -174,7 +174,7 @@ regression_futureCogScores_00to12mo_demoplustaxa = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(taxa_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     [ 3, 4, 5, 6, collect(12:560)... ],
     :futureCogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = taxa_tuning_space,
     train_rng = ml_rng
 )
@@ -192,7 +192,7 @@ regression_futureCogScores_00to12mo_onlyecs = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(ecs_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     12:2444,
     :futureCogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
@@ -210,7 +210,7 @@ regression_futureCogScores_00to12mo_demoplusecs = train_randomforest(
     x -> unique(prepare_future_prediction_df(x, Symbol.(names(ecs_df)), [ :cogScorePercentile ], 12.0, 24.0), :subject),
     [3, 4, 5, 6, collect(12:2444)... ],
     :futureCogScorePercentile;
-    n_splits = 4,
+    n_splits = 10,
     tuning_space = ecs_tuning_space,
     train_rng = ml_rng
 )
