@@ -1,0 +1,62 @@
+using Resonance
+using CairoMakie
+using Colors
+using Statistics
+using MultivariateStats
+using MLJ
+using DecisionTree
+using JLD2
+using StableRNGs
+using GLM
+ml_rng = StableRNG(0)
+
+RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
+RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
+# concurrent cogScore classification from taxonomic profiles
+JLD2.@load "models/classification_currentCogScores_00to06mo_onlydemo.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_onlytaxa.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_demoplustaxa.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_onlyecs.jld"
+JLD2.@load "models/classification_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_onlydemo.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_onlytaxa.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_demoplustaxa.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_onlyecs.jld"
+JLD2.@load "models/classification_currentCogScores_18to120mo_demoplusecs.jld"
+JLD2.@load "models/classification_currentCogScores_00to120mo_onlydemo.jld"
+JLD2.@load "models/classification_currentCogScores_00to120mo_onlytaxa.jld"
+JLD2.@load "models/classification_currentCogScores_00to120mo_demoplustaxa.jld"
+JLD2.@load "models/classification_currentCogScores_00to120mo_onlyecs.jld"
+JLD2.@load "models/classification_currentCogScores_00to120mo_demoplusecs.jld"
+# concurrent cogScore reression from taxonomic profiles
+JLD2.@load "models/regression_currentCogScores_00to06mo_onlydemo.jld"
+JLD2.@load "models/regression_currentCogScores_00to06mo_onlytaxa.jld"
+JLD2.@load "models/regression_currentCogScores_00to06mo_demoplustaxa.jld"
+JLD2.@load "models/regression_currentCogScores_00to06mo_onlyecs.jld"
+JLD2.@load "models/regression_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_onlydemo.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_onlytaxa.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_demoplustaxa.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_onlyecs.jld"
+JLD2.@load "models/regression_currentCogScores_18to120mo_demoplusecs.jld"
+JLD2.@load "models/regression_currentCogScores_00to120mo_onlydemo.jld"
+JLD2.@load "models/regression_currentCogScores_00to120mo_onlytaxa.jld"
+JLD2.@load "models/regression_currentCogScores_00to120mo_demoplustaxa.jld"
+JLD2.@load "models/regression_currentCogScores_00to120mo_onlyecs.jld"
+JLD2.@load "models/regression_currentCogScores_00to120mo_demoplusecs.jld"
+
+report_merits(classification_currentCogScores_00to06mo_onlydemo)
+expanded_classification_currentCogScores_00to06mo_onlydemo = expand_pretrained_model(classification_currentCogScores_00to06mo_onlydemo, 1, 100; train_rng=ml_rng)
+report_merits(expanded_classification_currentCogScores_00to06mo_onlydemo)
+
+report_merits(regression_currentCogScores_00to06mo_onlydemo)
+expanded_regression_currentCogScores_00to06mo_onlydemo = expand_pretrained_model(regression_currentCogScores_00to06mo_onlydemo, 1, 100; train_rng=ml_rng)
+report_merits(expanded_regression_currentCogScores_00to06mo_onlydemo)
+
+report_merits(classification_currentCogScores_00to06mo_onlytaxa)
+expanded_classification_currentCogScores_00to06mo_onlytaxa = expand_pretrained_model(classification_currentCogScores_00to06mo_onlytaxa, 1, 100; train_rng=ml_rng)
+report_merits(expanded_classification_currentCogScores_00to06mo_onlytaxa)
+
+report_merits(regression_currentCogScores_00to06mo_onlytaxa)
+expanded_regression_currentCogScores_00to06mo_onlytaxa = expand_pretrained_model(regression_currentCogScores_00to06mo_onlytaxa, 1, 100; train_rng=ml_rng)
+report_merits(expanded_regression_currentCogScores_00to06mo_onlytaxa)
