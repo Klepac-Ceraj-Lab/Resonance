@@ -52,17 +52,17 @@ end
 #-
 
 spedm = Microbiome.braycurtis(species)
-CSV.write(outputfiles("spedm.csv"), Tables.table(spedm))
+CSV.write(scratchfiles("spedm.csv"), Tables.table(spedm))
 unidm = Microbiome.braycurtis(unirefs)
-CSV.write(outputfiles("unidm.csv"), Tables.table(unidm))
+CSV.write(scratchfiles("unidm.csv"), Tables.table(unidm))
 ecsdm = Microbiome.braycurtis(ecs)
-CSV.write(outputfiles("ecsdm.csv"), Tables.table(ecsdm))
+CSV.write(scratchfiles("ecsdm.csv"), Tables.table(ecsdm))
 kosdm = Microbiome.braycurtis(kos)
-CSV.write(outputfiles("kosdm.csv"), Tables.table(kosdm))
+CSV.write(scratchfiles("kosdm.csv"), Tables.table(kosdm))
 # metdm = Microbiome.braycurtis(metabolites)
-# CSV.write(outputfiles("metdm.csv"), Tables.table(metdm))
+# CSV.write(scratchfiles("metdm.csv"), Tables.table(metdm))
 brndm = Microbiome.braycurtis(brain)
-CSV.write(outputfiles("brndm.csv"), Tables.table(brndm))
+CSV.write(scratchfiles("brndm.csv"), Tables.table(brndm))
 
 
 #-
@@ -96,7 +96,7 @@ p3 = permanovas(brndm[buidx, buidx], [
 )
 p3.label .= "neuroimg"
 append!(p, p3)
-CSV.write(outputfiles("permanovas_all.csv"), p)
+CSV.write(scratchfiles("permanovas_all.csv"), p)
 
 #-
 
@@ -133,7 +133,7 @@ p3 = permanovas(brndm[idx, idx], [
 p3.label .= "neuroimg"
 append!(p, p3)
 
-CSV.write(outputfiles("permanovas_u6mo.csv"), p)
+CSV.write(scratchfiles("permanovas_u6mo.csv"), p)
 
 
 #-
@@ -156,7 +156,7 @@ p3 = permanovas(brndm[bidx, bidx], [
 )
 p3.label .= "neuroimg"
 append!(p, p3)
-CSV.write(outputfiles("permanovas_o18mo.csv"), p)
+CSV.write(scratchfiles("permanovas_o18mo.csv"), p)
 
 #- Mantel -#
 
@@ -173,7 +173,7 @@ mdf = mantel([spedm, unidm, ecsdm, kosdm]; commlabels)
 # end
 # append!(mdf, m2)
 
-(ol3, ol4) = stp_overlap(
+(ol3, ol4) = Resonance.stp_overlap(
         collect(zip(get(species, :subject), get(species, :timepoint))),
         collect(zip(get(brain, :subject), get(brain, :timepoint)))
 )
@@ -192,7 +192,7 @@ append!(mdf, m3)
 # m, p = mantel(metdm[ol5, ol5], brndm[ol6, ol6])
 # push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
-CSV.write(outputfiles("mantel_all.csv"), mdf)
+CSV.write(scratchfiles("mantel_all.csv"), mdf)
 
 #- Under 6mo -#
 
@@ -230,7 +230,7 @@ mdf = mantel([speu6dm, uniu6dm, ecsu6dm, kosu6dm]; commlabels)
 # append!(mdf, m2)
 
 
-(ol3, ol4) = stp_overlap(
+(ol3, ol4) = Resonance.stp_overlap(
         collect(zip(get(species, :subject)[speidx],
                     get(species, :timepoint)[speidx])
                 ),
@@ -257,7 +257,7 @@ append!(mdf, m3)
 # m, p = mantel(metu6dm[ol5, ol5], brnu6dm[ol6, ol6])
 # push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
-CSV.write(outputfiles("mantel_u6.csv"), mdf)
+CSV.write(scratchfiles("mantel_u6.csv"), mdf)
 
 #- Over 18mo -#
 
@@ -274,7 +274,7 @@ brno18dm = brndm[brnidx, brnidx]
 mdf = mantel([speo18dm, unio18dm, ecso18dm, koso18dm]; commlabels)
 
 
-(ol3, ol4) = stp_overlap(
+(ol3, ol4) = Resonance.stp_overlap(
         collect(zip(get(species, :subject)[speidx],
                     get(species, :timepoint)[speidx])
                 ),
@@ -289,4 +289,4 @@ for (i, dm1) in enumerate([speo18dm, unio18dm, ecso18dm, koso18dm])
 end
 append!(mdf, m3)   
 
-CSV.write(outputfiles("mantel_o18.csv"), mdf)
+CSV.write(scratchfiles("mantel_o18.csv"), mdf)

@@ -1686,7 +1686,7 @@ uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 version = "1.1.1"
 
 [[deps.Setup]]
-deps = ["Comonicon", "Downloads"]
+deps = ["Comonicon", "Downloads", "Random"]
 path = "Setup"
 uuid = "df7026d2-1fa7-4e92-9c5e-4669e13f0f5c"
 version = "0.0.0"

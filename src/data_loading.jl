@@ -197,3 +197,32 @@ function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield
     set!(comm, timepoint_metadata; namecol=Symbol(samplefield))
     return comm
 end
+
+"""
+Given 2 vectors of (:subject, :timepoint) tuples,
+find the overlap, and put them in the same order.
+"""
+function stp_overlap(ds1, ds2; lt = (x,y)-> x[1] == y[1] ? x[2] < y[2] : x[1] < y[1]) 
+    srt1 = sortperm(ds1; lt)
+    srt2 = sortperm(ds2; lt)
+    
+    keep1 = _keep_unique(ds1, ds2, srt1)
+    keep2 = _keep_unique(ds2, ds1, srt2)
+
+    return srt1[keep1], srt2[keep2]
+end
+
+function _keep_unique(ds1, ds2, srt)
+    recip = Set(ds2)
+    keep = Bool[]
+    used = Set(eltype(ds1)[])
+    for d in ds1[srt]
+        if d ∈ used
+            push!(keep, false)
+        else
+            push!(used, d)
+            push!(keep, d ∈ recip)
+        end
+    end
+    return keep
+end

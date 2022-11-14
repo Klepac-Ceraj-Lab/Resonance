@@ -62,12 +62,12 @@ We'll calculate them once for each profile rather
 rather than separately for each test.
 
 ```julia
-spedm = CSV.read(outputfiles("spedm.csv"), DataFrame) |> Matrix
-unidm = CSV.read(outputfiles("unidm.csv"), DataFrame) |> Matrix
-ecsdm = CSV.read(outputfiles("ecsdm.csv"), DataFrame) |> Matrix
-kosdm = CSV.read(outputfiles("kosdm.csv"), DataFrame) |> Matrix
-# metdm = CSV.read(outputfiles("metdm.csv"), DataFrame) |> Matrix
-brndm = CSV.read(outputfiles("brndm.csv"), DataFrame) |> Matrix
+spedm = CSV.read(scratchfiles("spedm.csv"), DataFrame) |> Matrix
+unidm = CSV.read(scratchfiles("unidm.csv"), DataFrame) |> Matrix
+ecsdm = CSV.read(scratchfiles("ecsdm.csv"), DataFrame) |> Matrix
+kosdm = CSV.read(scratchfiles("kosdm.csv"), DataFrame) |> Matrix
+# metdm = CSV.read(scratchfiles("metdm.csv"), DataFrame) |> Matrix
+brndm = CSV.read(scratchfiles("brndm.csv"), DataFrame) |> Matrix
 ```
 
 
@@ -125,10 +125,10 @@ Bc = Axis(B[1,2]; title="Over 18mo")
 ```
 
 ```julia
-# plot_permanovas!(Ba, CSV.read(outputfiles("permanovas_all.csv"), DataFrame))
-plot_permanovas!(Bb, CSV.read(outputfiles("permanovas_u6mo.csv"), DataFrame))
+# plot_permanovas!(Ba, CSV.read(scratchfiles("permanovas_all.csv"), DataFrame))
+plot_permanovas!(Bb, CSV.read(scratchfiles("permanovas_u6mo.csv"), DataFrame))
 hideydecorations!(Bc)
-plot_permanovas!(Bc, CSV.read(outputfiles("permanovas_o18mo.csv"), DataFrame))
+plot_permanovas!(Bc, CSV.read(scratchfiles("permanovas_o18mo.csv"), DataFrame))
 
 colsize!(BC, 1, Relative(1/2))
 Label(BC[0,1], "PERMANOVAs")
@@ -145,9 +145,9 @@ Cb = Axis(C[1,1]; title="Under 6mo")
 Cc = Axis(C[1,2]; title="Over 18mo")
 hideydecorations!(Cc)
 
-# plot_mantel!(Ca, CSV.read(outputfiles("mantel_all.csv"), DataFrame))
-plot_mantel!(Cb, CSV.read(outputfiles("mantel_u6.csv"), DataFrame))
-plot_mantel!(Cc, CSV.read(outputfiles("mantel_o18.csv"), DataFrame))
+# plot_mantel!(Ca, CSV.read(scratchfiles("mantel_all.csv"), DataFrame))
+plot_mantel!(Cb, CSV.read(scratchfiles("mantel_u6.csv"), DataFrame))
+plot_mantel!(Cc, CSV.read(scratchfiles("mantel_o18.csv"), DataFrame))
 
 Label(BC[0,2], "Mantel"; tellwidth=false)
 ```
