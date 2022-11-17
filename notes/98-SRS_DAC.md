@@ -210,42 +210,6 @@ or
 
 `CohortID_SetID_SampleInformation_YYYY_MMDD.tgz`
 
-### B1. Panel File
-
-Headers common to all files
-
-```julia
-b1_common = (;
-  PanelID = "resonance_upload_1",
-  specimen_type = 1, # Stool
-  specimen_type_oth_sp = missing,
-  panel_lab_name = "Integrated Microbiome Resource",
-  panel_lab_country = "CAN", # Canada
-  panel_lab_state = "NS",
-  panel_lab_city = "Halifax",
-  panel_lab_meth = 4, # metagenomic
-  panel_lab_meth_oth = missing,
-  panel_lab_instr = 9, # other
-  panel_lab_instr_oth = "Illumina NextSeq 550",
-  panel_data_public = 1, # subset of data
-
-  panel_data_srs = 1,
-  panel_data_link = "https://dataview.ncbi.nlm.nih.gov/object/PRJNA695570"
-)
-
-amp_columns = (;
-    an_amp = 1,                                   # Amplicon sequencing conducted  1,Yes | 2,No            
-    an_amp_std_sp = "N/A",                        # Standards used
-    an_amp_prod = 2,                              # Amplicon products stored       1,Yes | 2,No
-    an_amp_chem = "V3",                           # Sequencing chemistry
-    an_amp_prim_fwd_seq = "GTGYCAGCMGCCGCGGTAA",  # The forward primer
-    an_amp_prim_rev_seq = "CCGYCAATTYMTTTRAGTTT", # The reverse primer
-    an_amp_prim_trim = 1,                         # Were the primers trimmed       1,Yes | 2,No
-    an_amp_pcrcycle = "",                         # Number of cycles
-    an_amp_pairseq = 1,                           # Paired-end sequencing used     1,Yes | 2,No
-    an_amp_read = 300,                            # Read length       
-)
-```
 
 ```julia
 using Resonance
@@ -275,8 +239,27 @@ end
 
 ```
 
+### B1. Panel File
 
 ```julia
+b1_common = (;
+  PanelID = "resonance_upload_1",
+  specimen_type = 1, # Stool
+  specimen_type_oth_sp = missing,
+  panel_lab_name = "Integrated Microbiome Resource",
+  panel_lab_country = "CAN", # Canada
+  panel_lab_state = "NS",
+  panel_lab_city = "Halifax",
+  panel_lab_meth = 4, # metagenomic
+  panel_lab_meth_oth = missing,
+  panel_lab_instr = 9, # other
+  panel_lab_instr_oth = "Illumina NextSeq 550",
+  panel_data_public = 1, # subset of data
+
+  panel_data_srs = 1,
+  panel_data_link = "https://dataview.ncbi.nlm.nih.gov/object/PRJNA695570"
+)
+
 b1_panel = copy(extant)
 select!(b1_panel,
     "siteid"          => identity => "SiteID",
@@ -445,22 +428,48 @@ end
 
 ```julia
 CSV.write(datafiles("10701_1_SampleInformation_MicroPanelFile_2022_1001.csv"),
-    select(b1_panel, Not(["sample", "subject", "timepoint"]))
+    unique(select(b1_panel, Not(["sample", "subject", "timepoint"])), "fastq_file_name")
 )
 
 CSV.write(datafiles("10701_1_SampleInformation_MicroBatchFile_2022_1001.csv"),
-    select(b2_batch, Not(["sample", "subject", "timepoint"]))
+    unique(select(b2_batch, Not(["sample", "subject", "timepoint"])), "fastq_file_name")
 )
 
 CSV.write(datafiles("10701_1_SampleInformation_MicroSpecimenFile_2022_1001.csv"),
-    select(b3_specimen, Not(["sample", "subject", "timepoint"]))
+    unique(select(b3_specimen, Not(["sample", "subject", "timepoint"])), "fastq_file_name")
 )
 
 CSV.write(datafiles("10701_1_SampleInformation_MicroAnalysisFile_2022_1001.csv"),
-    select(b3_specimen, Not(["sample", "subject", "timepoint"]))
+    unique(select(b3_specimen, Not(["sample", "subject", "timepoint"])), "fastq_file_name")
 )
 ```
 
 
 ### File copying
 
+```julia
+
+files = [readdir("/lovelace/sequencing/raw/mgx/fastq"; join=true);
+         readdir("/lovelace/sequencing/raw/mgx/sra_uploads"; join=true)]
+newdir = "/lovelace/sequencing/raw/mgx/echo_dac"
+
+for row in eachrow(unique(b2_batch, "fastq_file_name"))
+    sample = row.sample
+    sfs = filter(f-> occursin(sample, basename(f)), files)
+    isempty(sfs) && continue
+    length(sfs) == 16 && (sfs = first(sfs, 8))
+
+    @assert length(sfs) == 8
+    bits = split(row.fastq_file_name, "_")
+    @assert bits[[6,7]] == ["L001", "R1"]
+    @info sample
+
+    for sf in sfs
+        newf = copy(bits)
+        lane, fr = match(r"FG\d+_S\d+_(L00[1-4])_(R[12])_001", sf).captures
+        newf[[6,7]] = [lane, fr]
+        cp(sf, joinpath(newdir, joinpath(newdir, join(newf, "_"))))
+    end
+end
+
+```
