@@ -215,25 +215,252 @@ or
 Headers common to all files
 
 ```julia
-const PanelID = resonance_upload_1
-const CohortID_pairs = 10703
-const CohortID_kids = 10701
-const SiteID = "" # TODO
+b1_common = (;
+  PanelID = "resonance_upload_1",
+  specimen_type = 1, # Stool
+  specimen_type_oth_sp = missing,
+  panel_lab_name = "Integrated Microbiome Resource",
+  panel_lab_country = "CAN", # Canada
+  panel_lab_state = "NS",
+  panel_lab_city = "Halifax",
+  panel_lab_meth = 4, # metagenomic
+  panel_lab_meth_oth = missing,
+  panel_lab_instr = 9, # other
+  panel_lab_instr_oth = "Illumina NextSeq 550",
+  panel_data_public = 1, # subset of data
 
-const specimen_type = 1 # Stool
-const specimen_type_oth_sp = missing
-const panel_lab_name = "Integrated Microbiome Resource"
-const panel_lab_country = "CAN" # Canada
-const panel_lab_name = "NS"
-const panel_lab_city = "Halifax"
-const panel_lab_meth = 4 # metagenomic
-const panel_lab_meth_oth = missing
-const panel_lab_instr = 9 # other
-const panel_lab_instr_oth = "Illumina NextSeq 550"
-const panel_data_public = 3 # subset of data
+  panel_data_srs = 1,
+  panel_data_link = "https://dataview.ncbi.nlm.nih.gov/object/PRJNA695570"
+)
 
-const panel_data_srs = 1
-const panel_data_link = ""
+amp_columns = (;
+    an_amp = 1,                                   # Amplicon sequencing conducted  1,Yes | 2,No            
+    an_amp_std_sp = "N/A",                        # Standards used
+    an_amp_prod = 2,                              # Amplicon products stored       1,Yes | 2,No
+    an_amp_chem = "V3",                           # Sequencing chemistry
+    an_amp_prim_fwd_seq = "GTGYCAGCMGCCGCGGTAA",  # The forward primer
+    an_amp_prim_rev_seq = "CCGYCAATTYMTTTRAGTTT", # The reverse primer
+    an_amp_prim_trim = 1,                         # Were the primers trimmed       1,Yes | 2,No
+    an_amp_pcrcycle = "",                         # Number of cycles
+    an_amp_pairseq = 1,                           # Paired-end sequencing used     1,Yes | 2,No
+    an_amp_read = 300,                            # Read length       
+)
+```
+
+```julia
+using Resonance
+using XLSX
+using CSV
+using DataFrames
+using Airtable
+using Dates
+using CategoricalArrays
+
+atmdata = airtable_metadata()
+extant = DataFrame(XLSX.readtable(datafiles("Extant_Microbiome_092022.xlsx"), "Sheet1", infer_eltypes=true))
+
+subset!(extant, "Participation Level"=> ByRow(p-> parse(Int, p) > 0))
+
+extant.fastq_file_name = map(eachrow(extant)) do row
+    join([
+        row.cohortid,
+        row.participantid,
+        row.collectionNum,
+        "1", #setID
+        "WMS_L001_R1_DMF",
+        "2022_1001.fastq.gz"
+    ], "_"
+    )
+end
 
 ```
+
+
+```julia
+b1_panel = copy(extant)
+select!(b1_panel,
+    "siteid"          => identity => "SiteID",
+    "cohortid"        => identity => "CohortID",
+    "participantid"   => identity => "ParticipantID",
+    "collectionNum"   => identity => "sample_number",
+    "fastq_file_name" => identity => "fastq_file_name",
+    "SampleID"        => identity => "sample",
+    "studyID"         => identity => "subject",
+    "collectionNum"   => identity => "timepoint"
+)
+
+for key in keys(b1_common)
+    b1_panel[!, key] .= b1_common[key]
+end
+
+
+```
+
+### B2 Batch File
+
+```julia
+b2_batch = copy(b1_panel)
+select!(b2_batch,
+    "PanelID",
+    "SiteID",
+    "CohortID",
+    "ParticipantID",
+    "sample_number",
+    "fastq_file_name",
+    "sample",
+    "subject",
+    "timepoint"
+)
+
+atgrp = groupby(atmdata, "sample")
+
+base = AirBase("appSWOVVdqAi5aT5u")
+batches = DataFrame([rec.fields for rec in Airtable.query(AirTable("MGX Batches", base))])
+batchdict = Dict(row.Name => Date(row."Date Shipped") for row in eachrow(batches))
+
+b2_batch = hcat(b2_batch, DataFrame(map(eachrow(b2_batch)) do row
+    misrow = (; batch_num=missing, batch_date_yr=missing, batch_date_mn=missing, batch_date_day=missing)
+    key = (; sample = row.sample)
+    haskey(atgrp, key) || return misrow
+    grp = first(atgrp[key])
+    batch_num = grp.Mgx_batch
+    ismissing(batch_num) && return misrow
+    dt = batchdict[batch_num]
+    batch_date_yr = year(dt)
+    batch_date_mn = lpad(month(dt), 2, "0")
+    batch_date_day = lpad(day(dt), 2, "0")
+    
+    return (; batch_num, batch_date_yr, batch_date_mn, batch_date_day)
+end))
+
+subset!(b2_batch, :batch_num => ByRow(!ismissing))
+let keep = Set(b2_batch.sample)
+    subset!(b1_panel, "sample"=> ByRow(s-> s in keep))
+end
+```
+
+### B3 Specimen File
+
+```julia
+b3_common = (;
+    spec_coll_comp = -6, # Not Applicable
+    spec_type      =  1, # Stool
+    spec_stl_meth  =  1, # Fecal sample
+    spec_coll_meth =  2, # collected by trained staff
+    spec_stl_kit   = -6, # Not Applicable
+    spec_ship_meth =  5, # Other
+    spec_ship_meth_oth = "In box with dry ice",
+    spec_coll_prss =  2, # Specimen collected with preservatives
+    
+)
+
+function lifestage(stage)
+    startswith(stage, "P")   && return 2
+    startswith(stage, "Inf") && return 3
+    startswith(stage, "EC")  && return 4
+    startswith(stage, "MC")  && return 5
+    startswith(stage, "Ado") && return 6
+    return missing
+end
+
+b3_specimen = copy(extant)
+b3_specimen.Sex = categorical(b3_specimen.Sex; levels = ["Male", "Female"])
+select!(b3_specimen,
+    "siteid"          => identity => "SiteID",
+    "cohortid"        => identity => "CohortID",
+    "participantid"   => identity => "ParticipantID",
+    "collectionNum"   => identity => "sample_number",
+    "fastq_file_name" => identity => "fastq_file_name",
+    "SampleID"        => identity => "sample",
+    "studyID"         => identity => "subject",
+    "collectionNum"   => identity => "timepoint",
+    "AgeatCollection_Years" => identity => "spec_age_yrs",
+    "AgeOn7012020"    => identity => "spec_age_fixed",
+    "echotpcoded"     => ByRow(lifestage) => "spec_coll_ls",
+    "Sex"             => ByRow(levelcode) => "spec_sex"
+)
+
+
+for key in keys(b3_common)
+    b3_specimen[!, key] .= b3_common[key]
+end
+
+let keep = Set(b2_batch.sample)
+    subset!(b3_specimen, "sample"=> ByRow(s-> s in keep))
+end
+
+```
+
+### B4 Analysis File
+
+```julia
+b4_common_mgx = (;
+    analysis_dna_extr = 1, # yes
+    an_dna_extr_meth  = "extracted",
+    an_dna_extr_kit   = 1, # MoBio PowerSoil kit
+    analysis_rna_extr = 2, # no
+    an_hmgz           = 2, # no
+    an_shtgn          = 1, # yes
+    an_shtgn_chem_sp  = "Illumina Nextera Flex kit for MiSeq+NextSeq",
+    an_shtgn_std_sp   = "None",
+    an_amp            = 2
+)
+
+b4_common_amp = (;
+    an_amp = 1,                                   # Amplicon sequencing conducted  1,Yes | 2,No            
+    an_amp_std_sp = "N/A",                        # Standards used
+    an_amp_prod = 2,                              # Amplicon products stored       1,Yes | 2,No
+    an_amp_chem = "V3",                           # Sequencing chemistry
+    an_amp_prim_fwd_seq = "GTGYCAGCMGCCGCGGTAA",  # The forward primer
+    an_amp_prim_rev_seq = "CCGYCAATTYMTTTRAGTTT", # The reverse primer
+    an_amp_prim_trim = 1,                         # Were the primers trimmed       1,Yes | 2,No
+    an_amp_pcrcycle = "",                         # Number of cycles
+    an_amp_pairseq = 1,                           # Paired-end sequencing used     1,Yes | 2,No
+    an_amp_read = 300,                            # Read length       
+)
+
+b4_analysis = copy(b2_batch)
+select!(b4_analysis,
+    "batch_num" => identity => "BatchID",
+    "SiteID",
+    "CohortID",
+    "ParticipantID",
+    "sample_number",
+    "fastq_file_name",
+    "sample",
+    "subject",
+    "timepoint",
+)
+
+
+for key in keys(b4_common_mgx)
+    b4_analysis[!, key] .= b4_common_mgx[key]
+end
+
+```
+
+
+### Outputs
+
+
+```julia
+CSV.write(datafiles("10701_1_SampleInformation_MicroPanelFile_2022_1001.csv"),
+    select(b1_panel, Not(["sample", "subject", "timepoint"]))
+)
+
+CSV.write(datafiles("10701_1_SampleInformation_MicroBatchFile_2022_1001.csv"),
+    select(b2_batch, Not(["sample", "subject", "timepoint"]))
+)
+
+CSV.write(datafiles("10701_1_SampleInformation_MicroSpecimenFile_2022_1001.csv"),
+    select(b3_specimen, Not(["sample", "subject", "timepoint"]))
+)
+
+CSV.write(datafiles("10701_1_SampleInformation_MicroAnalysisFile_2022_1001.csv"),
+    select(b3_specimen, Not(["sample", "subject", "timepoint"]))
+)
+```
+
+
+### File copying
 
