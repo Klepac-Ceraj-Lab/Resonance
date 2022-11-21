@@ -453,6 +453,8 @@ files = [readdir("/lovelace/sequencing/raw/mgx/fastq"; join=true);
          readdir("/lovelace/sequencing/raw/mgx/sra_uploads"; join=true)]
 newdir = "/lovelace/sequencing/raw/mgx/echo_dac"
 
+using ThreadsX
+
 for row in eachrow(unique(b2_batch, "fastq_file_name"))
     sample = row.sample
     sfs = filter(f-> occursin(sample, basename(f)), files)
@@ -464,12 +466,12 @@ for row in eachrow(unique(b2_batch, "fastq_file_name"))
     @assert bits[[6,7]] == ["L001", "R1"]
     @info sample
 
-    for sf in sfs
+    ThreadsX.foreach(sfs) do sf
         newf = copy(bits)
         lane, fr = match(r"FG\d+_S\d+_(L00[1-4])_(R[12])_001", sf).captures
         newf[[6,7]] = [lane, fr]
-        cp(sf, joinpath(newdir, joinpath(newdir, join(newf, "_"))))
+        dest = joinpath(newdir, joinpath(newdir, join(newf, "_")))
+        !isfile(dest) && cp(sf, dest)
     end
 end
-
 ```
