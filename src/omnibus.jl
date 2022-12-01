@@ -97,15 +97,15 @@ end
                        category=["young", "young", "young", "old", "old"]))
 
     @testset "Permanovas" begin
-        p = permanovas(c1, [:age, :category])
-        @test p isa DataFrame
-        @test size(p) == (2,3)
-        @test names(p) == ["metadatum", "varexpl", "pvalue"]
+        # p = permanovas(c1, [:age, :category])
+        # @test p isa DataFrame
+        # @test size(p) == (2,3)
+        # @test names(p) == ["metadatum", "varexpl", "pvalue"]
         
-        p2 = permanovas([c1, c2], [:age, :category])
-        @test p2 isa DataFrame
-        @test size(p2) == (4,4)
-        @test names(p2) == ["metadatum", "varexpl", "pvalue", "label"]
+        # p2 = permanovas([c1, c2], [:age, :category])
+        # @test p2 isa DataFrame
+        # @test size(p2) == (4,4)
+        # @test names(p2) == ["metadatum", "varexpl", "pvalue", "label"]
     end
 
     @testset "Mantel tests" begin
