@@ -165,7 +165,7 @@ function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", kwarg
     fullcors = [setcors; notcors]
     ncors = length(fullcors)
 
-    srt = sortperm(fullcors; rev=true)
+    srt = sortperm(fullcors)
     ranks = invperm(srt)
     setranks = Set(ranks[1:length(setcors)])
     
@@ -173,7 +173,7 @@ function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", kwarg
     notscore = -1 / length(notcors)
     
     xs = 1:ncors
-    ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
+    ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks)) .* -1
     
     t = "ES: $(round(enrichment_score(setcors, notcors), digits=3))"
     !isempty(label) && (t = string(label, " ", t))
@@ -198,7 +198,7 @@ end
 function plot_corrband!(ax, cors; bandres=5000)
     ax.xlabel="rank"
     ax.ylabel="correlation"
-    srt = sortperm(cors; rev=true)
+    srt = sortperm(cors)
     ncors = length(cors)
     rn = ncors > bandres ? round.(Int, range(1, ncors; length=bandres)) : range(1, ncors)
     blow, bup = extrema(cors)
