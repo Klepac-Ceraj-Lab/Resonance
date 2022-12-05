@@ -99,6 +99,7 @@ export  AgeBracketPercentiles,
 using Reexport
 using ReTest
 
+using Airtable
 using Arrow
 using AlgebraOfGraphics
 using CairoMakie
@@ -127,6 +128,8 @@ using CubicSplines
 
 const transform = DataFrames.transform
 
+include("airtable.jl")
+include("rawdata.jl")
 include("files.jl")
 include("genefamilies.jl")
 include("plotting.jl")
