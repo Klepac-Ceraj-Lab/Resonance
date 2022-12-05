@@ -102,7 +102,9 @@ mdt = DataFrame(
     sample = samplenames(taxa),
     subject = get(taxa, :subject),
     timepoint = get(taxa, :timepoint),
-    ageMonths = get(taxa, :ageMonths)
+    ageMonths = get(taxa, :ageMonths),
+    sex = get(taxa, :childGender)
+    collectionDate = get(taxa, :collectionDate)    
 )
 
 for f in features(taxa)
