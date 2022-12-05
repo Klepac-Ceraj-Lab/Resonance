@@ -4,6 +4,7 @@ authors = ["Kevin Bonham", "PhD <kbonham@wellesley.edu> and contributors"]
 version = "0.3.0"
 
 [deps]
+Airtable = "96f7d883-6668-4fbe-bb01-b60427b16035"
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
