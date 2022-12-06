@@ -66,6 +66,7 @@ end
 abstract type Dataset end
 
 struct Metadata <: Dataset end
+struct ReadCounts <: Dataset end
 struct TaxonomicProfiles <: Dataset end
 struct UnirefProfiles <: Dataset end
 struct KOProfiles <: Dataset end
@@ -196,6 +197,34 @@ function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield
     comm = CommunityProfile(mat, feats, samps)
     set!(comm, timepoint_metadata; namecol=Symbol(samplefield))
     return comm
+end
+
+function load(::ReadCounts; srcdir=analysisfiles("kneaddata"), readcountfile="read_counts.csv", overwrite=false)
+    destfile = joinpath(srcdir, readcountfile)
+    if isfile(destfile) && !overwrite
+        return CSV.read(destfile, DataFrame; types=(i, col) -> contains(string(col), "sample") ? String : Float64)
+    else
+        run(Cmd([
+            "kneaddata_read_count_table",
+            "--input", srcdir,
+            "--output", destfile
+        ]))
+
+        df = CSV.read(destfile, DataFrame; missingstring="NA")
+        for col in names(df, r"Homo_sapiens")
+            df[!, col] = map(p-> coalesce(p...), zip(df[!, col], df[!, replace(col, "Homo_sapiens"=>"hg37dec_v0.1")]))
+        end
+        df."decontaminated Homo_sapiens pair1" = map(x-> ismissing(x) ? missing :  x isa Real ? x : parse(Float64, x), df."decontaminated Homo_sapiens pair1")
+        df."decontaminated Homo_sapiens orphan2" = map(x-> ismissing(x) ? missing :  x isa Real ? x : parse(Float64, x), df."decontaminated Homo_sapiens orphan2")
+
+        df = select(df, Not(r"hg37"))
+        subset!(df, "Sample"=> ByRow(s-> contains(s, r"^FG\d+")))
+        df.sample_uid = map(s-> replace(s, r"_kneaddata"=>""), df.Sample)
+        df.sample = map(s-> replace(s, r"_S\d+"=>""), df.sample_uid)
+        select!(df, Cols("sample", "sample_uid", r".+[12]"))
+        CSV.write(destfile, df)
+        return df
+    end
 end
 
 """
