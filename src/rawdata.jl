@@ -2,9 +2,9 @@
 
 
 function load_raw_metadata(;
-    subject_centric_path = datafiles("resonance_fmp", "Subject_Centric_071322.xlsx"),
-    sample_centric_path  = datafiles("resonance_fmp", "Sample_Centric_071322.xlsx"),
-    timepoint_centric_path = datafiles("resonance_fmp", "Timepoint_Centric_071322.xlsx")
+    subject_centric_path = datafiles("resonance_fmp", "Subject_centric_120522.xlsx"),
+    sample_centric_path  = datafiles("resonance_fmp", "Sample_centric_120522.xlsx"),
+    timepoint_centric_path = datafiles("resonance_fmp", "Timepoint_centric_120522.xlsx")
     )
 
     samplemeta = @chain airtable_metadata() begin
@@ -59,7 +59,7 @@ function load_raw_metadata(;
         ed
     end
 
-    DataFrames.transform!(groupby(fmp_alltp, :subject), :race => (r->coalesce(r...)) => :race)
+    DataFrames.transform!(groupby(fmp_alltp, :subject), :Merge_Dem_Child_Race => (r->coalesce(r...)) => :Merge_Dem_Child_Race)
 
     fmp_alltp.race = map(fmp_alltp."Merge_Dem_Child_Race") do r
         ismissing(r) && return missing
@@ -81,7 +81,7 @@ function load_raw_metadata(;
             missing                           => "Unknown"
         )
         droplevels!(race)
-        levels!(race, ["White","Black","Asian","Mixed","Other","Unknown"])
+        levels!(race, ["White","Black","Asian","Indiginous", "Mixed","Other","Unknown"])
         race
     end
 
