@@ -8,8 +8,6 @@ tables/*
 .envrc
 data/*
 figures/*.pdf
-manuscript/main.*
-!manuscript/main.tex
 slides/figures*
 !slides/figures.tex
 *scratch*
