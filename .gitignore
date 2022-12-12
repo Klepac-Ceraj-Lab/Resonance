@@ -3,6 +3,7 @@
 *.jl.mem
 .vscode/
 output/*
+tables/*
 /docs/build/
 .envrc
 data/*
