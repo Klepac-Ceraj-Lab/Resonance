@@ -87,15 +87,13 @@ function load_raw_metadata(;
 
     omni = @chain samplemeta begin
         subset("Fecal_EtOH" => ByRow(==("F")), "Mgx_batch"=> ByRow(!ismissing))
-        select("subject", "timepoint", "sample")
+        select("subject", "timepoint", "sample"=>"omni", "collectionDate"=>"omni_collectionDate")
         unique(["subject", "timepoint"])
-        rename("sample"=> "omni")
     end
     etoh = @chain samplemeta begin
         subset("Fecal_EtOH" => ByRow(==("E")), "Metabolomics_batch"=> ByRow(!ismissing))
-        select("subject", "timepoint", "sample")
+        select("subject", "timepoint", "sample"=>"etoh", "collectionDate"=>"etoh_collectionDate")
         unique(["subject", "timepoint"])
-        rename("sample"=> "etoh")
     end
 
     leftjoin!(fmp_alltp, omni; on=["subject", "timepoint"])
