@@ -2,9 +2,9 @@
 
 
 function load_raw_metadata(;
-    subject_centric_path = datafiles("resonance_fmp", "Subject_centric_120522.xlsx"),
-    sample_centric_path  = datafiles("resonance_fmp", "Sample_centric_120522.xlsx"),
-    timepoint_centric_path = datafiles("resonance_fmp", "Timepoint_centric_120522.xlsx")
+    subject_centric_path = datafiles("Subject_centric_120522.xlsx"),
+    sample_centric_path  = datafiles("Sample_centric_120522.xlsx"),
+    timepoint_centric_path = datafiles("Timepoint_centric_120522.xlsx")
     )
 
     samplemeta = @chain airtable_metadata() begin
@@ -30,8 +30,6 @@ function load_raw_metadata(;
 
     fmp_timepoint = DataFrame(XLSX.readtable(timepoint_centric_path, "Sheet1", infer_eltypes=true))
     rename!(fmp_timepoint, Dict("studyID"=> "subject"))
-    cs_perc = CSV.read(datafiles("cogscore_percentiles.csv"), DataFrame)
-    leftjoin!(fmp_timepoint, select(cs_perc, "subject", "timepoint", "cogScorePercentile"), on=["subject", "timepoint"])
 
     fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=["subject"])
 
@@ -87,15 +85,13 @@ function load_raw_metadata(;
 
     omni = @chain samplemeta begin
         subset("Fecal_EtOH" => ByRow(==("F")), "Mgx_batch"=> ByRow(!ismissing))
-        select("subject", "timepoint", "sample", "sample"=>"omni", "collectionDate"=>"omni_collectionDate")
+        select("subject", "timepoint", "sample"=>"omni", "collectionDate"=>"omni_collectionDate")
         unique(["subject", "timepoint"])
-        rename("sample"=> "omni")
     end
     etoh = @chain samplemeta begin
         subset("Fecal_EtOH" => ByRow(==("E")), "Metabolomics_batch"=> ByRow(!ismissing))
-        select("subject", "timepoint", "sample", "sample"=>"etoh", "collectionDate"=>"etoh_collectionDate")
+        select("subject", "timepoint", "sample"=>"etoh", "collectionDate"=>"etoh_collectionDate")
         unique(["subject", "timepoint"])
-        rename("sample"=> "etoh")
     end
 
     leftjoin!(fmp_alltp, omni; on=["subject", "timepoint"])
@@ -116,11 +112,10 @@ function load_raw_metaphlan()
     taxa
 end
 
-# using Resonance
 
-# metaphlan_files = filter(readdir(analysisfiles("metaphlan"), join=true)) do f
-#     !contains(f, r"FE\d{5}") && contains(f, "profile.tsv")
-# end
-
-# #- 
+function load_raw_humann(; kind="genefamilies", overwrite=false, names=false, stratified=false)
+    fname = joinpath(scratchfiles("genefunctions"), "$kind.arrow")
+    (!isfile(fname) || overwrite) && write_gfs_arrow(; kind, names, stratified)
+    read_gfs_arrow(; kind)
+end
 
