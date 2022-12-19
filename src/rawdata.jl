@@ -57,31 +57,28 @@ function load_raw_metadata(;
         ed
     end
 
-    DataFrames.transform!(groupby(fmp_alltp, :subject), :Merge_Dem_Child_Race => (r->coalesce(r...)) => :Merge_Dem_Child_Race)
-
-    fmp_alltp.race = map(fmp_alltp."Merge_Dem_Child_Race") do r
-        ismissing(r) && return missing
-        r == "Unknown" && return missing
-        r == "Decline to Answer" && return missing
-        contains(r, "\n") && return "Mixed"
-        r ∈ ("Mixed", "Mixed Race") && return "Mixed"
-        r ∈ ("Other Asian", "Asian ") && return "Asian"
-        return r
-    end
+    DataFrames.transform!(groupby(fmp_alltp, :subject), 
+                            :Merge_Dem_Child_Race => (r-> coalesce(r...)) => :Merge_Dem_Child_Race)
 
     fmp_alltp.race = let
-        race = categorical(fmp_alltp.race; ordered=true)
+        race = categorical(fmp_alltp.Merge_Dem_Child_Race)
+        race[findall(r-> contains(string(r), '\n'), race)] .= "Mixed"        
         race = recode(race, 
-            "American Indian or Alaska Native"=> "Indiginous",
-            "Some other race"                 => "Other",
-            "Asian Indian"                    => "Asian",
-            "Black or African American"       => "Black",
-            missing                           => "Unknown"
+            "Decline to Answer"                => missing,
+            "Unknown"                          => missing,
+            "Mixed Race"                       => "Mixed",
+            "American Indian or Alaska Native" => "Indiginous",
+            "Some other race"                  => "Other",
+            "Other Asian"                      => "Asian",
+            "Asian Indian"                     => "Asian",
+            "Asian "                           => "Asian",
+            "Black or African American"        => "Black",
         )
         droplevels!(race)
         levels!(race, ["White","Black","Asian","Indiginous", "Mixed","Other","Unknown"])
         race
     end
+
 
     omni = @chain samplemeta begin
         subset("Fecal_EtOH" => ByRow(==("F")), "Mgx_batch"=> ByRow(!ismissing))

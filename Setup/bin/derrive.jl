@@ -3,71 +3,118 @@ using Chain
 using CairoMakie
 using AlgebraOfGraphics
 
+loaddata() = quote
 mdata = Resonance.load_raw_metadata()
 taxa = Resonance.load_raw_metaphlan()
 ecs = Resonance.load_raw_humann(; kind = "ecs", names=true, stratified=false)
 kos = Resonance.load_raw_humann(; kind = "kos", names=true, stratified=false)
 # unirefs = Resonance.load_raw_humann(; kind = "genefamilies", names=false, stratified=false)
+@assert samplenames(kos) == samplenames(ecs) == samplenames(taxa)
+mdata.isMom = map(tp-> !ismissing(tp) && tp != "-8" && contains(tp, r"^pre"i), mdata.ECHOTPCoded)
+mdata.isKid = map(tp-> !ismissing(tp) && tp != "-8" && !contains(tp, r"^pre"i), mdata.ECHOTPCoded)
+end
+#- Samples
 
-#- mgx / mbx
 
-let
-    df = @chain mdata begin
-        groupby([:subject])
-        combine(:omni => (col-> count(!ismissing, col)) => "n_mgx",
-                :etoh => (col-> count(!ismissing, col)) => "n_mbx")
-        subset("n_mgx"=> ByRow(>(0)))
-        groupby(["n_mgx", "n_mbx"])
-        combine("n_mgx" => length => "count")
-    end
+
+
+# #- mgx / mbx
+
+
+# @info "samples with techreps:"
+# @info @chain samplenames(taxa) begin
+#     DataFrame(; sample=_)
+#     transform("sample"=> ByRow(s-> replace(s, r"_S\d+"=>"")) => "sample_base")
+#     groupby("sample_base")
+#     combine("sample"=> length=> "n_reps")
+#     subset("n_reps"=> ByRow(>(1)))
+# end
+
+# @info """
+# ## Raw Data
+
+# - N rows in metadata (subject=> timepoint pairs): $(nrow(mdata))
+# - N sequenced samples with taxaonomic profiles: $(nsamples(taxa))
+# - N sequenced samples with functional profiles: $(nsamples(ecs))
+# - N unique child stool samples: $(
+#     nrow(subset(mdata, "omni"=> ByRow(!ismissing), "isKid" => identity)))
+# - N unique maternal stool samples: $(
+#     nrow(subset(mdata, "omni"=> ByRow(!ismissing), "isMom" => identity)))
+# - N child subjects with at least 1 stool sample: $(
+#     nrow(unique(subset(mdata, "omni"=> ByRow(!ismissing), "isKid"=> identity), "subject"))
+# )
+#   - N child subjects with stool sample < 6 months: $(
+#     nrow(unique(subset(mdata, "omni"=> ByRow(!ismissing), "isKid"=> identity, 
+#                           "ageMonths" => ByRow(a-> !ismissing(a) && a < 6)), "subject"))
+
+#   )
+#   - N child subjects with stool sample < 8 months: $(
+#     nrow(unique(subset(mdata, "omni"=> ByRow(!ismissing), "isKid"=> identity, 
+#                           "ageMonths" => ByRow(a-> !ismissing(a) && a < 8)), "subject"))
+
+#   )
+#   - N child subjects with stool sample < 12 months: $(
+#     nrow(unique(subset(mdata, "omni"=> ByRow(!ismissing), "isKid"=> identity, 
+#                           "ageMonths" => ByRow(a-> !ismissing(a) && a < 12)), "subject"))
+
+#   )
+#   - N child subjects with stool sample > 18 months: $(
+#     nrow(unique(subset(mdata, "omni"=> ByRow(!ismissing), "isKid"=> identity, 
+#                           "ageMonths" => ByRow(a-> !ismissing(a) && a > 18)), "subject"))
+
+#   )
+# - N maternal subjects with at least 1 stool sample: $(
+#     nrow(unique(subset(mdata, "omni"=> ByRow(!ismissing), "isMom"=> identity), "subject"))
+# )
+
+# """
+
+# #- Important Metadata (kids)
+
+# keep_fields = ["subject", "timepoint", "ageMonths", "education", "race", "cogScore", "sex"
+#                "isKid", "isMom", "omni", "omni_collectionDate", "etoh"]
+# reduced = @chain mdata begin
+#     select(keep_fields)
+#     rename("omni"=> "sample_base", "omni_collectionDate"=>"omni_collectionDate")
+#     subset("sample_base"=> ByRow(!ismissing))
+# end
     
-    plt = data(df) * mapping(:n_mbx=> "N mbx samples", :count; layout = :n_mgx => nonnumeric) * visual(BarPlot)
-    draw(plt; figure=(;title = "number of samples"))
-end
+# taxmd = DataFrame(metadata(taxa))
+# leftjoin!(taxmd, select(reduced, "sample_base", "cogScore"), on=[:sample_base])
+# set!(taxa, taxmd)
 
-#- visits vs samples
+# taxmatch = taxa[:, .!ismissing.(get(taxa, :subject))]
+# isKid = get(taxmatch, :isKid)
+# isMom = get(taxmatch, :isMom)
 
-hasmgx = @chain subset(mdata, :omni=> ByRow(!ismissing)) begin
-    groupby([:subject])
-    combine(:omni => length => :n)
-end
-hasmgx.kind .= "hasmgx"
-hasvisit = @chain mdata begin
-    groupby([:subject])
-    combine(:omni => length => :n)
-end
-hasvisit.kind .= "hasvisit"
-df = vcat(hasmgx, hasvisit)
+# @info """
+# ## For timpoints with sequenced stool sample
 
-#-
+# - Total (N): $(nsamples(taxmatch))
+# - Kids (N): $(count(isKid))
+#     - Has age: $(count(!ismissing, get(taxmatch, :ageMonths)[isKid]))
+#     - Has education: $(count(!ismissing, get(taxmatch, :education)[isKid]))
+#     - Has race: $(count(r-> !ismissing(r) && r != "Unknown", get(taxmatch, :race)[isKid]))
+#     - Has cogScore: $(count(r-> !ismissing(r) && r != "Unknown", get(taxmatch, :cogScore)[isKid]))
+#     - Has all: $(count(map(r-> !ismissing(r) && r != "Unknown", get(taxmatch, :race)[isKid]) .& 
+#                        map(!ismissing, get(taxmatch, :ageMonths)[isKid]) .&
+#                        map(!ismissing, get(taxmatch, :education)[isKid]) .&
+#                        map(!ismissing, get(taxmatch, :cogScore)[isKid])
+#                 ))
+# - Moms (N): $(count(isMom))
+#     - Has education: $(count(!ismissing, get(taxmatch, :education)[isMom]))
+#     - Has race: $(count(r-> !ismissing(r) && r != "Unknown", get(taxmatch, :race)[isMom]))
+#     - Has all: $(count(map(r-> !ismissing(r) && r != "Unknown", get(taxmatch, :race)[isMom]) .& 
+#                        map(!ismissing, get(taxmatch, :education)[isMom])
+#                 ))
+# """
 
-fig = Figure()
-visits = Axis(fig[1,1]; title  = "Visits", xticks=(1.5:12.5, string.(1:12)),
-                        xlabel = "number of visits",
-                        ylabel = "number of subjects"
-)
-samples = Axis(fig[1,2]; title  = "Stool samples", xticks=(1.5:12.5, string.(1:12)),
-                         xlabel = "number of stool samples",
-                         ylabel = "number of subjects"
-)
-subs = Axis(fig[2,1]; title = "All visits",
-                      xlabel = "Age (years)",
-                      ylabel = "Count"
-)
+# @info """
+# ## Kids with all demographics (cogScore, education, race, sex)
 
-subws = Axis(fig[2,2]; title = "Visits with stool",
-                       xlabel = "Age (years)",
-                       ylabel = "Count"
-)
+# #- Exports
 
+# @info "Subsetting Table"
 
-hist!(visits, hasvisit.n; bins = length(unique(hasvisit.n)))
-hist!(samples, hasmgx.n; bins = length(unique(hasmgx.n)))
-
-linkaxes!(visits, samples)
-
-hist!(subs, collect(skipmissing(mdata.ageMonths)) ./ 12)
-hist!(subws, collect(skipmissing(subset(mdata, "omni"=> ByRow(!ismissing)).ageMonths)) ./ 12)
-
-
-fig
+# kids = subset(taxmatch, "isKid"=> identity)
+# kids0120 = subset(kids, "ageMonths"=> ByRow(a-> !ismissing(a) && a < 120))
