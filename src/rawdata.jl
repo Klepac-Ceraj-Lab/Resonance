@@ -78,6 +78,7 @@ function load_raw_metadata(;
         levels!(race, ["White","Black","Asian","Indiginous", "Mixed","Other","Unknown"])
         race
     end
+    fmp_alltp.sex = categorical(fmp_alltp.childGender)
 
 
     omni = @chain samplemeta begin
