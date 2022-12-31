@@ -2,9 +2,9 @@
 
 
 function load_raw_metadata(;
-    subject_centric_path = datafiles("resonance_fmp", "Subject_centric_120522.xlsx"),
-    sample_centric_path  = datafiles("resonance_fmp", "Sample_centric_120522.xlsx"),
-    timepoint_centric_path = datafiles("resonance_fmp", "Timepoint_centric_120522.xlsx")
+    subject_centric_path = datafiles("Subject_centric_120522.xlsx"),
+    sample_centric_path  = datafiles("Sample_centric_120522.xlsx"),
+    timepoint_centric_path = datafiles("Timepoint_centric_120522.xlsx")
     )
 
     samplemeta = @chain airtable_metadata() begin
@@ -30,8 +30,6 @@ function load_raw_metadata(;
 
     fmp_timepoint = DataFrame(XLSX.readtable(timepoint_centric_path, "Sheet1", infer_eltypes=true))
     rename!(fmp_timepoint, Dict("studyID"=> "subject"))
-    cs_perc = CSV.read(datafiles("cogscore_percentiles.csv"), DataFrame)
-    leftjoin!(fmp_timepoint, select(cs_perc, "subject", "timepoint", "cogScorePercentile"), on=["subject", "timepoint"])
 
     fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=["subject"])
 
@@ -59,43 +57,39 @@ function load_raw_metadata(;
         ed
     end
 
-    DataFrames.transform!(groupby(fmp_alltp, :subject), :Merge_Dem_Child_Race => (r->coalesce(r...)) => :Merge_Dem_Child_Race)
-
-    fmp_alltp.race = map(fmp_alltp."Merge_Dem_Child_Race") do r
-        ismissing(r) && return missing
-        r == "Unknown" && return missing
-        r == "Decline to Answer" && return missing
-        contains(r, "\n") && return "Mixed"
-        r ∈ ("Mixed", "Mixed Race") && return "Mixed"
-        r ∈ ("Other Asian", "Asian ") && return "Asian"
-        return r
-    end
+    DataFrames.transform!(groupby(fmp_alltp, :subject), 
+                            :Merge_Dem_Child_Race => (r-> coalesce(r...)) => :Merge_Dem_Child_Race)
 
     fmp_alltp.race = let
-        race = categorical(fmp_alltp.race; ordered=true)
+        race = categorical(fmp_alltp.Merge_Dem_Child_Race)
+        race[findall(r-> contains(string(r), '\n'), race)] .= "Mixed"        
         race = recode(race, 
-            "American Indian or Alaska Native"=> "Indiginous",
-            "Some other race"                 => "Other",
-            "Asian Indian"                    => "Asian",
-            "Black or African American"       => "Black",
-            missing                           => "Unknown"
+            "Decline to Answer"                => missing,
+            "Unknown"                          => missing,
+            "Mixed Race"                       => "Mixed",
+            "American Indian or Alaska Native" => "Indiginous",
+            "Some other race"                  => "Other",
+            "Other Asian"                      => "Asian",
+            "Asian Indian"                     => "Asian",
+            "Asian "                           => "Asian",
+            "Black or African American"        => "Black",
         )
         droplevels!(race)
         levels!(race, ["White","Black","Asian","Indiginous", "Mixed","Other","Unknown"])
         race
     end
+    fmp_alltp.sex = categorical(fmp_alltp.childGender)
+
 
     omni = @chain samplemeta begin
         subset("Fecal_EtOH" => ByRow(==("F")), "Mgx_batch"=> ByRow(!ismissing))
-        select("subject", "timepoint", "sample", "sample"=>"omni", "collectionDate"=>"omni_collectionDate")
+        select("subject", "timepoint", "sample"=>"omni", "collectionDate"=>"omni_collectionDate")
         unique(["subject", "timepoint"])
-        rename("sample"=> "omni")
     end
     etoh = @chain samplemeta begin
         subset("Fecal_EtOH" => ByRow(==("E")), "Metabolomics_batch"=> ByRow(!ismissing))
-        select("subject", "timepoint", "sample", "sample"=>"etoh", "collectionDate"=>"etoh_collectionDate")
+        select("subject", "timepoint", "sample"=>"etoh", "collectionDate"=>"etoh_collectionDate")
         unique(["subject", "timepoint"])
-        rename("sample"=> "etoh")
     end
 
     leftjoin!(fmp_alltp, omni; on=["subject", "timepoint"])
@@ -116,11 +110,10 @@ function load_raw_metaphlan()
     taxa
 end
 
-# using Resonance
 
-# metaphlan_files = filter(readdir(analysisfiles("metaphlan"), join=true)) do f
-#     !contains(f, r"FE\d{5}") && contains(f, "profile.tsv")
-# end
-
-# #- 
+function load_raw_humann(; kind="genefamilies", overwrite=false, names=false, stratified=false)
+    fname = joinpath(scratchfiles("genefunctions"), "$kind.arrow")
+    (!isfile(fname) || overwrite) && write_gfs_arrow(; kind, names, stratified)
+    read_gfs_arrow(; kind)
+end
 

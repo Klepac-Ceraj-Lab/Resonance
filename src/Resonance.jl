@@ -112,6 +112,7 @@ using Dates
 using LinearAlgebra
 using MultivariateStats
 using PERMANOVA
+using ProgressLogging
 using Random
 using Setup # dev package at `./Setup`
 using SparseArrays
