@@ -7,7 +7,7 @@ mdata = Resonance.load_raw_metadata()
 taxa = Resonance.load_raw_metaphlan()
 ecs = Resonance.load_raw_humann(; kind = "ecs", names=true, stratified=false)
 kos = Resonance.load_raw_humann(; kind = "kos", names=true, stratified=false)
-# unirefs = Resonance.load_raw_humann(; kind = "genefamilies", names=false, stratified=false)
+unirefs = Resonance.load_raw_humann(; kind = "genefamilies", names=false, stratified=false)
 @assert samplenames(kos) == samplenames(ecs) == samplenames(taxa)
 mdata.isMom = map(tp-> !ismissing(tp) && tp != "-8" && contains(tp, r"^pre"i), mdata.ECHOTPCoded)
 mdata.isKid = map(tp-> !ismissing(tp) && tp != "-8" && !contains(tp, r"^pre"i), mdata.ECHOTPCoded)
@@ -151,7 +151,6 @@ CSV.write(tablefiles("taxa_kids_all_wide.csv"), select(taxakids, Cols(keep_field
 CSV.write(tablefiles("taxa_kids_0to120.csv"), select(kids0120, Cols(keep_fields[1:end-3]..., "sample_base", "omni_collectionDate", r"^s__")))
 CSV.write(tablefiles("taxa_kids_0to6.csv"), select(kids06, Cols(keep_fields[1:end-3]..., "sample_base", "omni_collectionDate", r"^s__")))
 CSV.write(tablefiles("taxa_kids_18to120.csv"), select(kids18120, Cols(keep_fields[1:end-3]..., "sample_base", "omni_collectionDate", r"^s__")))
-
 
 candace = parse.(Int, readlines("data/candace_ids.txt"))
 CSV.write("data/candace_wide.csv", subset(taxmd, "subject"=> ByRow(s-> s in candace)))
