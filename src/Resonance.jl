@@ -133,6 +133,7 @@ const transform = DataFrames.transform
 
 include("airtable.jl")
 include("rawdata.jl")
+include("microbiomejl_interface.jl")
 include("files.jl")
 include("genefamilies.jl")
 include("plotting.jl")
