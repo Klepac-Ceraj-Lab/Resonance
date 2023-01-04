@@ -86,11 +86,11 @@ struct Neuroimaging <: Dataset end
 #     return subjects, timepoints
 # end # end function
 
-load(ds::Dataset; kwargs...) = MethodError("load has not been implemented for $(typeof(ds))")
+load(ds::Dataset; kwargs...) = throw(MethodError("load has not been implemented for $(typeof(ds))"))
 
 function load(::Metadata)
     Setup.datadownload(Setup.Timepoints(); inputdir=inputfiles())
-    df = CSV.read(inputfiles("timepoint_metadata.csv"), DataFrame;
+    df = CSV.read(inputfiles("timepoints_metadata.csv"), DataFrame;
         types = [
             Int64,                   # subject
             Int64,                   # timepoint
@@ -98,14 +98,14 @@ function load(::Metadata)
             String,                  # sex
             String,                  # race
             Union{Missing, String},  # education
-            Union{Missing, Date},    # assessmentDate
-            Union{Missing, Date},    # scanDate
+            Union{Missing, Date},    # date
             Union{Missing, Float64}, # cogScore
-            Union{Missing, Float64}, # cogScorePercentile
-            Union{Missing, String},  # omni
-            Union{Missing, String},  # etoh
-            Bool,                    # has_segmentation
-            Union{Missing, Float64}  # read_depth
+            String,                  # sample
+            String,                  # sample_base
+            Union{Missing, Float64}, # read_depth
+            Bool,                    # filter_00to120 
+            Bool,                    # filter_00to06
+            Bool,                    # filter_18to120 
         ]        
     )
 
@@ -117,46 +117,30 @@ end
 
 function load(::TaxonomicProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.Taxa(); inputdir=inputfiles())
-    tbl = Arrow.Table(inputfiles("taxa.arrow"))
-    mat = sparse(tbl.fidx, tbl.sidx, tbl.abundance)
-    fs = [taxon(last(split(line, "|"))) for line in eachline(inputfiles("taxa_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
-    comm = CommunityProfile(mat, fs, ss)
-    insert!(comm, timepoint_metadata; namecol=:omni)
-    return comm
+    comm = read_arrow(inputfiles("taxa.arrow"); featurefunc = taxon)
+    insert!(comm, timepoint_metadata; namecol=:sample)
+    return comm[:, timepoint_metadata.sample]
 end
 
 function load(::UnirefProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.Unirefs(); inputdir=inputfiles())
-    tbl = Arrow.Table(inputfiles("genefamilies.arrow"))
-    mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
-    fs = [genefunction(line) for line in eachline(inputfiles("genefamilies_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
-    comm = CommunityProfile(mat, fs, ss)
-    insert!(comm, timepoint_metadata; namecol=:omni)
-    return comm
+    comm = read_arrow(inputfiles("genefamilies.arrow"); featurefunc = genefunction)
+    insert!(comm, timepoint_metadata; namecol=:sample)
+    return comm[:, timepoint_metadata.sample]
 end
 
 function load(::KOProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.KOs(); inputdir=inputfiles())
-    tbl = Arrow.Table(inputfiles("kos.arrow"))
-    mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
-    fs = [genefunction(line) for line in eachline(inputfiles("kos_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
-    comm = CommunityProfile(mat, fs, ss)
-    insert!(comm, timepoint_metadata; namecol=:omni)
-    return comm
+    comm = read_arrow(inputfiles("kos.arrow"); featurefunc = genefunction)
+    insert!(comm, timepoint_metadata; namecol=:sample)
+    return comm[:, timepoint_metadata.sample]
 end
 
 function load(::ECProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.ECs(); inputdir=inputfiles())
-    tbl = Arrow.Table(inputfiles("ecs.arrow"))
-    mat = sparse(tbl.fidx, tbl.sidx, tbl.value)
-    fs = [genefunction(line) for line in eachline(inputfiles("ecs_features.txt"))]
-    ss = [MicrobiomeSample(line) for line in eachline(inputfiles("samples.txt"))]
-    comm = CommunityProfile(mat, fs, ss)
-    insert!(comm, timepoint_metadata; namecol=:omni)
-    return comm
+    comm = read_arrow(inputfiles("ecs.arrow"); featurefunc = genefunction)
+    insert!(comm, timepoint_metadata; namecol=:sample)
+    return comm[:, timepoint_metadata.sample]
 end
 
 # function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))

@@ -7,6 +7,7 @@ export datafiles,
        outputfiles,
        figurefiles,
        tablefiles,
+       inputfiles,
        Metadata,
        ReadCounts,
        TaxonomicProfiles,
@@ -29,7 +30,8 @@ export loadings,
        plot_mantel,
        plot_mantel!,
        plot_pcoa!,
-       commonname
+       commonname,
+       comm2wide
 
 # Machine Learning
 export  # 0. structs/types
@@ -133,6 +135,7 @@ const transform = DataFrames.transform
 
 include("airtable.jl")
 include("rawdata.jl")
+include("microbiomejl_interface.jl")
 include("files.jl")
 include("genefamilies.jl")
 include("plotting.jl")
