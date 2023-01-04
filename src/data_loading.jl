@@ -100,8 +100,8 @@ function load(::Metadata)
             Union{Missing, String},  # education
             Union{Missing, Date},    # date
             Union{Missing, Float64}, # cogScore
-            Union{Missing, String},  # sample
-            Union{Missing, String},  # sample_base
+            String,                  # sample
+            String,                  # sample_base
             Union{Missing, Float64}, # read_depth
             Bool,                    # filter_00to120 
             Bool,                    # filter_00to06
