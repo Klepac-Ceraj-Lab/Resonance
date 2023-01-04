@@ -119,28 +119,28 @@ function load(::TaxonomicProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.Taxa(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("taxa.arrow"); featurefunc = taxon)
     insert!(comm, timepoint_metadata; namecol=:sample)
-    return comm
+    return comm[:, timepoint_metadata.sample]
 end
 
 function load(::UnirefProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.Unirefs(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("genefamilies.arrow"); featurefunc = genefunction)
     insert!(comm, timepoint_metadata; namecol=:sample)
-    return comm
+    return comm[:, timepoint_metadata.sample]
 end
 
 function load(::KOProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.KOs(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("kos.arrow"); featurefunc = genefunction)
     insert!(comm, timepoint_metadata; namecol=:sample)
-    return comm
+    return comm[:, timepoint_metadata.sample]
 end
 
 function load(::ECProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.ECs(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("ecs.arrow"); featurefunc = genefunction)
     insert!(comm, timepoint_metadata; namecol=:sample)
-    return comm
+    return comm[:, timepoint_metadata.sample]
 end
 
 # function load(::MetabolicProfiles; timepoint_metadata = load(Metadata()))

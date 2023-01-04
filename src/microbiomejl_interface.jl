@@ -55,6 +55,5 @@ end
 function comm2wide(cmp::CommunityProfile; feature_filter=identity, sample_filter=identity)
     cmp = cmp[feature_filter(features(cmp)), sample_filter(samples(cmp))]
     md = DataFrame(metadata(cmp))
-    hcat!(md, DataFrame(collect(abundances(cmp)'), string.(features(cmp))))
-    md
+    return hcat(md, DataFrame(collect(abundances(cmp)'), featurenames(cmp)))
 end

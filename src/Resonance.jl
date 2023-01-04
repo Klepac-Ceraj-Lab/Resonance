@@ -30,7 +30,8 @@ export loadings,
        plot_mantel,
        plot_mantel!,
        plot_pcoa!,
-       commonname
+       commonname,
+       comm2wide
 
 # Machine Learning
 export  # 0. structs/types
