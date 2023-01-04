@@ -93,32 +93,33 @@ end
 subset!(taxmd, "subject"=> ByRow(!ismissing))
 taxmd.isKid = Vector{Bool}(taxmd.isKid)
 taxmd.isMom = Vector{Bool}(taxmd.isMom)
+
 #- 
 
 @info """
-## For timpoints with sequenced stool sample
+    ## For timpoints with sequenced stool sample
 
-- Total (N): $(nrow(taxmd))
-- Kids (N): $(count(taxmd.isKid))
-    - Has age: $(count(!ismissing, taxmd.ageMonths[taxmd.isKid]))
-    - Has education: $(count(!ismissing, taxmd.education[taxmd.isKid]))
-    - Has race: $(count(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isKid]))
-    - Has cogScore: $(count(r-> !ismissing(r) && r != "Unknown", taxmd.cogScore[taxmd.isKid]))
-    - Has all: $(count(map(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isKid]) .& 
-                       map(!ismissing, taxmd.ageMonths[taxmd.isKid]) .&
-                       map(!ismissing, taxmd.education[taxmd.isKid]) .&
-                       map(!ismissing, taxmd.cogScore[taxmd.isKid])
-                ))
-- Moms (N): $(count(isMom))
-    - Has education: $(count(!ismissing, taxmd.education[taxmd.isMom]))
-    - Has race: $(count(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isMom]))
-    - Has all: $(count(map(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isMom]) .& 
-                       map(!ismissing, taxmd.education[taxmd.isMom])
-                ))
+    - Total (N): $(nrow(taxmd))
+    - Kids (N): $(count(taxmd.isKid))
+        - Has age: $(count(!ismissing, taxmd.ageMonths[taxmd.isKid]))
+        - Has education: $(count(!ismissing, taxmd.education[taxmd.isKid]))
+        - Has race: $(count(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isKid]))
+        - Has cogScore: $(count(r-> !ismissing(r) && r != "Unknown", taxmd.cogScore[taxmd.isKid]))
+        - Has all: $(count(map(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isKid]) .& 
+                        map(!ismissing, taxmd.ageMonths[taxmd.isKid]) .&
+                        map(!ismissing, taxmd.education[taxmd.isKid]) .&
+                        map(!ismissing, taxmd.cogScore[taxmd.isKid])
+                    ))
+    - Moms (N): $(count(isMom))
+        - Has education: $(count(!ismissing, taxmd.education[taxmd.isMom]))
+        - Has race: $(count(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isMom]))
+        - Has all: $(count(map(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isMom]) .& 
+                        map(!ismissing, taxmd.education[taxmd.isMom])
+                    ))
 """
 
 @info """
-## Kids with all demographics (cogScore, education, race, sex)
+    ## Kids with all demographics (cogScore, education, race, sex)
 """
 #- Exports
 
