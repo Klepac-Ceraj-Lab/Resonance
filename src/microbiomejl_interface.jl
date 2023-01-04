@@ -1,7 +1,7 @@
 function write_arrow(filename, cmp::CommunityProfile)
     df = DataFrame(metadata(cmp))
     @debug "filtering profile"
-    cmp = cmp[ThreadsX.unique(first(findnz(abundances(cmp)))), :]
+    cmp = cmp[sort(ThreadsX.unique(first(findnz(abundances(cmp))))), :]
     @debug "getting features and samples"
     feats = features(cmp)
     featidx = Dict(string(f)=>i for (i, f) in enumerate(feats))

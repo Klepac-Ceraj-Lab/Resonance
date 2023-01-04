@@ -110,7 +110,7 @@ taxmd.isMom = Vector{Bool}(taxmd.isMom)
                         map(!ismissing, taxmd.education[taxmd.isKid]) .&
                         map(!ismissing, taxmd.cogScore[taxmd.isKid])
                     ))
-    - Moms (N): $(count(isMom))
+    - Moms (N): $(count(taxmd.isMom))
         - Has education: $(count(!ismissing, taxmd.education[taxmd.isMom]))
         - Has race: $(count(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isMom]))
         - Has all: $(count(map(r-> !ismissing(r) && r != "Unknown", taxmd.race[taxmd.isMom]) .& 
@@ -152,15 +152,10 @@ kids18120 = @chain taxakids begin
     transform("subject" => (col -> [[true]; fill(false, length(col) - 1)])=> "first")
 end
 
-isdir(tablefiles()) || mkpath(tablefiles())
-CSV.write(tablefiles("taxa_all_wide.csv"), select(taxmd, Cols(keep_fields[1:end-3]...), "sample_base", "omni_collectionDate" => "collectionDate", Cols(r"^s__")))
-CSV.write(tablefiles("taxa_kids_all_wide.csv"), select(taxakids, Cols(keep_fields[1:end-3]...), "sample_base", "omni_collectionDate" => "collectionDate", Cols(r"^s__")))
-CSV.write(tablefiles("taxa_kids_0to120.csv"), select(kids0120, Cols(keep_fields[1:end-3]...), "sample_base", "omni_collectionDate" => "collectionDate", Cols(r"^s__")))
-CSV.write(tablefiles("taxa_kids_0to6.csv"), select(kids06, Cols(keep_fields[1:end-3]...), "sample_base", "omni_collectionDate" => "collectionDate", Cols(r"^s__")))
-CSV.write(tablefiles("taxa_kids_18to120.csv"), select(kids18120, Cols(keep_fields[1:end-3]...), "sample_base", "omni_collectionDate" => "collectionDate", Cols(r"^s__")))
+isdir(scratchfiles("uploads")) || mkpath(scratchfiles("uploads"))
 
 candace = parse.(Int, readlines("data/candace_ids.txt"))
-CSV.write("data/candace_wide.csv", subset(taxmd, "subject"=> ByRow(s-> s in candace)))
+CSV.write(scratchfiles("uploads", "candace_wide.csv"), subset(taxmd, "subject"=> ByRow(s-> s in candace)))
 
 
 ## Uploads
@@ -194,7 +189,7 @@ filtcols = @chain kids0120 begin
 end
 
 
-CSV.write(tablefiles("timepoints_metadata.csv"), select(filtcols, 
+CSV.write(scratchfiles("uploads", "timepoints_metadata.csv"), select(filtcols, 
     "subject",
     "timepoint",
     "ageMonths",
@@ -211,7 +206,10 @@ CSV.write(tablefiles("timepoints_metadata.csv"), select(filtcols,
     "filter_18to120"
     )
 )
-Resonance.write_arrow(tablefiles("taxa.arrow"), taxa[taxrank.(features(taxa)) .== :species, filtcols.sample])
-Resonance.write_arrow(tablefiles("ecs.arrow"), ecs[:, filtcols.sample])
-Resonance.write_arrow(tablefiles("kos.arrow"), kos[:, filtcols.sample])
-Resonance.write_arrow(tablefiles("unirefs.arrow"), unirefs[:, filtcols.sample])
+
+#- 
+
+Resonance.write_arrow(scratchfiles("uploads", "taxa.arrow"), taxa[taxrank.(features(taxa)) .== :species, filtcols.sample])
+Resonance.write_arrow(scratchfiles("uploads", "ecs.arrow"), ecs[:, filtcols.sample])
+Resonance.write_arrow(scratchfiles("uploads", "kos.arrow"), kos[:, filtcols.sample])
+Resonance.write_arrow(scratchfiles("uploads", "unirefs.arrow"), unirefs[:, filtcols.sample])
