@@ -194,7 +194,23 @@ filtcols = @chain kids0120 begin
 end
 
 
-CSV.write(tablefiles("metadata_filtered.csv"), filtcols)
+CSV.write(tablefiles("timepoints_metadata.csv"), select(filtcols, 
+    "subject",
+    "timepoint",
+    "ageMonths",
+    "sex",
+    "race",
+    "education",
+    "omni_collectionDate"=> "date",
+    "cogScore",
+    "sample",
+    "sample_base",
+    "read_depth",
+    "filter_00to120",
+    "filter_00to06",
+    "filter_18to120"
+    )
+)
 Resonance.write_arrow(tablefiles("taxa.arrow"), taxa[taxrank.(features(taxa)) .== :species, filtcols.sample])
 Resonance.write_arrow(tablefiles("ecs.arrow"), ecs[:, filtcols.sample])
 Resonance.write_arrow(tablefiles("kos.arrow"), kos[:, filtcols.sample])

@@ -86,11 +86,11 @@ struct Neuroimaging <: Dataset end
 #     return subjects, timepoints
 # end # end function
 
-load(ds::Dataset; kwargs...) = MethodError("load has not been implemented for $(typeof(ds))")
+load(ds::Dataset; kwargs...) = throw(MethodError("load has not been implemented for $(typeof(ds))"))
 
 function load(::Metadata)
     Setup.datadownload(Setup.Timepoints(); inputdir=inputfiles())
-    df = CSV.read(inputfiles("timepoint_metadata.csv"), DataFrame;
+    df = CSV.read(inputfiles("timepoints_metadata.csv"), DataFrame;
         types = [
             Int64,                   # subject
             Int64,                   # timepoint
@@ -98,14 +98,14 @@ function load(::Metadata)
             String,                  # sex
             String,                  # race
             Union{Missing, String},  # education
-            Union{Missing, Date},    # assessmentDate
-            Union{Missing, Date},    # scanDate
+            Union{Missing, Date},    # date
             Union{Missing, Float64}, # cogScore
-            Union{Missing, Float64}, # cogScorePercentile
-            Union{Missing, String},  # omni
-            Union{Missing, String},  # etoh
-            Bool,                    # has_segmentation
-            Union{Missing, Float64}  # read_depth
+            Union{Missing, String},  # sample
+            Union{Missing, String},  # sample_base
+            Union{Missing, Float64}, # read_depth
+            Bool,                    # filter_00to120 
+            Bool,                    # filter_00to06
+            Bool,                    # filter_18to120 
         ]        
     )
 
@@ -118,28 +118,28 @@ end
 function load(::TaxonomicProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.Taxa(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("taxa.arrow"); featurefunc = taxon)
-    insert!(comm, timepoint_metadata; namecol=:omni)
+    insert!(comm, timepoint_metadata; namecol=:sample)
     return comm
 end
 
 function load(::UnirefProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.Unirefs(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("genefamilies.arrow"); featurefunc = genefunction)
-    insert!(comm, timepoint_metadata; namecol=:omni)
+    insert!(comm, timepoint_metadata; namecol=:sample)
     return comm
 end
 
 function load(::KOProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.KOs(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("kos.arrow"); featurefunc = genefunction)
-    insert!(comm, timepoint_metadata; namecol=:omni)
+    insert!(comm, timepoint_metadata; namecol=:sample)
     return comm
 end
 
 function load(::ECProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.ECs(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("ecs.arrow"); featurefunc = genefunction)
-    insert!(comm, timepoint_metadata; namecol=:omni)
+    insert!(comm, timepoint_metadata; namecol=:sample)
     return comm
 end
 
