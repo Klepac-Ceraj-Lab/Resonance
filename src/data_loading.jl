@@ -152,7 +152,7 @@ end
 #     return comm
 # end
 
-function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield = "omni")
+function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield = "sample")
     Setup.datadownload(Setup.Neuro(); inputdir=inputfiles())
     df = CSV.read(inputfiles("brain_normalized.csv"), DataFrame)
     mat = Matrix(select(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))' |> collect

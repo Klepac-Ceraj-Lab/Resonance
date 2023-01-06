@@ -8,15 +8,11 @@ using CategoricalArrays
 #-
 
 mdata = Resonance.load(Metadata())
-subset!(mdata, "ageMonths"=> ByRow(<(120)))
 
-taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
-taxa = taxa[:, findall(!ismissing, get(taxa, :ageMonths))]
-species = filter(t-> taxrank(t) == :species, taxa)
 
-unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
-unirefs = unirefs[:, findall(!ismissing, get(unirefs, :ageMonths))]
-unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
+species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+# unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
+# # unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
 
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
 ecs = ecs[:, findall(!ismissing, get(ecs, :ageMonths))]
@@ -30,7 +26,7 @@ kos = filter(!hastaxon, kos)
 brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
 
 
-@assert all(samplenames(species) .== samplenames(unirefs))
+# @assert all(samplenames(species) .== samplenames(unirefs))
 @assert all(samplenames(species) .== samplenames(ecs))
 @assert all(samplenames(species) .== samplenames(kos))
 
@@ -53,7 +49,7 @@ end
 
 spedm = Microbiome.braycurtis(species)
 CSV.write(scratchfiles("spedm.csv"), Tables.table(spedm))
-unidm = Microbiome.braycurtis(unirefs)
+# unidm = Microbiome.braycurtis(unirefs)
 CSV.write(scratchfiles("unidm.csv"), Tables.table(unidm))
 ecsdm = Microbiome.braycurtis(ecs)
 CSV.write(scratchfiles("ecsdm.csv"), Tables.table(ecsdm))
