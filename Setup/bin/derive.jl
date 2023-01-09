@@ -8,7 +8,11 @@ taxa = Resonance.load_raw_metaphlan()
 ecs = Resonance.load_raw_humann(; kind = "ecs", names=true, stratified=false)
 kos = Resonance.load_raw_humann(; kind = "kos", names=true, stratified=false)
 unirefs = Resonance.load_raw_humann(; kind = "genefamilies", names=false, stratified=false)
-@assert samplenames(kos) == samplenames(ecs) == samplenames(taxa) == samplenames(unirefs)
+volumes = Resonance.load_raw_brain()
+
+@assert samplenames(kos) == samplenames(ecs) == samplenames(taxa)
+
+
 mdata.isMom = map(tp-> !ismissing(tp) && tp != "-8" && contains(tp, r"^pre"i), mdata.ECHOTPCoded)
 mdata.isKid = map(tp-> !ismissing(tp) && tp != "-8" && !contains(tp, r"^pre"i), mdata.ECHOTPCoded)
 
@@ -191,6 +195,7 @@ filtcols = @chain kids0120 begin
 end
 
 
+
 CSV.write(scratchfiles("uploads", "timepoints_metadata.csv"), select(filtcols, 
     "subject",
     "timepoint",
@@ -209,9 +214,17 @@ CSV.write(scratchfiles("uploads", "timepoints_metadata.csv"), select(filtcols,
     )
 )
 
+filtbrain = let keep_subj = Set(collect(zip(filtcols.subject, filtcols.timepoint)))
+    keep_rows = map(row-> (row.subject, row.timepoint) in keep_subj, eachrow(volumes))
+    volumes[keep_rows, :]
+end
+
+CSV.write(scratchfiles("uploads", "brain_normalized.csv"), select(filtbrain, Not(["AgeInDays", "Sex"])))
+
+
 #- 
 
 Resonance.write_arrow(scratchfiles("uploads", "taxa.arrow"), taxa[taxrank.(features(taxa)) .== :species, filtcols.sample])
 Resonance.write_arrow(scratchfiles("uploads", "ecs.arrow"), ecs[:, filtcols.sample])
 Resonance.write_arrow(scratchfiles("uploads", "kos.arrow"), kos[:, filtcols.sample])
-# Resonance.write_arrow(scratchfiles("uploads", "unirefs.arrow"), unirefs[:, filtcols.sample]; unirefs = true)
+Resonance.write_arrow(scratchfiles("uploads", "unirefs.arrow"), unirefs[:, filtcols.sample]; unirefs = true)

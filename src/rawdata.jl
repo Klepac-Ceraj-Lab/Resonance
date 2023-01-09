@@ -117,3 +117,47 @@ function load_raw_humann(; kind="genefamilies", overwrite=false, names=false, st
     read_gfs_arrow(; kind)
 end
 
+function load_raw_brain()
+    brain = XLSX.readxlsx(datafiles("AllResonanceVols_Resonance_only.xlsx"))
+    volumes = let 
+        tb = brain["RESONANCE"]["A2:CW1181"]
+    
+        df = DataFrame(tb[2:end, :], string.(vec(tb[1, :])))
+        contains(brain["RESONANCE"]["CZ2"], "CSF") || error("CSF col missing")
+        contains(brain["RESONANCE"]["DA2"], "GM") || error("GM col missing")
+        contains(brain["RESONANCE"]["DB2"], "WM") || error("GM col missing")
+    
+        df."CSF (ignore)" = vec(brain["RESONANCE"]["CZ3:CZ1181"])
+        df."Gray-matter" = vec(brain["RESONANCE"]["DA3:DA1181"])
+        df."White-matter" = vec(brain["RESONANCE"]["DB3:DB1181"])
+    
+        rename!(df, "missing" => "Sex")
+        for col in ["Cohort", "ID", "Session", "Sex"]
+            df[!, col] = String.(df[!, col])
+        end
+        df.AgeInDays = Float64[ismissing(x) ? missing : x for x in df.AgeInDays]
+    
+        for (cidx, row) in zip(vec(brain["Tissue Labels"]["B2:B97"]), eachrow(brain["Tissue Labels"]["C2:F97"]))
+            lab = join(strip.(coalesce.(row, ""), Ref(['“', '”'])), ' ')
+            lab = replace(lab, " missing"=> "", r" $"=> "", " "=>"-")
+            lab = strip(lab, '-')
+            cidx isa Number && rename!(df, string(cidx) => lab)
+            df[!, lab] = Float64[ismissing(x) ? 0. : x for x in df[!, lab]]
+        end
+    
+    
+        df.subject = map(df.ID) do id
+            m = match(r"^sub-BAMBAM(\d+)$", id)
+            isnothing(m) && error("$id is wrong format")
+            parse(Int, m.captures[1])
+        end
+    
+        df.timepoint = map(df.Session) do s
+            m = match(r"^ses-(\d+)$", s)
+            isnothing(m) && error("$s is wrong format")
+            parse(Int, m.captures[1])
+        end
+        df
+    end
+    return select(volumes, Cols(:subject, :timepoint, Not(["Cohort", "ID", "Session", "CSF (ignore)"])))
+end
