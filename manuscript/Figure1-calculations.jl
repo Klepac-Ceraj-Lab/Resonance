@@ -23,7 +23,7 @@ kos = kos[:, findall(!ismissing, get(kos, :ageMonths))]
 kos = filter(!hastaxon, kos)
 
 # metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
-brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
+brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata, samplefield="omni")
 
 
 # @assert all(samplenames(species) .== samplenames(unirefs))
