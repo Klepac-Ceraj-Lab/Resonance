@@ -11,7 +11,7 @@ mdata = Resonance.load(Metadata())
 
 
 species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
-# unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
+unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
 # # unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
 
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
@@ -27,22 +27,7 @@ brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
 
 
 # @assert all(samplenames(species) .== samplenames(unirefs))
-@assert all(samplenames(species) .== samplenames(ecs))
-@assert all(samplenames(species) .== samplenames(kos))
-
-uidx = let md = DataFrame(Microbiome.metadata(taxa))
-    smp = Set(unique(md, :subject).sample)
-    findall(s-> s in smp, samplenames(taxa))
-end
-
-buidx = let md = DataFrame(Microbiome.metadata(brain))
-    grp = groupby(md, :subject)
-    smp = map(keys(grp)) do g
-        idx = findfirst(grp[g].hassample)
-        return isnothing(idx) ? first(grp[g].sample) : grp[g].sample[idx]
-    end
-    findall(s-> s in smp, samplenames(brain))
-end
+@assert all(samplenames(species) .== samplenames(ecs) .== samplenames(kos))
 
 
 #-
@@ -50,7 +35,7 @@ end
 spedm = Microbiome.braycurtis(species)
 CSV.write(scratchfiles("spedm.csv"), Tables.table(spedm))
 # unidm = Microbiome.braycurtis(unirefs)
-CSV.write(scratchfiles("unidm.csv"), Tables.table(unidm))
+# CSV.write(scratchfiles("unidm.csv"), Tables.table(unidm))
 ecsdm = Microbiome.braycurtis(ecs)
 CSV.write(scratchfiles("ecsdm.csv"), Tables.table(ecsdm))
 kosdm = Microbiome.braycurtis(kos)
@@ -97,14 +82,14 @@ CSV.write(scratchfiles("permanovas_all.csv"), p)
 #-
 
 
-idx = findall(<(6), get(species, :ageMonths))
-p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
-                        get(species, :cogScorePercentile)[idx], 
-                        get(species, :ageMonths)[idx], 
-                        get(species, :sex)[idx], 
-                        get(species, :education)[idx]
-            ]; commlabels=["taxa", "UniRef90s"], mdlabels
-)
+# idx = findall(<(6), get(species, :ageMonths))
+# p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
+#                         get(species, :cogScorePercentile)[idx], 
+#                         get(species, :ageMonths)[idx], 
+#                         get(species, :sex)[idx], 
+#                         get(species, :education)[idx]
+#             ]; commlabels=["taxa", "UniRef90s"], mdlabels
+# )
 
 # idx = findall(<(6), get(metabolites, :ageMonths))
 # p2 = permanovas(metdm[idx,idx], [

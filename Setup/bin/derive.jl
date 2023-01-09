@@ -160,6 +160,8 @@ CSV.write(scratchfiles("uploads", "candace_wide.csv"), subset(taxmd, "subject"=>
 
 ## Uploads
 
+
+
 filtcols = @chain kids0120 begin
     sort(["subject", "timepoint"])
     groupby("subject")
@@ -212,4 +214,4 @@ CSV.write(scratchfiles("uploads", "timepoints_metadata.csv"), select(filtcols,
 Resonance.write_arrow(scratchfiles("uploads", "taxa.arrow"), taxa[taxrank.(features(taxa)) .== :species, filtcols.sample])
 Resonance.write_arrow(scratchfiles("uploads", "ecs.arrow"), ecs[:, filtcols.sample])
 Resonance.write_arrow(scratchfiles("uploads", "kos.arrow"), kos[:, filtcols.sample])
-Resonance.write_arrow(scratchfiles("uploads", "unirefs.arrow"), unirefs[:, filtcols.sample])
+# Resonance.write_arrow(scratchfiles("uploads", "unirefs.arrow"), unirefs[:, filtcols.sample]; unirefs = true)
