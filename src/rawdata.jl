@@ -111,9 +111,10 @@ function load_raw_metaphlan()
 end
 
 
-function load_raw_humann(; kind="genefamilies", overwrite=false, names=false, stratified=false)
+function load_raw_humann(; kind="genefamilies", overwrite=false, names=false, stratified=false, sample_filter=nothing)
     fname = joinpath(scratchfiles("genefunctions"), "$kind.arrow")
-    (!isfile(fname) || overwrite) && write_gfs_arrow(; kind, names, stratified)
+    @debug "writing to $fname"
+    (!isfile(fname) || overwrite) && write_gfs_arrow(; kind, names, stratified, sample_filter)
     read_gfs_arrow(; kind)
 end
 

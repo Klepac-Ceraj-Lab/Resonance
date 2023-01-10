@@ -5,26 +5,9 @@ using AlgebraOfGraphics
 
 mdata = Resonance.load_raw_metadata()
 taxa = Resonance.load_raw_metaphlan()
-ecs = Resonance.load_raw_humann(; kind = "ecs", names=true, stratified=false)
-kos = Resonance.load_raw_humann(; kind = "kos", names=true, stratified=false)
-unirefs = Resonance.load_raw_humann(; kind = "genefamilies", names=false, stratified=false)
-volumes = Resonance.load_raw_brain()
-
-@assert samplenames(kos) == samplenames(ecs) == samplenames(taxa)
-
 
 mdata.isMom = map(tp-> !ismissing(tp) && tp != "-8" && contains(tp, r"^pre"i), mdata.ECHOTPCoded)
 mdata.isKid = map(tp-> !ismissing(tp) && tp != "-8" && !contains(tp, r"^pre"i), mdata.ECHOTPCoded)
-
-knead = Resonance.load(ReadCounts())
-for p in [ecs, kos, unirefs]
-    set!(p, select(knead, "sample_uid"=>"sample", AsTable(["final pair1", "final pair2"])=> ByRow(row-> row[1]+row[2]) =>"read_depth"))
-end
-
-#- Samples
-
-
-
 
 # #- mgx / mbx
 
@@ -158,6 +141,9 @@ end
 
 isdir(scratchfiles("uploads")) || mkpath(scratchfiles("uploads"))
 
+
+#-
+
 candace = parse.(Int, readlines("data/candace_ids.txt"))
 CSV.write(scratchfiles("uploads", "candace_wide.csv"), subset(taxmd, "subject"=> ByRow(s-> s in candace)))
 
@@ -214,6 +200,9 @@ CSV.write(scratchfiles("uploads", "timepoints_metadata.csv"), select(filtcols,
     )
 )
 
+#-
+
+volumes = Resonance.load_raw_brain()
 filtbrain = let keep_subj = Set(collect(zip(filtcols.subject, filtcols.timepoint)))
     keep_rows = map(row-> (row.subject, row.timepoint) in keep_subj, eachrow(volumes))
     volumes[keep_rows, :]
@@ -225,6 +214,16 @@ CSV.write(scratchfiles("uploads", "brain_normalized.csv"), select(filtbrain, Not
 #- 
 
 Resonance.write_arrow(scratchfiles("uploads", "taxa.arrow"), taxa[taxrank.(features(taxa)) .== :species, filtcols.sample])
-Resonance.write_arrow(scratchfiles("uploads", "ecs.arrow"), ecs[:, filtcols.sample])
-Resonance.write_arrow(scratchfiles("uploads", "kos.arrow"), kos[:, filtcols.sample])
-Resonance.write_arrow(scratchfiles("uploads", "unirefs.arrow"), unirefs[:, filtcols.sample]; unirefs = true)
+
+
+#-
+
+ecs = Resonance.load_raw_humann(; kind = "ecs", overwrite = true, names=true, stratified=false, sample_filter = Set(kids0120.sample))
+kos = Resonance.load_raw_humann(; kind = "kos", overwrite = true, names=true, stratified=false, sample_filter = Set(kids0120.sample))
+unirefs = Resonance.load_raw_humann(; kind = "genefamilies", names=false, stratified=false, sample_filter = Set(kids0120.sample))
+
+@assert samplenames(unirefs) == samplenames(kos) == samplenames(ecs) == sort(filtcols.sample)
+
+run(Cmd(["ln", "-s", scratchfiles("genefunctions", "genefamilies.arrow"), scratchfiles("uploads", "genefamilies.arrow")]))
+run(Cmd(["ln", "-s", scratchfiles("genefunctions", "kos.arrow"), scratchfiles("uploads", "kos.arrow")]))
+run(Cmd(["ln", "-s", scratchfiles("genefunctions", "ecs.arrow"), scratchfiles("uploads", "ecs.arrow")]))

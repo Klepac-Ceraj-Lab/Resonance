@@ -24,7 +24,7 @@ function _downloader(id, dir)
 end
 
 function datadownload(::Taxa; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
-    if overwrite || !isfile("taxa.arrow")
+    if overwrite || !isfile(joinpath(inputdir, "taxa.arrow"))
         @info "Downloading taxonomic profiles!"
         _downloader(taxa_osfio, inputdir)
     else
@@ -35,7 +35,7 @@ end
 
 function datadownload(::Unirefs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     @debug overwrite inputdir
-    if overwrite || !isfile("unirefs.arrow")
+    if overwrite || !isfile(joinpath(inputdir, "unirefs.arrow")) || !isfile(joinpath(inputdir, "uniref_features.txt"))
         @info "Downloading Uniref profiles!"
         _downloader(genefamilies_osfio, inputdir)
     else
@@ -45,7 +45,7 @@ function datadownload(::Unirefs; basedir=pwd(), overwrite=false, inputdir=get(EN
 end
 
 function datadownload(::KOs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
-    if overwrite || !isfile("kos.arrow")
+    if overwrite || !isfile(joinpath(inputdir, "kos.arrow"))
         @info "Downloading KO profiles!"
         _downloader(kos_osfio, inputdir)
     else
@@ -55,7 +55,7 @@ function datadownload(::KOs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "
 end
 
 function datadownload(::ECs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
-    if overwrite || !isfile("ecs.arrow")
+    if overwrite || !isfile(joinpath(inputdir, "ecs.arrow"))
         @info "Downloading EC profiles!"
         _downloader(ecs_osfio, inputdir)
     else
@@ -65,7 +65,7 @@ function datadownload(::ECs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "
 end
 
 function datadownload(::Neuro; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
-    if overwrite || !isfile("brain_normalized.csv")
+    if overwrite || !isfile(joinpath(inputdir, "brain_normalized.csv"))
         @info "Downloading normalized brain data!"
         _downloader(brain_osfio, inputdir)
     else
@@ -75,7 +75,7 @@ function datadownload(::Neuro; basedir=pwd(), overwrite=false, inputdir=get(ENV,
 end
 
 function datadownload(::Timepoints; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
-    if overwrite || !isfile("timepoint_metadata.csv")
+    if overwrite || !isfile(joinpath(inputdir, "timepoint_metadata.csv"))
         @info "Downloading Timepoint metadata!"
         _downloader(timepoints_osfio, inputdir)
     else
