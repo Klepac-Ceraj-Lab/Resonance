@@ -124,7 +124,7 @@ end
 
 function load(::UnirefProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.Unirefs(); inputdir=inputfiles())
-    comm = read_arrow(inputfiles("unirefs.arrow"); featurefunc = genefunction)
+    comm = read_arrow(inputfiles("genefamilies.arrow"); featurefunc = genefunction)
     insert!(comm, timepoint_metadata; namecol=:sample)
     return comm[:, timepoint_metadata.sample]
 end

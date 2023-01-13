@@ -35,7 +35,7 @@ end
 
 function datadownload(::Unirefs; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
     @debug overwrite inputdir
-    if overwrite || !isfile(joinpath(inputdir, "unirefs.arrow")) || !isfile(joinpath(inputdir, "uniref_features.txt"))
+    if overwrite || !isfile(joinpath(inputdir, "genefamilies.arrow"))
         @info "Downloading Uniref profiles!"
         _downloader(genefamilies_osfio, inputdir)
     else
