@@ -48,8 +48,9 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 ```julia
 figure = Figure(; resolution = (2000, 1200))
 A = GridLayout(figure[1,1]; alignmode=Outside())
-BCDE = GridLayout(figure[1,2]; alignmode=Outside());
-FG = GridLayout(figure[2,1:2]; alignmode=Outside())
+BCDE = GridLayout(figure[1,2]; alignmode=Outside())
+F = GridLayout(figure[1,3]; alignmod=Outside())
+GH = GridLayout(figure[2,1:3]; alignmode=Outside())
 ```
 
 
@@ -66,7 +67,7 @@ A_histright = Axis(A[1,2]; xlabel = "Age (years)", xticks=2:2:16, alignmode=Insi
 hidedecorations!(A_img)
 hidespines!(A_img)
 
-# image!(A_img, rotr90(load("figures/fig1a_placeholder.png")))
+image!(A_img, rotr90(load("manuscript/assets/Figure1-graphic.pdf")))
 
 hist!(A_histleft, filter(<=(24), mdata.ageMonths); color = :darkgray)
 hist!(A_histright, filter(>(24), mdata.ageMonths) ./ 12; color = :darkgray, bins=8)
@@ -76,22 +77,31 @@ rowsize!(A, 1, Relative(1/5))
 colsize!(A, 2, Relative(1/3))
 linkyaxes!(A_histleft, A_histright)
 
-colsize!(figure.layout, 1, Relative(3/7))
 A_histleft.xticks = ([0,3,6,12], ["birth", "3m", "6m", "12m"])
-figure
 ```
 
 
 ### Ordinations
 
 ```julia
-B = Axis(BCDE[1,1]; title = "Taxa")
 spepco = fit(MDS, spedm; distances=true)
-sc = plot_pcoa!(B, spepco; color=get(species, :ageMonths))
 
-C = GridLayout(BCDE[2,1])
-Ca = Axis(E[1,1]; title = "Bacteroidetes")
-Cb = Axis(E[1,2]; title = "Firmicutes")
+divr = shannon(species) |> vec
+
+B = GridLayout(BCDE[1,1])
+Ba = Axis(B[1,1]; ylabel= "Age (months)", yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2))
+sc1 = scatter!(Ba, Resonance.loadings(spepco, 1), get(species, :ageMonths);
+        color = divr, colormap=:plasma)
+hlines!(Ba, [6, 18]; linestyle=:dash, color=:darkgray)
+Colorbar(B[1, 2], sc1; label="Shannon Diversity", flipaxis=true)
+
+C = Axis(BCDE[2,1]; title = "Taxa")
+sc2 = plot_pcoa!(C, spepco; color=get(species, :ageMonths))
+
+
+# C = GridLayout(BCDE[2,1])
+# Ca = Axis(C[1,1]; title = "Bacteroidetes")
+# Cb = Axis(C[1,2]; title = "Firmicutes")
 # Cc = Axis(E[1,3]; title = "Actinobacteria")
 
 # plot_pcoa!(Ca, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])), colormap=:Purples)
@@ -108,51 +118,69 @@ E = Axis(BCDE[2,2]; title = "Neuroimaging")
 brnpco = fit(MDS, brndm; distances=true)
 plot_pcoa!(E, brnpco; color=get(brain, :ageMonths))
 
-Colorbar(BCDE[1:2, 3], sc; label="Age (months)", flipaxis=true)
-
+Colorbar(BCDE[1:2, 3], sc2; label="Age (months)", flipaxis=true, ticks=0:24:120)
+figure
 ```
 
+### 1F - cogscores
 
-### 1F-G: Omnibus tests
+```julia
+Fa = Axis(F[1,1]; ylabel="Cog. function score", xlabel="Age (months)")
 
-#### 1F - PERMANOVA
+cogscores = scatter!(Fa, get(species, :ageMonths), get(species, :cogScore);
+        color = [a < 36 ? :seagreen : a > 60 ? :dodgerblue : :darkorchid for a in get(species, :ageMonths)],
+        xticks = 0:24:120, xminorticksvisible=true, xminorticks=IntervalsBetween(2)
+)
+
+Legend(F[2,1], [MarkerElement(; color=c, marker=:elipse) for c in [:seagreen, :darkorchid, :dodgerblue]], ["Mullen", "WPPSI", "WISC"];
+        orientation = :horizontal, tellheight=true, tellwidth=false)
+
+colsize!(figure.layout, 1, Relative(1/4))
+colsize!(figure.layout, 3, Relative(1/4))
+```
+
+### 1G-H: Omnibus tests
+
+#### 1G - PERMANOVA
 
 This is a permutation test of variance
 
 ```julia
-F = GridLayout(FG[1,1])
+G = GridLayout(GH[1,1])
 # Ba = Axis(B[1:2,1]; alignmode=Outside())
-Fa = Axis(F[1,1]; title="Under 6mo")
-Fb = Axis(F[1,2]; title="Over 18mo")
+Ga = Axis(G[1,1]; title="Under 6mo")
+Gb = Axis(G[1,2]; title="Over 18mo")
 ```
 
 ```julia
 # plot_permanovas!(Ba, CSV.read(scratchfiles("permanovas_all.csv"), DataFrame))
-plot_permanovas!(Fa, CSV.read(scratchfiles("permanovas_00to06.csv"), DataFrame))
-hideydecorations!(Fb)
-plot_permanovas!(Fb, CSV.read(scratchfiles("permanovas_18to120.csv"), DataFrame))
+plot_permanovas!(Ga, CSV.read(scratchfiles("permanovas_00to06.csv"), DataFrame))
+hideydecorations!(Gb)
+plot_permanovas!(Gb, CSV.read(scratchfiles("permanovas_18to120.csv"), DataFrame))
 
-colsize!(FG, 1, Relative(1/2))
-Label(FG[0,1], "PERMANOVAs")
+colsize!(GH, 1, Relative(1/2))
+# Label(GH[0,1], "PERMANOVAs")
 ```
 
 
-#### 1G - Mantel tests
+#### 1H - Mantel tests
 
 ```julia
-G = GridLayout(FG[1,2])
+H = GridLayout(GH[1,2])
 
 # Ca = Axis(C[1:2, 1]; alignmode=Outside())
-Ga = Axis(G[1,1]; title="Under 6mo")
-Gb = Axis(G[1,2]; title="Over 18mo")
-hideydecorations!(Gb)
+Ha = Axis(H[1,1]; title="Under 6mo")
+Hb = Axis(H[1,2]; title="Over 18mo")
+hideydecorations!(Hb)
 
 # plot_mantel!(Ca, CSV.read(scratchfiles("mantel_all.csv"), DataFrame))
-plot_mantel!(Ga, CSV.read(scratchfiles("mantel_00to06.csv"), DataFrame))
-plot_mantel!(Gb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
+plot_mantel!(Ha, CSV.read(scratchfiles("mantel_00to06.csv"), DataFrame))
+plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 
-Label(FG[0,2], "Mantel"; tellwidth=false)
+# Label(GH[0,2], "Mantel"; tellwidth=false)
 ```
+
+#### 1H - cogScores
 
 ### Labels & saving
 
@@ -189,13 +217,19 @@ Label(BCDE[2, 2, TopLeft()], "E",
         halign = :right
 )
 
-Label(F[1, 1, TopLeft()], "F",
+Label(figure[1, 3, TopLeft()], "F",
         textsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(G[1, 1, TopLeft()], "G",
+        textsize = 26,
+        font = "Open Sans Bold",
+        padding = (0, 5, 5, 0),
+        halign = :right
+)
+Label(H[1, 1, TopLeft()], "H",
         textsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
