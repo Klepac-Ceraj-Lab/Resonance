@@ -21,31 +21,31 @@ using JLD2
 ## Data Loading
 
 ```julia
-allcors              = JLD2.load(outputfiles("figure2_data.jld2"), "allcors")
-u6cors               = JLD2.load(outputfiles("figure2_data.jld2"), "u6cors")
-o18cors              = JLD2.load(outputfiles("figure2_data.jld2"), "o18cors")
-allcors_age          = JLD2.load(outputfiles("figure2_data.jld2"), "allcors_age")
-u6cors_age           = JLD2.load(outputfiles("figure2_data.jld2"), "u6cors_age")
-o18cors_age          = JLD2.load(outputfiles("figure2_data.jld2"), "o18cors_age")
-all_neuroactive      = JLD2.load(outputfiles("figure2_data.jld2"), "all_neuroactive")
-u6_neuroactive       = JLD2.load(outputfiles("figure2_data.jld2"), "u6_neuroactive")
-o18_neuroactive      = JLD2.load(outputfiles("figure2_data.jld2"), "o18_neuroactive")
-all_neuroactive_full = JLD2.load(outputfiles("figure2_data.jld2"), "all_neuroactive_full")
-u6_neuroactive_full  = JLD2.load(outputfiles("figure2_data.jld2"), "u6_neuroactive_full")
-o18_neuroactive_full = JLD2.load(outputfiles("figure2_data.jld2"), "o18_neuroactive_full")
-unimdata             = JLD2.load(outputfiles("figure2_data.jld2"), "unimdata")
+cors_00to120              = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_00to120")
+cors_00to06               = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_00to06")
+cors_18to120              = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_18to120")
+cors_00to120_age          = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_00to120_age")
+cors_00to06_age           = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_00to06_age")
+cors_18to120_age          = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_18to120_age")
+neuroactive_00to120       = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_00to120")
+neuroactive_00to06        = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_00to06")
+neuroactive_00to120       = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_00to120")
+neuroactive_full_00to120  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_full_00to120")
+neuroactive_full_00to06   = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_full_00to06")
+neuroactive_full_00to120  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_full_00to120")
+unimdata             = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "unimdata")
 ```
 
 ## Load FSEA
 
 
 ```julia
-allfsdf = CSV.read(outputfiles("fsea_all_consolidated.csv"), DataFrame)
-allfsdf2 = CSV.read(outputfiles("fsea_all.csv"), DataFrame)
-u6fsdf = CSV.read(outputfiles("fsea_u6_consolidated.csv"), DataFrame)
-u6fsdf2 = CSV.read(outputfiles("fsea_u6.csv"), DataFrame)
-o18fsdf = CSV.read(outputfiles("fsea_o18_consolidated.csv"), DataFrame)
-o18fsdf2 = CSV.read(outputfiles("fsea_o18.csv"), DataFrame)
+allfsdf = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
+allfsdf2 = CSV.read(scratchfiles("figure2", "fsea_all.csv"), DataFrame)
+u6fsdf = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
+u6fsdf2 = CSV.read(scratchfiles("figure2", "fsea_u6.csv"), DataFrame)
+o18fsdf = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
+o18fsdf2 = CSV.read(scratchfiles("figure2", "fsea_o18.csv"), DataFrame)
 ```
 
 
@@ -128,9 +128,9 @@ colgap!(B, Fixed(4))
 let
     gs = "Acetate synthesis II"
     panel = C
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
+    ixs = neuroactive_full_00to06[gs]
+    cs = filter(!isnan, cors_00to06[ixs])
+    acs = filter(!isnan, cors_00to06[Not(ixs)])
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
@@ -141,9 +141,9 @@ end
 let
     gs = "Menaquinone synthesis (vitamin K2) I"
     panel = D
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
+    ixs = neuroactive_full_00to06[gs]
+    cs = filter(!isnan, cors_00to06[ixs])
+    acs = filter(!isnan, cors_00to06[Not(ixs)])
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
@@ -153,9 +153,9 @@ end
 let
     gs = "Propionate degradation I"
     panel = E
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
+    ixs = neuroactive_full_00to06[gs]
+    cs = filter(!isnan, cors_00to06[ixs])
+    acs = filter(!isnan, cors_00to06[Not(ixs)])
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
@@ -165,9 +165,9 @@ end
 let
     gs = "Propionate synthesis I"
     panel = F
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
+    ixs = neuroactive_full_00to06[gs]
+    cs = filter(!isnan, cors_00to06[ixs])
+    acs = filter(!isnan, cors_00to06[Not(ixs)])
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
@@ -187,7 +187,7 @@ let
     df = sort(subset(allfsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
     ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="All ages")
-    m = median(allcors)
+    m = median(cors_00to120)
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -197,7 +197,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, allcors[all_neuroactive_full[row.geneset]])
+        y = filter(!isnan, cors_00to120[neuroactive_full_00to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -210,7 +210,7 @@ let
                 xlabel="correlation", title="Under 6mo")
     hideydecorations!(ax, grid=false)
 
-    m = median(u6cors)
+    m = median(cors_00to06)
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -220,7 +220,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, u6cors[u6_neuroactive_full[row.geneset]])
+        y = filter(!isnan, cors_00to06[neuroactive_full_00to06[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -232,7 +232,7 @@ let
     ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="over 18")
     hideydecorations!(ax, grid=false)
-    m = median(o18cors)
+    m = median(cors_18to120)
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -242,7 +242,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, o18cors[o18_neuroactive_full[row.geneset]])
+        y = filter(!isnan, cors_18to120[neuroactive_full_00to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end

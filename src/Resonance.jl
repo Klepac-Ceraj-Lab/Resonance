@@ -108,9 +108,11 @@ using Arrow
 using AlgebraOfGraphics
 using CairoMakie
 using CategoricalArrays
+using CodecZlib
 using ColorSchemes
 using Combinatorics
 using Dates
+using Dictionaries
 using LinearAlgebra
 using MultivariateStats
 using PERMANOVA
