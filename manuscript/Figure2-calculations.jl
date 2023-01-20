@@ -14,7 +14,7 @@ using Dates
 using JLD2
 using MultipleTesting
 
-const adjust = MultipleTesting.adjust
+const adjust = adjust
 ## Data Loading
 
 mdata = Resonance.load(Metadata())
@@ -125,7 +125,7 @@ let
     for spc in names(indf, Not(non_spec_cols))
         @info spc
             
-        0.15 < prevalence(indf[!, spc]) < 0.9 || continue
+        0.15 < prevalence(indf[!, spc]) < 1 || continue
         df = indf[:, ["ageMonths", "cogScore", "quartile", "read_depth", "education"]]
         df.bug = Int.(indf[!, spc] .> 0)
 
@@ -193,11 +193,13 @@ cors_00to06_age = vec(cor(get(unirefs_00to06, :ageMonths), abundances(unirefs_00
 cors_18to120_age = vec(cor(get(unirefs_18to120, :ageMonths), abundances(unirefs_18to120), dims=2))
 
 neuroactive_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_00to120)))
-neuroactive_full_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_00to120)); consolidate=false)
 neuroactive_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_00to06)))
-neuroactive_full_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_00to06)); consolidate=false)
 neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_18to120)))
+
+neuroactive_full_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_00to120)); consolidate=false)
+neuroactive_full_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_00to06)); consolidate=false)
 neuroactive_full_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), featurenames(unirefs_18to120)); consolidate=false)
+
 
 isdir(scratchfiles("figure2")) || mkpath(scratchfiles("figure2"))
 
@@ -248,7 +250,7 @@ let
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), tmp)
 end
@@ -285,9 +287,9 @@ let
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
-    CSV.write(scratchfiles("figure2", "fsea_all.csv"), tmp)
+    CSV.write(scratchfiles("figure2", "fsea_all_00to120.csv"), tmp)
 
 end
 
@@ -324,7 +326,7 @@ let
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), tmp)
 end
@@ -362,9 +364,9 @@ let
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
-    CSV.write(scratchfiles("figure2", "fsea_u6.csv"), tmp)
+    CSV.write(scratchfiles("figure2", "fsea_all_00to06.csv"), tmp)
 end
 
 ### Kids over 18 months
@@ -400,7 +402,7 @@ let
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(scratchfiles("figure2", "fsea_consolidated_18to120.csv"), tmp)
 end
@@ -437,7 +439,7 @@ let
 
     append!(tmp, tmp2)
     subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = MultipleTesting.adjust(tmp.pvalue, BenjaminiHochberg())
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
-    CSV.write(scratchfiles("figure2", "fsea_18to120.csv"), tmp)
+    CSV.write(scratchfiles("figure2", "fsea_all_18to120.csv"), tmp)
 end

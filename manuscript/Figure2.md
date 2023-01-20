@@ -41,11 +41,11 @@ unimdata                  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2
 
 ```julia
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
-fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all.csv"), DataFrame)
+fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
 fsdf_00to06 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
-fsdf2_00to06 = CSV.read(scratchfiles("figure2", "fsea_u6.csv"), DataFrame)
-fsdf_18to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
-fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_o18.csv"), DataFrame)
+fsdf2_00to06 = CSV.read(scratchfiles("figure2", "fsea_all_00to06.csv"), DataFrame)
+fsdf_18to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_18to120.csv"), DataFrame)
+fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_all_18to120.csv"), DataFrame)
 ```
 
 
