@@ -75,7 +75,7 @@ function datadownload(::Neuro; basedir=pwd(), overwrite=false, inputdir=get(ENV,
 end
 
 function datadownload(::Timepoints; basedir=pwd(), overwrite=false, inputdir=get(ENV, "INPUT_FILES", joinpath(basedir, "input")))
-    if overwrite || !isfile(joinpath(inputdir, "timepoint_metadata.csv"))
+    if overwrite || !isfile(joinpath(inputdir, "timepoints_metadata.csv"))
         @info "Downloading Timepoint metadata!"
         _downloader(timepoints_osfio, inputdir)
     else
