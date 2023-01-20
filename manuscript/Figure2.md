@@ -21,6 +21,12 @@ using JLD2
 ## Data Loading
 
 ```julia
+mdata = Resonance.load(Metadata())
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+taxdf = comm2wide(taxa)
+```
+
+```julia
 cors_00to120              = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_00to120")
 cors_00to06               = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_00to06")
 cors_18to120              = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "cors_18to120")
@@ -40,7 +46,7 @@ unimdata                  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2
 
 
 ```julia
-speclms = CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame)
+speclms = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
 speclms_pa = CSV.read(tablefiles("lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
 fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
@@ -68,34 +74,14 @@ G = GridLayout(figure[3,1:2]; alignmode=Outside())
 
 
 ```julia
+aax = Axis(A[1,1]; title = L"$cogScore \sim species + readdepth + education + age$", ylabel=L"$-log_2(P)$", xlabel = "Coef.")
+scatter!(aax, speclms."Coef.", -1 .* log2.(speclms.qvalue), color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms.qvalue))
 
+bax1 = Axis(B[1,1]; title = "Faecalibacterium prausnitzii", ylabel="cogScore", xlabel="Relative Abundance (%)")
+scatter!(bax1, taxdf."Faecalibacterium_prausnitzii", taxdf.cogScore)
 
-colgap!(A, Fixed(4))
-
-bax = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
-let
-    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScore, date = unimdata.date)
-    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
-    df.grp = categorical(map(df.age) do a
-        a < 6 && return "0-6"
-        a < 12 && return "6-12"
-        a < 18 && return "12-18"
-        a < 24 && return "18-24"
-        return "> 24"
-    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
-
-    grp = groupby(df, "grp")
-    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
-            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
-end
-
-Legend(B[1,2], [MarkerElement(; color = :dodgerblue, marker=:circle), MarkerElement(; color = :orangered, marker=:circle)],
-               ["Pre-covid", "Post-covid"]
-)
-colgap!(B, Fixed(4))
+figure
 ```
-
 
 
 ```julia
@@ -211,7 +197,6 @@ let
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
-        @info i
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
             row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
