@@ -40,6 +40,8 @@ unimdata                  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2
 
 
 ```julia
+speclms = CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame)
+speclms_pa = CSV.read(tablefiles("lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
 fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
 fsdf_00to06 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
@@ -66,34 +68,7 @@ G = GridLayout(figure[3,1:2]; alignmode=Outside())
 
 
 ```julia
-aax1 = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
-aax2 = Axis(A[1,2]; xlabel = "Age (years)")
-hideydecorations!(aax2)
-linkyaxes!(aax1, aax2)
 
-let
-    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-
-    cs = ColorSchemes.colorschemes[:Set2_7]
-    function colorage(age)
-        age <= 36 && return cs[1] # mullen
-        age <= 60 && return cs[2] # WPPSI
-        return cs[3] # WISC
-    end
-    ages = unimdata.ageMonths[u2y]
-    scatter!(aax1, ages, unimdata.cogScore[u2y]; color=colorage.(ages))
-
-    ages = unimdata.ageMonths[o2y]
-    scatter!(aax2, ages ./ 12, unimdata.cogScore[o2y]; color=colorage.(ages))
-    
-    vlines!(aax1, [6, 12, 18]; linestyle=:dash, color=:gray)
-    # TODO: add colors for training/test sets in later models
-
-    Legend(A[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["Mullen", "WPPSI", "WISC"], "Assessment"; 
-    )
-end
 
 colgap!(A, Fixed(4))
 

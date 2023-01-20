@@ -126,15 +126,34 @@ figure
 ### 1F - cogscores
 
 ```julia
-Fa = Axis(F[1,1]; ylabel="Cog. function score", xlabel="Age (months)")
+fax1 = Axis(F[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
+fax2 = Axis(F[1,2]; xlabel = "Age (years)")
+hideydecorations!(fax2)
+linkyaxes!(fax1, fax2)
 
-cogscores = scatter!(Fa, get(species, :ageMonths), get(species, :cogScore);
-        color = [a < 36 ? :seagreen : a > 60 ? :dodgerblue : :darkorchid for a in get(species, :ageMonths)],
-        xticks = 0:24:120, xminorticksvisible=true, xminorticks=IntervalsBetween(2)
-)
+let
+    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
+    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
 
-Legend(F[2,1], [MarkerElement(; color=c, marker=:elipse) for c in [:seagreen, :darkorchid, :dodgerblue]], ["Mullen", "WPPSI", "WISC"];
-        orientation = :horizontal, tellheight=true, tellwidth=false)
+    cs = ColorSchemes.colorschemes[:Set2_7]
+    function colorage(age)
+        age <= 36 && return cs[1] # mullen
+        age <= 60 && return cs[2] # WPPSI
+        return cs[3] # WISC
+    end
+    ages = unimdata.ageMonths[u2y]
+    scatter!(fax1, ages, unimdata.cogScore[u2y]; color=colorage.(ages))
+
+    ages = unimdata.ageMonths[o2y]
+    scatter!(fax2, ages ./ 12, unimdata.cogScore[o2y]; color=colorage.(ages))
+    
+    vlines!(fax1, [6, 12, 18]; linestyle=:dash, color=:gray)
+    # TODO: add colors for training/test sets in later models
+
+    Legend(F[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
+                      ["Mullen", "WPPSI", "WISC"], "Assessment"; 
+    )
+end
 
 colsize!(figure.layout, 1, Relative(1/4))
 colsize!(figure.layout, 3, Relative(1/4))
