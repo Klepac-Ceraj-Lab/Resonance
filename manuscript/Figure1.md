@@ -16,6 +16,7 @@ Then, we'll load in the different data sources.
 ```julia
 mdata = Resonance.load(Metadata())
 
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata) # this can take a bit
 species = filter(t-> taxrank(t) == :species, taxa)
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)

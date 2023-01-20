@@ -4,8 +4,7 @@
 function load_raw_metadata(;
     subject_centric_path = datafiles("Subject_centric_120522.xlsx"),
     sample_centric_path  = datafiles("Sample_centric_120522.xlsx"),
-    timepoint_centric_path = datafiles("Timepoint_centric_120522.xlsx")
-    )
+    timepoint_centric_path = datafiles("Timepoint_centric_120522.xlsx"))
 
     samplemeta = @chain airtable_metadata() begin
         groupby(["subject", "timepoint"])

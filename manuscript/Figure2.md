@@ -33,19 +33,19 @@ neuroactive_00to120       = JLD2.load(scratchfiles("figure2", "figure2_data.jld2
 neuroactive_full_00to120  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_full_00to120")
 neuroactive_full_00to06   = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_full_00to06")
 neuroactive_full_00to120  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "neuroactive_full_00to120")
-unimdata             = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "unimdata")
+unimdata                  = JLD2.load(scratchfiles("figure2", "figure2_data.jld2"), "unimdata")
 ```
 
 ## Load FSEA
 
 
 ```julia
-allfsdf = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
-allfsdf2 = CSV.read(scratchfiles("figure2", "fsea_all.csv"), DataFrame)
-u6fsdf = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
-u6fsdf2 = CSV.read(scratchfiles("figure2", "fsea_u6.csv"), DataFrame)
-o18fsdf = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
-o18fsdf2 = CSV.read(scratchfiles("figure2", "fsea_o18.csv"), DataFrame)
+fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
+fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all.csv"), DataFrame)
+fsdf_00to06 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
+fsdf2_00to06 = CSV.read(scratchfiles("figure2", "fsea_u6.csv"), DataFrame)
+fsdf_18to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
+fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_o18.csv"), DataFrame)
 ```
 
 
@@ -99,7 +99,7 @@ colgap!(A, Fixed(4))
 
 bax = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
 let
-    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScore, date = unimdata.assessmentDate)
+    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScore, date = unimdata.date)
     subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
     df.grp = categorical(map(df.age) do a
         a < 6 && return "0-6"
@@ -179,12 +179,12 @@ end
 
 ```julia
 let
-    genesets = union(subset(allfsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScorePercentile"))).geneset,
-                     subset(u6fsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScorePercentile"))).geneset,
-                     subset(o18fsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScorePercentile"))).geneset
+    genesets = union(subset(fsdf2_00to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(fsdf2_00to06, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(fsdf2_18to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset
     )
   
-    df = sort(subset(allfsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
+    df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="All ages")
     m = median(cors_00to120)
@@ -205,7 +205,7 @@ let
 
     ####
 
-    df = sort(subset(u6fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
+    df = sort(subset(fsdf2_00to06, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="Under 6mo")
     hideydecorations!(ax, grid=false)
@@ -228,7 +228,7 @@ let
 
     ####
 
-    df = sort(subset(o18fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
+    df = sort(subset(fsdf2_18to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="correlation", title="over 18")
     hideydecorations!(ax, grid=false)
@@ -236,13 +236,14 @@ let
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
+        @info i
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
             row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, cors_18to120[neuroactive_full_00to120[row.geneset]])
+        y = filter(!isnan, cors_18to120[neuroactive_full_18to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -284,104 +285,13 @@ Label(G[1, 1, TopLeft()], "G",
 )
 
 # colgap!(figure.layout, 2, -35)
-save(figurefiles("Figure2.svg"), fig)
-save(figurefiles("Figure2.png"), fig)
+save(figurefiles("Figure2.svg"), figure)
+save(figurefiles("Figure2.png"), figure)
 figure
 ```
 
 
 ## Supplement
-
-### Comparing normalized to un-normalized cogScores
-
-```julia
-fig = Figure()
-A = GridLayout(fig[1,1])
-B = GridLayout(fig[2,1])
-
-aax1 = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
-aax2 = Axis(A[1,2]; xlabel = "Age (years)")
-hideydecorations!(aax2)
-linkyaxes!(aax1, aax2)
-
-aax3 = Axis(A[1,3]; xlabel = "Age (months)", ylabel = "cogScorePercentile", xticks=(4:4:24))
-aax4 = Axis(A[1,4]; xlabel = "Age (years)")
-
-let
-    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-
-    cs = ColorSchemes.colorschemes[:Set2_7]
-    function colorage(age)
-        age <= 36 && return cs[1] # mullen
-        age <= 60 && return cs[2] # WPPSI
-        return cs[3] # WISC
-    end
-    ages = unimdata.ageMonths[u2y]
-    scatter!(aax1, ages, unimdata.cogScore[u2y]; color=colorage.(ages))
-    scatter!(aax3, ages, unimdata.cogScorePercentile[u2y]; color=colorage.(ages))
-
-    ages = unimdata.ageMonths[o2y]
-    scatter!(aax2, ages ./ 12, unimdata.cogScore[o2y]; color=colorage.(ages))
-    scatter!(aax4, ages ./ 12, unimdata.cogScorePercentile[o2y]; color=colorage.(ages))
-    
-    vlines!(aax1, [6, 12, 18]; linestyle=:dash, color=:gray)
-    vlines!(aax3, [6, 12, 18]; linestyle=:dash, color=:gray)
-    # TODO: add colors for training/test sets in later models
-
-    Legend(A[2, 1:4], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["Mullen", "WPPSI", "WISC"]; orientation=:horizontal, tellheight=true, tellwidth=false
-    )
-end
-
-
-
-bax1 = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
-let
-    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScore, date = unimdata.assessmentDate)
-    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
-    df.grp = categorical(map(df.age) do a
-        a < 6 && return "0-6"
-        a < 12 && return "6-12"
-        a < 18 && return "12-18"
-        a < 24 && return "18-24"
-        return "> 24"
-    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
-
-    grp = groupby(df, "grp")
-    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax1, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
-            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
-end
-
-bax2 = Axis(B[1,2]; ylabel = "cogScorePercentile", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
-let
-    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScorePercentile, date = unimdata.assessmentDate)
-    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
-    df.grp = categorical(map(df.age) do a
-        a < 6 && return "0-6"
-        a < 12 && return "6-12"
-        a < 18 && return "12-18"
-        a < 24 && return "18-24"
-        return "> 24"
-    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
-
-    grp = groupby(df, "grp")
-    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax2, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
-            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
-end
-
-Legend(B[2,1:2], [MarkerElement(; color = :dodgerblue, marker=:circle), 
-                  MarkerElement(; color = :orangered, marker=:circle)],
-            ["Pre-covid", "Post-Covid"]; orientation=:horizontal, tellheight=true, tellwidth=false
-)
-
-
-save(figurefiles("Supp_Figure2.svg"), fig)
-save(figurefiles("Supp_Figure2.png"), fig)
-fig
-```
 
 ### Other FSEA Plots
 
