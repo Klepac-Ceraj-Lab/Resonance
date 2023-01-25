@@ -31,10 +31,10 @@ taxdf = comm2wide(taxa)
 
 
 ```julia
-speclms_00to120 = subset(CSV.read(tablefiles("lms_species_00to120.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
-speclms_00to06 = subset(CSV.read(tablefiles("lms_species_00to06.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
-speclms_18to120 = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
-speclms = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
+speclms_00to120 = subset(CSV.read(tablefiles("lms_species_00to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_00to06 = subset(CSV.read(tablefiles("lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_18to120 = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+
 speclms_pa = CSV.read(tablefiles("lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
 fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
@@ -53,15 +53,19 @@ neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>"
 
 
 ```julia
-sigs = subset(speclms, "qvalue"=> ByRow(<(0.2)))
-for i in eachindex(sigs.species)
-    sp = sigs.species[i]
-    prev_00to120 = prevalence(taxa[Regex(sp), mdata.filter_00to120])
-    prev_00to06 = prevalence(taxa[Regex(sp), mdata.filter_00to06])
-    prev_18to120 = prevalence(taxa[Regex(sp), mdata.filter_18to120])
-    meanab_00to120 = mean(abundances(taxa[Regex(sp), mdata.filter_00to120]))
-    meanab_00to06 = mean(abundances(taxa[Regex(sp), mdata.filter_00to06]))
-    meanab_18to120 = mean(abundances(taxa[Regex(sp), mdata.filter_18to120]))
+let 
+    sigs_00to120 = subset(speclms_00to120, "qvalue"=> ByRow(<(0.2)))
+    sigs_00to06 = subset(speclms_00to06, "qvalue"=> ByRow(<(0.2)))
+    sigs_18to120 = subset(speclms_18to120, "qvalue"=> ByRow(<(0.2)))
+
+    for i in eachindex(sigs.species)
+        sp = sigs.species[i]
+        prev_00to120 = prevalence(taxa[Regex(sp), mdata.filter_00to120])
+        prev_00to06 = prevalence(taxa[Regex(sp), mdata.filter_00to06])
+        prev_18to120 = prevalence(taxa[Regex(sp), mdata.filter_18to120])
+        meanab_00to120 = mean(abundances(taxa[Regex(sp), mdata.filter_00to120]))
+        meanab_00to06 = mean(abundances(taxa[Regex(sp), mdata.filter_00to06]))
+        meanab_18to120 = mean(abundances(taxa[Regex(sp), mdata.filter_18to120]))
 
     
 end
