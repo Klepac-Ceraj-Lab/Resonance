@@ -31,7 +31,8 @@ export loadings,
        plot_mantel!,
        plot_pcoa!,
        commonname,
-       comm2wide
+       comm2wide,       
+       runlms
 
 # Machine Learning
 export  # 0. structs/types
@@ -145,5 +146,6 @@ include("omnibus.jl")
 include("prediction.jl")
 include("data_loading.jl")
 include("percentiles.jl")
+include("lms.jl")
 
 end

@@ -14,7 +14,7 @@ using Dates
 using JLD2
 using MultipleTesting
 
-const adjust = adjust
+const adjust = MultipleTesting.adjust
 ## Data Loading
 
 mdata = Resonance.load(Metadata())
@@ -37,7 +37,8 @@ brain_roi = [
     "left-cerebellum-white-matter",
     "right-thalamus-proper",
     "left-thalamus-proper",
-    "insula",
+    "right-insula",
+    "left-insula",
     "Gray-matter",
     "White-matter"
 ]
@@ -69,55 +70,9 @@ ecsdf.quartile = specdf.quartile
 
 ## GLMs
 
-let 
-    indf = specdf[specdf.filter_18to120, :]
-    outfile = tablefiles("lms_species_18to120.csv")
-    lmresults = DataFrame()
-
-    for spc in names(indf, Not(non_spec_cols))
-        @info spc
-            
-        over0 = indf[!, spc] .> 0
-        sum(over0) / size(indf, 1) > 0.20 || continue
-        # ab = collect(indf[!, spc] .+ (minimum(indf[over0, spc])) / 2) # add half-minimum non-zerovalue
-
-        df = indf[:, ["ageMonths", "cogScore", "quartile", "read_depth", "education"]]
-        df.bug = asin.(sqrt.(indf[!, spc]))
-
-        mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        ct.species .= spc
-        ct.kind .= "cogScore"
-        append!(lmresults, ct)
-
-        mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        subset!(ct, :Name=> ByRow(q-> !contains(q, "middle")))
-        droplevels!(df.quartile)
-        ct.species .= spc
-        ct.kind .= "quartile"
-        append!(lmresults, ct)
-    end
-
-    select!(lmresults, Cols(:species, :Name, :))
-    rename!(lmresults, "Pr(>|t|)"=>"pvalue");
-
-    @chain lmresults begin
-        subset!(:Name => ByRow(x->
-            !any(y-> contains(x, y), 
-                ("(Intercept)", "ageMonths", "read_depth", "education")
-                )
-            )
-        )
-
-        groupby(:kind)
-        transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
-        sort!(:qvalue)
-    end
-
-    CSV.write(outfile, lmresults)
-    lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-end
+runlms(specdf[specdf.filter_00to120, :], tablefiles("lms_species_00to120.csv"), names(indf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_18to120, :], tablefiles("lms_species_18to120.csv"), names(indf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_00to06, :], tablefiles("lms_species_00to06.csv"), names(indf, Not(non_spec_cols)))
 
 let 
     indf = unique(sort(braindf, [:subject, :timepoint]; rev=true), :subject)

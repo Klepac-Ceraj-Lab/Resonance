@@ -31,6 +31,9 @@ taxdf = comm2wide(taxa)
 
 
 ```julia
+speclms_00to120 = subset(CSV.read(tablefiles("lms_species_00to120.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
+speclms_00to06 = subset(CSV.read(tablefiles("lms_species_00to06.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
+speclms_18to120 = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
 speclms = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "kind"=> ByRow(==("cogScore")))
 speclms_pa = CSV.read(tablefiles("lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
@@ -49,13 +52,27 @@ neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>"
 ```
 
 
+```julia
+sigs = subset(speclms, "qvalue"=> ByRow(<(0.2)))
+for i in eachindex(sigs.species)
+    sp = sigs.species[i]
+    prev_00to120 = prevalence(taxa[Regex(sp), mdata.filter_00to120])
+    prev_00to06 = prevalence(taxa[Regex(sp), mdata.filter_00to06])
+    prev_18to120 = prevalence(taxa[Regex(sp), mdata.filter_18to120])
+    meanab_00to120 = mean(abundances(taxa[Regex(sp), mdata.filter_00to120]))
+    meanab_00to06 = mean(abundances(taxa[Regex(sp), mdata.filter_00to06]))
+    meanab_18to120 = mean(abundances(taxa[Regex(sp), mdata.filter_18to120]))
+
+    
+end
+```
+
 ## Plotting
 
 ```julia
-figure = Figure(resolution=(900, 900))
+figure = Figure(resolution=(1200, 900))
 
-A = GridLayout(figure[1,1]; alignmode=Outside())
-B = GridLayout(figure[2,1]; alignmode=Outside())
+AB = GridLayout(figure[1,1]; alignmode=Outside())
 CDEF = GridLayout(figure[1:2,2]; alignmode=Outside())
 C = GridLayout(CDEF[1,1])
 D = GridLayout(CDEF[2,1])
@@ -66,11 +83,15 @@ G = GridLayout(figure[3,1:2]; alignmode=Outside())
 
 
 ```julia
-aax = Axis(A[1,1]; title = L"$cogScore \sim species + readdepth + education + age$", ylabel=L"$-log_2(P)$", xlabel = "Coef.")
-scatter!(aax, speclms."Coef.", -1 .* log2.(speclms.qvalue), color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms.qvalue))
+aax1 = Axis(AB[1,1]; title = "under 6mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.")
+aax2 = Axis(AB[1,2]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.")
+scatter!(aax1, speclms_00to06."Coef.", -1 .* log2.(speclms_00to06.qvalue), color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_00to06.qvalue))
+scatter!(aax2, speclms_18to120."Coef.", -1 .* log2.(speclms_18to120.qvalue), color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_18to120.qvalue))
 
-bax1 = Axis(B[1,1]; title = "Faecalibacterium prausnitzii", ylabel="cogScore", xlabel="Relative Abundance (%)")
-scatter!(bax1, taxdf."Faecalibacterium_prausnitzii", taxdf.cogScore)
+bax1 = Axis(AB[1,2]; )
+
+
+
 ```
 
 
@@ -136,7 +157,7 @@ let
     df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="T stat", title="All ages")
-    m = median(filter(!isnan, cors_00to120.t))
+    m = median(filter(x-> !isnan(x) && x < 7, cors_00to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -146,7 +167,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, cors_00to120.t[neuroactive_00to120[row.geneset]])
+        y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_00to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -159,7 +180,7 @@ let
                 xlabel="T stat", title="Under 6mo")
     hideydecorations!(ax, grid=false)
 
-    m = median(filter(!isnan, cors_00to06.t))
+    m = median(filter(x-> !isnan(x) && x < 7, cors_00to06.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -169,7 +190,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, cors_00to06.t[neuroactive_00to06[row.geneset]])
+        y = filter(x-> !isnan(x) && x < 7, cors_00to06.t[neuroactive_00to06[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -181,7 +202,7 @@ let
     ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="T stat", title="over 18")
     hideydecorations!(ax, grid=false)
-    m = median(filter(!isnan, cors_18to120.t))
+    m = median(filter(x-> !isnan(x) && x < 7, cors_18to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -191,7 +212,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, cors_18to120.t[neuroactive_18to120[row.geneset]])
+        y = filter(x-> !isnan(x) && x < 7, cors_18to120.t[neuroactive_18to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
