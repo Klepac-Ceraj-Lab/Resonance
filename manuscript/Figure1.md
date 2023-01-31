@@ -90,7 +90,7 @@ spepco = fit(MDS, spedm; distances=true)
 divr = shannon(species) |> vec
 
 B = GridLayout(BCDE[1,1])
-Ba = Axis(B[1,1]; ylabel= "Age (months)", yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2))
+Ba = Axis(B[1,1]; ylabel= "Age (months)", title = "Taxa", yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2))
 sc1 = scatter!(Ba, Resonance.loadings(spepco, 1), get(species, :ageMonths);
         color = divr, colormap=:plasma)
 hlines!(Ba, [6, 18]; linestyle=:dash, color=:darkgray)
@@ -107,7 +107,7 @@ sc2 = plot_pcoa!(C, spepco; color=get(species, :ageMonths))
 
 # plot_pcoa!(Ca, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])), colormap=:Purples)
 # plot_pcoa!(Cb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
-hideydecorations!(Cb)
+# hideydecorations!(Cb)
 # pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
 D = Axis(BCDE[1,2]; title = "Functions")
 
@@ -126,14 +126,14 @@ figure
 ### 1F - cogscores
 
 ```julia
-fax1 = Axis(F[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
-fax2 = Axis(F[1,2]; xlabel = "Age (years)")
+fax1 = Axis(F[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing))
+fax2 = Axis(F[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
 hideydecorations!(fax2)
 linkyaxes!(fax1, fax2)
 
 let
-    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
+    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
+    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
 
     cs = ColorSchemes.colorschemes[:Set2_7]
     function colorage(age)
@@ -141,22 +141,25 @@ let
         age <= 60 && return cs[2] # WPPSI
         return cs[3] # WISC
     end
-    ages = unimdata.ageMonths[u2y]
-    scatter!(fax1, ages, unimdata.cogScore[u2y]; color=colorage.(ages))
+    ages = mdata.ageMonths[u2y]
+    scatter!(fax1, ages, mdata.cogScore[u2y]; color=colorage.(ages))
 
-    ages = unimdata.ageMonths[o2y]
-    scatter!(fax2, ages ./ 12, unimdata.cogScore[o2y]; color=colorage.(ages))
+    ages = mdata.ageMonths[o2y]
+    scatter!(fax2, ages ./ 12, mdata.cogScore[o2y]; color=colorage.(ages))
     
-    vlines!(fax1, [6, 12, 18]; linestyle=:dash, color=:gray)
+    vlines!(fax1, [6, 18]; linestyle=:dash, color=:gray)
     # TODO: add colors for training/test sets in later models
 
-    Legend(F[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["Mullen", "WPPSI", "WISC"], "Assessment"; 
+    Legend(F[2, 1:2], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
+                      ["Mullen", "WPPSI", "WISC"], "Assessment";
+                      orientation = :horizontal, tellheight=true, tellwidth=false
     )
 end
 
 colsize!(figure.layout, 1, Relative(1/4))
 colsize!(figure.layout, 3, Relative(1/4))
+colgap!(F, Fixed(4))
+figure
 ```
 
 ### 1G-H: Omnibus tests
@@ -237,7 +240,7 @@ Label(BCDE[2, 2, TopLeft()], "E",
         halign = :right
 )
 
-Label(figure[1, 3, TopLeft()], "F",
+Label(F[1, 1, TopLeft()], "F",
         textsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
@@ -257,7 +260,7 @@ Label(H[1, 1, TopLeft()], "H",
 )
 
 save(figurefiles("Figure1.svg"), figure)
-save(figurefiles("Figure1.png"), figure)
+save("manuscript/assets/Figure1.png", figure)
 figure
 ```
 

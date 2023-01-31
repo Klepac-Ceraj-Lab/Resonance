@@ -318,31 +318,34 @@ colgap!(G, Fixed(4))
 ```
 
 ```julia
-for (label, layout) in zip(["A", "B"], [A, B])
-    Label(layout[1, 1, TopLeft()], label,
-        textsize = 26,
-        font = "Open Sans Bold",
-        padding = (0, 50, 5, 0),
-        halign = :right)
-end
+Label(AB[1, 1, TopLeft()], "A",
+    textsize = 26,
+    font = "Open Sans Bold",
+    padding = (0, 30, 5, 0),
+    halign = :right)
+Label(AB[1, 2, TopLeft()], "B",
+    textsize = 26,
+    font = "Open Sans Bold",
+    padding = (0, 120, 5, 0),
+    halign = :right)
+
 for (label, layout) in zip(["C", "D", "E", "F"], [C, D, E, F])
     Label(layout[1, 1, TopLeft()], label,
         textsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 40, 5, 0),
+        padding = (0, 30, 5, 0),
         halign = :right)
 end
-
+figure
 Label(G[1, 1, TopLeft()], "G",
         textsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 180, 5, 0),
+        padding = (0, 120, 5, 0),
         halign = :right
 )
-
 # colgap!(figure.layout, 2, -35)
+save("manuscript/assets/Figure2.png", figure)
 save(figurefiles("Figure2.svg"), figure)
-save(figurefiles("Figure2.png"), figure)
 figure
 ```
 
