@@ -21,6 +21,7 @@ function runlms(indf, outfile, featurecols;
         return NamedTuple(only(filter(row-> row.Name == modelcols[keyfeature], eachrow(ct))))
     end)
 
+    subset!(lmresults, "pvalue"=> ByRow(!isnan))
     DataFrames.transform!(lmresults, :pvalue => (col-> MultipleTesting.adjust(collect(col), BenjaminiHochberg())) => :qvalue)
     sort!(lmresults, :qvalue)
 

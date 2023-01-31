@@ -114,7 +114,9 @@ using ColorSchemes
 using Combinatorics
 using Dates
 using Dictionaries
+using GLM
 using LinearAlgebra
+using MultipleTesting
 using MultivariateStats
 using PERMANOVA
 using ProgressLogging

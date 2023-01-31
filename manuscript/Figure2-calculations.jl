@@ -70,9 +70,9 @@ ecsdf.quartile = specdf.quartile
 
 ## GLMs
 
-runlms(specdf[specdf.filter_00to120, :], tablefiles("lms_species_00to120.csv"), names(indf, Not(non_spec_cols)))
-runlms(specdf[specdf.filter_18to120, :], tablefiles("lms_species_18to120.csv"), names(indf, Not(non_spec_cols)))
-runlms(specdf[specdf.filter_00to06, :], tablefiles("lms_species_00to06.csv"), names(indf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_00to120, :], tablefiles("lms_species_00to120.csv"), names(specdf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_18to120, :], tablefiles("lms_species_18to120.csv"), names(specdf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_00to06, :], tablefiles("lms_species_00to06.csv"), names(specdf, Not(non_spec_cols)))
 
 let 
     indf = unique(sort(braindf, [:subject, :timepoint]; rev=true), :subject)

@@ -53,21 +53,35 @@ neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>"
 
 
 ```julia
-let 
-    sigs_00to120 = subset(speclms_00to120, "qvalue"=> ByRow(<(0.2)))
-    sigs_00to06 = subset(speclms_00to06, "qvalue"=> ByRow(<(0.2)))
-    sigs_18to120 = subset(speclms_18to120, "qvalue"=> ByRow(<(0.2)))
-
-    for i in eachindex(sigs.species)
-        sp = sigs.species[i]
-        prev_00to120 = prevalence(taxa[Regex(sp), mdata.filter_00to120])
-        prev_00to06 = prevalence(taxa[Regex(sp), mdata.filter_00to06])
-        prev_18to120 = prevalence(taxa[Regex(sp), mdata.filter_18to120])
-        meanab_00to120 = mean(abundances(taxa[Regex(sp), mdata.filter_00to120]))
-        meanab_00to06 = mean(abundances(taxa[Regex(sp), mdata.filter_00to06]))
-        meanab_18to120 = mean(abundances(taxa[Regex(sp), mdata.filter_18to120]))
-
-    
+lms_mat = let 
+    df = vcat(speclms_00to120, speclms_00to06, speclms_18to120)
+    df.group = [fill("00to120", nrow(speclms_00to120)); fill("00to06", nrow(speclms_00to06)); fill("18to120", nrow(speclms_18to120))]
+    sigs = subset(df, "qvalue"=> ByRow(<(0.2)))
+    sig_feats = unique(sigs.feature)
+    gdf = groupby(df, ["feature", "group"])
+    DataFrame(ThreadsX.map(eachindex(sig_feats)) do i
+        ft = sig_feats[i]
+        q_00to120 = haskey(gdf, (; feature=ft, group="00to120")) ? only(gdf[(; feature=ft, group="00to120")].qvalue) : 1.0
+        q_00to06 = haskey(gdf, (; feature=ft, group="00to06")) ? only(gdf[(; feature=ft, group="00to06")].qvalue) : 1.0
+        q_18to120 = haskey(gdf, (; feature=ft, group="18to120")) ? only(gdf[(; feature=ft, group="18to120")].qvalue) : 1.0
+        corr_00to120 = cor(taxdf[taxdf.filter_00to120, "cogScore"], taxdf[taxdf.filter_00to120, ft])
+        corr_00to06 = cor(taxdf[taxdf.filter_00to06, "cogScore"], taxdf[taxdf.filter_00to06, ft])
+        corr_18to120 = cor(taxdf[taxdf.filter_18to120, "cogScore"], taxdf[taxdf.filter_18to120, ft])
+        (; feature = ft, 
+           prev_00to120 = only(prevalence(taxa[Regex(ft), mdata.filter_00to120])),
+           meanab_00to120 = mean(abundances(taxa[Regex(ft), mdata.filter_00to120])),
+           corr_00to120,
+           q_00to120,
+           prev_00to06 = only(prevalence(taxa[Regex(ft), mdata.filter_00to06])),
+           meanab_00to06 = mean(abundances(taxa[Regex(ft), mdata.filter_00to06])),
+           corr_00to06,
+           q_00to06, 
+           prev_18to120 = only(prevalence(taxa[Regex(ft), mdata.filter_18to120])),
+           meanab_18to120 = mean(abundances(taxa[Regex(ft), mdata.filter_18to120])),
+           corr_18to120,
+           q_18to120,
+        )
+   end)
 end
 ```
 
@@ -76,26 +90,91 @@ end
 ```julia
 figure = Figure(resolution=(1200, 900))
 
-AB = GridLayout(figure[1,1]; alignmode=Outside())
-CDEF = GridLayout(figure[1:2,2]; alignmode=Outside())
-C = GridLayout(CDEF[1,1])
-D = GridLayout(CDEF[2,1])
-E = GridLayout(CDEF[3,1])
-F = GridLayout(CDEF[4,1])
-G = GridLayout(figure[3,1:2]; alignmode=Outside())
+AB = GridLayout(figure[1,1])
+CDEF = GridLayout(figure[2,1])
+C = GridLayout(CDEF[1, 1])
+D = GridLayout(CDEF[1, 2])
+E = GridLayout(CDEF[1, 3])
+F = GridLayout(CDEF[1, 4])
+G = GridLayout(figure[3,1], alignmode=Outside())
 ```
 
-
 ```julia
-aax1 = Axis(AB[1,1]; title = "under 6mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.")
-aax2 = Axis(AB[1,2]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.")
-scatter!(aax1, speclms_00to06."Coef.", -1 .* log2.(speclms_00to06.qvalue), color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_00to06.qvalue))
-scatter!(aax2, speclms_18to120."Coef.", -1 .* log2.(speclms_18to120.qvalue), color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_18to120.qvalue))
+aax = Axis(AB[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.",
+                xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
+                limits = ((-1.5e-3, 1.5e-3), nothing),
+                xminorticksvisible=true, xminorticks = IntervalsBetween(3))
 
-bax1 = Axis(AB[1,2]; )
+scatter!(aax, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
+    color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_18to120.qvalue))
+```
+```julia
+
+B = GridLayout(AB[1, 2:3])
+
+bax1 = let groups = ["0-120m", "0-6m", "18-120m"]
+    Axis(B[1, 1]; xticks = (1.5:length(groups) + 0.5, groups), 
+                  yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
+                  yticklabelfont = "TeX Gyre Heros Makie Italic",
+                  yticklabelsize = 12,
+                  xticklabelsize = 12
+                  )
+end
+bax2 = let groups = ["0-120m", "0-6m", "18-120m"]
+    Axis(B[1, 2]; xticks = (1.5:length(groups) + 0.5, groups), 
+                  xticklabelsize = 12)
+end
+bax2.yticklabelsvisible = false
+bax2.yticksvisible = false
+bax3 = let groups = ["0-120m", "0-6m", "18-120m"]
+    Axis(B[1, 3]; xticks = (1.5:length(groups) + 0.5, groups), 
+                  xticklabelsize = 12)
+end
+bax3.yticksvisible = false
+bax3.yticklabelsvisible = false
+
+for ax in (bax1, bax2, bax3)
+    tightlimits!(ax)
+end
+
+let clrs = vcat((lms_mat[:, "prev_$group"] for group in ("00to120", "00to06", "18to120"))...)
+    poly!(bax1, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
+        color = clrs, colormap = :viridis)
+    Colorbar(B[2,1]; colormap=:viridis, colorrange=extrema(clrs),
+                    vertical = false, flipaxis = false,
+                    label="Prevalence",
+                    )
+end
+
+let clrs = log.(vcat((lms_mat[:, "meanab_$group"] for group in ("00to120", "00to06", "18to120"))...))
+    poly!(bax2, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
+        color = clrs, colormap = :magma)
+    Colorbar(B[2,2]; colormap=:magma, colorrange=extrema(clrs),
+                    vertical = false, flipaxis = false,
+                    label="Mean abundance (log)",
+                    )
+end
+
+let clrs = [isnan(x) ? 0.0 : x for x in vcat((lms_mat[:, "corr_$group"] for group in ("00to120", "00to06", "18to120"))...)]
+    
+    poly!(bax3, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
+        color = clrs, colorrange=(-0.3, 0.3),
+        colormap = :RdBu)
+    
+    
+    Colorbar(B[2,3]; colormap=:RdBu,
+                    vertical = false, flipaxis = false,
+                    label="Correlation",
+                    limits=(-0.3, 0.3))
+
+    qs = vcat((lms_mat[:, "q_$group"] for group in ("00to120", "00to06", "18to120"))...)
+    annotations!(bax3, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in 1:3 for i in eachindex(lms_mat.feature)];
+    color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+    align=(:center, :center))
+end
 
 
-
+rowgap!(B, Fixed(4))
 ```
 
 
@@ -111,22 +190,11 @@ let
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
-    Label(panel[1,2], "Under 6m"; tellheight=false, tellwidth=true)
-
-
-    gs = "Glutamate synthesis II"
-    panel = D
-    ixs = neuroactive_18to120[gs]
-    cs = filter(!isnan, cors_18to120.t[ixs])
-    acs = filter(!isnan, cors_18to120.t[Not(ixs)])
-
-    Resonance.plot_fsea!(panel, cs, acs;
-        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "", xticks = -0.2:0.1:0.0)
-    Label(panel[1,2], "Over 18m"; tellheight=false, tellwidth=true)
-
+    Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
+    
     gs = "Propionate degradation I"
-    panel = E
+    panel = D
     ixs = neuroactive_00to06[gs]
     cs = filter(!isnan, cors_00to06.t[ixs])
     acs = filter(!isnan, cors_00to06.t[Not(ixs)])
@@ -134,7 +202,21 @@ let
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "", xticks = -0.7:0.2:0.0)
-    Label(panel[1,2], "Under 6m"; tellheight=false, tellwidth=true)
+    Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
+    
+    gs = "Glutamate synthesis II"
+    panel = E
+    ixs = neuroactive_18to120[gs]
+    cs = filter(!isnan, cors_18to120.t[ixs])
+    acs = filter(!isnan, cors_18to120.t[Not(ixs)])
+
+    Resonance.plot_fsea!(panel, cs, acs;
+        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
+        ylabel = "", xticks = -0.2:0.1:0.0)
+    Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
+
 
     gs = "Propionate degradation I"
     panel = F
@@ -145,7 +227,8 @@ let
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
-    Label(panel[1,2], "Over 18m"; tellheight=false, tellwidth=true)
+    Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
 end
 
 ```
@@ -230,7 +313,7 @@ let
                     "(+) q < 0.20", "(+) q < 0.05", "(+) p < 0.01"])
 end
 
-rowsize!(figure.layout, 3, Relative(2/5))
+# rowsize!(figure.layout, 3, Relative(2/5))
 colgap!(G, Fixed(4))
 ```
 
