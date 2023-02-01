@@ -336,7 +336,7 @@ for (label, layout) in zip(["C", "D", "E", "F"], [C, D, E, F])
         padding = (0, 30, 5, 0),
         halign = :right)
 end
-figure
+
 Label(G[1, 1, TopLeft()], "G",
         textsize = 26,
         font = "Open Sans Bold",
