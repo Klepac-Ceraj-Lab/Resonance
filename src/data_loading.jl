@@ -204,6 +204,13 @@ function load(::ReadCounts; srcdir=analysisfiles("kneaddata"), readcountfile="re
         end
         df."decontaminated Homo_sapiens pair1" = map(x-> ismissing(x) ? missing :  x isa Real ? x : parse(Float64, x), df."decontaminated Homo_sapiens pair1")
         df."decontaminated Homo_sapiens orphan2" = map(x-> ismissing(x) ? missing :  x isa Real ? x : parse(Float64, x), df."decontaminated Homo_sapiens orphan2")
+        for row in eachrow(df)
+            ismissing(row."final pair1") || continue
+            for i in (1,2)
+                ismissing(row["decontaminated Homo_sapiens pair$i"]) && (row["final pair$i"] = row["trimmed pair$i"])
+                ismissing(row["decontaminated Homo_sapiens orphan$i"]) && (row["final orphan$i"] = row["trimmed pair$i"])
+            end
+        end
 
         df = select(df, Not(r"hg37"))
         subset!(df, "Sample"=> ByRow(s-> contains(s, r"^FG\d+")))
