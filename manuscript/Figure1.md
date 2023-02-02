@@ -6,6 +6,7 @@ First, load packages that will be used throughout this notebook.
 using Resonance
 using FileIO
 using CairoMakie # for plotting
+using ColorSchemes
 using Distances
 using MultivariateStats
 using CategoricalArrays
@@ -64,7 +65,7 @@ For now, the graphic here is a place-holder, but we'll have something like this 
 ```julia
 A_img = Axis(A[2,1:2]; aspect = DataAspect(), alignmode=Inside())
 A_histleft = Axis(A[1,1]; ylabel="Samples (N)", alignmode=Mixed(; left=45))
-A_histright = Axis(A[1,2]; xlabel = "Age (years)", xticks=2:2:16, alignmode=Inside())
+A_histright = Axis(A[1,2]; xlabel = "Age (years)", xticks=2:2:16, alignmode=Inside(), yticklabelsvisible=false, yticksvisible=false)
 hidedecorations!(A_img)
 hidespines!(A_img)
 
@@ -210,50 +211,50 @@ plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 ```julia
 
 Label(A[1, 1, TopLeft()], "A",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[1, 1, TopLeft()], "B",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[2, 1, TopLeft()], "C",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[1, 2, TopLeft()], "D",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[2, 2, TopLeft()], "E",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 
 Label(F[1, 1, TopLeft()], "F",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(G[1, 1, TopLeft()], "G",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(H[1, 1, TopLeft()], "H",
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 5, 5, 0),
         halign = :right
