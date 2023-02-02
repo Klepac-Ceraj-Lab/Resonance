@@ -21,106 +21,161 @@ using JLD2
 ## Data Loading
 
 ```julia
-allcors              = JLD2.load(outputfiles("figure2_data.jld2"), "allcors")
-u6cors               = JLD2.load(outputfiles("figure2_data.jld2"), "u6cors")
-o18cors              = JLD2.load(outputfiles("figure2_data.jld2"), "o18cors")
-allcors_age          = JLD2.load(outputfiles("figure2_data.jld2"), "allcors_age")
-u6cors_age           = JLD2.load(outputfiles("figure2_data.jld2"), "u6cors_age")
-o18cors_age          = JLD2.load(outputfiles("figure2_data.jld2"), "o18cors_age")
-all_neuroactive      = JLD2.load(outputfiles("figure2_data.jld2"), "all_neuroactive")
-u6_neuroactive       = JLD2.load(outputfiles("figure2_data.jld2"), "u6_neuroactive")
-o18_neuroactive      = JLD2.load(outputfiles("figure2_data.jld2"), "o18_neuroactive")
-all_neuroactive_full = JLD2.load(outputfiles("figure2_data.jld2"), "all_neuroactive_full")
-u6_neuroactive_full  = JLD2.load(outputfiles("figure2_data.jld2"), "u6_neuroactive_full")
-o18_neuroactive_full = JLD2.load(outputfiles("figure2_data.jld2"), "o18_neuroactive_full")
-unimdata             = JLD2.load(outputfiles("figure2_data.jld2"), "unimdata")
+mdata = Resonance.load(Metadata())
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+taxdf = comm2wide(taxa)
 ```
+
 
 ## Load FSEA
 
 
 ```julia
-allfsdf = CSV.read(outputfiles("fsea_all_consolidated.csv"), DataFrame)
-allfsdf2 = CSV.read(outputfiles("fsea_all.csv"), DataFrame)
-u6fsdf = CSV.read(outputfiles("fsea_u6_consolidated.csv"), DataFrame)
-u6fsdf2 = CSV.read(outputfiles("fsea_u6.csv"), DataFrame)
-o18fsdf = CSV.read(outputfiles("fsea_o18_consolidated.csv"), DataFrame)
-o18fsdf2 = CSV.read(outputfiles("fsea_o18.csv"), DataFrame)
+speclms_00to120 = subset(CSV.read(tablefiles("lms_species_00to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_00to06 = subset(CSV.read(tablefiles("lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_18to120 = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+
+speclms_pa = CSV.read(tablefiles("lms_species_18to120_pa.csv"), DataFrame)
+fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
+fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
+fsdf_00to06 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
+fsdf2_00to06 = CSV.read(scratchfiles("figure2", "fsea_all_00to06.csv"), DataFrame)
+fsdf_18to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_18to120.csv"), DataFrame)
+fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_all_18to120.csv"), DataFrame)
+
+cors_00to120 = CSV.read(tablefiles("lms_unirefs_00to120.csv"), DataFrame)
+cors_00to06 = CSV.read(tablefiles("lms_unirefs_00to06.csv"), DataFrame)
+cors_18to120 = CSV.read(tablefiles("lms_unirefs_18to120.csv"), DataFrame)
+neuroactive_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to120.species); consolidate=false)
+neuroactive_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to06.species); consolidate=false)
+neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_18to120.species); consolidate=false)
 ```
 
+
+```julia
+lms_mat = let 
+    df = vcat(speclms_00to120, speclms_00to06, speclms_18to120)
+    df.group = [fill("00to120", nrow(speclms_00to120)); fill("00to06", nrow(speclms_00to06)); fill("18to120", nrow(speclms_18to120))]
+    sigs = subset(df, "qvalue"=> ByRow(<(0.2)))
+    sig_feats = unique(sigs.feature)
+    gdf = groupby(df, ["feature", "group"])
+    DataFrame(ThreadsX.map(eachindex(sig_feats)) do i
+        ft = sig_feats[i]
+        q_00to120 = haskey(gdf, (; feature=ft, group="00to120")) ? only(gdf[(; feature=ft, group="00to120")].qvalue) : 1.0
+        q_00to06 = haskey(gdf, (; feature=ft, group="00to06")) ? only(gdf[(; feature=ft, group="00to06")].qvalue) : 1.0
+        q_18to120 = haskey(gdf, (; feature=ft, group="18to120")) ? only(gdf[(; feature=ft, group="18to120")].qvalue) : 1.0
+        corr_00to120 = cor(taxdf[taxdf.filter_00to120, "cogScore"], taxdf[taxdf.filter_00to120, ft])
+        corr_00to06 = cor(taxdf[taxdf.filter_00to06, "cogScore"], taxdf[taxdf.filter_00to06, ft])
+        corr_18to120 = cor(taxdf[taxdf.filter_18to120, "cogScore"], taxdf[taxdf.filter_18to120, ft])
+        (; feature = ft, 
+           prev_00to120 = only(prevalence(taxa[Regex(ft), mdata.filter_00to120])),
+           meanab_00to120 = mean(abundances(taxa[Regex(ft), mdata.filter_00to120])),
+           corr_00to120,
+           q_00to120,
+           prev_00to06 = only(prevalence(taxa[Regex(ft), mdata.filter_00to06])),
+           meanab_00to06 = mean(abundances(taxa[Regex(ft), mdata.filter_00to06])),
+           corr_00to06,
+           q_00to06, 
+           prev_18to120 = only(prevalence(taxa[Regex(ft), mdata.filter_18to120])),
+           meanab_18to120 = mean(abundances(taxa[Regex(ft), mdata.filter_18to120])),
+           corr_18to120,
+           q_18to120,
+        )
+   end)
+end
+```
 
 ## Plotting
 
 ```julia
-figure = Figure(resolution=(900, 900))
+figure = Figure(resolution=(1200, 900))
 
-A = GridLayout(figure[1,1]; alignmode=Outside())
-B = GridLayout(figure[2,1]; alignmode=Outside())
-CDEF = GridLayout(figure[1:2,2]; alignmode=Outside())
-C = GridLayout(CDEF[1,1])
-D = GridLayout(CDEF[2,1])
-E = GridLayout(CDEF[3,1])
-F = GridLayout(CDEF[4,1])
-G = GridLayout(figure[3,1:2]; alignmode=Outside())
+AB = GridLayout(figure[1,1])
+CDEF = GridLayout(figure[2,1])
+C = GridLayout(CDEF[1, 1])
+D = GridLayout(CDEF[1, 2])
+E = GridLayout(CDEF[1, 3])
+F = GridLayout(CDEF[1, 4])
+G = GridLayout(figure[3,1], alignmode=Outside())
 ```
-
 
 ```julia
-aax1 = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
-aax2 = Axis(A[1,2]; xlabel = "Age (years)")
-hideydecorations!(aax2)
-linkyaxes!(aax1, aax2)
+aax = Axis(AB[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.",
+                xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
+                limits = ((-1.5e-3, 1.5e-3), nothing),
+                xminorticksvisible=true, xminorticks = IntervalsBetween(3))
 
-let
-    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-
-    cs = ColorSchemes.colorschemes[:Set2_7]
-    function colorage(age)
-        age <= 36 && return cs[1] # mullen
-        age <= 60 && return cs[2] # WPPSI
-        return cs[3] # WISC
-    end
-    ages = unimdata.ageMonths[u2y]
-    scatter!(aax1, ages, unimdata.cogScore[u2y]; color=colorage.(ages))
-
-    ages = unimdata.ageMonths[o2y]
-    scatter!(aax2, ages ./ 12, unimdata.cogScore[o2y]; color=colorage.(ages))
-    
-    vlines!(aax1, [6, 12, 18]; linestyle=:dash, color=:gray)
-    # TODO: add colors for training/test sets in later models
-
-    Legend(A[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["Mullen", "WPPSI", "WISC"], "Assessment"; 
-    )
-end
-
-colgap!(A, Fixed(4))
-
-bax = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
-let
-    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScore, date = unimdata.assessmentDate)
-    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
-    df.grp = categorical(map(df.age) do a
-        a < 6 && return "0-6"
-        a < 12 && return "6-12"
-        a < 18 && return "12-18"
-        a < 24 && return "18-24"
-        return "> 24"
-    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
-
-    grp = groupby(df, "grp")
-    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
-            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
-end
-
-Legend(B[1,2], [MarkerElement(; color = :dodgerblue, marker=:circle), MarkerElement(; color = :orangered, marker=:circle)],
-               ["Pre-covid", "Post-covid"]
-)
-colgap!(B, Fixed(4))
+scatter!(aax, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
+    color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_18to120.qvalue))
 ```
+```julia
 
+B = GridLayout(AB[1, 2:3])
+
+bax1 = let groups = ["0-120m", "0-6m", "18-120m"]
+    Axis(B[1, 1]; xticks = (1.5:length(groups) + 0.5, groups), 
+                  yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
+                  yticklabelfont = "TeX Gyre Heros Makie Italic",
+                  yticklabelsize = 12,
+                  xticklabelsize = 12
+                  )
+end
+bax2 = let groups = ["0-120m", "0-6m", "18-120m"]
+    Axis(B[1, 2]; xticks = (1.5:length(groups) + 0.5, groups), 
+                  xticklabelsize = 12)
+end
+bax2.yticklabelsvisible = false
+bax2.yticksvisible = false
+bax3 = let groups = ["0-120m", "0-6m", "18-120m"]
+    Axis(B[1, 3]; xticks = (1.5:length(groups) + 0.5, groups), 
+                  xticklabelsize = 12)
+end
+bax3.yticksvisible = false
+bax3.yticklabelsvisible = false
+
+for ax in (bax1, bax2, bax3)
+    tightlimits!(ax)
+end
+
+let clrs = vcat((lms_mat[:, "prev_$group"] for group in ("00to120", "00to06", "18to120"))...)
+    poly!(bax1, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
+        color = clrs, colormap = :viridis)
+    Colorbar(B[2,1]; colormap=:viridis, colorrange=extrema(clrs),
+                    vertical = false, flipaxis = false,
+                    label="Prevalence",
+                    )
+end
+
+let clrs = log.(vcat((lms_mat[:, "meanab_$group"] for group in ("00to120", "00to06", "18to120"))...))
+    poly!(bax2, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
+        color = clrs, colormap = :magma)
+    Colorbar(B[2,2]; colormap=:magma, colorrange=extrema(clrs),
+                    vertical = false, flipaxis = false,
+                    label="Mean abundance (log)",
+                    )
+end
+
+let clrs = [isnan(x) ? 0.0 : x for x in vcat((lms_mat[:, "corr_$group"] for group in ("00to120", "00to06", "18to120"))...)]
+    
+    poly!(bax3, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
+        color = clrs, colorrange=(-0.3, 0.3),
+        colormap = :RdBu)
+    
+    
+    Colorbar(B[2,3]; colormap=:RdBu,
+                    vertical = false, flipaxis = false,
+                    label="Correlation",
+                    limits=(-0.3, 0.3))
+
+    qs = vcat((lms_mat[:, "q_$group"] for group in ("00to120", "00to06", "18to120"))...)
+    annotations!(bax3, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in 1:3 for i in eachindex(lms_mat.feature)];
+    color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+    align=(:center, :center))
+end
+
+
+rowgap!(B, Fixed(4))
+```
 
 
 ```julia
@@ -128,50 +183,52 @@ colgap!(B, Fixed(4))
 let
     gs = "Acetate synthesis II"
     panel = C
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
+    ixs = neuroactive_00to06[gs]
+    cs = filter(!isnan, cors_00to06.t[ixs])
+    acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
-
-end
-
-let
-    gs = "Menaquinone synthesis (vitamin K2) I"
-    panel = D
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
-
-    Resonance.plot_fsea!(panel, cs, acs;
-        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "", xticks = -0.2:0.1:0.0)
-end
-
-let
+    Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
+    
     gs = "Propionate degradation I"
-    panel = E
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
+    panel = D
+    ixs = neuroactive_00to06[gs]
+    cs = filter(!isnan, cors_00to06.t[ixs])
+    acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "", xticks = -0.7:0.2:0.0)
-end
+    Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
+    
+    gs = "Glutamate synthesis II"
+    panel = E
+    ixs = neuroactive_18to120[gs]
+    cs = filter(!isnan, cors_18to120.t[ixs])
+    acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
-let
-    gs = "Propionate synthesis I"
+    Resonance.plot_fsea!(panel, cs, acs;
+        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
+        ylabel = "", xticks = -0.2:0.1:0.0)
+    Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
+
+
+    gs = "Propionate degradation I"
     panel = F
-    ixs = u6_neuroactive_full[gs]
-    cs = filter(!isnan, u6cors[ixs])
-    acs = filter(!isnan, u6cors[Not(ixs)])
+    ixs = neuroactive_18to120[gs]
+    cs = filter(!isnan, cors_18to120.t[ixs])
+    acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
     Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
+    Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
+    rowgap!(panel, 2, Fixed(4))
 end
 
 ```
@@ -179,15 +236,15 @@ end
 
 ```julia
 let
-    genesets = union(subset(allfsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScorePercentile"))).geneset,
-                     subset(u6fsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScorePercentile"))).geneset,
-                     subset(o18fsdf2, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScorePercentile"))).geneset
+    genesets = union(subset(fsdf2_00to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(fsdf2_00to06, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(fsdf2_18to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset
     )
   
-    df = sort(subset(allfsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
+    df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="correlation", title="All ages")
-    m = median(allcors)
+                xlabel="T stat", title="All ages")
+    m = median(filter(x-> !isnan(x) && x < 7, cors_00to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -197,7 +254,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, allcors[all_neuroactive_full[row.geneset]])
+        y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_00to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -205,12 +262,12 @@ let
 
     ####
 
-    df = sort(subset(u6fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
+    df = sort(subset(fsdf2_00to06, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="correlation", title="Under 6mo")
+                xlabel="T stat", title="Under 6mo")
     hideydecorations!(ax, grid=false)
 
-    m = median(u6cors)
+    m = median(filter(x-> !isnan(x) && x < 7, cors_00to06.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -220,7 +277,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, u6cors[u6_neuroactive_full[row.geneset]])
+        y = filter(x-> !isnan(x) && x < 7, cors_00to06.t[neuroactive_00to06[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -228,11 +285,11 @@ let
 
     ####
 
-    df = sort(subset(o18fsdf2, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScorePercentile"))), :geneset; rev=true)
+    df = sort(subset(fsdf2_18to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="correlation", title="over 18")
+                xlabel="T stat", title="over 18")
     hideydecorations!(ax, grid=false)
-    m = median(o18cors)
+    m = median(filter(x-> !isnan(x) && x < 7, cors_18to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
@@ -242,7 +299,7 @@ let
             row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
             sign == "neg" ? colors[1] : colors[7]
 
-        y = filter(!isnan, o18cors[o18_neuroactive_full[row.geneset]])
+        y = filter(x-> !isnan(x) && x < 7, cors_18to120.t[neuroactive_18to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
     end
@@ -253,135 +310,47 @@ let
                                     strokecolor=:gray,
                                     strokewidth=0.5) for c in colors[[1:3..., 5:7...]]],
                    ["(-) q < 0.01", "(-) q < 0.05", "(-) q < 0.2", 
-                    "(+) q < 0.01", "(+) q < 0.05", "(+) p < 0.2"])
+                    "(+) q < 0.20", "(+) q < 0.05", "(+) p < 0.01"])
 end
 
-rowsize!(figure.layout, 3, Relative(2/5))
+# rowsize!(figure.layout, 3, Relative(2/5))
 colgap!(G, Fixed(4))
 ```
 
 ```julia
-for (label, layout) in zip(["A", "B"], [A, B])
-    Label(layout[1, 1, TopLeft()], label,
-        textsize = 26,
-        font = "Open Sans Bold",
-        padding = (0, 50, 5, 0),
-        halign = :right)
-end
+Label(AB[1, 1, TopLeft()], "A",
+    textsize = 26,
+    font = "Open Sans Bold",
+    padding = (0, 30, 5, 0),
+    halign = :right)
+Label(AB[1, 2, TopLeft()], "B",
+    textsize = 26,
+    font = "Open Sans Bold",
+    padding = (0, 120, 5, 0),
+    halign = :right)
+
 for (label, layout) in zip(["C", "D", "E", "F"], [C, D, E, F])
     Label(layout[1, 1, TopLeft()], label,
         textsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 40, 5, 0),
+        padding = (0, 30, 5, 0),
         halign = :right)
 end
 
 Label(G[1, 1, TopLeft()], "G",
         textsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 180, 5, 0),
+        padding = (0, 120, 5, 0),
         halign = :right
 )
-
 # colgap!(figure.layout, 2, -35)
-save(figurefiles("Figure2.svg"), fig)
-save(figurefiles("Figure2.png"), fig)
+save("manuscript/assets/Figure2.png", figure)
+save(figurefiles("Figure2.svg"), figure)
 figure
 ```
 
 
 ## Supplement
-
-### Comparing normalized to un-normalized cogScores
-
-```julia
-fig = Figure()
-A = GridLayout(fig[1,1])
-B = GridLayout(fig[2,1])
-
-aax1 = Axis(A[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24))
-aax2 = Axis(A[1,2]; xlabel = "Age (years)")
-hideydecorations!(aax2)
-linkyaxes!(aax1, aax2)
-
-aax3 = Axis(A[1,3]; xlabel = "Age (months)", ylabel = "cogScorePercentile", xticks=(4:4:24))
-aax4 = Axis(A[1,4]; xlabel = "Age (years)")
-
-let
-    u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-    o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(unimdata.ageMonths, unimdata.cogScore)))
-
-    cs = ColorSchemes.colorschemes[:Set2_7]
-    function colorage(age)
-        age <= 36 && return cs[1] # mullen
-        age <= 60 && return cs[2] # WPPSI
-        return cs[3] # WISC
-    end
-    ages = unimdata.ageMonths[u2y]
-    scatter!(aax1, ages, unimdata.cogScore[u2y]; color=colorage.(ages))
-    scatter!(aax3, ages, unimdata.cogScorePercentile[u2y]; color=colorage.(ages))
-
-    ages = unimdata.ageMonths[o2y]
-    scatter!(aax2, ages ./ 12, unimdata.cogScore[o2y]; color=colorage.(ages))
-    scatter!(aax4, ages ./ 12, unimdata.cogScorePercentile[o2y]; color=colorage.(ages))
-    
-    vlines!(aax1, [6, 12, 18]; linestyle=:dash, color=:gray)
-    vlines!(aax3, [6, 12, 18]; linestyle=:dash, color=:gray)
-    # TODO: add colors for training/test sets in later models
-
-    Legend(A[2, 1:4], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["Mullen", "WPPSI", "WISC"]; orientation=:horizontal, tellheight=true, tellwidth=false
-    )
-end
-
-
-
-bax1 = Axis(B[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
-let
-    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScore, date = unimdata.assessmentDate)
-    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
-    df.grp = categorical(map(df.age) do a
-        a < 6 && return "0-6"
-        a < 12 && return "6-12"
-        a < 18 && return "12-18"
-        a < 24 && return "18-24"
-        return "> 24"
-    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
-
-    grp = groupby(df, "grp")
-    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax1, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
-            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
-end
-
-bax2 = Axis(B[1,2]; ylabel = "cogScorePercentile", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
-let
-    df = DataFrame(age = unimdata.ageMonths, score = unimdata.cogScorePercentile, date = unimdata.assessmentDate)
-    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
-    df.grp = categorical(map(df.age) do a
-        a < 6 && return "0-6"
-        a < 12 && return "6-12"
-        a < 18 && return "12-18"
-        a < 24 && return "18-24"
-        return "> 24"
-    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
-
-    grp = groupby(df, "grp")
-    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
-    scatter!(bax2, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
-            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
-end
-
-Legend(B[2,1:2], [MarkerElement(; color = :dodgerblue, marker=:circle), 
-                  MarkerElement(; color = :orangered, marker=:circle)],
-            ["Pre-covid", "Post-Covid"]; orientation=:horizontal, tellheight=true, tellwidth=false
-)
-
-
-save(figurefiles("Supp_Figure2.svg"), fig)
-save(figurefiles("Supp_Figure2.png"), fig)
-fig
-```
 
 ### Other FSEA Plots
 

@@ -1,13 +1,15 @@
-function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false)
+function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false, sample_filter=nothing)
     root = analysisfiles("humann", names ? "rename" : 
                                     kind == "genefamilies" ? "main" : "regroup"
     )
     stripper = "_$kind" * (names ? "_rename.tsv" : ".tsv")
     filt = Regex(string(raw"FG\d+_S\d+_", kind))
-    
     df = DataFrame(file = filter(f-> contains(f, filt), readdir(root, join=true)))
     df.sample = map(s-> replace(s, stripper => ""), basename.(df.file))
+    isnothing(sample_filter) || subset!(df, "sample"=> ByRow(s-> s in sample_filter))
     df.sample_base = map(s-> replace(stripper, r"_S\d+"=>""), df.sample)
+    @debug "Found $(nrow(df)) files"
+
     knead = load(ReadCounts())
     leftjoin!(df, select(knead, "sample_uid"=>"sample", 
                                 AsTable(["final pair1", "final pair2"])=> ByRow(row-> row[1]+row[2]) =>"read_depth");
@@ -46,6 +48,7 @@ function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false)
                                         )
         )                                
     end
+
 
     return nothing
 end

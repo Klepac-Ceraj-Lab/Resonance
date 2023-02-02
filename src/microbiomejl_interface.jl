@@ -1,4 +1,4 @@
-function write_arrow(filename, cmp::CommunityProfile)
+function write_arrow(filename, cmp::CommunityProfile; unirefs = false)
     df = DataFrame(metadata(cmp))
     @debug "filtering profile"
     cmp = cmp[sort(ThreadsX.unique(first(findnz(abundances(cmp))))), :]
@@ -12,6 +12,7 @@ function write_arrow(filename, cmp::CommunityProfile)
         tbls = Tables.partitioner(smps) do smp
             sample = name(smp)
             sidx = smpidx[name(smp)]
+
             sdf = DataFrame([(; sample,
                                 sidx,
                                 feature = string(f),
@@ -26,7 +27,7 @@ function write_arrow(filename, cmp::CommunityProfile)
             sdf
         end
 
-        Arrow.write(io, tbls; metadata=("features" => join(string.(features(cmp)), '\n'), 
+        Arrow.write(io, tbls; metadata=("features" => unirefs ? "nothing" : join(string.(features(cmp)), '\n'), 
                                         "samples"  => join(name.(samples(cmp)), '\n'),
                                         "reads"    => join(df.read_depth, '\n')
                                         )
@@ -34,7 +35,7 @@ function write_arrow(filename, cmp::CommunityProfile)
     end
 end
 
-function read_arrow(filename; featurefunc = taxon)
+function read_arrow(filename; featurefunc = taxon, unirefs = false)
     @info "reading table"
     tbl = Arrow.Table(filename)
     @info "building sparse mat"
