@@ -7,10 +7,7 @@
 #
 # Here, I'm conforming the taxonomic profiles from the VCK lab ECHO cohort
 # to fit the format needed to plug in to Hannah's script.
-#
-# Source code for functions can be found in the module defined in
-# `src/ECHOSRS2.jl`.
-# 
+
 
 @info VERSION # julia version
 using Pkg
@@ -30,40 +27,15 @@ function asv_df(taxdict, tidydf)
     return asvtab
 end
 
-tidytax = Resonance.load_raw_metaphlan()
+taxa = Resonance.load_raw_metaphlan()
 mdata = Resonance.load_raw_metadata()
 
+species = filter(f-> taxrank(f) == :species, taxa)
 
-filter!("taxon"=> (t-> occursin("s__", t)), tidytax) # only include species
-
-taxtab, taxdict = taxa_df(tidytax.taxon)
-
-##
-
-asvtab = asv_df(taxdict, tidytax)
-asvtab.sample = map(s-> replace(replace(s, r"_S\d+"=>""), "-"=>"_"), asvtab.sample)
 
 ## metadata
 
-using Distributions
-using ResonanceMicrobiome
-
-samp = ResonanceMicrobiome.airtable_metadata()
-rename!(samp, "subject"=>"studyID")
-
-tp = CSV.read("data/Timepoint_centric_041421.csv", DataFrame)
-filter!(:timepoint=> t-> floor(Int, t) == t, tp) # why the F do we still have 2.5 in here?
-tp.timepoint = Int.(tp.timepoint)
-
-meta = leftjoin(samp, tp, on=["studyID", "timepoint"], makeunique=true)
-
-subj = CSV.read("data/Subject_Specific_050721.csv", DataFrame)
-meta = leftjoin(meta, subj, on="studyID")
-
-redcap = CSV.read("data/SRS_Redcap_07192021.csv", DataFrame)
-filter!(:studyID=>!ismissing, redcap)
-
-subj.MARRIED = map(eachrow(subj)) do row
+mdata.MARRIED = map(eachrow(mdata)) do row
     old = row."Marital_Status_old"
     mom = row."Marital_Status_Mother"
     ismissing(old) && ismissing(mom) && return missing
@@ -72,61 +44,43 @@ subj.MARRIED = map(eachrow(subj)) do row
     return false
 end
 
-subj.PAROUS = map(subj."BasicFamilyAndChild::siblingInStudy") do sib
+mdata.PAROUS = map(mdata."BasicFamilyAndChild::siblingInStudy") do sib
     ismissing(sib) && return false
     return occursin("yes", lowercase(sib))
 end
 
-subj.kidbday = [ismissing(bday) ? missing : Date(bday, "m/d/y") for bday in subj."BasicFamilyAndChild::childBirthday"]
-# subj.mombday = [ismissing(bday) ? missing : Date(bday, "m/d/y") for bday in subj."BasicFamilyAndChild::motherBirthday"]
-subj.dadbday = [ismissing(bday) ? missing : Date(bday, "m/d/y") for bday in subj."BasicFamilyAndChild::fatherBirthday"]
+mdata.kidbday = mdata."BasicFamilyAndChild::childBirthday"
+mdata.mombday = mdata."BasicFamilyAndChild::motherBirthday"
+mdata.dadbday = mdata."BasicFamilyAndChild::fatherBirthday"
 
-subj.mombday = map(collect(subj."BasicFamilyAndChild::motherBirthday")) do bday
-    ismissing(bday) && return missing
-    try
-        Date(bday, "m/d/y")
-    catch e
-        missing
-    end
-end
-
-subj.MAGE = map(eachrow(subj)) do row
+mdata.MAGE = map(eachrow(mdata)) do row
     mage = row.kidbday - row.mombday
     ismissing(mage) && return missing
     return mage.value / 365
 end
 
-subj.FAGE = map(eachrow(subj)) do row
+mdata.FAGE = map(eachrow(mdata)) do row
     fage = row.kidbday - row.dadbday
     ismissing(fage) && return missing
     return fage.value / 365
 end
 
-subj.SMOKE = [ismissing(smoke) ? missing : smoke=="Yes" for smoke in subj."Prenatal::smoke"]
+mdata.SMOKE = [ismissing(smoke) ? missing : smoke=="Yes" for smoke in mdata."Prenatal::smoke"]
 
-subj.GESTAGE = subj."NewbornInfo::childGestationalPeriodWeeks"
+mdata.GESTAGE = mdata."NewbornInfo::childGestationalPeriodWeeks"
 
-select!(subj, r"^(studyID|mother_HHS_Education|BreastfeedingDone|MARRIED|PAROUS|MAGE|FAGE|SMOKE|GESTAGE)")
+mdata.SRS2_T = map(t-> coalesce(t...), zip(mdata."SchoolageSRS::schoolAgeTotalTScore", mdata."PreschoolSRS::preschoolTotalTScore"))
+subset!(mdata, "SRS2_T"=> ByRow(!ismissing))
+subset!(mdata, "ageMonths"=> ByRow(!ismissing))
+subset!(mdata, "omni"=> ByRow(!ismissing))
+unique!(mdata, "omni")
 
+sort!(mdata.ageMonths)
 
-rename!(subj, "studyID" => "subject")
-meta = leftjoin(meta, subj, on="subject")
-
-tp = CSV.read("data/Timepoint_centric_041421.csv", DataFrame)
-select!(tp, r"^(studyID|timepoint|BreastfeedingStill|assessmentAge)")
-rename!(tp, "studyID" => "subject")
-meta = leftjoin(meta, tp, on=["subject", "timepoint"])
-
-unique!(meta, "sample")
-# filter!("SRS2_T"=> !ismissing, meta)
-filter!("correctedAgeDays" => !ismissing, meta)
-
-sort!(meta.correctedAgeDays)
-
-meta.AGE = map(row-> (row.assessmentAgeMonths / 12 + row.assessmentAgeDays / 365) * 365, eachrow(meta))
-meta = @chain meta begin
+transform!(mdata, "ageMonths"=> ByRow(x-> x / 12) =>"AGE")
+@chain mdata begin
     groupby("subject")
-    transform(["AGE", "SRS2_T"] => ( (age, srs2) -> [
+    transform!(["AGE", "SRS2_T"] => ( (age, srs2) -> [
         all(ismissing, srs2) ? (missing, missing) : 
                ismissing(sc) ? (age[findfirst(!ismissing, srs2)], 
                                 srs2[findfirst(!ismissing, srs2)]) : 
@@ -134,19 +88,19 @@ meta = @chain meta begin
         ] ) => [:AGE, :SCORE])
 end
 
-meta.MED = map(collect(meta.mother_HHS)) do hhs
+mdata.MED = map(collect(mdata.mother_HHS_Education)) do hhs
     ismissing(hhs) && return missing
     hhs >= 6 # higher ed or not
 end
 
-meta.SEX = map(collect(meta.childSex)) do s
+mdata.SEX = map(collect(mdata.sex)) do s
     ismissing(s) && return missing
-    lowercase(s) == "male" && return true
-    lowercase(s) == "female" && return false
+    s == "Male" && return true
+    s == "Female" && return false
     error("unknown sex $s")
 end
 
-meta.BFEEDDUR = map(eachrow(meta)) do row
+mdata.BFEEDDUR = map(eachrow(mdata)) do row
     nolonger = row."BreastfeedingDone::noLongerFeedBreastmilkAge"
     bfperc = row."BreastfeedingStill::breastFedPercent"
     if !ismissing(nolonger)
@@ -158,24 +112,24 @@ meta.BFEEDDUR = map(eachrow(meta)) do row
     end
 end
 
-meta.BFEED = map(eachrow(meta)) do row
+mdata.BFEED = map(eachrow(mdata)) do row
     ismissing(row.BFEEDDUR) ? missing : row.BFEEDDUR > 1.5
 end
 
 
 ## for now, fill these with random variables
 
-meta.ABX = fill(false, nrow(meta)) # TODO: add correct value
+mdata.ABX .= fill(false, nrow(mdata)) # TODO: add correct value
 
 
-meta.STOOLAGE = map(eachrow(meta)) do row
-    (row.correctedAgeDays / 365 * 52 + (40 - row.GESTAGE)) / 52 * 365 # correctedAge + weeks early in days
+mdata.STOOLAGE = map(eachrow(mdata)) do row
+    (row.ageMonths / 12 * 52 + (40 - row.GESTAGE)) / 52 * 365 # correctedAge + weeks early in days
 end
 
-meta.AGE = map(x-> ismissing(x) ? missing : floor(Int, x), meta.AGE)
-meta.STOOLAGE = map(x-> ismissing(x) ? missing : floor(Int, x), meta.STOOLAGE)
+mdata.AGE = map(x-> ismissing(x) ? missing : floor(Int, x), mdata.AGE)
+mdata.STOOLAGE = map(x-> ismissing(x) ? missing : floor(Int, x), mdata.STOOLAGE)
 
-meta.AGEGROUP = map(meta.STOOLAGE) do age
+mdata.AGEGROUP = map(mdata.STOOLAGE) do age
     age = age / 12
     ismissing(age) && return missing
     age < 0.5 && return 1
@@ -184,26 +138,32 @@ meta.AGEGROUP = map(meta.STOOLAGE) do age
     return 3
 end
 
-rename!(meta, "birthType" => "BMODE")
+rename!(mdata, "birthType" => "BMODE")
 
+function generate_taxtab()
+    taxa = Set(String[])
+    for t in filter(f-> contains(basename(f), "profile"), readdir(analysisfiles("metaphlan"), join=true))
+        df = CSV.read(t, DataFrame; comment="#", header=["taxon", "ncbi", "abundance", "other"])
+        union!(taxa, subset(df, "taxon"=>ByRow(tax-> contains(tax, "s__") && !contains(tax, "t__"))).taxon)
+    end
+    df = DataFrame([NamedTuple(k=> v for (v, k) in zip(split(replace(taxstring, r"\[|\]"=>""), "|"), [:kingdom, :phylum, :class, :order, :family, :genus, :species])) for taxstring in taxa])
+    sort!(df, :species)
+    df.taxon = replace.(df.species, "s__"=>"")
+    select(df, Cols(:taxon, :))
+end
 
+taxtab = generate_taxtab()
+spec_subset = let sub = species[:, [s in mdata.omni for s in get(species, :sample_base)]]
+    sub = sub[vec(prevalence(sub)) .> 0, :]
+end
+asvtab = comm2wide(spec_subset)
 
-filter!("sample"=> (s-> s in asvtab.sample), meta) # remove samples that we don't have metadata for
-filter!("sample"=> (s-> s in meta.sample), asvtab) # remoce samples that we don't have profile for
-asvtab = leftjoin(select(meta, "sample"), asvtab, on="sample") # get rows in same order
-
+subset!(mdata, "omni"=> ByRow(o-> o in get(spec_subset, :sample_base)))# remove samples that we don't have profile for
+unique!(mdata, "subject")
+mdata.sample = mdata.omni
+subset!(taxtab, "taxon"=> ByRow(t-> !(t in featurenames(spec_subset))))
 ## write files
 
-CSV.write("data/VKC_TAXTAB.csv", taxtab)
-CSV.write("data/VKC_ASVTAB.csv", asvtab)
-CSV.write("data/VCK_METATAB.csv", select(meta, [:sample, :SCORE, :BMODE, :AGE, :MED, :MARRIED, :PAROUS, :MAGE, :FAGE, :SMOKE, :ABX, :SEX, :GESTAGE, :STOOLAGE, :BFEEDDUR, :BFEED]))
-
-
-## Plot
-
-using CairoMakie
-
-fig = Figure()
-ax = Axis(fig[1,1])
-
-hist(collect(skipmissing(meta.STOOLAGE)))
+CSV.write("/brewster/kevin/resonance_data/exports/VKC_TAXTAB.csv", taxtab)
+CSV.write("/brewster/kevin/resonance_data/exports/VKC_ASVTAB.csv",  comm2wide(species))
+CSV.write("/brewster/kevin/resonance_data/exports/VCK_METATAB.csv", select(mdata, [:sample, :subject, :SCORE, :BMODE, :AGE, :MED, :MARRIED, :PAROUS, :MAGE, :FAGE, :SMOKE, :ABX, :SEX, :GESTAGE, :STOOLAGE, :BFEEDDUR, :BFEED]))

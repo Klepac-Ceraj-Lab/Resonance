@@ -164,7 +164,7 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_18to120, ["ageMonths", "cogScore", "read_depth", "education"]))
     outfile = tablefiles("lms_unirefs_18to120.csv")
     lmresults = DataFrame()
 
@@ -220,7 +220,7 @@ end
 
 ## Calculate correlations
 
-unimdata = DataFrame(metadata(unirefs))
+unimdata = DataFrame(get(unirefs))
 
 unirefs_00to120 = let filt = get(unirefs, :filter_00to120)
     keepuni = vec(prevalence(unirefs[:, filt]) .> 0)
@@ -250,7 +250,7 @@ isdir(scratchfiles("figure2")) || mkpath(scratchfiles("figure2"))
 ## Run LMs
 
 let 
-    indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_18to120, ["ageMonths", "cogScore", "read_depth", "education"]))
     outfile = tablefiles("lms_unirefs_18to120.csv")
     lmresults = DataFrame()
     i = 0
@@ -285,7 +285,7 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_00to120, ["ageMonths", "cogScore", "read_depth", "education"]))
     outfile = tablefiles("lms_unirefs_00to120.csv")
     lmresults = DataFrame()
     i = 0
@@ -320,7 +320,7 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_00to06))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_00to06, ["ageMonths", "cogScore", "read_depth", "education"]))
     outfile = tablefiles("lms_unirefs_00to06.csv")
     lmresults = DataFrame()
     i = 0

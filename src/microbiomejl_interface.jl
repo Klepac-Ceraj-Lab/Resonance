@@ -1,5 +1,5 @@
 function write_arrow(filename, cmp::CommunityProfile; unirefs = false)
-    df = DataFrame(metadata(cmp))
+    df = DataFrame(get(cmp))
     @debug "filtering profile"
     cmp = cmp[sort(ThreadsX.unique(first(findnz(abundances(cmp))))), :]
     @debug "getting features and samples"
@@ -55,6 +55,6 @@ end
 
 function comm2wide(cmp::CommunityProfile; feature_filter=identity, sample_filter=identity)
     cmp = cmp[feature_filter(features(cmp)), sample_filter(samples(cmp))]
-    md = DataFrame(metadata(cmp))
+    md = DataFrame(get(cmp))
     return hcat(md, DataFrame(collect(abundances(cmp)'), featurenames(cmp)))
 end
