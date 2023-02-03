@@ -1,54 +1,17 @@
-using Microbiome
-using CSV
-using DataFrames
-using ECHOSRS2
-using SparseArrays
-using ProgressLogging
-using Dictionaries
-using MultipleTesting
-using Statistics
-using HypothesisTests
-using CairoMakie
+using Resonance
 
 outdir = "/grace/facstaff/kevin/srs2/"
 figsdir = joinpath(outdir, "figures")
 isdir(figsdir) || mkpath(figsdir)
 
-meta = CSV.read("data/VKC.DATA.MI.csv", DataFrame)
+mdata = CSV.read("/brewster/kevin/resonance_data/exports/VCK_METATAB.csv", DataFrame)
+unirefs = Resonance.load_raw_humann()
+unirefs = let
+    sns = replace.(samplenames(unirefs), r"_S\d+"=>"")
+    unirefs[:, map(s-> s in mdata.sample, sns)]
+end
 
 gfs = DataFrame()
-
-for batch in 1:14
-    b = lpad(batch, 3, '0')
-    @info "working on batch$b"
-    for (root, dirs, files) in walkdir("/grace/echo/analysis/biobakery3/batch$b/")
-        occursin("humann", root) || continue
-        occursin("main", root) || continue
-        filter!(f-> occursin(r"_genefamilies\.tsv", f), files)
-        
-        for f in joinpath.(Ref(root), files)
-            s = first(basename(f), 11)
-            s = replace(s, "-"=>"_")
-            row = findfirst(==(s), meta.MBL_ID)
-            isnothing(row) && continue
-
-            sample = MicrobiomeSample(s)
-            set!(sample, :batch, batch)
-            for col in propertynames(meta)[2:end]
-                set!(sample, col, meta[row, col])
-            end
-
-            gf = CSV.read(f, DataFrame)
-            rename!(gf, ["feature", "abundance"])
-            gf.sample = fill(sample, nrow(gf))
-            
-
-            filter!("feature" => (x-> !occursin(r"\|[gu]", x)), gf)
-            gf.feature = GeneFunction.(gf.feature)
-            append!(gfs, gf)
-        end
-    end
-end
 
 
 cp = let
@@ -64,7 +27,7 @@ cp = let
     CommunityProfile(mat, features, samples)
 end
 
-cpmeta = DataFrame(metadata(cp))
+cpmeta = DataFrame(get(cp))
 accessory = findall(p-> 0.1 < p < 0.9, vec(prevalence(cp)))
 
 unirefaccessory = cp[accessory, :]

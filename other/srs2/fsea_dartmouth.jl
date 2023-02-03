@@ -54,7 +54,7 @@ cp = let
     CommunityProfile(mat, features, samples)
 end
 
-cpmeta = DataFrame(metadata(cp))
+cpmeta = DataFrame(get(cp))
 accessory = findall(p-> 0.1 < p < 0.9, vec(prevalence(cp)))
 
 unirefaccessory = cp[accessory, :]

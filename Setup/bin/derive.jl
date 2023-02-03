@@ -70,7 +70,7 @@ reduced = @chain mdata begin
     subset("sample_base"=> ByRow(!ismissing))
 end
     
-taxmd = DataFrame(metadata(taxa))
+taxmd = DataFrame(get(taxa))
 
 leftjoin!(taxmd, reduced, on=[:sample_base])
 for f in features(taxa)
