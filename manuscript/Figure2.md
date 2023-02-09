@@ -96,7 +96,7 @@ C = GridLayout(CDEF[1, 1])
 D = GridLayout(CDEF[1, 2])
 E = GridLayout(CDEF[1, 3])
 F = GridLayout(CDEF[1, 4])
-G = GridLayout(figure[3,1], alignmode=Outside())
+G = GridLayout(figure[3,1], alignmode=Mixed(; left=0))
 ```
 
 ```julia
@@ -109,7 +109,6 @@ scatter!(aax, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
     color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_18to120.qvalue))
 ```
 ```julia
-
 B = GridLayout(AB[1, 2:3])
 
 bax1 = let groups = ["0-120m", "0-6m", "18-120m"]
@@ -179,7 +178,6 @@ rowgap!(B, Fixed(4))
 
 
 ```julia
-
 let
     gs = "Acetate synthesis II"
     panel = C
@@ -243,7 +241,7 @@ let
   
     df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="T stat", title="All ages")
+                xlabel="T stat", title="All ages", alignmode=Mixed(; left=-15))
     m = median(filter(x-> !isnan(x) && x < 7, cors_00to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
@@ -319,30 +317,30 @@ colgap!(G, Fixed(4))
 
 ```julia
 Label(AB[1, 1, TopLeft()], "A",
-    textsize = 26,
+    fontsize = 26,
     font = "Open Sans Bold",
     padding = (0, 30, 5, 0),
     halign = :right)
 Label(AB[1, 2, TopLeft()], "B",
-    textsize = 26,
+    fontsize = 26,
     font = "Open Sans Bold",
-    padding = (0, 120, 5, 0),
+    padding = (0, 150, 5, 0),
     halign = :right)
 
 for (label, layout) in zip(["C", "D", "E", "F"], [C, D, E, F])
     Label(layout[1, 1, TopLeft()], label,
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 30, 5, 0),
         halign = :right)
 end
 
-Label(G[1, 1, TopLeft()], "G",
-        textsize = 26,
-        font = "Open Sans Bold",
-        padding = (0, 120, 5, 0),
-        halign = :right
-)
+Label(figure[3, 1, TopLeft()], "G";
+             fontsize = 26,
+             font = "Open Sans Bold",
+             padding = (0, 30, 5, 0),
+             halign = :right
+       )
 # colgap!(figure.layout, 2, -35)
 save("manuscript/assets/Figure2.png", figure)
 save(figurefiles("Figure2.svg"), figure)
