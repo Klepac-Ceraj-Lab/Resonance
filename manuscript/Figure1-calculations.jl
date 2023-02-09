@@ -8,6 +8,7 @@ using CategoricalArrays
 #-
 
 mdata = Resonance.load(Metadata())
+mdata.education = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), mdata.education)
 
 species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit

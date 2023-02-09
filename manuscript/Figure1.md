@@ -40,6 +40,8 @@ ecsdm = CSV.read(scratchfiles("ecsdm.csv"), DataFrame) |> Matrix
 kosdm = CSV.read(scratchfiles("kosdm.csv"), DataFrame) |> Matrix
 # metdm = CSV.read(scratchfiles("metdm.csv"), DataFrame) |> Matrix
 brndm = CSV.read(scratchfiles("brndm.csv"), DataFrame) |> Matrix
+
+divr = shannon(species) |> vec
 ```
 
 
@@ -49,10 +51,10 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 ```julia
 figure = Figure(; resolution = (2000, 1200))
-A = GridLayout(figure[1,1]; alignmode=Outside())
-BCDE = GridLayout(figure[1,2]; alignmode=Outside())
-F = GridLayout(figure[1,3]; alignmod=Outside())
-GH = GridLayout(figure[2,1:3]; alignmode=Outside())
+A = GridLayout(figure[1,1])
+BCDE = GridLayout(figure[1,2])
+F = GridLayout(figure[1,3])
+GH = GridLayout(figure[2,1:3])
 ```
 
 
@@ -63,13 +65,13 @@ GH = GridLayout(figure[2,1:3]; alignmode=Outside())
 For now, the graphic here is a place-holder, but we'll have something like this for 1A.
 
 ```julia
-A_img = Axis(A[2,1:2]; aspect = DataAspect(), alignmode=Inside())
-A_histleft = Axis(A[1,1]; ylabel="Samples (N)", alignmode=Mixed(; left=45))
-A_histright = Axis(A[1,2]; xlabel = "Age (years)", xticks=2:2:16, alignmode=Inside(), yticklabelsvisible=false, yticksvisible=false)
+A_img = Axis(A[2,1:3]; aspect = DataAspect(), alignmode=Inside())
+A_histleft = Axis(A[1,2]; ylabel="Samples (N)")
+A_histright = Axis(A[1,3]; xlabel = "Age (years)", xticks=2:2:16, yticklabelsvisible=false, yticksvisible=false)
 hidedecorations!(A_img)
 hidespines!(A_img)
 
-image!(A_img, rotr90(load("manuscript/assets/Figure1-graphic.pdf")))
+image!(A_img, rotr90(load("manuscript/assets/Figure1A.jpg")))
 
 hist!(A_histleft, filter(<=(24), mdata.ageMonths); color = :darkgray)
 hist!(A_histright, filter(>(24), mdata.ageMonths) ./ 12; color = :darkgray, bins=8)
@@ -79,7 +81,7 @@ rowsize!(A, 1, Relative(1/5))
 colsize!(A, 2, Relative(1/3))
 linkyaxes!(A_histleft, A_histright)
 
-A_histleft.xticks = ([0,3,6,12], ["birth", "3m", "6m", "12m"])
+A_histleft.xticks = ([3,6,12], ["", "", ""])
 ```
 
 
@@ -88,16 +90,16 @@ A_histleft.xticks = ([0,3,6,12], ["birth", "3m", "6m", "12m"])
 ```julia
 spepco = fit(MDS, spedm; distances=true)
 
-divr = shannon(species) |> vec
-
 B = GridLayout(BCDE[1,1])
-Ba = Axis(B[1,1]; ylabel= "Age (months)", title = "Taxa", yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2))
+Ba = Axis(B[1,1]; ylabel= "Age (months)", xlabel = mdsaxis(spepco, 1), 
+                  title = "Taxa", yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2),
+                  alignmode = Mixed(; left=-15))
 sc1 = scatter!(Ba, Resonance.loadings(spepco, 1), get(species, :ageMonths);
         color = divr, colormap=:plasma)
 hlines!(Ba, [6, 18]; linestyle=:dash, color=:darkgray)
 Colorbar(B[1, 2], sc1; label="Shannon Diversity", flipaxis=true)
 
-C = Axis(BCDE[2,1]; title = "Taxa")
+C = Axis(BCDE[2,1]; title = "Taxa", alignmode = Mixed(; left=-15))
 sc2 = plot_pcoa!(C, spepco; color=get(species, :ageMonths))
 
 
@@ -110,24 +112,23 @@ sc2 = plot_pcoa!(C, spepco; color=get(species, :ageMonths))
 # plot_pcoa!(Cb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
 # hideydecorations!(Cb)
 # pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
-D = Axis(BCDE[1,2]; title = "Functions")
+D = Axis(BCDE[1,2]; title = "Functions", alignmode = Mixed(; left=-15))
 
 unipco = fit(MDS, unidm; distances=true)
 plot_pcoa!(D, unipco; color=get(unirefs, :ageMonths))
 
-E = Axis(BCDE[2,2]; title = "Neuroimaging")
+E = Axis(BCDE[2,2]; title = "Neuroimaging", alignmode = Mixed(; left=-15))
 
 brnpco = fit(MDS, brndm; distances=true)
 plot_pcoa!(E, brnpco; color=get(brain, :ageMonths))
 
 Colorbar(BCDE[1:2, 3], sc2; label="Age (months)", flipaxis=true, ticks=0:24:120)
-figure
 ```
 
 ### 1F - cogscores
 
 ```julia
-fax1 = Axis(F[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing))
+fax1 = Axis(F[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing), alignmode = Mixed(; left=-15))
 fax2 = Axis(F[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
 hideydecorations!(fax2)
 linkyaxes!(fax1, fax2)
@@ -157,8 +158,10 @@ let
     )
 end
 
-colsize!(figure.layout, 1, Relative(1/4))
+colsize!(figure.layout, 1, Relative(1/3))
 colsize!(figure.layout, 3, Relative(1/4))
+colsize!(A, 1, Fixed(12))
+colsize!(A, 2, Relative(1/2))
 colgap!(F, Fixed(4))
 figure
 ```
@@ -172,7 +175,7 @@ This is a permutation test of variance
 ```julia
 G = GridLayout(GH[1,1])
 # Ba = Axis(B[1:2,1]; alignmode=Outside())
-Ga = Axis(G[1,1]; title="Under 6mo")
+Ga = Axis(G[1,1]; title="Under 6mo", alignmode = Mixed(; left=-15))
 Gb = Axis(G[1,2]; title="Over 18mo")
 ```
 
@@ -183,7 +186,8 @@ hideydecorations!(Gb)
 plot_permanovas!(Gb, CSV.read(scratchfiles("permanovas_18to120.csv"), DataFrame))
 
 colsize!(GH, 1, Relative(1/2))
-# Label(GH[0,1], "PERMANOVAs")
+Ga.alignmode = Mixed(; left=0)
+colsize!(G, 1, Relative(4/7))
 ```
 
 
@@ -193,7 +197,7 @@ colsize!(GH, 1, Relative(1/2))
 H = GridLayout(GH[1,2])
 
 # Ca = Axis(C[1:2, 1]; alignmode=Outside())
-Ha = Axis(H[1,1]; title="Under 6mo")
+Ha = Axis(H[1,1]; title="Under 6mo", alignmode = Mixed(; left=-15))
 Hb = Axis(H[1,2]; title="Over 18mo")
 hideydecorations!(Hb)
 
@@ -213,50 +217,42 @@ plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 Label(A[1, 1, TopLeft()], "A",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[1, 1, TopLeft()], "B",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[2, 1, TopLeft()], "C",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[1, 2, TopLeft()], "D",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(BCDE[2, 2, TopLeft()], "E",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 
 Label(F[1, 1, TopLeft()], "F",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(G[1, 1, TopLeft()], "G",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 Label(H[1, 1, TopLeft()], "H",
         fontsize = 26,
         font = "Open Sans Bold",
-        padding = (0, 5, 5, 0),
         halign = :right
 )
 
