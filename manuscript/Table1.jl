@@ -61,14 +61,14 @@ Table1.all = let df = mdata; ufilt = df.filter_00to120
     ages = ["$(round(f(ages); digits=2))" for f in [minimum, maximum, median]]
 
     sexes = [count(si -> !ismissing(si) && si == s, df.sex[ufilt]) for s in levels(df.sex)]
-    sexes = ["$s ($(round(s / length(ufilt) * 100; digits = 1))%)" for s in sexes]
+    sexes = ["$s ($(round(s / sum(ufilt) * 100; digits = 1))%)" for s in sexes]
 
     races = [count(ri -> !ismissing(ri) && ri == r, df.race[ufilt]) for r in levels(df.race)]
-    races = ["$r ($(round(r / length(ufilt) * 100; digits = 1))%)" for r in races]
+    races = ["$r ($(round(r / sum(ufilt) * 100; digits = 1))%)" for r in races]
 
 
     eds = [count(ei -> !ismissing(ei) && ei == e, df.education[ufilt]) for e in levels(df.education)]
-    eds = ["$e ($(round(e / length(ufilt) * 100; digits = 1))%)" for e in eds]
+    eds = ["$e ($(round(e / sum(ufilt) * 100; digits = 1))%)" for e in eds]
     [nsub; ss; ages; sexes; races; eds]
 end
 
@@ -83,14 +83,14 @@ Table1.under6mo = let df = subset(mdata, "ageMonths"=> ByRow(<=(6))); ufilt = df
     ages = ["$(round(f(ages); digits=2))" for f in [minimum, maximum, median]]
 
     sexes = [count(si -> !ismissing(si) && si == s, df.sex[ufilt]) for s in levels(df.sex)]
-    sexes = ["$s ($(round(s / length(ufilt) * 100; digits = 1))%)" for s in sexes]
+    sexes = ["$s ($(round(s / sum(ufilt) * 100; digits = 1))%)" for s in sexes]
 
     races = [count(ri -> !ismissing(ri) && ri == r, df.race[ufilt]) for r in levels(df.race)]
-    races = ["$r ($(round(r / length(ufilt) * 100; digits = 1))%)" for r in races]
+    races = ["$r ($(round(r / sum(ufilt) * 100; digits = 1))%)" for r in races]
 
 
     eds = [count(ei -> !ismissing(ei) && ei == e, df.education[ufilt]) for e in levels(df.education)]
-    eds = ["$e ($(round(e / length(ufilt) * 100; digits = 1))%)" for e in eds]
+    eds = ["$e ($(round(e / sum(ufilt) * 100; digits = 1))%)" for e in eds]
     [nsub; ss; ages; sexes; races; eds]
 end
 
@@ -105,14 +105,14 @@ Table1.over18mo = let df = subset(mdata, "ageMonths"=> ByRow(>(18))); ufilt = df
     ages = ["$(round(f(ages); digits=2))" for f in [minimum, maximum, median]]
 
     sexes = [count(si -> !ismissing(si) && si == s, df.sex[ufilt]) for s in levels(df.sex)]
-    sexes = ["$s ($(round(s / length(ufilt) * 100; digits = 1))%)" for s in sexes]
+    sexes = ["$s ($(round(s / sum(ufilt) * 100; digits = 1))%)" for s in sexes]
 
     races = [count(ri -> !ismissing(ri) && ri == r, df.race[ufilt]) for r in levels(df.race)]
-    races = ["$r ($(round(r / length(ufilt) * 100; digits = 1))%)" for r in races]
+    races = ["$r ($(round(r / sum(ufilt) * 100; digits = 1))%)" for r in races]
 
 
     eds = [count(ei -> !ismissing(ei) && ei == e, df.education[ufilt]) for e in levels(df.education)]
-    eds = ["$e ($(round(e / length(ufilt) * 100; digits = 1))%)" for e in eds]
+    eds = ["$e ($(round(e / sum(ufilt) * 100; digits = 1))%)" for e in eds]
     [nsub; ss; ages; sexes; races; eds]
 end
 
