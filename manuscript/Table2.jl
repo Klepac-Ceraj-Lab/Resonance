@@ -7,19 +7,19 @@ using DataFrames.PrettyTables
 isdir(tablefiles()) || mkpath(tablefiles())
 
 fsea = let
-    fsea_all = CSV.read(outputfiles("fsea_all.csv"), DataFrame)
-    fsea_all.group .= "all"
-    fsea_u6 = CSV.read(outputfiles("fsea_u6.csv"), DataFrame)
-    fsea_u6.group .= "u6"
-    fsea_o18 = CSV.read(outputfiles("fsea_o18.csv"), DataFrame)
-    fsea_o18.group .= "o18"
+    fsea_all = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
+    fsea_all.group .= "00to120"
+    fsea_u6 = CSV.read(scratchfiles("figure2", "fsea_all_00to06.csv"), DataFrame)
+    fsea_u6.group .= "00to06"
+    fsea_o18 = CSV.read(scratchfiles("figure2", "fsea_all_18to120.csv"), DataFrame)
+    fsea_o18.group .= "18to120"
     vcat(fsea_all, fsea_u6, fsea_o18)
 end
 
-fsea.group = categorical(fsea.group; levels=["all", "u6", "o18"])
+fsea.group = categorical(fsea.group; levels=["00to120", "00to06", "18to120"])
 
 @chain fsea begin
-    subset!(:cortest=> ByRow(==("cogScorePercentile")))
+    subset!(:cortest=> ByRow(==("cogScore")))
     groupby(:geneset)
     transform!(:qvalue => (
         q-> any(<(0.2), q) ? fill(true, length(q)) : 
@@ -47,5 +47,12 @@ end
 
 
 CSV.write(tablefiles("Table2.csv"), fseaout)
-h1 = Highlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2; bold=true, foreground=:blue)
-pretty_table(fseaout; highlighters=(h1,))
+h1 = Highlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] < 0; bold=true, foreground=:red)
+h2 = Highlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] > 0; bold=true, foreground=:blue)
+
+pretty_table(fseaout; highlighters=(h1,h2),
+    header = (map(n-> replace(replace(n, r"_.+" => ""), "geneset"=>"Age group"), names(fseaout)),
+              map(n-> replace(replace(n, r".+_enrichment" => "E.S."), r".+_qvalue"=>"q value"), names(fseaout))
+    )
+    
+    )

@@ -35,7 +35,7 @@ kosdm = Microbiome.braycurtis(kos)
 CSV.write(scratchfiles("kosdm.csv"), Tables.table(kosdm))
 # metdm = Microbiome.braycurtis(metabolites)
 # CSV.write(scratchfiles("metdm.csv"), Tables.table(metdm))
-brndm = Microbiome.braycurtis(brain)
+brndm = pairwise(Euclidean(), abundances(brain))
 CSV.write(scratchfiles("brndm.csv"), Tables.table(brndm))
 
 
