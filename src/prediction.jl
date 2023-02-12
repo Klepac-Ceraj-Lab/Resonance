@@ -2,6 +2,13 @@
 # 0. Hierarchical Structures and Types #
 ########################################
 
+struct CustomRangeNormalizer
+    rmin::Float64
+    rmax::Float64
+    tmin::Float64
+    tmax::Float64
+end
+
 abstract type Prediction end
 struct Classification <: Prediction end
 struct Regression <: Prediction end
@@ -10,13 +17,20 @@ abstract type Predictor end
 abstract type UnivariatePredictor <: Resonance.Predictor end
 abstract type MultivariatePredictor <: Resonance.Predictor end
 
+mutable struct ExpandedRandomForestClassifier
+    model::Machine
+    train_accuracy::Float64
+    test_accuracy::Float64
+    fitness::Float64
+end
+
 mutable struct UnivariateRandomForestClassifier <: Resonance.UnivariatePredictor
     name::String
     original_data::DataFrame
     inputs_outputs::Tuple{DataFrame, CategoricalArrays.CategoricalVector{Bool, UInt32, Bool, CategoricalArrays.CategoricalValue{Bool, UInt32}, Union{}}}
     n_splits::Int64
     dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
-    models::Vector{Machine}
+    models:: Vector{Vector{ExpandedRandomForestClassifier}}
     selected_split::Tuple{Float64, Int64}
     train_accuracies::Vector{Float64}
     test_accuracies::Vector{Float64}
@@ -29,20 +43,37 @@ mutable struct UnivariateRandomForestRegressor <: Resonance.UnivariatePredictor
     n_splits::Int64
     dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
     models::Vector{Machine}
-    slope_corrections::Vector{}
+    scale_corrections::Vector{CustomRangeNormalizer}
     selected_split::Tuple{Float64, Int64}
-    train_maes::Vector{Float64}
-    test_maes::Vector{Float64}
-    train_mapes::Vector{Float64}
-    test_mapes::Vector{Float64}
-    train_cor::Vector{Float64}
-    test_cor::Vector{Float64}
+    train_rmses::Vector{Float64}
+    test_rmses::Vector{Float64}
+    train_cors::Vector{Float64}
+    test_cors::Vector{Float64}
+end
+
+mutable struct ExpandedRandomForestRegressor <: Resonance.UnivariatePredictor
+    model::Machine
+    scale_correction::CustomRangeNormalizer
+    train_rmse::Float64
+    test_rmse::Float64
+    train_cor::Float64
+    test_cor::Float64
+    fitness::Float64
 end
 
 mutable struct UnivariatePredictorEnsemble
     screen_names::Vector{String}
     col_names::Vector{Symbol}
     predictors::Vector{T where T <: Resonance.UnivariatePredictor}
+end
+
+struct ProbeData
+    name::String
+    n_folds::Int64
+    n_replicas::Int64
+    n_rngs::Int64
+    merits::DataFrame
+    importances::DataFrame
 end
 
 ########################################
@@ -221,6 +252,17 @@ end
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 
+## N-fold CV
+function partitionvec(x,stride,i,longtail::Bool=true)
+    # longtail=true to lengthen the last entry with the leftovers
+    # longtail=false to place the leftovers in their own entry
+    stride > 0 || error("stride must be positive") # doesn't handle negative strides
+    starts = firstindex(x):stride:(lastindex(x)-longtail*stride)+1 # where to start each subvector
+    subvecs = [view(x,starts[i]:get(starts,i+1,lastindex(x)+1)-1) for i in eachindex(starts)]
+    train, test = reduce(vcat, [ collect(subvecs[map(x -> x != i, eachindex(subvecs))]) ]...), collect(subvecs[i])
+    return train, test
+end
+
 ## 2.1. Train Tandom Forest Classifier
 
 function train_randomforest(
@@ -231,7 +273,7 @@ function train_randomforest(
     class_function::Function,
     input_cols,
     output_col;
-    n_splits = 2,
+    n_splits = 5,
     tuning_space = (;
         maxnodes_range = [ -1 ],
         nodesize_range = [ 0 ],
@@ -239,12 +281,15 @@ function train_randomforest(
         mtry_range = [ 5 ],
         ntrees_range = [ 10 ]
     ),
-    split_proportion=0.75,
+    stress_draws=51,
+    select_stress_percentile = 0.841,
     train_rng=Random.GLOBAL_RNG
     )
 
-    # ## 1. Subsetting Data
+    # ## 1. Subsetting Data and shuffling DataFrame
     prediction_df = data_preparation_fun(original_df)
+    Random.seed!(train_rng, 0)
+    prediction_df = prediction_df[Random.randperm(train_rng, nrow(prediction_df)), :]
     
     # ## 2. Separating inputs/outputs
     X = prediction_df[:, input_cols]
@@ -261,7 +306,7 @@ function train_randomforest(
 
     # ## 4. Initializing meta-arrays to record tuning results for each split
     trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
-    trial_machines = Vector{Machine}(undef, n_splits)
+    trial_machines = Vector{Vector{ExpandedRandomForestClassifier}}(undef, n_splits)
     trial_train_accuracies = zeros(Float64, n_splits)
     trial_test_accuracies = zeros(Float64, n_splits)
 
@@ -270,48 +315,44 @@ function train_randomforest(
 
     for this_trial in 1:n_splits
 
+        fitness_threshold = 0.0
+
         ## 5.1. Splitting training data between train and test
-        Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partitionvec(collect(1:nrow(prediction_df)),floor(Int64, nrow(prediction_df)/n_splits),this_trial, true)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
         for i in eachindex(tuning_grid)
-            Random.seed!(train_rng, 0)
 
-            ## 5.2.1. Construct model with a candidate set of hyperparameters
-            rf_model = RandomForestClassifier(
-                max_depth = tuning_grid[i][1],
-                min_samples_leaf = tuning_grid[i][2],
-                sampling_fraction = tuning_grid[i][3],
-                n_subfeatures = tuning_grid[i][4],
-                n_trees = tuning_grid[i][5],
-                rng=train_rng
-            )
+            expanded_models = try_stress_hyperparameters(
+                Resonance.Classification(),
+                X, y, train, test,
+                (;
+                    max_depth = tuning_grid[i][1],
+                    min_samples_leaf = tuning_grid[i][2],
+                    sampling_fraction = tuning_grid[i][3],
+                    n_subfeatures = tuning_grid[i][4],
+                    n_trees = tuning_grid[i][5]
+                ),
+                stress_draws;
+                train_rng=train_rng)
 
-            ## 5.2.2. Fit model on training data
-            if length(collect(input_cols)) == 1
-                rf_machine = machine(rf_model, X[train], y[train])
-            else
-                rf_machine = machine(rf_model, X[train, :], y[train])
-            end
-            MLJ.fit!(rf_machine, verbosity=0)
-
-            ## 5.2.3. Benchmark model on independent testing data
-            train_y_hat = MLJ.predict_mode(rf_machine, X[train, :]) 
-            train_acc = mean(train_y_hat .== y[train])
-
-            test_y_hat = MLJ.predict_mode(rf_machine, X[test, :]) 
-            test_acc = mean(test_y_hat .== y[test])
+            merits = report_merits(expanded_models)
+            target_percentile = sort(merits[1:stress_draws, :Fitness])[floor(Int64, select_stress_percentile*stress_draws)]
+            selected_fitness_index = findfirst(merits[1:stress_draws, :Fitness] .== target_percentile)
+            selected_fitness = merits[selected_fitness_index, :Fitness]
 
             ## 5.2.4. Compare benchmark results with previous best model
-            test_acc > trial_test_accuracies[this_trial] ? begin
-                trial_train_accuracies[this_trial] = train_acc
-                trial_test_accuracies[this_trial] = test_acc
-                trial_machines[this_trial] = deepcopy(rf_machine)
+            selected_fitness > fitness_threshold ? begin
+                fitness_threshold = selected_fitness
+                trial_train_accuracies[this_trial] = merits[selected_fitness_index, :Train_ACC]
+                trial_test_accuracies[this_trial] = merits[selected_fitness_index, :Test_ACC]
+                trial_machines[this_trial] = deepcopy(expanded_models)
             end : continue
 
         end # end for i in 1:length(tuning_grid) - each set of hyperparameters
+
+        println("Split done!")
 
     end # end for this_trial - each different train/test split
 
@@ -350,12 +391,14 @@ function train_randomforest(
         mtry_range = [ 5 ],
         ntrees_range = [ 10 ]
     ),
-    split_proportion=0.75,
+    split_proportion=0.6,
     train_rng=Random.GLOBAL_RNG
     )
 
-    # ## 1. Subsetting Data
+    # ## 1. Subsetting Data and shuffling DataFrame
     prediction_df = data_preparation_fun(original_df)
+    Random.seed!(train_rng, 0)
+    prediction_df = prediction_df[Random.randperm(train_rng, nrow(prediction_df)), :]
     
     # ## 2. Separating inputs/outputs
     X = prediction_df[:, input_cols]
@@ -373,12 +416,10 @@ function train_randomforest(
     # ## 4. Initializing meta-arrays to record tuning results for each split
     trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
     trial_machines = Vector{Machine}(undef, n_splits)
-    trial_slopecorrections = Vector{T where T <: RegressionModel}(undef, n_splits)
-    trial_train_maes = repeat([Inf], n_splits)
-    trial_train_mapes = repeat([Inf], n_splits)
+    trial_scalecorrections = Vector{CustomRangeNormalizer}(undef, n_splits)
+    trial_train_rmses = repeat([Inf], n_splits)
+    trial_test_rmses = repeat([Inf], n_splits)
     trial_train_cors = repeat([-1.0], n_splits)
-    trial_test_maes = repeat([Inf], n_splits)
-    trial_test_mapes = repeat([Inf], n_splits)
     trial_test_cors = repeat([-1.0], n_splits)
 
     # ## 5. Tuning/training loop
@@ -386,9 +427,12 @@ function train_randomforest(
 
     for this_trial in 1:n_splits
 
+        fitness_threshold = -1.0
+
         ## 5.1. Splitting training data between train and test
-        Random.seed!(train_rng, this_trial)
-        train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
+        # Random.seed!(train_rng, this_trial)
+        # train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
+        train, test = partitionvec(collect(1:nrow(prediction_df)),floor(Int64, nrow(prediction_df)/n_splits),this_trial, true)
         trial_partitions[this_trial] = (train, test)
 
         ## 5.2. Tuning hyperparameter for this split
@@ -408,31 +452,43 @@ function train_randomforest(
             ## 5.2.2. Fit model on training data
             rf_machine = machine(rf_model, X[train, :], y[train])
             MLJ.fit!(rf_machine, verbosity=0)
-            ## 5.2.2.1. Fit slope correction on training data
-
+            ## 5.2.2.1. Fit scale correction on training data
             train_y_hat = MLJ.predict(rf_machine, X[train, :])
-            slope_correction_df = DataFrame([ train_y_hat, y[train] ], [:yhat, :y])
-            slope_correction = lm(@formula(y ~ yhat), slope_correction_df)
-            train_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => train_y_hat))
-            train_mape = mape(train_y_hat, y[train])
+            scale_correction = compute_custom_scale(train_y_hat, y[train])
+            train_y_hat = scale_normalization(train_y_hat, scale_correction)
+            train_rmse = rms(train_y_hat, y[train])
+            train_cor = Statistics.cor(train_y_hat, y[train])
 
             ## 5.2.3. Benchmark model on independent testing data
-            test_y_hat = GLM.predict(slope_correction, DataFrame(:yhat => MLJ.predict(rf_machine, X[test, :])))
-            test_mape = mape(test_y_hat, y[test])
+            test_y_hat = MLJ.predict(rf_machine, X[test, :])
+            test_y_hat = scale_normalization(test_y_hat, scale_correction)
+            test_rmse = rms(test_y_hat, y[test])
+            test_cor = Statistics.cor(test_y_hat, y[test])
 
             ## 5.2.4. Compare benchmark results with previous best model
-            test_mape < trial_test_mapes[this_trial] ? begin
-                trial_train_maes[this_trial] = mae(train_y_hat, y[train])
-                trial_train_mapes[this_trial] = train_mape
-                trial_train_cors[this_trial] = Statistics.cor(train_y_hat, y[train])
-                trial_test_maes[this_trial] = mae(test_y_hat, y[test])
-                trial_test_mapes[this_trial] = test_mape
-                trial_test_cors[this_trial] = Statistics.cor(test_y_hat, y[test])
+            # model_fitness = sqrt(Complex(train_rmse*test_rmse))
+            model_fitness = sqrt((train_cor^2)*(test_cor^2)) # Penalizing test_cor to avoid lucky test sets.
+            # model_fitness = Complex(train_cor*test_cor*test_cor).re ^ 1.0/3.0
+
+            ## 5.2.4. Compare benchmark results with previous best model
+            # ((model_fitness.im == 0) & (model_fitness.re > fitness_threshold) & (train_cor != -1.0) & (test_cor != -1.0)) ? begin
+            # ((model_fitness.re < fitness_threshold) & (train_cor > -0.0)) ? begin
+            ((model_fitness > fitness_threshold) & (train_cor > -0.1) & (test_cor > -0.1)) ? begin
+                println(model_fitness)
+                println(train_cor)
+                println(test_cor)
+                fitness_threshold = model_fitness
+                trial_train_rmses[this_trial] = train_rmse
+                trial_train_cors[this_trial] = train_cor
+                trial_test_rmses[this_trial] = test_rmse
+                trial_test_cors[this_trial] = test_cor
                 trial_machines[this_trial] = deepcopy(rf_machine)
-                trial_slopecorrections[this_trial] = slope_correction
+                trial_scalecorrections[this_trial] = scale_correction
             end : continue
 
         end # end for i in 1:length(tuning_grid) - each set of hyperparameters
+
+        println("Split done!")
 
     end # end for this_trial - each different train/test split
 
@@ -444,12 +500,10 @@ function train_randomforest(
         n_splits,                   #n_splits::Int64
         trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
         trial_machines,             #models::Vector{Machine}
-        trial_slopecorrections,     #slope_correction::Vector{}
-        findmin(trial_test_mapes),  #selected_split::Tuple{Float64, Int64}
-        trial_train_maes,           #train_maes::Vector{Float64}
-        trial_test_maes,            #test_maes::Vector{Float64}
-        trial_train_mapes,          #train_mapes::Vector{Float64}
-        trial_test_mapes,           #test_mapes::Vector{Float64}
+        trial_scalecorrections,     #scale_correction::Vector{}
+        findmin(trial_test_rmses),  #selected_split::Tuple{Float64, Int64}
+        trial_train_rmses,          #train_rmses::Vector{Float64}
+        trial_test_rmses,           #test_rmses::Vector{Float64}
         trial_train_cors,           #train_cor::Vector{Float64}
         trial_test_cors,            #test_cor::Vector{Float64}
     )
@@ -459,9 +513,177 @@ function train_randomforest(
 
 end # end function
 
+function try_stress_hyperparameters(
+    ::Resonance.Classification,
+    X,
+    y,
+    train,
+    test,
+    pars = (;
+        maxnodes_range = -1 ,
+        nodesize_range = 0,
+        sampsize_range = 0.7,
+        mtry_range = 5,
+        ntrees_range = 1
+    ),
+    n_expanded_models = 101;
+    train_rng=Random.GLOBAL_RNG)
+
+    expanded_models = Vector{ExpandedRandomForestClassifier}(undef, n_expanded_models)
+
+    for i in 1:n_expanded_models
+        Random.seed!(train_rng, i-1)
+
+        rf_model = RandomForestClassifier(
+            max_depth = pars[1],
+            min_samples_leaf = pars[2],
+            sampling_fraction = pars[3],
+            n_subfeatures = pars[4],
+            n_trees = pars[5],
+            rng=train_rng
+        )
+        rf_machine = machine(rf_model, X[train, :], y[train])
+        MLJ.fit!(rf_machine, verbosity=0)
+
+        train_y_hat = MLJ.predict_mode(rf_machine, X[train, :]) 
+        train_acc = mean(train_y_hat .== y[train])
+        test_y_hat = MLJ.predict_mode(rf_machine, X[test, :]) 
+        test_acc = mean(test_y_hat .== y[test])
+        fitness = sqrt(train_acc*test_acc)
+
+        expanded_models[i] = ExpandedRandomForestClassifier(
+            deepcopy(rf_machine),
+            train_acc,
+            test_acc,
+            fitness
+        )
+
+    end
+
+    return expanded_models
+
+end
+
+function expand_pretrained_model(
+    model::Resonance.UnivariateRandomForestClassifier,
+    selected_split::Int64,
+    n_expanded_models::Int64;
+    train_rng=Random.GLOBAL_RNG
+    )
+
+    X = model.inputs_outputs[1]
+    y = model.inputs_outputs[2]
+    train, test = model.dataset_partitions[selected_split]
+
+    expanded_models = Vector{ExpandedRandomForestClassifier}(undef, n_expanded_models)
+
+    for i in 1:n_expanded_models
+        Random.seed!(train_rng, i-1)
+
+        rf_model = RandomForestClassifier(
+            max_depth = model.models[selected_split].model.max_depth,
+            min_samples_leaf = model.models[selected_split].model.min_samples_leaf,
+            sampling_fraction = model.models[selected_split].model.sampling_fraction,
+            n_subfeatures = model.models[selected_split].model.n_subfeatures,
+            n_trees = model.models[selected_split].model.n_trees,
+            rng=train_rng
+        )
+        rf_machine = machine(rf_model, X[train, :], y[train])
+        MLJ.fit!(rf_machine, verbosity=0)
+
+        train_y_hat = MLJ.predict_mode(rf_machine, X[train, :]) 
+        train_acc = mean(train_y_hat .== y[train])
+        test_y_hat = MLJ.predict_mode(rf_machine, X[test, :]) 
+        test_acc = mean(test_y_hat .== y[test])
+
+        expanded_models[i] = ExpandedRandomForestClassifier(
+            deepcopy(rf_machine),
+            train_acc,
+            test_acc
+        )
+
+    end
+
+    @info "Done!"
+    return expanded_models
+
+end # end function
+
+function expand_pretrained_model(
+    model::Resonance.UnivariateRandomForestRegressor,
+    selected_split::Int64,
+    n_expanded_models::Int64;
+    train_rng=Random.GLOBAL_RNG
+    )
+
+    X = model.inputs_outputs[1]
+    y = model.inputs_outputs[2]
+    train, test = model.dataset_partitions[selected_split]
+
+    expanded_models = Vector{ExpandedRandomForestRegressor}(undef, n_expanded_models)
+
+    for i in 1:n_expanded_models
+        Random.seed!(train_rng, i-1)
+
+        rf_model = RandomForestRegressor(
+            max_depth = model.models[selected_split].model.max_depth,
+            min_samples_leaf = model.models[selected_split].model.min_samples_leaf,
+            sampling_fraction = model.models[selected_split].model.sampling_fraction,
+            n_subfeatures = model.models[selected_split].model.n_subfeatures,
+            n_trees = model.models[selected_split].model.n_trees,
+            rng=train_rng
+        )
+        rf_machine = machine(rf_model, X[train, :], y[train])
+        MLJ.fit!(rf_machine, verbosity=0)
+
+        train_y_hat = MLJ.predict(rf_machine, X[train, :])
+        scale_correction = compute_custom_scale(train_y_hat, y[train])
+        train_y_hat = scale_normalization(train_y_hat, scale_correction)
+        train_rmse = rms(train_y_hat, y[train])
+        train_cor = Statistics.cor(train_y_hat, y[train])
+
+        test_y_hat = MLJ.predict(rf_machine, X[test, :])
+        test_y_hat = scale_normalization(test_y_hat, scale_correction)
+        test_rmse = rms(test_y_hat, y[test])
+        test_cor = Statistics.cor(test_y_hat, y[test])
+
+        expanded_models[i] = ExpandedRandomForestRegressor(
+            deepcopy(rf_machine),
+            scale_correction,
+            train_rmse,
+            test_rmse,
+            train_cor,
+            test_cor
+        )
+
+    end
+
+    @info "Done!"
+    return expanded_models
+
+end # end function
+
 #########################################
 # 3. Post-processing/Analysis Functions #
 #########################################
+
+## 3.0. Scale normalization
+function compute_custom_scale(rvector::Vector{Float64}, tvector::Vector{Float64})
+    return CustomRangeNormalizer(
+        minimum(rvector),
+        maximum(rvector),
+        minimum(tvector),
+        maximum(tvector)
+    )
+end
+
+function normalize_number(m, scale::CustomRangeNormalizer)
+    return ( (m - scale.rmin) / (scale.rmax - scale.rmin) * (scale.tmax - scale.tmin) + scale.tmin )
+end
+
+function scale_normalization(inputs::Vector{Float64}, scale::CustomRangeNormalizer)
+    return map(x -> normalize_number(x, scale), inputs)
+end
 
 ## 3.1. Generate Predictions (method predict)
 
@@ -498,19 +720,20 @@ function predict(model::UnivariateRandomForestRegressor, newx=nothing; split_ind
     (split_index > length(model.models)) && error("Out of Bounds model/split index selected")
     (split_index == 0) && (split_index = model.selected_split[2])
 
-    slope_correction = model.slope_corrections[split_index]
+    scale_correction = model.scale_corrections[split_index]
 
     if newx isa Nothing
-        return GLM.predict(
-            slope_correction,
-            DataFrame(:yhat => MLJ.predict(model.models[split_index], model.inputs_outputs[1]))
-        )
+        return scale_normalization(MLJ.predict(model.models[split_index], model.inputs_outputs[1]), scale_correction)
     else
-        return GLM.predict(
-            slope_correction,
-            DataFrame(:yhat => MLJ.predict(model.models[split_index], newx))
-        )
+        return scale_normalization(MLJ.predict(model.models[split_index], newx), scale_correction)
     end
+
+    # ## Without Scale Correction
+    # if newx isa Nothing
+    #     return MLJ.predict(model.models[split_index], model.inputs_outputs[1])
+    # else
+    #     return MLJ.predict(model.models[split_index], newx)
+    # end
 
 end
 
@@ -532,6 +755,12 @@ function report_merits(res::UnivariateRandomForestClassifier)
         :Test_ACC => mean(merits.Test_ACC)
     ))
 
+    push!(merits, Dict(
+        :Split => -1,
+        :Train_ACC => median(merits.Train_ACC[1:end-1]),
+        :Test_ACC => median(merits.Test_ACC[1:end-1])
+    ))
+
     return merits
 end
 
@@ -540,27 +769,85 @@ function report_merits(res::UnivariateRandomForestRegressor)
     
     merits = DataFrame(
         :Split => collect(1:res.n_splits),
-        :Train_MAE => res.train_maes,
-        :Test_MAE => res.test_maes,
-        :Train_MAPE => res.train_mapes,
-        :Test_MAPE => res.test_mapes,
-        :Train_COR => res.train_cor,
-        :Test_COR => res.test_cor
+        :Train_RMSE => res.train_rmses,
+        :Test_RMSE => res.test_rmses,
+        :Train_COR => res.train_cors,
+        :Test_COR => res.test_cors
         )
 
     push!(merits, Dict(
         :Split => 0,
-        :Train_MAE => mean(merits.Train_MAE),
-        :Test_MAE => mean(merits.Test_MAE),
-        :Train_MAPE => mean(merits.Train_MAPE),
-        :Test_MAPE => mean(merits.Test_MAPE),
+        :Train_RMSE => mean(merits.Train_RMSE),
+        :Test_RMSE => mean(merits.Test_RMSE),
         :Train_COR => mean(merits.Train_COR),
         :Test_COR => mean(merits.Test_COR)
+    ))
+
+    push!(merits, Dict(
+        :Split => -1,
+        :Train_RMSE => median(merits.Train_RMSE[1:end-1]),
+        :Test_RMSE => median(merits.Test_RMSE[1:end-1]),
+        :Train_COR => median(merits.Train_COR[1:end-1]),
+        :Test_COR => median(merits.Test_COR[1:end-1])
     ))
     
     return merits
 end
 
+function report_merits(res::Vector{ExpandedRandomForestClassifier})
+
+    merits = DataFrame(
+    :Trial => collect(1:length(res)),
+    :Train_ACC => [ el.train_accuracy for el in res ],
+    :Test_ACC => [ el.test_accuracy for el in res ],
+    :Fitness => [ el.fitness for el in res ],
+    )
+
+    push!(merits, Dict(
+        :Trial => 0,
+        :Train_ACC => mean(merits.Train_ACC),
+        :Test_ACC => mean(merits.Test_ACC),
+        :Fitness => mean(merits.Fitness)
+    ))
+
+    push!(merits, Dict(
+        :Trial => -1,
+        :Train_ACC => median(merits.Train_ACC[1:end-1]),
+        :Test_ACC => median(merits.Test_ACC[1:end-1]),
+        :Fitness => median(merits.Fitness[1:end-1])
+    ))
+
+    return merits
+end
+
+function report_merits(res::Vector{ExpandedRandomForestRegressor})
+
+    merits = DataFrame(
+    :Trial => collect(1:length(res)),
+    :Train_RMSE => [ el.train_rmse for el in res ],
+    :Test_RMSE => [ el.test_rmse for el in res ],
+    :Train_COR => [ el.train_cor for el in res ],
+    :Test_COR => [ el.test_cor for el in res ],
+    )
+
+    push!(merits, Dict(
+        :Trial => 0,
+        :Train_RMSE => mean(merits.Train_RMSE),
+        :Test_RMSE => mean(merits.Test_RMSE),
+        :Train_COR => mean(merits.Train_COR),
+        :Test_COR => mean(merits.Test_COR)
+    ))
+
+    push!(merits, Dict(
+        :Trial => -1,
+        :Train_RMSE => median(merits.Train_RMSE[1:end-1]),
+        :Test_RMSE => median(merits.Test_RMSE[1:end-1]),
+        :Train_COR => median(merits.Train_COR[1:end-1]),
+        :Test_COR => median(merits.Test_COR[1:end-1])
+    ))
+
+    return merits
+end
 ## 3.3. Importance analysis
 
 ### 3.3.1. MDI importance for all features in a single train/test split of a single Classifier model
@@ -1093,7 +1380,8 @@ function singlemodel_merit_barplot!(
     barplot!(
         ax, tbl.x, tbl.value,
         stack = tbl.grp,
-        color = confplot_colors[tbl.color]
+        color = confplot_colors[tbl.color],
+        size = 5
     )
     return figure
 end # end function

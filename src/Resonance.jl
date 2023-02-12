@@ -40,7 +40,10 @@ export  # 0. structs/types
         Regression,
         UnivariateRandomForestClassifier,
         UnivariateRandomForestRegressor,
+        ExpandedRandomForestClassifier,
+        ExpandedRandomForestRegressor,
         UnivariatePredictorEnsemble,
+        ProbeData,
         # 1. preprocessing functions
         dropmissing,
         dropnan,
@@ -54,8 +57,15 @@ export  # 0. structs/types
         univariate_tietjenmoore,
         try_outliers,
         # 2. training functions
+        partitionvec,
         train_randomforest,
+        try_stress_hyperparameters,
+        expand_pretrained_model,
         # postprocessing functions
+        CustomRangeNormalizer,
+        compute_custom_scale,
+        normalize_number,
+        scale_normalization,
         predict_proba,
         predict,
         report_merits,
