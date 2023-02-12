@@ -115,7 +115,7 @@ bax1 = let groups = ["0-120m", "0-6m", "18-120m"]
     Axis(B[1, 1]; xticks = (1.5:length(groups) + 0.5, groups), 
                   yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
                   yticklabelfont = "TeX Gyre Heros Makie Italic",
-                  yticklabelsize = 12,
+                  yticklabelsize = 14,
                   xticklabelsize = 12
                   )
 end
