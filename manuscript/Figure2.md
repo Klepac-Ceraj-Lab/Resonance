@@ -185,7 +185,7 @@ let
     cs = filter(!isnan, cors_00to06.t[ixs])
     acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, cax, _) = Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
     Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
@@ -197,7 +197,7 @@ let
     cs = filter(!isnan, cors_00to06.t[ixs])
     acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, dax, _) = Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "", xticks = -0.7:0.2:0.0)
     Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
@@ -209,7 +209,7 @@ let
     cs = filter(!isnan, cors_18to120.t[ixs])
     acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, eax, _) =  Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "", xticks = -0.2:0.1:0.0)
     Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
@@ -222,11 +222,12 @@ let
     cs = filter(!isnan, cors_18to120.t[ixs])
     acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, fax, _) = Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
     Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
+    linkyaxes!(cax, dax, eax, fax)
 end
 
 ```
@@ -341,7 +342,9 @@ Label(figure[3, 1, TopLeft()], "G";
              padding = (0, 30, 5, 0),
              halign = :right
        )
-# colgap!(figure.layout, 2, -35)
+
+rowsize!(figure.layout, 1, Relative(2/5))
+colsize!(G, 1, Relative(3/8))
 save("manuscript/assets/Figure2.png", figure)
 save(figurefiles("Figure2.svg"), figure)
 figure
