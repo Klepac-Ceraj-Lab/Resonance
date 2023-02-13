@@ -67,8 +67,8 @@ end
 function plot_comparativedemo_importance_barplots!(plot_axis::Axis, joined_importances::DataFrame; n_rows = 40)
 
     # Plot barplot
-    barplot!(plot_axis, reverse(collect(1:n_rows)), joined_importances.ImportanceWithoutDemo[1:n_rows], color = "medium turquoise", direction = :x)
-    scatter!(plot_axis, joined_importances.ImportanceWithDemo[1:n_rows], reverse(collect(1:n_rows)), marker = :star8, color = "purple", direction = :x)
+    barplot!(plot_axis, reverse(collect(1:n_rows)), joined_importances.ImportanceWithoutDemo[1:n_rows], color = "gray", direction = :x)
+    scatter!(plot_axis, joined_importances.ImportanceWithDemo[1:n_rows], reverse(collect(1:n_rows)), marker = :star8, color = "red", direction = :x)
     
     return plot_axis
 
@@ -78,16 +78,51 @@ end
 ### Comparative Linear/RF importances scatterplots
 
 ```julia
-function plot_comparative_lmvsrf_scatterplots!(plot_axis::Axis, rf_model::ProbeData, lm_path::String;)
 
+function attribute_colors(lm_qvalue, rf_cumImp, plot_colorset = [:dodgerblue, :orange, :green, :purple])
+    if (lm_qvalue & rf_cumImp)
+        return plot_colorset[4]
+    elseif (!lm_qvalue & rf_cumImp)
+        return plot_colorset[3]
+    elseif (lm_qvalue & !rf_cumImp)
+        return plot_colorset[2]
+    else
+        return plot_colorset[1]
+    end
+end
+
+function plot_comparative_lmvsrf_scatterplots!(
+    plot_axis::Axis,
+    rf_model::ProbeData,
+    lm_path::String;
+    exclude_from_importances= [ "ageMonths" ],
+    cumulative_importance_threshold = 0.6,
+    plot_colorset = [:dodgerblue, :orange, :green, :purple])
+
+    ## 1. calculate the importances and the cumulative sum, excluding the relevant variables
     rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
+    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(rf_model_importances.weightedImportance[.!(rf_model_importances.variable .∈ Ref(exclude_from_importances))])
+    rf_model_importances[rf_model_importances.variable .∈ Ref(exclude_from_importances), :relativeWeightedImportance] .= 0.0
+    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
+    
+    ## 2. get the data for linear models, from `Figure2-calculations.jl`
     lm_coefs = CSV.read(lm_path, DataFrame)
-    lm_coefs = select(lm_coefs, [:feature, :coef, :pvalue])
-    lm_coefs.coef = sqrt.(lm_coefs.coef .^ 2)
-    plot_comaprative_df = outerjoin(rf_model_importances, lm_coefs, on = [ :variable => :feature ])
+    lm_coefs = select(lm_coefs, [:feature, :coef, :pvalue, :qvalue])
 
-    # Plot scatterplot
-    scatter!(plot_axis, log.(plot_comaprative_df.pvalue).*(-1), plot_comaprative_df.weightedImportance, color = "blue")
+    ## 3. Join the data
+    plot_comparative_df = dropmissing(outerjoin(rf_model_importances, lm_coefs, on = [ :variable => :feature ]))
+    
+    ## 4. Attribute color to each point
+    is_significative_lm = map(q-> q < 0.2 ? true : false, plot_comparative_df.qvalue)
+    is_over_threshold = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance)
+    point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_significative_lm, is_over_threshold)
+
+    # 5. Plot scatterplot
+    scatter!(
+        plot_axis,
+        log.(plot_comparative_df.pvalue).*(-1), plot_comparative_df.weightedImportance,
+        color = point_colors
+    )
 
     return plot_axis
 end
@@ -161,10 +196,10 @@ JLD2.@load "models/2023-01-31/regression_currentCogScores_18to120mo_demoplusecs.
 ```julia
 figure = Figure(resolution = (1920, 1536))
 
-AB_subfig = GridLayout(figure[1,1], alignmode=Mixed(; left=0))
-CD_subfig = GridLayout(figure[1,2], alignmode=Mixed(; left=0))
-E_subfig = GridLayout(figure[2,1:2], alignmode=Mixed(; left=0))
-F_subfig = GridLayout(figure[3,1:2], alignmode=Mixed(; left=0))
+AB_subfig = GridLayout(figure[1,1], alignmode=Outside())
+CD_subfig = GridLayout(figure[1,2], alignmode=Outside())
+E_subfig = GridLayout(figure[2,1:2], alignmode=Outside())
+F_subfig = GridLayout(figure[3,1:2], alignmode=Outside())
 
 
 colsize!(figure.layout, 1, Relative(0.3))
@@ -192,8 +227,26 @@ axB = Axis(
     title = "18 to 120 months",
 )
 
-plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv";)
-plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv";)
+plot_colorset = [:dodgerblue, :orange, :green, :purple]
+plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset)
+plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset)
+
+Legend(
+    AB_subfig[3, 1],
+    [
+        MarkerElement(; marker=:circle, color=plot_colorset[4]),
+        MarkerElement(; marker=:circle, color=plot_colorset[3]),
+        MarkerElement(; marker=:circle, color=plot_colorset[2]),
+        MarkerElement(; marker=:circle, color=plot_colorset[1]),
+    ],
+    [
+        "Significant in LM and >80% cumulative ranked Importance",
+        "Only >80% cumulative ranked Importance",
+        "Only significant in LM",
+        "Does not match any significance criterion"
+    ],
+    "Input composition"
+)
 ```
 
 ```julia
@@ -233,7 +286,13 @@ axD = Axis(
 plot_comparativedemo_importance_barplots!(axC, joined_importances_00to06; n_rows = nbars_toplot)
 plot_comparativedemo_importance_barplots!(axD, joined_importances_18to120; n_rows = nbars_toplot)
 
-Legend(CD_subfig[2, 1:2], [MarkerElement(; marker=:rect, color=:aqua), MarkerElement(; marker=:star8, color=:purple)], ["Microbiome alone", "Microbiome + demographics"], "Input composition", orientation=:horizontal)
+Legend(
+    CD_subfig[1, 2], [MarkerElement(; marker=:rect, color=:aqua), MarkerElement(; marker=:star8, color=:purple)], ["Microbiome alone", "Microbiome + demographics"], "Input composition",
+    tellheight = false,
+    tellwidth = false,
+    margin = (10, 10, 10, 10),
+    halign = :right, valign = :bottom, orientation = :vertical
+)
 ```
 
 ### Plot panel E - Deep dives on taxa
@@ -254,4 +313,14 @@ plot_taxon_deepdive!(F_subfig, 3, spec, :filter_18to120, "Ruminococcus_gnavus";)
 plot_taxon_deepdive!(F_subfig, 4, spec, :filter_18to120, "Bifidobacterium_longum";)
 plot_taxon_deepdive!(F_subfig, 5, spec, :filter_18to120, "Erysipelatoclostridium_ramosum";)
 plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Eubacterium_eligens";)
+```
+
+### Panel labels
+```julia
+Label(AB_subfig[1, 1, TopLeft()], "A", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(AB_subfig[2, 1, TopLeft()], "B", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 1, TopLeft()], "C", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 2, TopLeft()], "D", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+
+save("manuscript/assets/Figure3.png", figure)
 ```
