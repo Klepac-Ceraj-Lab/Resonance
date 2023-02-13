@@ -29,30 +29,27 @@ function calculate_fitness(train_cor::Vector{Float64}, test_cor::Vector{Float64}
 
 end
 
-function weightedimportances(m; change_hashnames=false, hashnamestable::Union{Nothing, DataFrame} = nothing)
-
+function weighted_hpimportances(m, hp = 1; change_hashnames=false, hashnamestable::Union{Nothing, DataFrame} = nothing)
     merits = m.merits
     importances = m.importances
     fitnesses = calculate_fitness(merits.Train_Cor, merits.Test_Cor)
-    weighted_importances = map(x -> sum(x .* fitnesses)/sum(fitnesses .> 0.0), collect(eachrow(Matrix(importances[:, 2:end]))))
-    weighted_importances_df = sort( DataFrame(:variable => importances[:,1], :weightedImportance => weighted_importances), :weightedImportance; rev=true)
-    sum(fitnesses .> 0.0) / nrow(merits)
-    contributing_rows = merits[fitnesses .> 0.0, :]
-    sum(contributing_rows.Train_Cor .> contributing_rows.Test_Cor)
-    sum(contributing_rows.Train_Cor .< contributing_rows.Test_Cor)
+    fitness_subset_idx = findall(merits.Hyperpar_Idx .== hp)
+
+    mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/sum(fitnesses[fitness_subset_idx] .> 0.0), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
+    mean_importances_df = sort( DataFrame(:variable => importances[:,1], :weightedImportance => mean_importances), :weightedImportance; rev=true)
 
     if change_hashnames
-        newnames = leftjoin(weighted_importances_df, hashnamestable, on = :variable => :hashname).longname
-        weighted_importances_df.variable = newnames
+        newnames = leftjoin(mean_importances_df, hashnamestable, on = :variable => :hashname).longname
+        mean_importances_df.variable = newnames
     end
 
-    return weighted_importances_df
+    return mean_importances_df
 end
 ```
 
 ### Comparative Importance plots
 ```julia
-function compute_joined_importances(modelwithoutdemo, modelwithdemo; imp_fun = hpimportances)
+function compute_joined_importances(modelwithoutdemo, modelwithdemo; imp_fun = weighted_hpimportances)
 
     importanceswithoutdemo = imp_fun(modelwithoutdemo)
     importanceswithdemo = imp_fun(modelwithdemo)
@@ -83,7 +80,7 @@ end
 ```julia
 function plot_comparative_lmvsrf_scatterplots!(plot_axis::Axis, rf_model::ProbeData, lm_path::String;)
 
-    rf_model_importances = weightedimportances(rf_model; change_hashnames=false)
+    rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
     lm_coefs = CSV.read(lm_path, DataFrame)
     lm_coefs = select(lm_coefs, [:feature, :coef, :pvalue])
     lm_coefs.coef = sqrt.(lm_coefs.coef .^ 2)
@@ -115,9 +112,17 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, taxono
     g2p = count(!=(0), taxab[mqidx]) / length(mqidx)
     g3p = count(!=(0), taxab[uqidx]) / length(uqidx)
 
-    ax1 = Axis(figure_layout[1,figure_col]; ylabel="relative abundance\n$taxon_to_dive")
+    ax1 = Axis(
+        figure_layout[1,figure_col];
+        ylabel="relative abundance",#\n$taxon_to_dive",
+        title = replace(taxon_to_dive, "_"=>" "),
+        titlefont = "TeX Gyre Heros Makie Italic")
     ax2 = Axis(figure_layout[2,figure_col]; xticks = (1:3, ["lower", "mid", "upper"]), xlabel="quartile", ylabel = "Intra-q\nPrevalence")
-    
+    ylims!(ax2, [0, 1.0])
+
+    boxplot!(ax1, repeat([ 1.0 ], length(g1)), g1, color = (Makie.wong_colors()[1], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 2.0 ], length(g2)), g2, color = (Makie.wong_colors()[2], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 3.0 ], length(g3)), g3, color = (Makie.wong_colors()[3], 0.5), show_notch = false, show_outliers=false)    
     Random.seed!(0)
     scatter!(ax1, 1 .+ rand(Normal(0, 0.1), length(g1)), g1)
     Random.seed!(0)
@@ -156,14 +161,14 @@ JLD2.@load "models/2023-01-31/regression_currentCogScores_18to120mo_demoplusecs.
 ```julia
 figure = Figure(resolution = (1920, 1536))
 
-AB_subfig = GridLayout(figure[1,1])
-CD_subfig = GridLayout(figure[1,2])
-E_subfig = GridLayout(figure[2,1:2])
-F_subfig = GridLayout(figure[3,1:2])
+AB_subfig = GridLayout(figure[1,1], alignmode=Mixed(; left=0))
+CD_subfig = GridLayout(figure[1,2], alignmode=Mixed(; left=0))
+E_subfig = GridLayout(figure[2,1:2], alignmode=Mixed(; left=0))
+F_subfig = GridLayout(figure[3,1:2], alignmode=Mixed(; left=0))
 
 
-colsize!(figure.layout, 1, Relative(0.7))
-colsize!(figure.layout, 2, Relative(0.3))
+colsize!(figure.layout, 1, Relative(0.3))
+colsize!(figure.layout, 2, Relative(0.7))
 
 rowsize!(figure.layout, 1, Relative(0.6))
 rowsize!(figure.layout, 2, Relative(0.2))
@@ -173,21 +178,40 @@ rowsize!(figure.layout, 3, Relative(0.2))
 ### Plot panels A and B - Comparative Importances
 
 ```julia
-nbars_toplot = 30
+axA = Axis(
+    AB_subfig[1, 1];
+    xlabel = "-log(p) for LM coefficients",
+    ylabel = "Fitness-weighted importance from  RFs",
+    title = "00 to 06 months",
+)
+
+axB = Axis(
+    AB_subfig[2, 1];
+    xlabel = "-log(p) for LM coefficients",
+    ylabel = "Fitness-weighted importance from  RFs",
+    title = "18 to 120 months",
+)
+
+plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv";)
+plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv";)
+```
+
+```julia
+nbars_toplot = 25
 
 joined_importances_00to06 = compute_joined_importances(
     regression_currentCogScores_00to06mo_onlytaxa,
     regression_currentCogScores_00to06mo_demoplustaxa;
-    imp_fun = weightedimportances
+    imp_fun = weighted_hpimportances
 )
 joined_importances_18to120 = compute_joined_importances(
     regression_currentCogScores_18to120mo_onlytaxa,
     regression_currentCogScores_18to120mo_demoplustaxa;
-    imp_fun = weightedimportances
+    imp_fun = weighted_hpimportances
 )
 
-axA = Axis(
-    AB_subfig[1, 1];
+axC = Axis(
+    CD_subfig[1, 1];
     xlabel = "Importance",
     yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_00to06.variable[1:nbars_toplot], "_"=>" ")),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
@@ -196,8 +220,8 @@ axA = Axis(
     # yticklabelrotation= -pi/2
 )
 
-axB = Axis(
-    AB_subfig[1, 2];
+axD = Axis(
+    CD_subfig[1, 2];
     xlabel = "Importance",
     yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_18to120.variable[1:nbars_toplot], "_"=>" ")),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
@@ -206,29 +230,10 @@ axB = Axis(
     # yticklabelrotation= -pi/2
 )
 
-plot_comparativedemo_importance_barplots!(axA, joined_importances_00to06; n_rows = nbars_toplot)
-plot_comparativedemo_importance_barplots!(axB, joined_importances_18to120; n_rows = nbars_toplot)
+plot_comparativedemo_importance_barplots!(axC, joined_importances_00to06; n_rows = nbars_toplot)
+plot_comparativedemo_importance_barplots!(axD, joined_importances_18to120; n_rows = nbars_toplot)
 
-Legend(AB_subfig[2, 1:2], [MarkerElement(; marker=:rect, color=:aqua), MarkerElement(; marker=:star8, color=:purple)], ["Microbiome alone", "Microbiome + demographics"], "Input composition", orientation=:horizontal)
-```
-
-```julia
-axC = Axis(
-    CD_subfig[1, 1];
-    xlabel = "-log(p) for LM coefficients",
-    ylabel = "Fitness-weighted importance from  RFs",
-    title = "00 to 06 months",
-)
-
-axD = Axis(
-    CD_subfig[2, 1];
-    xlabel = "-log(p) for LM coefficients",
-    ylabel = "Fitness-weighted importance from  RFs",
-    title = "18 to 120 months",
-)
-
-plot_comparative_lmvsrf_scatterplots!(axC, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv";)
-plot_comparative_lmvsrf_scatterplots!(axD, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv";)
+Legend(CD_subfig[2, 1:2], [MarkerElement(; marker=:rect, color=:aqua), MarkerElement(; marker=:star8, color=:purple)], ["Microbiome alone", "Microbiome + demographics"], "Input composition", orientation=:horizontal)
 ```
 
 ### Plot panel E - Deep dives on taxa
