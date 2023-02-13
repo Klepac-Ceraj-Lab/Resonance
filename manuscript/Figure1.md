@@ -51,87 +51,32 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 ```julia
 figure = Figure(; resolution = (2000, 1200))
-A = GridLayout(figure[1,1])
-BCDE = GridLayout(figure[1,2])
-F = GridLayout(figure[1,3])
-GH = GridLayout(figure[2,1:3])
+AB = GridLayout(figure[1,1])
+CDEF = GridLayout(figure[1,2])
+GH = GridLayout(figure[2,1:2])
 ```
 
 
 ## Summaries
 
-### 1A - Cohort diagram and ages
+### 1A-B - Cohort diagram and ages, cogscores
 
 For now, the graphic here is a place-holder, but we'll have something like this for 1A.
 
 ```julia
-A_img = Axis(A[2,1:3]; aspect = DataAspect(), alignmode=Inside())
-A_histleft = Axis(A[1,2]; ylabel="Samples (N)")
-A_histright = Axis(A[1,3]; xlabel = "Age (years)", xticks=2:2:16, yticklabelsvisible=false, yticksvisible=false)
+
+A_img = Axis(AB[1,1]; aspect = DataAspect(), alignmode=Inside())
 hidedecorations!(A_img)
 hidespines!(A_img)
 
 image!(A_img, rotr90(load("manuscript/assets/Figure1A.jpg")))
 
-hist!(A_histleft, filter(<=(24), mdata.ageMonths); color = :darkgray)
-hist!(A_histright, filter(>(24), mdata.ageMonths) ./ 12; color = :darkgray, bins=8)
+B = GridLayout(AB[2,1])
 
-rowgap!(A, -30)
-rowsize!(A, 1, Relative(1/5))
-colsize!(A, 2, Relative(1/3))
-linkyaxes!(A_histleft, A_histright)
-
-A_histleft.xticks = ([3,6,12], ["", "", ""])
-```
-
-
-### Ordinations
-
-```julia
-spepco = fit(MDS, spedm; distances=true)
-
-B = GridLayout(BCDE[1,1])
-Ba = Axis(B[1,1]; ylabel= "Age (months)", xlabel = mdsaxis(spepco, 1), 
-                  title = "Taxa", yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2),
-                  alignmode = Mixed(; left=-15))
-sc1 = scatter!(Ba, Resonance.loadings(spepco, 1), get(species, :ageMonths);
-        color = divr, colormap=:plasma)
-hlines!(Ba, [6, 18]; linestyle=:dash, color=:darkgray)
-Colorbar(B[1, 2], sc1; label="Shannon Diversity", flipaxis=true)
-
-C = Axis(BCDE[2,1]; title = "Taxa", alignmode = Mixed(; left=-15))
-sc2 = plot_pcoa!(C, spepco; color=get(species, :ageMonths))
-
-
-# C = GridLayout(BCDE[2,1])
-# Ca = Axis(C[1,1]; title = "Bacteroidetes")
-# Cb = Axis(C[1,2]; title = "Firmicutes")
-# Cc = Axis(E[1,3]; title = "Actinobacteria")
-
-# plot_pcoa!(Ca, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Bacteroidetes", :])), colormap=:Purples)
-# plot_pcoa!(Cb, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Firmicutes", :])), colormap=:Purples)
-# hideydecorations!(Cb)
-# pco = plot_pcoa!(Ec, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, taxa)[r"Actinobacteria", :])), colormap=:Purples)
-D = Axis(BCDE[1,2]; title = "Functions", alignmode = Mixed(; left=-15))
-
-unipco = fit(MDS, unidm; distances=true)
-plot_pcoa!(D, unipco; color=get(unirefs, :ageMonths))
-
-E = Axis(BCDE[2,2]; title = "Neuroimaging", alignmode = Mixed(; left=-15))
-
-brnpco = fit(MDS, brndm; distances=true)
-plot_pcoa!(E, brnpco; color=get(brain, :ageMonths))
-
-Colorbar(BCDE[1:2, 3], sc2; label="Age (months)", flipaxis=true, ticks=0:24:120)
-```
-
-### 1F - cogscores
-
-```julia
-fax1 = Axis(F[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing), alignmode = Mixed(; left=-15))
-fax2 = Axis(F[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
-hideydecorations!(fax2)
-linkyaxes!(fax1, fax2)
+bax1 = Axis(B[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing), alignmode = Mixed(; left=-15))
+bax2 = Axis(B[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
+hideydecorations!(bax2)
+linkyaxes!(bax1, bax2)
 
 let
     u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
@@ -144,26 +89,55 @@ let
         return cs[3] # WISC
     end
     ages = mdata.ageMonths[u2y]
-    scatter!(fax1, ages, mdata.cogScore[u2y]; color=colorage.(ages))
+    scatter!(bax1, ages, mdata.cogScore[u2y]; color=colorage.(ages))
 
     ages = mdata.ageMonths[o2y]
-    scatter!(fax2, ages ./ 12, mdata.cogScore[o2y]; color=colorage.(ages))
+    scatter!(bax2, ages ./ 12, mdata.cogScore[o2y]; color=colorage.(ages))
     
-    vlines!(fax1, [6, 18]; linestyle=:dash, color=:gray)
+    vlines!(bax1, [6, 18]; linestyle=:dash, color=:gray)
     # TODO: add colors for training/test sets in later models
 
-    Legend(F[2, 1:2], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
+    Legend(B[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
                       ["Mullen", "WPPSI", "WISC"], "Assessment";
-                      orientation = :horizontal, tellheight=true, tellwidth=false
     )
 end
 
-colsize!(figure.layout, 1, Relative(1/3))
-colsize!(figure.layout, 3, Relative(1/4))
-colsize!(A, 1, Fixed(12))
-colsize!(A, 2, Relative(1/2))
-colgap!(F, Fixed(4))
-figure
+
+colgap!(B, Fixed(4))
+rowsize!(AB, 1, Relative(2/3))
+
+
+```
+
+
+### Ordinations
+
+```julia
+spepco = fit(MDS, spedm; distances=true)
+
+C = GridLayout(CDEF[1,1])
+Ca = Axis(C[1,1]; ylabel= "Age (months)", xlabel = mdsaxis(spepco, 1), 
+                  title = "Taxa", yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2),
+                  alignmode = Mixed(; left=-15))
+sc1 = scatter!(Ca, Resonance.loadings(spepco, 1), get(species, :ageMonths);
+        color = divr, colormap=:plasma)
+hlines!(Ca, [6, 18]; linestyle=:dash, color=:darkgray)
+Colorbar(C[1, 2], sc1; label="Shannon Diversity", flipaxis=true)
+
+D = Axis(CDEF[2,1]; title = "Taxa", alignmode = Mixed(; left=-15))
+sc2 = plot_pcoa!(D, spepco; color=get(species, :ageMonths))
+
+E = Axis(CDEF[1,2]; title = "Functions", alignmode = Mixed(; left=-15))
+
+unipco = fit(MDS, unidm; distances=true)
+plot_pcoa!(E, unipco; color=get(unirefs, :ageMonths))
+
+F = Axis(CDEF[2,2]; title = "Neuroimaging", alignmode = Mixed(; left=-15))
+
+brnpco = fit(MDS, brndm; distances=true)
+plot_pcoa!(F, brnpco; color=get(brain, :ageMonths))
+
+Colorbar(CDEF[1:2, 3], sc2; label="Age (months)", flipaxis=true, ticks=0:24:120)
 ```
 
 ### 1G-H: Omnibus tests
@@ -214,37 +188,37 @@ plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 
 ```julia
 
-Label(A[1, 1, TopLeft()], "A",
+Label(AB[1, 1, TopLeft()], "A",
         fontsize = 26,
         font = "Open Sans Bold",
         halign = :right
 )
-Label(BCDE[1, 1, TopLeft()], "B",
+Label(AB[2, 1, TopLeft()], "B",
         fontsize = 26,
         font = "Open Sans Bold",
         halign = :right
 )
-Label(BCDE[2, 1, TopLeft()], "C",
+Label(CDEF[1, 1, TopLeft()], "C",
         fontsize = 26,
         font = "Open Sans Bold",
         halign = :right
 )
-Label(BCDE[1, 2, TopLeft()], "D",
+Label(CDEF[2, 1, TopLeft()], "D",
         fontsize = 26,
         font = "Open Sans Bold",
         halign = :right
 )
-Label(BCDE[2, 2, TopLeft()], "E",
+Label(CDEF[1, 2, TopLeft()], "E",
+        fontsize = 26,
+        font = "Open Sans Bold",
+        halign = :right
+)
+Label(CDEF[2, 2, TopLeft()], "F",
         fontsize = 26,
         font = "Open Sans Bold",
         halign = :right
 )
 
-Label(F[1, 1, TopLeft()], "F",
-        fontsize = 26,
-        font = "Open Sans Bold",
-        halign = :right
-)
 Label(G[1, 1, TopLeft()], "G",
         fontsize = 26,
         font = "Open Sans Bold",
@@ -256,47 +230,82 @@ Label(H[1, 1, TopLeft()], "H",
         halign = :right
 )
 
+rowsize!(AB, 1, Relative(4/7))
+rowsize!(figure.layout, 1, Relative(2/3))
+figure
+```
+
+```julia
 save(figurefiles("Figure1.svg"), figure)
 save("manuscript/assets/Figure1.png", figure)
-figure
 ```
 
 ![](figures/Figure1.png)
 
 ## Supplement
 
+### Sample collection histograms
+
+```julia
+
+let fig = Figure()
+        histleft = Axis(fig[1,1];  xlabel = "Age (months)", ylabel="Samples (N)", xticks=(3:3:24))
+        histright = Axis(fig[1,2]; xlabel = "Age (years)", xticks=2:2:10, yticklabelsvisible=false, yticksvisible=false)
+        hist!(histleft, filter(<=(24), mdata.ageMonths); color = :darkgray)
+        hist!(histright, filter(>(24), mdata.ageMonths) ./ 12; color = :darkgray, bins=8)
+
+        linkyaxes!(histleft, histright)
+        
+        tightlimits!(histleft, Bottom())
+        tightlimits!(histright, Bottom())
+        save(figurefiles("Supp_Figure1.svg"), fig)
+        save("manuscript/assets/Supp_Figure1.png", fig)
+        fig
+end
+```
+
 ### More Taxa PCoA
 
 ```julia
-fig = Figure()
-ax = Axis(fig[1,1], title = "Bacteroidetes")
-ax2 = Axis(fig[1,2], title = "Prevotella")
-ax3 = Axis(fig[2,1], title = "Bacteroides")
-ax4 = Axis(fig[2,2], title = "Alistipes")
+fulltax = Resonance.load_raw_metaphlan()[:, samplenames(taxa)]
 
-fulltax = Resonance.get_raw_metaphlan()[:, samplenames(taxa)]
+let
+    fig = Figure()
+    ax = Axis(fig[1,1], title = "Bacteroidetes")
+    ax2 = Axis(fig[1,2], title = "Prevotella")
+    ax3 = Axis(fig[2,1], title = "Firmicutes")
+    ax4 = Axis(fig[2,2], title = "Bifidobacterium")
 
-plot_pcoa!(ax, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, fulltax)[r"^Bacteroidetes$", :])),
-        colormap=:Purples,
-        strokecolor=:black,
-        strokewidth=1
-)
-plot_pcoa!(ax2, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"^Prevotella$", :])),
-        colormap=:Purples,
-        strokecolor=:black,
-        strokewidth=1
-)
-plot_pcoa!(ax3, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"^Bacteroides$", :])),
-        colormap=:Purples,
-        strokecolor=:black,
-        strokewidth=1
-)
-plot_pcoa!(ax4, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"^Alistipes$", :])),
-        colormap=:Purples,
-        strokecolor=:black,
-        strokewidth=1
-)
-fig
+
+    plot_pcoa!(ax, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, fulltax)[r"Bacteroidetes$", :])),
+            colormap=:Purples,
+            strokecolor=:black,
+            strokewidth=1,
+            colorrange=(0,100)
+    )
+    plot_pcoa!(ax2, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"Prevotella$", :])),
+            colormap=:Purples,
+            strokecolor=:black,
+            strokewidth=1,
+            colorrange=(0,100)
+    )
+    plot_pcoa!(ax3, spepco; color=vec(abundances(filter(t-> taxrank(t) == :phylum, fulltax)[r"Firmicutes$", :])),
+            colormap=:Purples,
+            strokecolor=:black,
+            strokewidth=1,
+            colorrange=(0,100)
+    )
+    sc = plot_pcoa!(ax4, spepco; color=vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"Bifidobacterium$", :])),
+            colormap=:Purples,
+            strokecolor=:black,
+            strokewidth=1,
+            colorrange=(0,100)
+    )
+    Colorbar(fig[1:2, 3], sc; label="Relative abundance (%)")
+    save(figurefiles("Supp_Figure2.svg"), fig)
+    save("manuscript/assets/Supp_Figure2.png", fig)
+    fig
+end
 ```
 
 
@@ -314,5 +323,11 @@ oidx = findall(.!ismissing.(df.education) .& .!ismissing.(df.race))
 df = df[oidx, :]
 
 permanova(df, spedm[uidx[oidx], uidx[oidx]], @formula(1 ~ education + race), 1000)
+
+maximum([
+        vec(abundances(filter(t-> taxrank(t) == :phylum, fulltax)[r"Bacteroidetes$", :]));
+        vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"Prevotella$", :]));
+        vec(abundances(filter(t-> taxrank(t) == :phylum, fulltax)[r"Firmicutes$", :]));
+        vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"Bifidobacterium$", :]))])
 
 ```
