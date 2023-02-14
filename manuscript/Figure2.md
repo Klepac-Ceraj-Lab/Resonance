@@ -148,9 +148,9 @@ end
 
 let clrs = log.(vcat((lms_mat[:, "meanab_$group"] for group in ("00to120", "00to06", "18to120"))...))
     poly!(bax2, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
-        color = clrs, colormap = :magma)
-    Colorbar(B[2,2]; colormap=:magma, colorrange=extrema(clrs),
-                    vertical = false, flipaxis = false,
+        color = clrs, colormap=Reverse(:BuPu))
+    Colorbar(B[2,2]; colormap=Reverse(:BuPu),
+                    vertical=false, flipaxis=false,
                     label="Mean abundance (log)",
                     )
 end
