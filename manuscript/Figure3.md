@@ -9,6 +9,7 @@ using DataFrames
 using StableRNGs
 using MLJ
 using CairoMakie
+using ColorSchemes
 using DecisionTree
 using JLD2
 using Resonance
@@ -227,25 +228,29 @@ axB = Axis(
     title = "18 to 120 months",
 )
 
-plot_colorset = [:dodgerblue, :orange, :green, :purple]
+plot_colorset = [:gray, ColorSchemes.tableau_10[1], ColorSchemes.tableau_10[3], ColorSchemes.tableau_10[7]]
 plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset)
 plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset)
 
 Legend(
     AB_subfig[3, 1],
     [
-        MarkerElement(; marker=:circle, color=plot_colorset[4]),
         MarkerElement(; marker=:circle, color=plot_colorset[3]),
         MarkerElement(; marker=:circle, color=plot_colorset[2]),
+        MarkerElement(; marker=:circle, color=plot_colorset[4]),
         MarkerElement(; marker=:circle, color=plot_colorset[1]),
     ],
     [
-        "Significant in LM and >80% cumulative ranked Importance",
-        "Only >80% cumulative ranked Importance",
-        "Only significant in LM",
-        "Does not match any significance criterion"
+        ">80% ranked importance",
+        "q < 0.2 in LM",
+        "Both",
+        "None"
     ],
-    "Input composition"
+    "Input composition",
+    tellheight = true,
+    tellwidth = false,
+    nbanks = 2,
+    orientation = :horizontal
 )
 ```
 
@@ -287,7 +292,7 @@ plot_comparativedemo_importance_barplots!(axC, joined_importances_00to06; n_rows
 plot_comparativedemo_importance_barplots!(axD, joined_importances_18to120; n_rows = nbars_toplot)
 
 Legend(
-    CD_subfig[1, 2], [MarkerElement(; marker=:rect, color=:aqua), MarkerElement(; marker=:star8, color=:purple)], ["Microbiome alone", "Microbiome + demographics"], "Input composition",
+    CD_subfig[1, 2], [MarkerElement(; marker=:rect, color=:gray), MarkerElement(; marker=:star8, color=:red)], ["Microbiome alone", "Microbiome + demographics"], "Input composition",
     tellheight = false,
     tellwidth = false,
     margin = (10, 10, 10, 10),
@@ -301,18 +306,18 @@ mdata = Resonance.load(Metadata())
 spec = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 
 plot_taxon_deepdive!(E_subfig, 1, spec, :filter_00to06, "Blautia_wexlerae";)
-plot_taxon_deepdive!(E_subfig, 2, spec, :filter_00to06, "Erysipelatoclostridium_ramosum";)
+plot_taxon_deepdive!(E_subfig, 2, spec, :filter_00to06, "Gordonibacter_pamelaeae";)
 plot_taxon_deepdive!(E_subfig, 3, spec, :filter_00to06, "Bifidobacterium_longum";)
 plot_taxon_deepdive!(E_subfig, 4, spec, :filter_00to06, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(E_subfig, 5, spec, :filter_00to06, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(E_subfig, 6, spec, :filter_00to06, "Eggerthella_lenta";)
+plot_taxon_deepdive!(E_subfig, 5, spec, :filter_00to06, "Eggerthella_lenta";)
+plot_taxon_deepdive!(E_subfig, 6, spec, :filter_00to06, "Erysipelatoclostridium_ramosum";)
 
-plot_taxon_deepdive!(F_subfig, 1, spec, :filter_18to120, "Alistipes_finegoldii";)
-plot_taxon_deepdive!(F_subfig, 2, spec, :filter_18to120, "Faecalibacterium_prausnitzii";)
-plot_taxon_deepdive!(F_subfig, 3, spec, :filter_18to120, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(F_subfig, 4, spec, :filter_18to120, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(F_subfig, 5, spec, :filter_18to120, "Erysipelatoclostridium_ramosum";)
-plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Eubacterium_eligens";)
+plot_taxon_deepdive!(F_subfig, 1, spec, :filter_18to120, "Blautia_wexlerae";)
+plot_taxon_deepdive!(F_subfig, 2, spec, :filter_18to120, "Gordonibacter_pamelaeae";)
+plot_taxon_deepdive!(F_subfig, 3, spec, :filter_18to120, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(F_subfig, 4, spec, :filter_18to120, "Ruminococcus_gnavus";)
+plot_taxon_deepdive!(F_subfig, 5, spec, :filter_18to120, "Faecalibacterium_prausnitzii";)
+plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Alistipes_finegoldii";)
 ```
 
 ### Panel labels
@@ -321,6 +326,12 @@ Label(AB_subfig[1, 1, TopLeft()], "A", textsize = 26,font = :bold, padding = (0,
 Label(AB_subfig[2, 1, TopLeft()], "B", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
 Label(CD_subfig[1, 1, TopLeft()], "C", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
 Label(CD_subfig[1, 2, TopLeft()], "D", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 1, TopLeft()], "E", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 5, TopLeft()], "F", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(F_subfig[1, 5, TopLeft()], "G", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+
+Label(E_subfig[1:2, 1, Left()], "00 to 06 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(F_subfig[1:2, 1, Left()], "18 to 120 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 
 save("manuscript/assets/Figure3.png", figure)
 ```
