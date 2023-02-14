@@ -57,6 +57,7 @@ lms_mat = let
     df = vcat(speclms_00to120, speclms_00to06, speclms_18to120)
     df.group = [fill("00to120", nrow(speclms_00to120)); fill("00to06", nrow(speclms_00to06)); fill("18to120", nrow(speclms_18to120))]
     sigs = subset(df, "qvalue"=> ByRow(<(0.2)))
+    sort!(sigs, :qvalue)
     sig_feats = unique(sigs.feature)
     gdf = groupby(df, ["feature", "group"])
     DataFrame(ThreadsX.map(eachindex(sig_feats)) do i
@@ -69,15 +70,15 @@ lms_mat = let
         corr_18to120 = cor(taxdf[taxdf.filter_18to120, "cogScore"], taxdf[taxdf.filter_18to120, ft])
         (; feature = ft, 
            prev_00to120 = only(prevalence(taxa[Regex(ft), mdata.filter_00to120])),
-           meanab_00to120 = mean(abundances(taxa[Regex(ft), mdata.filter_00to120])),
+           meanab_00to120 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_00to120]))),
            corr_00to120,
            q_00to120,
            prev_00to06 = only(prevalence(taxa[Regex(ft), mdata.filter_00to06])),
-           meanab_00to06 = mean(abundances(taxa[Regex(ft), mdata.filter_00to06])),
+           meanab_00to06 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_00to06]))),
            corr_00to06,
            q_00to06, 
            prev_18to120 = only(prevalence(taxa[Regex(ft), mdata.filter_18to120])),
-           meanab_18to120 = mean(abundances(taxa[Regex(ft), mdata.filter_18to120])),
+           meanab_18to120 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_18to120]))),
            corr_18to120,
            q_18to120,
         )
@@ -106,7 +107,7 @@ aax = Axis(AB[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef."
                 xminorticksvisible=true, xminorticks = IntervalsBetween(3))
 
 scatter!(aax, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
-    color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_18to120.qvalue))
+    color = map(q-> q < 0.2 ? 1 : 10, speclms_18to120.qvalue), colormap=:tableau_10)
 ```
 ```julia
 B = GridLayout(AB[1, 2:3])
