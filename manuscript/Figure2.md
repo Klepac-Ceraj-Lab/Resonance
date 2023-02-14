@@ -256,7 +256,7 @@ let
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_00to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
@@ -279,7 +279,7 @@ let
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to06.t[neuroactive_00to06[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
@@ -301,7 +301,7 @@ let
 
         y = filter(x-> !isnan(x) && x < 7, cors_18to120.t[neuroactive_18to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
