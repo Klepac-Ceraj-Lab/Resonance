@@ -98,7 +98,7 @@ let
     # TODO: add colors for training/test sets in later models
 
     Legend(B[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["Mullen", "WPPSI", "WISC"], "Assessment";
+                      ["MSEL", "WPPSI", "WISC"], "Assessment";
     )
 end
 
