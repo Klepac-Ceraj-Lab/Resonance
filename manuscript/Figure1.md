@@ -300,7 +300,37 @@ let
 end
 ```
 
+### Cog function / COVID
 
+
+```julia
+let
+    fig = Figure()
+    ax = Axis(fig[1,1]; ylabel = "cogScore", xlabel = "age group (months)", xticks=(1:5, ["0-6", "6-12", "12-18", "18-24", "> 24"]))
+    df = DataFrame(age = get(unirefs, :ageMonths), score = get(unirefs, :cogScore), date = get(unirefs, :date))
+    subset!(df, AsTable(["age", "score", "date"]) => ByRow(row-> all(!ismissing, values(row))))
+    df.grp = categorical(map(df.age) do a
+        a < 6 && return "0-6"
+        a < 12 && return "6-12"
+        a < 18 && return "12-18"
+        a < 24 && return "18-24"
+        return "> 24"
+    end; ordered=true, levels = ["0-6", "6-12", "12-18", "18-24", "> 24"])
+
+    grp = groupby(df, "grp")
+    transform!(grp, "grp"=> ByRow(levelcode) => "x", "score" => (x-> x .< mean(x)) => "low")
+    scatter!(ax, df.x .+ rand(Normal(0, 0.05), size(df, 1)) .+ [x < Date("2020-03-01") ? -0.15 : 0.15 for x in df.date], df.score; 
+            color = [x < Date("2020-03-01") ? (:dodgerblue, 0.3) : (:orangered, 0.3) for x in df.date])
+    
+    
+    Legend(fig[2,1], [MarkerElement(; color = :dodgerblue, marker=:circle), MarkerElement(; color = :orangered, marker=:circle)],
+                ["Pre-covid", "Post-covid"]; orientation=:horizontal, tellheight=true, tellwidth=false, framevisible=false)
+    save(figurefiles("Supp_Figure3.svg"), fig)
+    save("manuscript/assets/Supp_Figure3.png", fig)
+    fig 
+end
+
+```
 
 ### Multivariate permanovas
 
@@ -323,3 +353,4 @@ maximum([
         vec(abundances(filter(t-> taxrank(t) == :genus, fulltax)[r"Bifidobacterium$", :]))])
 
 ```
+
