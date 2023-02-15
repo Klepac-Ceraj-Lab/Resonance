@@ -13,6 +13,7 @@ using DecisionTree
 using JLD2
 using Resonance
 using Distributions
+using Clustering, Distances
 ml_rng = StableRNG(0)
 ```
 
@@ -79,7 +80,6 @@ end
 ```
 
 ### Comparative Linear/RF importances scatterplots
-
 ```julia
 function plot_comparative_lmvsrf_scatterplots!(plot_axis::Axis, rf_model::ProbeData, lm_path::String;)
 
@@ -178,6 +178,44 @@ ordered_brain_segments_list = [
     "cerebellar-vermal-lobules-I-V", "cerebellar-vermal-lobules-VI-VII", "cerebellar-vermal-lobules-VIII-X",
     "Brain-stem", "CSF"
 ]
+
+symmetric_segment_strings = [
+    "temporal", "temporal",
+    "orbitofrontal", "orbitofrontal",
+    "parietal", "parietal",
+    "middle-frontal", "middle-frontal",
+    "anterior-cingulate", "anterior-cingulate",
+    "lateral-occipital", "lateral-occipital",
+    "cerebellum-white-matter", "cerebellum-white-matter",
+    "thalamus-proper", "thalamus-proper",
+    "caudate", "caudate",
+    "putamen", "putamen",
+    "pallidum", "pallidum",
+    "hippocampus", "hippocampus",
+    "amygdala", "amygdala",
+    "accumbens-area", "accumbens-area",
+    "basal-forebrain", "basal-forebrain", 
+    "cuneus", "cuneus", 
+    "entorhinal", "entorhinal",
+    "fusiform", "fusiform",
+    "isthmus-cingulate", "isthmus-cingulate",
+    "lingual", "lingual",
+    "parahippocampal", "parahippocampal",
+    "paracentral", "paracentral",
+    "pars-opercularis", "pars-opercularis",
+    "pars-orbitalis", "pars-orbitalis",
+    "pars-triangularis", "pars-triangularis",
+    "pericalcarine", "pericalcarine",
+    "postcentral", "postcentral",
+    "posterior-cingulate", "posterior-cingulate",
+    "precentral", "precentral",
+    "precuneus", "precuneus",
+    "superior-frontal", "superior-frontal",
+    "supramarginal", "supramarginal",
+    "insula", "insula",
+    "cerebellar-vermal-lobules-I-V", "cerebellar-vermal-lobules-VI-VII", "cerebellar-vermal-lobules-VIII-X",
+    "Brain-stem", "CSF"
+]
 ```
 
 ## Initializing Figure 4
@@ -191,12 +229,60 @@ colsize!(figure.layout, 1, Relative(0.2))
 colsize!(figure.layout, 2, Relative(0.8))
 ```
 
-### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance
+### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
 ```julia
 mean_brain_merits = reduce(
     vcat,
     [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
 )
+
+mean_brain_importances = reduce(
+    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+    [ 
+        DataFrame(:variable => j.importances.variable, Symbol(split(j.name, '_')[2]) => map(mean, eachrow(j.importances[:, 2:end]))) 
+        for (i, j) in brain_models
+    ]
+)
+
+mean_brain_importances = mean_brain_importances[:, vcat([ "variable" ], ordered_brain_segments_list)]
+mean_brain_importances.averageImportance = [ sum(row[.!(isnan.(collect(row)))])/length(collect(row)) for row in eachrow(mean_brain_importances[:, 2:end]) ]
+sort!(mean_brain_importances, :averageImportance, rev=true)
+
+transposedImportances = DataFrame(permutedims(Matrix(mean_brain_importances)), :auto)
+transposedImportances = rename!(transposedImportances, Symbol.(Vector(transposedImportances[1,:])))[2:end-1,:]
+insertcols!(transposedImportances, 1, :symmetricSegment => symmetric_segment_strings)
+insertcols!(transposedImportances, 1, :longSegment => ordered_brain_segments_list)
+
+combinedTransposedImportances = combine(
+    groupby(transposedImportances, :symmetricSegment),
+    Symbol.(names(transposedImportances))[3:end] .=> mean .=> Symbol.(names(transposedImportances))[3:end]
+)
+
+dist_taxa = pairwise(Euclidean(), Matrix(combinedTransposedImportances[:, 2:end]); dims=2)
+dist_segments = pairwise(Euclidean(), Matrix(combinedTransposedImportances[:, 2:end]); dims=1)
+
+hcl_taxa = hclust(dist_taxa; linkage=:average, branchorder=:optimal)
+hcl_segments = hclust(dist_segments; linkage=:average, branchorder=:optimal)
+
+hclust_taxa_order = hcl_taxa.order
+hclust_symmetric_segment_order = hcl_segments.order
+
+reorder_segments_df = innerjoin(
+    DataFrame(
+        :original_segment => ordered_brain_segments_list,
+        :left_or_unique => vcat(repeat([1, 0], 33), repeat([ 1 ], 5)),
+        :symmetric_segment => symmetric_segment_strings),
+    DataFrame(
+        :symmetric_segment => combinedTransposedImportances.symmetricSegment,
+        :hclust_order => hclust_symmetric_segment_order),
+    on = :symmetric_segment
+)
+reorder_segments_df.plot_order = collect(1:nrow(reorder_segments_df))
+sort!(reorder_segments_df, [:hclust_order, :left_or_unique])
+
+plot_segments_order = reorder_segments_df.plot_order
+## using the hclust to order it
+mean_brain_merits = mean_brain_merits[plot_segments_order, :]
 
 axA = Axis(
     A_subfig[1, 1];
@@ -209,6 +295,8 @@ axA = Axis(
     #yticklabelrotation= -pi/2
 )
 
+tightlimits!(axA, Top())
+tightlimits!(axA, Bottom())
 ylims!(axA, 0, length(ordered_brain_segments_list)+1)
 
 # Plot barplot
@@ -216,7 +304,7 @@ barplot!(
     axA,
     reverse(collect(1:nrow(mean_brain_merits))),
     mean_brain_merits.Test_Cor,
-    color = vcat( repeat( [ "blue", "red" ], 33),repeat( [ "purple" ], 5) ),
+    color = vcat( repeat( [ "blue", "red" ], 33),repeat( [ "purple" ], 5) )[plot_segments_order],
     direction=:x
 )
 
@@ -224,18 +312,7 @@ barplot!(
 # Importance Heatmaps
 ######
 
-mean_brain_importances = reduce(
-    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
-    [ 
-        DataFrame(:variable => j.importances.variable, Symbol(split(j.name, '_')[2]) => map(mean, eachrow(j.importances[:, 2:end]))) 
-        for (i, j) in brain_models
-    ]
-)
-
-mean_brain_importances = mean_brain_importances[:, vcat([ "variable" ], ordered_brain_segments_list)]
-
-mean_brain_importances.averageImportance = [ sum(row[.!(isnan.(collect(row)))])/length(collect(row)) for row in eachrow(mean_brain_importances[:, 2:end]) ]
-sort!(mean_brain_importances, :averageImportance, rev=true)
+mean_brain_importances = mean_brain_importances[:, vcat([1], plot_segments_order .+ 1)]
 
 axB = Axis(
     B_subfig[1, 1];
@@ -253,7 +330,6 @@ axB = Axis(
 heatmap!(axB, Matrix(mean_brain_importances[2:41, 2:end-1]), yflip=true)
 figure
 ```
-
 ### Plot figure 4 again, now with filtering segments and taxa based on predetermined lists, taxa ordered by mean importance
 
 ```julia
