@@ -51,9 +51,10 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 ```julia
 figure = Figure(; resolution = (2000, 1200))
-AB = GridLayout(figure[1,1])
-CDEF = GridLayout(figure[1,2])
-GH = GridLayout(figure[2,1:2])
+A = GridLayout(figure[1,1])
+B = GridLayout(figure[2,1])
+CDEF = GridLayout(figure[1:2,2])
+GH = GridLayout(figure[3,1:2])
 ```
 
 
@@ -64,14 +65,11 @@ GH = GridLayout(figure[2,1:2])
 For now, the graphic here is a place-holder, but we'll have something like this for 1A.
 
 ```julia
-
-A_img = Axis(AB[1,1]; aspect = DataAspect(), alignmode=Inside())
+A_img = Axis(A[1,1]; aspect = DataAspect(), alignmode=Inside())
 hidedecorations!(A_img)
 hidespines!(A_img)
 
 image!(A_img, rotr90(load("manuscript/assets/Figure1A.jpg")))
-
-B = GridLayout(AB[2,1])
 
 bax1 = Axis(B[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing), alignmode = Mixed(; left=-15))
 bax2 = Axis(B[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
@@ -104,9 +102,6 @@ end
 
 
 colgap!(B, Fixed(4))
-rowsize!(AB, 1, Relative(2/3))
-
-
 ```
 
 
@@ -151,9 +146,7 @@ G = GridLayout(GH[1,1])
 # Ba = Axis(B[1:2,1]; alignmode=Outside())
 Ga = Axis(G[1,1]; title="Under 6mo", alignmode = Mixed(; left=-15))
 Gb = Axis(G[1,2]; title="Over 18mo")
-```
 
-```julia
 # plot_permanovas!(Ba, CSV.read(scratchfiles("permanovas_all.csv"), DataFrame))
 plot_permanovas!(Ga, CSV.read(scratchfiles("permanovas_00to06.csv"), DataFrame))
 hideydecorations!(Gb)
@@ -188,12 +181,12 @@ plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 
 ```julia
 
-Label(AB[1, 1, TopLeft()], "A",
+Label(A[1, 1, TopLeft()], "A",
         fontsize = 26,
         font = "Open Sans Bold",
         halign = :right
 )
-Label(AB[2, 1, TopLeft()], "B",
+Label(B[1, 1, TopLeft()], "B",
         fontsize = 26,
         font = "Open Sans Bold",
         halign = :right
@@ -230,14 +223,13 @@ Label(H[1, 1, TopLeft()], "H",
         halign = :right
 )
 
-rowsize!(AB, 1, Relative(4/7))
-rowsize!(figure.layout, 1, Relative(2/3))
+ 
+colsize!(figure.layout, 1, Relative(1/3))
 figure
 ```
 
 ```julia
-save(figurefiles("Figure1.svg"), figure)
-save("manuscript/assets/Figure1.png", figure)
+aw
 ```
 
 ![](figures/Figure1.png)
