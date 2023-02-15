@@ -148,8 +148,8 @@ end
 
 let clrs = log.(vcat((lms_mat[:, "meanab_$group"] for group in ("00to120", "00to06", "18to120"))...))
     poly!(bax2, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
-        color = clrs, colormap=Reverse(:BuPu))
-    Colorbar(B[2,2]; colormap=Reverse(:BuPu),
+        color = clrs, colormap=:batlow)
+    Colorbar(B[2,2]; colormap=:batlow, colorrange=extrema(clrs),
                     vertical=false, flipaxis=false,
                     label="Mean abundance (log)",
                     )
@@ -346,9 +346,13 @@ Label(figure[3, 1, TopLeft()], "G";
 
 rowsize!(figure.layout, 1, Relative(2/5))
 colsize!(G, 1, Relative(3/8))
+figure
+```
+
+
+```julia
 save("manuscript/assets/Figure2.png", figure)
 save(figurefiles("Figure2.svg"), figure)
-figure
 ```
 
 
