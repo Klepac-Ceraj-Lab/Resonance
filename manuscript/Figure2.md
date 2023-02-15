@@ -107,7 +107,7 @@ aax = Axis(AB[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef."
                 xminorticksvisible=true, xminorticks = IntervalsBetween(3))
 
 scatter!(aax, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
-    color = map(q-> q < 0.2 ? 1 : 10, speclms_18to120.qvalue), colormap=:tableau_10)
+    color = map(q-> q < 0.2 ? ColorSchemes.tableau_10[3] : ColorSchemes.tableau_10[10], speclms_18to120.qvalue))
 ```
 ```julia
 B = GridLayout(AB[1, 2:3])
@@ -159,10 +159,10 @@ let clrs = [isnan(x) ? 0.0 : x for x in vcat((lms_mat[:, "corr_$group"] for grou
     
     poly!(bax3, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
         color = clrs, colorrange=(-0.3, 0.3),
-        colormap = :RdBu)
+        colormap = Reverse(:RdBu))
     
     
-    Colorbar(B[2,3]; colormap=:RdBu,
+    Colorbar(B[2,3]; colormap=Reverse(:RdBu),
                     vertical = false, flipaxis = false,
                     label="Correlation",
                     limits=(-0.3, 0.3))
@@ -250,9 +250,9 @@ let
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
-            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
-            sign == "neg" ? colors[1] : colors[7]
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_00to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
@@ -273,9 +273,9 @@ let
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
-            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
-            sign == "neg" ? colors[1] : colors[7]
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to06.t[neuroactive_00to06[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
@@ -295,9 +295,9 @@ let
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
-            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
-            sign == "neg" ? colors[1] : colors[7]
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_18to120.t[neuroactive_18to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
@@ -309,8 +309,8 @@ let
                                     marker=:circle,
                                     strokecolor=:gray,
                                     strokewidth=0.5) for c in colors[[1:3..., 5:7...]]],
-                   ["(-) q < 0.01", "(-) q < 0.05", "(-) q < 0.2", 
-                    "(+) q < 0.20", "(+) q < 0.05", "(+) p < 0.01"])
+                   ["(+) q < 0.01", "(+) q < 0.05", "(+) q < 0.2", 
+                    "(-) q < 0.20", "(-) q < 0.05", "(-) p < 0.01"])
 end
 
 # rowsize!(figure.layout, 3, Relative(2/5))
