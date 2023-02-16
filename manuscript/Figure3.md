@@ -1,707 +1,445 @@
 # Figure3 - RandomForest prediction of cogScores from DEM, Taxonomic and Functional Profiles
 
-#```julia
-using Resonance
-using CairoMakie
-using Colors
+```julia
+using Chain
+using CSV
 using Statistics
-using MultivariateStats
+using Random
+using DataFrames
+using StableRNGs
 using MLJ
+using CairoMakie
+using ColorSchemes
 using DecisionTree
 using JLD2
-using StableRNGs
-using GLM
-#```
+using Resonance
+using Distributions
+ml_rng = StableRNG(0)
+```
 
 ## Defining relevant functions
 
-### Calculate AUROC
-function res_auroc(res::UnivariateRandomForestClassifier, split_index::Int; sample_set = "test")
+### Calculating fitness-weighted importances
+```julia
+function calculate_fitness(train_cor::Vector{Float64}, test_cor::Vector{Float64})
 
-    (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
-    (split_index == 0) && (split_index = res.selected_split[2])
+    positive_train_cor = map( x -> maximum([x, 0.0]), train_cor)
+    positive_test_cor = map( x -> maximum([x, 0.0]), test_cor)
 
-    train, test = res.dataset_partitions[split_index]
-
-    if sample_set == "test"
-        X = res.inputs_outputs[1][test, :]
-        y = res.inputs_outputs[2][test]
-    elseif sample_set == "train"
-        X = res.inputs_outputs[1][train, :]
-        y = res.inputs_outputs[2][train]
-    else
-        X = res.inputs_outputs[1]
-        y = res.inputs_outputs[2]
-    end
-
-    yhat = Resonance.predict_proba(res, X; split_index=split_index)
-    auroc = AreaUnderCurve()(yhat, y)
-
-    return auroc
+    return positive_train_cor .* positive_test_cor
 
 end
 
-### Calculate classification measures
-function classification_measures(resvec::Vector{UnivariateRandomForestClassifier}; sample_set = "test")
+function weighted_hpimportances(m, hp = 1; change_hashnames=false, hashnamestable::Union{Nothing, DataFrame} = nothing)
+    merits = m.merits
+    importances = m.importances
+    fitnesses = calculate_fitness(merits.Train_Cor, merits.Test_Cor)
+    fitness_subset_idx = findall(merits.Hyperpar_Idx .== hp)
 
-    allmodels_measures = DataFrame(
-        model = String[],
-        accuracy = Float64[],
-        AUROC = Float64[],
-        TPR = Float64[],
-        TNR = Float64[],
-        FPR = Float64[],
-        FNR = Float64[]
+    mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/sum(fitnesses[fitness_subset_idx] .> 0.0), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
+    mean_importances_df = sort( DataFrame(:variable => importances[:,1], :weightedImportance => mean_importances), :weightedImportance; rev=true)
+
+    if change_hashnames
+        newnames = leftjoin(mean_importances_df, hashnamestable, on = :variable => :hashname).longname
+        mean_importances_df.variable = newnames
+    end
+
+    return mean_importances_df
+end
+```
+
+### Comparative Importance plots
+```julia
+function compute_joined_importances(modelwithoutdemo, modelwithdemo; imp_fun = weighted_hpimportances)
+
+    importanceswithoutdemo = imp_fun(modelwithoutdemo)
+    importanceswithdemo = imp_fun(modelwithdemo)
+    rename!(importanceswithoutdemo, "weightedImportance" => "ImportanceWithoutDemo")
+    rename!(importanceswithdemo, "weightedImportance" => "ImportanceWithDemo")
+
+    joined_importances = dropmissing(outerjoin(importanceswithdemo, importanceswithoutdemo, on = [ :variable => :variable ]))
+    sort!(joined_importances, :ImportanceWithoutDemo, rev = true)
+    insertcols!(joined_importances, 1, :rank => collect(1:nrow(joined_importances)))
+
+    return joined_importances
+
+end
+
+function plot_comparativedemo_importance_barplots!(plot_axis::Axis, joined_importances::DataFrame; n_rows = 40)
+
+    # Plot barplot
+    barplot!(plot_axis, reverse(collect(1:n_rows)), joined_importances.ImportanceWithoutDemo[1:n_rows], color = "gray", direction = :x)
+    scatter!(plot_axis, joined_importances.ImportanceWithDemo[1:n_rows], reverse(collect(1:n_rows)), marker = :star8, color = "red", direction = :x)
+    
+    return plot_axis
+
+end
+```
+
+### Comparative Linear/RF importances scatterplots
+
+```julia
+
+function attribute_colors(lm_qvalue, rf_cumImp, plot_colorset = [:dodgerblue, :orange, :green, :purple])
+    if (lm_qvalue & rf_cumImp)
+        return plot_colorset[4]
+    elseif (!lm_qvalue & rf_cumImp)
+        return plot_colorset[3]
+    elseif (lm_qvalue & !rf_cumImp)
+        return plot_colorset[2]
+    else
+        return plot_colorset[1]
+    end
+end
+
+function plot_comparative_lmvsrf_scatterplots!(
+    plot_axis::Axis,
+    rf_model::ProbeData,
+    lm_path::String;
+    exclude_from_importances= [ "ageMonths" ],
+    cumulative_importance_threshold = 0.6,
+    plot_colorset = [:dodgerblue, :orange, :green, :purple])
+
+    ## 1. calculate the importances and the cumulative sum, excluding the relevant variables
+    rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
+    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(rf_model_importances.weightedImportance[.!(rf_model_importances.variable .∈ Ref(exclude_from_importances))])
+    rf_model_importances[rf_model_importances.variable .∈ Ref(exclude_from_importances), :relativeWeightedImportance] .= 0.0
+    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
+    
+    ## 2. get the data for linear models, from `Figure2-calculations.jl`
+    lm_coefs = CSV.read(lm_path, DataFrame)
+    lm_coefs = select(lm_coefs, [:feature, :coef, :pvalue, :qvalue])
+
+    ## 3. Join the data
+    plot_comparative_df = dropmissing(outerjoin(rf_model_importances, lm_coefs, on = [ :variable => :feature ]))
+    
+    ## 4. Attribute color to each point
+    is_significative_lm = map(q-> q < 0.2 ? true : false, plot_comparative_df.qvalue)
+    is_over_threshold = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance)
+    point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_significative_lm, is_over_threshold)
+
+    # @show DataFrame(:variable => plot_comparative_df.variable, :color => point_colors) # For Debug
+
+    # 5. Plot scatterplot
+    scatter!(
+        plot_axis,
+        log.(plot_comparative_df.pvalue).*(-1), plot_comparative_df.weightedImportance,
+        color = point_colors
     )
 
-    for (i, res) in enumerate(resvec)
-
-        thismodel_measures = DataFrame(
-            accuracy = Float64[],
-            AUROC = Float64[],
-            TPR = Float64[],
-            TNR = Float64[],
-            FPR = Float64[],
-            FNR = Float64[]
-        )
-
-        for this_split in 1:res.n_splits
-
-            auroc = res_auroc(res, this_split; sample_set = sample_set)
-            
-            confmat = build_confusion_matrix(res, this_split).mat
-            tns = confmat[1,1]
-            fps = confmat[2,1]
-            fns = confmat[1,2]
-            tps = confmat[2,2]
-
-            push!(
-                thismodel_measures, 
-                (
-                    accuracy = (tns + tps)/( tns + tps + fns + fps ),
-                    AUROC = auroc,
-                    TPR = ( tps )/( tps + fns ),
-                    TNR = ( tns )/( tns + fps ),
-                    FPR = ( fps )/( tns + fps ),
-                    FNR = ( fns )/( tps + fns ),
-                )
-            )
-        end
-
-        thismodel_summary = map(mean, eachcol(thismodel_measures))
-
-        push!(
-            allmodels_measures, 
-            (
-                model = res.name,
-                accuracy = thismodel_summary[1],
-                AUROC = thismodel_summary[2],
-                TPR = thismodel_summary[3],
-                TNR = thismodel_summary[4],
-                FPR = thismodel_summary[5],
-                FNR = thismodel_summary[6],
-            )
-        )
-    end
-
-    return(allmodels_measures)
-
+    return plot_axis
 end
+```
 
-### Multimodel stacked bar plot
-function confmatrices2barplots(resvec::Vector{UnivariateRandomForestClassifier})
+### Taxon deepdive quantile plots
+```julia
+function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, taxonomic_profile::CommunityProfile, filter_row::Symbol, taxon_to_dive::String;)
 
-    xs = Int64[]
-    values = Float64[]
-    grps = Int64[]
-    colors = Int64[]
+    filtered_spec = taxonomic_profile[:, get(spec, filter_row)]
+    (lq, uq) = quantile(get(filtered_spec, :cogScore), [0.25, 0.75])
+    lqidx = findall(x-> x <= lq, get(filtered_spec, :cogScore))
+    mqidx = findall(x-> lq < x <= uq, get(filtered_spec, :cogScore))
+    uqidx = findall(x-> x > uq, get(filtered_spec, :cogScore))
 
-    for (i, res) in enumerate(resvec)
+    taxab = vec(abundances(filtered_spec[Regex(taxon_to_dive), :]))
+    g1 = filter(!=(0), taxab[lqidx])
+    g2 = filter(!=(0), taxab[mqidx])
+    g3 = filter(!=(0), taxab[uqidx])
 
-        append!(xs, repeat( [ i ], 4))
-        append!(values, average_confusion_matrix(res))
-        append!(grps, [ 1, 2, 2, 1 ] )
-        append!(colors, [ 1, 2, 3, 4] )
-    end
+    g1p = count(!=(0), taxab[lqidx]) / length(lqidx)
+    g2p = count(!=(0), taxab[mqidx]) / length(mqidx)
+    g3p = count(!=(0), taxab[uqidx]) / length(uqidx)
 
-    return xs, values, grps, colors
+    ax1 = Axis(
+        figure_layout[1,figure_col];
+        ylabel="relative abundance",#\n$taxon_to_dive",
+        title = replace(taxon_to_dive, "_"=>" "),
+        titlefont = "TeX Gyre Heros Makie Italic")
+    ax2 = Axis(figure_layout[2,figure_col]; xticks = (1:3, ["lower", "mid", "upper"]), xlabel="quartile", ylabel = "Intra-q\nPrevalence")
+    ylims!(ax2, [0, 1.0])
 
+    boxplot!(ax1, repeat([ 1.0 ], length(g1)), g1, color = (Makie.wong_colors()[1], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 2.0 ], length(g2)), g2, color = (Makie.wong_colors()[2], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 3.0 ], length(g3)), g3, color = (Makie.wong_colors()[3], 0.5), show_notch = false, show_outliers=false)    
+    Random.seed!(0)
+    scatter!(ax1, 1 .+ rand(Normal(0, 0.1), length(g1)), g1)
+    Random.seed!(0)
+    scatter!(ax1, 2 .+ rand(Normal(0, 0.1), length(g2)), g2)
+    Random.seed!(0)
+    scatter!(ax1, 3 .+ rand(Normal(0, 0.1), length(g3)), g3)
+    barplot!(ax2, [1,2,3], [g1p, g2p, g3p]; color=Makie.wong_colors()[1:3])
+    
+    hidexdecorations!(ax1; grid=false)
+    rowsize!(figure_layout, 2, Relative(1/3))
+
+    return figure_layout
 end
-
-### Generate ROC curve
-function res_roc_curve(res::UnivariateRandomForestClassifier, split_index::Int; sample_set = "test")
-
-    (split_index > length(res.models)) && error("Out of Bounds model/split index selected")
-    (split_index == 0) && (split_index = res.selected_split[2])
-
-    train, test = res.dataset_partitions[split_index]
-
-    if sample_set == "test"
-        X = res.inputs_outputs[1][test, :]
-        y = res.inputs_outputs[2][test]
-    elseif sample_set == "train"
-        X = res.inputs_outputs[1][train, :]
-        y = res.inputs_outputs[2][train]
-    else
-        X = res.inputs_outputs[1]
-        y = res.inputs_outputs[2]
-    end
-
-    yhat = Resonance.predict_proba(res, X; split_index=split_index)
-
-    fprs, tprs, ts = roc_curve(yhat, y)
-
-    return fprs, tprs, ts
-
-end
+```
 
 ## Loading the pretrained models
 
-#```julia
+```julia
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-# concurrent cogScore classification from taxonomic profiles
-JLD2.@load "models/classification_currentCogScores_00to06mo_onlydemo.jld"
-JLD2.@load "models/classification_currentCogScores_00to06mo_onlytaxa.jld"
-JLD2.@load "models/classification_currentCogScores_00to06mo_demoplustaxa.jld"
-JLD2.@load "models/classification_currentCogScores_00to06mo_onlyecs.jld"
-JLD2.@load "models/classification_currentCogScores_00to06mo_demoplusecs.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_onlydemo.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_onlytaxa.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_demoplustaxa.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_onlyecs.jld"
-JLD2.@load "models/classification_currentCogScores_18to120mo_demoplusecs.jld"
 # concurrent cogScore reression from taxonomic profiles
-JLD2.@load "models/regression_currentCogScores_00to06mo_onlydemo.jld"
-JLD2.@load "models/regression_currentCogScores_00to06mo_onlytaxa.jld"
-JLD2.@load "models/regression_currentCogScores_00to06mo_demoplustaxa.jld"
-JLD2.@load "models/regression_currentCogScores_00to06mo_onlyecs.jld"
-JLD2.@load "models/regression_currentCogScores_00to06mo_demoplusecs.jld"
-JLD2.@load "models/regression_currentCogScores_18to120mo_onlydemo.jld"
-JLD2.@load "models/regression_currentCogScores_18to120mo_onlytaxa.jld"
-JLD2.@load "models/regression_currentCogScores_18to120mo_demoplustaxa.jld"
-JLD2.@load "models/regression_currentCogScores_18to120mo_onlyecs.jld"
-JLD2.@load "models/regression_currentCogScores_18to120mo_demoplusecs.jld"
-#```
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlydemo.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlytaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_demoplustaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlyecs.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlydemo.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlytaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_demoplustaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlyecs.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_demoplusecs.jld"
+```
 
 ## Initializing Figure 3
 
-#```julia
-figure = Figure(resolution = (1920, 1080))
-left_subfig = GridLayout(figure[1,1])
-right_subfig = GridLayout(figure[1,2])
+```julia
+figure = Figure(resolution = (1920, 1536))
 
-A_subfig = GridLayout(left_subfig[1,1])
-B_subfig = GridLayout(left_subfig[2,1])
+AB_subfig = GridLayout(figure[1,1], alignmode=Outside())
+CD_subfig = GridLayout(figure[1,2], alignmode=Outside())
+E_subfig = GridLayout(figure[2,1:2], alignmode=Outside())
+F_subfig = GridLayout(figure[3,1:2], alignmode=Outside())
 
-CDEFGH_subfig = GridLayout(right_subfig[1,1])
-IJKLMN_subfig = GridLayout(right_subfig[2,1])
-Legends_subfig = GridLayout(right_subfig[3,1])
+colsize!(figure.layout, 1, Relative(0.3))
+colsize!(figure.layout, 2, Relative(0.7))
 
-colsize!(figure.layout, 1, Relative(0.4))
-colsize!(figure.layout, 2, Relative(0.6))
+rowsize!(figure.layout, 1, Relative(0.6))
+rowsize!(figure.layout, 2, Relative(0.2))
+rowsize!(figure.layout, 3, Relative(0.2))
+```
 
-confplot_colors = [:blue3, :red3, :tomato2, :dodgerblue2]
-#```
+### Plot panels A and B - Comparative Importances
 
-### Plot panel A - Concurrent cogScore classification
-
-#```julia
-classification_results = [
-    classification_currentCogScores_00to06mo_onlydemo,
-    classification_currentCogScores_00to06mo_onlytaxa,
-    classification_currentCogScores_00to06mo_demoplustaxa,
-    classification_currentCogScores_00to06mo_onlyecs,
-    classification_currentCogScores_00to06mo_demoplusecs,
-    classification_currentCogScores_18to120mo_onlydemo,
-    classification_currentCogScores_18to120mo_onlytaxa,
-    classification_currentCogScores_18to120mo_demoplustaxa,
-    classification_currentCogScores_18to120mo_onlyecs,
-    classification_currentCogScores_18to120mo_demoplusecs
-]
-
-xs, values, grps, colors = confmatrices2barplots(classification_results)
-
-axA1 = Axis(
-    A_subfig[1,1];
-    xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
-    ylabel = "Test set average Proportion",
-    title = "A - Classification - above/below 50th percentile"
+```julia
+axA = Axis(
+    AB_subfig[1, 1];
+    xlabel = "-log(p) for LM coefficients",
+    ylabel = "Fitness-weighted importance from  RFs",
+    title = "00 to 06 months",
 )
 
-ylims!(axA1, [0.0, 1.0])
-
-axA2 = Axis(
-    A_subfig[1,1];
-    xticks = (1:10, ["", "", "Subjects from birth to 6 months", "", "", "", "", "Subjects from 18 months to 120 months", "", ""]),
-    xticklabelpad = 30.0
+axB = Axis(
+    AB_subfig[2, 1];
+    xlabel = "-log(p) for LM coefficients",
+    ylabel = "Fitness-weighted importance from  RFs",
+    title = "18 to 120 months",
 )
 
-linkxaxes!(axA1, axA2)
+plot_colorset = [:gray, ColorSchemes.tableau_10[3], ColorSchemes.tableau_10[1], ColorSchemes.tableau_10[7]]
+plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset)
+plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset)
 
-hideydecorations!(axA2)
-hidexdecorations!(axA2, ticklabels = false)
-
-barplot!(
-    axA1, xs, values,
-    dodge = grps,
-    stack = grps,
-    color = confplot_colors[colors]
+Legend(
+    AB_subfig[3, 1],
+    [
+        MarkerElement(; marker=:circle, color=plot_colorset[3]),
+        MarkerElement(; marker=:circle, color=plot_colorset[2]),
+        MarkerElement(; marker=:circle, color=plot_colorset[4]),
+        MarkerElement(; marker=:circle, color=plot_colorset[1]),
+    ],
+    [
+        ">60% ranked importance",
+        "q < 0.2 in LM",
+        "Both",
+        "None"
+    ],
+    "Input composition",
+    tellheight = true,
+    tellwidth = false,
+    nbanks = 2,
+    orientation = :horizontal
 )
+```
 
-labels = ["True Negatives", "False Positives", "False Negatives", "True Positives"]
-elements = [PolyElement(polycolor = confplot_colors[i]) for i in 1:length(labels)]
-Legend(A_subfig[2,1], elements, labels, "Classification result", orientation=:horizontal)
+```julia
+nbars_toplot = 25
 
-#```
-
-### Plot panel B - Concurrent cogScore regression
-#```julia
-regression_results = [
-    regression_currentCogScores_00to06mo_onlydemo,
+joined_importances_00to06 = compute_joined_importances(
     regression_currentCogScores_00to06mo_onlytaxa,
-    regression_currentCogScores_00to06mo_demoplustaxa,
-    regression_currentCogScores_00to06mo_onlyecs,
-    regression_currentCogScores_00to06mo_demoplusecs,
-    regression_currentCogScores_18to120mo_onlydemo,
+    regression_currentCogScores_00to06mo_demoplustaxa;
+    imp_fun = weighted_hpimportances
+)
+joined_importances_18to120 = compute_joined_importances(
     regression_currentCogScores_18to120mo_onlytaxa,
-    regression_currentCogScores_18to120mo_demoplustaxa,
-    regression_currentCogScores_18to120mo_onlyecs,
-    regression_currentCogScores_18to120mo_demoplusecs
-]
-
-axB1 = Axis(
-    B_subfig[1,1];
-    xticks = (1:10, ["DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM", "DEM", "TAXA", "TAXA+DEM", "ECS", "ECS+DEM"]),
-    ylabel = "Test set Mean Abssolut Error\nTest set Person's R coefficient",
-    title = "B - Regression - numeric percentile"
+    regression_currentCogScores_18to120mo_demoplustaxa;
+    imp_fun = weighted_hpimportances
 )
-
-#ylims!(axB1, [0.0, 1.0])
-
-axB2 = Axis(
-    B_subfig[1,1];
-    xticks = (1:10, ["", "", "Subjects from birth to 6 months", "", "", "", "", "Subjects from 18 months to 120 months", "", ""]),
-    xticklabelpad = 30.0
-)
-
-linkxaxes!(axB1, axB2)
-
-hideydecorations!(axB2)
-hidexdecorations!(axB2, ticklabels = false)
-
-maxcorr_splits = [ findmax(report_merits(m)[1:10, :Test_COR]) for m in regression_results ]
-minmaes_splits = [ findmin(report_merits(m)[1:10, :Test_MAE]) for m in regression_results ]
-mediancorr_splits = [ findfirst(report_merits(m)[1:10, :Test_COR] .>= median(report_merits(m)[1:10, :Test_COR]) ) for m in regression_results ]
-medianmae_splits = [ findfirst(report_merits(m)[1:10, :Test_MAE] .<= median(report_merits(m)[1:10, :Test_MAE]) ) for m in regression_results ]
-selected_indexes = [ el[2] for el in maxcorr_splits]
-selected_maes = [ report_merits(m)[i, :Test_MAE] for (m,i) in zip(regression_results, selected_indexes) ]
-selected_correlations = [ report_merits(m)[i, :Test_COR] for (m,i) in zip(regression_results, selected_indexes) ]
-
-lines!(
-    axB1,
-    1:5,
-    selected_maes[1:5],
-    color = :pink
-)
-lines!(
-    axB1,
-    6:10,
-    selected_maes[6:10],
-    color = :pink
-)
-scatter!(
-    axB1,
-    1:10,
-    selected_maes,
-    color = :pink,
-    size = 5
-)
-
-lines!(
-    axB1,
-    1:5,
-    selected_correlations[1:5],
-    color = :green
-)
-lines!(
-    axB1,
-    6:10,
-    selected_correlations[6:10],
-    color = :green
-)
-scatter!(
-    axB1,
-    1:10,
-    selected_correlations,
-    color = :green,
-    size = 5
-)
-
-labels = ["Correlation coefficient (r)", "Mean Absolute Error"]
-elements = [PolyElement(polycolor = c) for c in [:green, :pink]]
-Legend(B_subfig[2,1], elements, labels, "Classification result", orientation=:horizontal)
-
-#```
-
-### Plot panel C - Taxonomic profile PCA, 0-6 mo, color by percentile
-#```julia
 
 axC = Axis(
-    CDEFGH_subfig[1,1];
-    xlabel = "PCo1",
-    ylabel = "PCo2",
-    title = "C - TAXA Percentile PCA - 0 to 6 months"
+    CD_subfig[1, 1];
+    xlabel = "Importance",
+    yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_00to06.variable[1:nbars_toplot], "_"=>" ")),
+    yticklabelfont = "TeX Gyre Heros Makie Italic",
+    ylabel = "Feature",
+    title = "00 to 06 months",
+    # yticklabelrotation= -pi/2
 )
-
-hidedecorations!(axC, grid = false, label = false)
-
-C_pca_model = fit(
-    PCA,
-    transpose(Matrix(classification_currentCogScores_00to06mo_onlytaxa.inputs_outputs[1])),
-    maxoutdim=2
-)
-
-C_prcomps = permutedims(MultivariateStats.predict(
-    C_pca_model,
-    transpose(Matrix(classification_currentCogScores_00to06mo_onlytaxa.inputs_outputs[1]))
-))
-
-scatter!(
-    axC,
-    C_prcomps[:,1], C_prcomps[:,2];
-    color = classification_currentCogScores_00to06mo_onlytaxa.original_data.cogScorePercentile
-)
-
-#```
-
-### Plot panel D - Taxonomic profile ROC curves, 0-6 mo, color by Microbiome vs pure DEM
-#```julia
 
 axD = Axis(
-    CDEFGH_subfig[1,2];
-    xlabel = "False-positive rate",
-    ylabel = "True-positive rate",
-    title = "D - ROC Curves, 0-6, TAXA"
+    CD_subfig[1, 2];
+    xlabel = "Importance",
+    yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_18to120.variable[1:nbars_toplot], "_"=>" ")),
+    yticklabelfont = "TeX Gyre Heros Makie Italic",
+    ylabel = "Feature",
+    title = "18 to 120 months",
+    # yticklabelrotation= -pi/2
 )
 
-for i in 1:classification_currentCogScores_00to06mo_onlydemo.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlydemo, i; sample_set = "all")
-    lines!(axD, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
+plot_comparativedemo_importance_barplots!(axC, joined_importances_00to06; n_rows = nbars_toplot)
+plot_comparativedemo_importance_barplots!(axD, joined_importances_18to120; n_rows = nbars_toplot)
+
+Legend(
+    CD_subfig[1, 2], [MarkerElement(; marker=:rect, color=:gray), MarkerElement(; marker=:star8, color=:red)], ["Microbiome alone", "Microbiome + demographics"], "Input composition",
+    tellheight = false,
+    tellwidth = false,
+    margin = (10, 10, 10, 10),
+    halign = :right, valign = :bottom, orientation = :vertical
+)
+```
+
+### Plot panel E - Deep dives on taxa
+```julia
+mdata = Resonance.load(Metadata())
+spec = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+
+plot_taxon_deepdive!(E_subfig, 1, spec, :filter_00to06, "Blautia_wexlerae";)
+plot_taxon_deepdive!(E_subfig, 2, spec, :filter_00to06, "Gordonibacter_pamelaeae";)
+plot_taxon_deepdive!(E_subfig, 3, spec, :filter_00to06, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(E_subfig, 4, spec, :filter_00to06, "Ruminococcus_gnavus";)
+plot_taxon_deepdive!(E_subfig, 5, spec, :filter_00to06, "Eggerthella_lenta";)
+plot_taxon_deepdive!(E_subfig, 6, spec, :filter_00to06, "Erysipelatoclostridium_ramosum";)
+
+plot_taxon_deepdive!(F_subfig, 1, spec, :filter_18to120, "Blautia_wexlerae";)
+plot_taxon_deepdive!(F_subfig, 2, spec, :filter_18to120, "Gordonibacter_pamelaeae";)
+plot_taxon_deepdive!(F_subfig, 3, spec, :filter_18to120, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(F_subfig, 4, spec, :filter_18to120, "Ruminococcus_gnavus";)
+plot_taxon_deepdive!(F_subfig, 5, spec, :filter_18to120, "Faecalibacterium_prausnitzii";)
+plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Alistipes_finegoldii";)
+```
+
+### Panel labels
+```julia
+Label(AB_subfig[1, 1, TopLeft()], "A", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(AB_subfig[2, 1, TopLeft()], "B", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 1, TopLeft()], "C", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 2, TopLeft()], "D", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 1, TopLeft()], "E", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 5, TopLeft()], "F", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(F_subfig[1, 5, TopLeft()], "G", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+
+Label(E_subfig[1:2, 1, Left()], "00 to 06 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(F_subfig[1:2, 1, Left()], "18 to 120 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+
+save("manuscript/assets/Figure3.png", figure)
+```
+
+## Table 3 generation - [TODO: Move to `tables.md`]
+```julia
+
+conf_interval(vv, critical_z=1.96) = critical_z * std(vv) / sqrt(length(vv))
+
+prod_summary_table = vcat(
+    combine(
+        groupby(regression_currentCogScores_00to06mo_onlydemo.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_onlydemo") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_onlytaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_onlytaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_demoplustaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_demoplustaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_onlyecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_onlyecs") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_demoplusecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_demoplusecs") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_onlydemo.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_onlydemo") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_onlytaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_onlytaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_demoplustaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_demoplustaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_onlyecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_onlyecs") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_demoplusecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_demoplusecs") => :model
+    )
+)
+
+prod_summary_table = select(prod_summary_table, [:model, :Test_RMSE_mean, :Test_RMSE_CI, :Test_Cor_mean, :Test_Cor_CI])
+```
+
+### Suppl Tables XXXA and XXXB
+```julia
+function suppl_table(rf_model)
+    rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
+    rf_model_importances = rf_model_importances[rf_model_importances.variable .!= "ageMonths", :]
+    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(skipmissing(rf_model_importances.weightedImportance))
+    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
+    return rf_model_importances
 end
 
-for i in 1:classification_currentCogScores_00to06mo_onlytaxa.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlytaxa, i; sample_set = "all")
-    lines!(axD, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
-end
-
-#```
-
-### Plot panel E - Taxonomic profile regression scatterplots, 0-6 mo, color by train/test
-#```julia
-
-axE = Axis(
-    CDEFGH_subfig[1,3];
-    xlabel = "Ground Truth Percentile",
-    ylabel = "Predicted percentile",
-    title = "E - Scatterplots, 0-6, TAXA"
-)
-
-xlims!(axE, [0.0, 1.0])
-ylims!(axE, [0.0, 1.0])
-
-singlemodel_merit_scatterplot!(
-    axE, regression_currentCogScores_00to06mo_onlytaxa;
-    split_index = selected_indexes[2],
-    traincorr_pos = Point(0.05, 0.85),
-    testcorr_pos = Point(0.05, 0.7)
-)
-
-#```
-
-### Plot panel F - Functional profile PCA, 0-6 mo, color by percentile
-#```julia
-
-axF = Axis(
-    CDEFGH_subfig[2,1];
-    xlabel = "PCo1",
-    ylabel = "PCo2",
-    title = "F - ECS Percentile PCA - 0 to 6 months"
-)
-
-hidedecorations!(axF, grid = false, label = false)
-
-F_pca_model = fit(
-    PCA,
-    transpose(Matrix(classification_currentCogScores_00to06mo_onlyecs.inputs_outputs[1]));
-    maxoutdim=2,
-    pratio = 1.0
-)
-
-F_prcomps = permutedims(MultivariateStats.predict(
-    F_pca_model,
-    transpose(Matrix(classification_currentCogScores_00to06mo_onlyecs.inputs_outputs[1]))
-))
-
-scatter!(
-    axF,
-    F_prcomps[:,1], F_prcomps[:,2];
-    color = classification_currentCogScores_00to06mo_onlyecs.original_data.cogScorePercentile
-)
-
-#```
-
-### Plot panel G - Functional profile ROC curves, 0-6 mo, color by Microbiome vs pure DEM
-#```julia
-
-axG = Axis(
-    CDEFGH_subfig[2,2];
-    xlabel = "False-positive rate",
-    ylabel = "True-positive rate",
-    title = "G - ROC Curves, 0-6, ECS"
-)
-
-for i in 1:classification_currentCogScores_00to06mo_onlydemo.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlydemo, i; sample_set = "all")
-    lines!(axG, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
-end
-
-for i in 1:classification_currentCogScores_00to06mo_onlyecs.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_00to06mo_onlyecs, i; sample_set = "all")
-    lines!(axG, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
-end
-
-figure
-#```
-
-### Plot panel H - Regression scatterplots, 0-6 mo, functional profiles
-#```julia
-
-axH = Axis(
-    CDEFGH_subfig[2,3];
-    xlabel = "Ground Truth Percentile",
-    ylabel = "Predicted percentile",
-    title = "H - Scatterplots, 0-6, ECS"
-)
-
-xlims!(axH, [0.0, 1.0])
-ylims!(axH, [0.0, 1.0])
-
-singlemodel_merit_scatterplot!(
-    axH, regression_currentCogScores_00to06mo_onlyecs;
-    split_index = selected_indexes[4],
-    traincorr_pos = Point(0.05, 0.85),
-    testcorr_pos = Point(0.05, 0.7)
-)
-
-figure
-#```
-
-
-### Plot panel I - Taxonomic profile PCA, 18-120mo, color by percentile
-#```julia
-
-axI = Axis(
-    IJKLMN_subfig[1,1];
-    xlabel = "PCo1",
-    ylabel = "PCo2",
-    title = "I - TAXA Percentile PCA - 18-120 months"
-)
-
-hidedecorations!(axI, grid = false, label = false)
-
-I_pca_model = fit(
-    PCA,
-    transpose(Matrix(classification_currentCogScores_18to120mo_onlytaxa.inputs_outputs[1]));
-    maxoutdim=2,
-    pratio = 1.0
-)
-
-I_prcomps = permutedims(MultivariateStats.predict(
-    I_pca_model,
-    transpose(Matrix(classification_currentCogScores_18to120mo_onlytaxa.inputs_outputs[1]))
-))
-
-scatter!(
-    axI,
-    I_prcomps[:,1], I_prcomps[:,2];
-    color = classification_currentCogScores_18to120mo_onlytaxa.original_data.cogScorePercentile
-)
-
-#```
-
-### Plot panel J - ROC curves, 18-120 mo, taxonomic profiles
-#```julia
-
-axJ = Axis(
-    IJKLMN_subfig[1,2];
-    xlabel = "False-positive rate",
-    ylabel = "True-positive rate",
-    title = "J - ROC Curves, 18-120, TAXA"
-)
-
-for i in 1:classification_currentCogScores_18to120mo_onlydemo.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlydemo, i; sample_set = "all")
-    lines!(axJ, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
-end
-
-for i in 1:classification_currentCogScores_18to120mo_onlytaxa.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlytaxa, i; sample_set = "all")
-    lines!(axJ, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
-end
-#```
-
-### Plot panel K - Regression scatterplots, 18-120 mo, taxonomic profiles
-#```julia
-
-axK = Axis(
-    IJKLMN_subfig[1,3];
-    xlabel = "Ground Truth Percentile",
-    ylabel = "Predicted percentile",
-    title = "K - Scatterplots, 18-120, TAXA"
-)
-
-xlims!(axK, [0.0, 1.0])
-ylims!(axK, [0.0, 1.0])
-
-singlemodel_merit_scatterplot!(
-    axK, regression_currentCogScores_18to120mo_onlytaxa;
-    split_index = selected_indexes[7],
-    traincorr_pos = Point(0.05, 0.85),
-    testcorr_pos = Point(0.05, 0.7)
-)
-
-#```
-
-### Plot panel L - Functional profile PCA, 18-120mo, color by percentile
-#```julia
-
-axL = Axis(
-    IJKLMN_subfig[2,1];
-    xlabel = "PCo1",
-    ylabel = "PCo2",
-    title = "L - ECS Percentile PCA - 18-120 months"
-)
-
-hidedecorations!(axL, grid = false, label = false)
-
-L_pca_model = fit(
-    PCA,
-    transpose(Matrix(classification_currentCogScores_18to120mo_onlyecs.inputs_outputs[1]));
-    maxoutdim=2,
-    pratio = 1.0
-)
-
-L_prcomps = permutedims(MultivariateStats.predict(
-    L_pca_model,
-    transpose(Matrix(classification_currentCogScores_18to120mo_onlyecs.inputs_outputs[1]))
-))
-
-scatter!(
-    axL,
-    L_prcomps[:,1], L_prcomps[:,2];
-    color = classification_currentCogScores_18to120mo_onlytaxa.original_data.cogScorePercentile
-)
-
-#```
-
-### Plot panel M - ROC curves, 18-120 mo, functional profiles
-#```julia
-
-axM = Axis(
-   IJKLMN_subfig[2,2];
-    xlabel = "False-positive rate",
-    ylabel = "True-positive rate",
-    title = "M - ROC Curves, 18-120, ECS"
-)
-
-for i in 1:classification_currentCogScores_18to120mo_onlydemo.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlydemo, i; sample_set = "all")
-    lines!(axM, fprs, tprs; color = RGBA(1.0, 0.0, 0.0, 0.3), transparency = true)
-end
-
-for i in 1:classification_currentCogScores_18to120mo_onlyecs.n_splits
-    fprs, tprs, ts = res_roc_curve(classification_currentCogScores_18to120mo_onlyecs, i; sample_set = "all")
-    lines!(axM, fprs, tprs; color = RGBA(0.0, 0.0, 1.0, 0.3), transparency = true)
-end
-
-#```
-
-### Plot panel N - Regression scatterplots, 18-120 mo, functional profiles
-#```julia
-
-axN = Axis(
-    IJKLMN_subfig[2,3];
-    xlabel = "Ground Truth Percentile",
-    ylabel = "Predicted percentile",
-    title = "N - Scatterplots, 18-120, ECS"
-)
-
-xlims!(axN, [0.0, 1.0])
-ylims!(axN, [0.0, 1.0])
-
-singlemodel_merit_scatterplot!(
-    axN, regression_currentCogScores_18to120mo_onlyecs;
-    split_index = selected_indexes[7],
-    traincorr_pos = Point(0.05, 0.85),
-    testcorr_pos = Point(0.05, 0.7)
-)
-
-#```
-
-### Legends
-
-Colorbar(Legends_subfig[1, 1], colorrange = (0.0, 1.0), colormap = :viridis, label="Cogscore Percentile", vertical = false)
-
-labels = [ "Microbiome", "Demographics" ]
-elements = [PolyElement(polycolor = el) for el in [ :blue, :red ] ]
-Legend(Legends_subfig[1, 2], elements, labels, "Model ROC", orientation = :horizontal)
-
-labels = [ "Train set", "Test set" ]
-elements = [PolyElement(polycolor = el) for el in [ :orange, :purple ] ]
-Legend(Legends_subfig[1, 3], elements, labels, "Sample set", orientation = :horizontal)
-
-colsize!(Legends_subfig, 1, Relative(0.3))
-colsize!(Legends_subfig, 2, Relative(0.4))
-colsize!(Legends_subfig, 3, Relative(0.3))
-
-figure
-
-save("figures/Figure3.png", figure)
-
-# Accessory figures
-
-acc_fig3 = Figure(resolution = (1000, 400))
-axO = Axis(
-    acc_fig3[1,1];
-    xlabel = "Ground Truth Percentile",
-    ylabel = "Predicted percentile",
-    title = "O - Scatterplots, 00-06, Demographics"
-)
-
-xlims!(axO, [0.0, 1.0])
-ylims!(axO, [0.0, 1.0])
-
-singlemodel_merit_scatterplot!(
-    axO, regression_currentCogScores_00to06mo_onlydemo;
-    split_index = selected_indexes[1],
-    traincorr_pos = Point(0.05, 0.85),
-    testcorr_pos = Point(0.05, 0.7)
-)
-
-axP = Axis(
-    acc_fig3[1,2];
-    xlabel = "Ground Truth Percentile",
-    ylabel = "Predicted percentile",
-    title = "P - Scatterplots, 18-120, Demographics"
-)
-
-xlims!(axP, [0.0, 1.0])
-ylims!(axP, [0.0, 1.0])
-
-singlemodel_merit_scatterplot!(
-    axP, regression_currentCogScores_18to120mo_onlydemo;
-    split_index = selected_indexes[6],
-    traincorr_pos = Point(0.05, 0.85),
-    testcorr_pos = Point(0.05, 0.7)
-)
+supptblA = suppl_table(regression_currentCogScores_00to06mo_onlytaxa)
+CSV.write("manuscript/assets/SuppTableXX_A_RankedImportances_00to06.csv", supptblA)
+supptblB = suppl_table(regression_currentCogScores_18to120mo_onlytaxa)[1:70, :]
+CSV.write("manuscript/assets/SuppTableXX_B_RankedImportances_18to120.csv", supptblB)
+```
