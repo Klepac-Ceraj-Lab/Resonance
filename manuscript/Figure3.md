@@ -180,16 +180,16 @@ end
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore reression from taxonomic profiles
-JLD2.@load "models/2023-01-24/regression_currentCogScores_00to06mo_onlydemo.jld"
-JLD2.@load "models/2023-01-24/regression_currentCogScores_00to06mo_onlytaxa.jld"
-JLD2.@load "models/2023-01-23/regression_currentCogScores_00to06mo_demoplustaxa.jld"
-JLD2.@load "models/2023-01-31/regression_currentCogScores_00to06mo_onlyecs.jld"
-JLD2.@load "models/2023-01-31/regression_currentCogScores_00to06mo_demoplusecs.jld"
-JLD2.@load "models/2023-01-24/regression_currentCogScores_18to120mo_onlydemo.jld"
-JLD2.@load "models/2023-01-24/regression_currentCogScores_18to120mo_onlytaxa.jld"
-JLD2.@load "models/2023-01-24/regression_currentCogScores_18to120mo_demoplustaxa.jld"
-JLD2.@load "models/2023-01-31/regression_currentCogScores_18to120mo_onlyecs.jld"
-JLD2.@load "models/2023-01-31/regression_currentCogScores_18to120mo_demoplusecs.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlydemo.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlytaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_demoplustaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlyecs.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_demoplusecs.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlydemo.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlytaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_demoplustaxa.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlyecs.jld"
+JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_demoplusecs.jld"
 ```
 
 ## Initializing Figure 3
@@ -201,7 +201,6 @@ AB_subfig = GridLayout(figure[1,1], alignmode=Outside())
 CD_subfig = GridLayout(figure[1,2], alignmode=Outside())
 E_subfig = GridLayout(figure[2,1:2], alignmode=Outside())
 F_subfig = GridLayout(figure[3,1:2], alignmode=Outside())
-
 
 colsize!(figure.layout, 1, Relative(0.3))
 colsize!(figure.layout, 2, Relative(0.7))
@@ -228,7 +227,7 @@ axB = Axis(
     title = "18 to 120 months",
 )
 
-plot_colorset = [:gray, ColorSchemes.tableau_10[1], ColorSchemes.tableau_10[3], ColorSchemes.tableau_10[7]]
+plot_colorset = [:gray, ColorSchemes.tableau_10[3], ColorSchemes.tableau_10[1], ColorSchemes.tableau_10[7]]
 plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset)
 plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset)
 
@@ -334,4 +333,95 @@ Label(E_subfig[1:2, 1, Left()], "00 to 06 months", textsize = 20, font = :bold, 
 Label(F_subfig[1:2, 1, Left()], "18 to 120 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 
 save("manuscript/assets/Figure3.png", figure)
+```
+
+## Table 3 generation - [TODO: Move to `tables.md`]
+```julia
+
+conf_interval(vv, critical_z=1.96) = critical_z * std(vv) / sqrt(length(vv))
+
+prod_summary_table = vcat(
+    combine(
+        groupby(regression_currentCogScores_00to06mo_onlydemo.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_onlydemo") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_onlytaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_onlytaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_demoplustaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_demoplustaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_onlyecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_onlyecs") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_00to06mo_demoplusecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "00to06_demoplusecs") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_onlydemo.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_onlydemo") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_onlytaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_onlytaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_demoplustaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_demoplustaxa") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_onlyecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_onlyecs") => :model
+    ),
+    combine(
+        groupby(regression_currentCogScores_18to120mo_demoplusecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 3)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 3)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "18to120_demoplusecs") => :model
+    )
+)
+
+prod_summary_table = select(prod_summary_table, [:model, :Test_RMSE_mean, :Test_RMSE_CI, :Test_Cor_mean, :Test_Cor_CI])
 ```
