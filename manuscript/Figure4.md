@@ -13,6 +13,8 @@ using JLD2
 using Resonance
 using Distributions
 using Clustering, Distances
+using ColorSchemes
+using StatsPlots
 ml_rng = StableRNG(0)
 ```
 
@@ -49,7 +51,7 @@ end
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore reression from taxonomic profiles
-JLD2.@load "models/2023-02-11/brain_models.jld"
+JLD2.@load "models/2023-02-15/brain_models.jld"
 
 ordered_brain_segments_list = [
     "left-temporal", "right-temporal",
@@ -176,13 +178,16 @@ interesting_taxa = [
 
 ## Initializing Figure 4
 ```julia
-figure = Figure(resolution = (1920, 1080))
+figure = Figure(resolution = (1920, 1536))
 
 A_subfig = GridLayout(figure[1,1])
 B_subfig = GridLayout(figure[1,2])
+C_subfig = GridLayout(figure[2,1:2], alignmode=Outside())
 
 colsize!(figure.layout, 1, Relative(0.2))
 colsize!(figure.layout, 2, Relative(0.8))
+rowsize!(figure.layout, 1, Relative(0.75))
+rowsize!(figure.layout, 2, Relative(0.25))
 ```
 
 ### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
@@ -302,40 +307,11 @@ axB = Axis(
     title = "Brain segmentation data variable importances"
 )
 
-heatmap!(axB, Matrix(mean_brain_importances[:, 2:end]), yflip=true)
+CairoMakie.heatmap!(axB, Matrix(mean_brain_importances[:, 2:end]), yflip=true)
 
-save("manuscript/assets/Figure4.png", figure)
-```
-
-### Finding out the highest importance on the matrix
-```julia
-findmax(Matrix(mean_brain_importances[:, 2:end]))
-```
-
-### Analyzing the list of average importances
-```julia
-mean_brain_importances.averageImportance = map(x -> mean(x), eachrow(Matrix(mean_brain_importances)[:, 2:end]))
-sorted_mean_brain_importances = sort(mean_brain_importances, :averageImportance, rev=true)
-sorted_mean_brain_importances.comulativeImportance = cumsum( sorted_mean_brain_importances.averageImportance ./ sum(sorted_mean_brain_importances.averageImportance) )
-sorted_mean_brain_importances[:, [1, end-1, end]]
-
-df = sort(DataFrame(:Anaerostipes_hadrus => collect(mean_brain_importances[1,2:end]), :segment => names(sorted_mean_brain_importances)[2:end-1]), :Anaerostipes_hadrus, rev = true)
-
-
-fig = Figure()
-
-ax = Axis(fig)
-
-for i in 2:ncol(mean_brain_importances)
-
-
-
-end
-
-```
-
-### Finding out how many taxa account for a certain amount of importance on each segment
-```julia
+######
+# Scatterplot
+######
 mean_brain_importances = reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
     [ 
@@ -344,23 +320,81 @@ mean_brain_importances = reduce(
     ]
 )
 
-# interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
-# mean_brain_importances = mean_brain_importances[:, vcat(["variable"], interesting_segments) ]
+noage = mean_brain_importances[[1, 2, collect(4:end)...], :]
 
-cumulative_importance_threshold = 0.333
-vars_to_cumulative_threshold = DataFrame(
-    :segment => names(mean_brain_importances)[2:end-1],
-    :vars_to_threshold => map(
-        seg -> begin
-            relimps = sort(mean_brain_importances[:, seg] ./ sum(mean_brain_importances[:, seg]), rev = true)
-            cumrelimps = cumsum(relimps)
-            return findfirst(cumrelimps .>= cumulative_importance_threshold)
-        end,
-        names(mean_brain_importances)[2:end-1]
-    )
-)
+idx = sortperm([median(row[2:end]) for row in eachrow(noage)])
+ys = reduce(vcat, [values(noage[i, 2:end])...] for i in idx)
+xs = repeat(1:length(idx); inner=ncol(noage)-1)
+
+axC = Axis(
+    C_subfig[1,1];
+    xlabel="Bugs (rank median)",
+    ylabel = "importances",
+    title = "Importances on all brain segments, by taxa")
+
+imp_bugs = [
+    "Anaerostipes_hadrus",
+    "Bacteroides_vulgatus",
+    "Fusicatenibacter_saccharivorans",
+    "Ruminococcus_torques",
+    "Eubacterium_rectale",
+    "Coprococcus_comes",
+    "Blautia_wexlerae",
+]
+maximp = maximum(Matrix(noage[!, 2:end]))
+    
+for (col, bug) in zip(ColorSchemes.Set3_12, imp_bugs)
+    i = findfirst(==(bug), noage.variable[idx])
+    poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=col)
+end
+CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
+Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = ColorSchemes.Set3_12[i]) for i in 1:length(imp_bugs)], imp_bugs)
+
+save("manuscript/assets/Figure4.png", figure)
+```
+
+### Finding out the highest importance on the matrix
+```julia
+# findmax(Matrix(mean_brain_importances[:, 2:end]))
+```
+
+### Analyzing the list of average importances
+```julia
+# mean_brain_importances.averageImportance = map(x -> mean(x), eachrow(Matrix(mean_brain_importances)[:, 2:end]))
+# sorted_mean_brain_importances = sort(mean_brain_importances, :averageImportance, rev=true)
+# sorted_mean_brain_importances.comulativeImportance = cumsum( sorted_mean_brain_importances.averageImportance ./ sum(sorted_mean_brain_importances.averageImportance) )
+# sorted_mean_brain_importances[:, [1, end-1, end]]
+
+# df = sort(DataFrame(:Anaerostipes_hadrus => collect(mean_brain_importances[1,2:end]), :segment => names(sorted_mean_brain_importances)[2:end-1]), :Anaerostipes_hadrus, rev = true)
+```
+
+### Finding out how many taxa account for a certain amount of importance on each segment
+```julia
+# mean_brain_importances = reduce(
+#     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+#     [ 
+#         DataFrame(:variable => j.importances.variable, Symbol(split(j.name, '_')[2]) => map(mean, eachrow(j.importances[:, 2:end]))) 
+#         for (i, j) in brain_models
+#     ]
+# )
+
+# # interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
+# # mean_brain_importances = mean_brain_importances[:, vcat(["variable"], interesting_segments) ]
+
+# cumulative_importance_threshold = 0.333
+# vars_to_cumulative_threshold = DataFrame(
+#     :segment => names(mean_brain_importances)[2:end-1],
+#     :vars_to_threshold => map(
+#         seg -> begin
+#             relimps = sort(mean_brain_importances[:, seg] ./ sum(mean_brain_importances[:, seg]), rev = true)
+#             cumrelimps = cumsum(relimps)
+#             return findfirst(cumrelimps .>= cumulative_importance_threshold)
+#         end,
+#         names(mean_brain_importances)[2:end-1]
+#     )
+# )
 
 
-println("$(median(vars_to_cumulative_threshold.vars_to_threshold)), $(std(vars_to_cumulative_threshold.vars_to_threshold))")
+# println("$(median(vars_to_cumulative_threshold.vars_to_threshold)), $(std(vars_to_cumulative_threshold.vars_to_threshold))")
 
 ```
