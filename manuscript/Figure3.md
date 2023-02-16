@@ -118,6 +118,8 @@ function plot_comparative_lmvsrf_scatterplots!(
     is_over_threshold = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance)
     point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_significative_lm, is_over_threshold)
 
+    # @show DataFrame(:variable => plot_comparative_df.variable, :color => point_colors) # For Debug
+
     # 5. Plot scatterplot
     scatter!(
         plot_axis,
@@ -240,7 +242,7 @@ Legend(
         MarkerElement(; marker=:circle, color=plot_colorset[1]),
     ],
     [
-        ">80% ranked importance",
+        ">60% ranked importance",
         "q < 0.2 in LM",
         "Both",
         "None"
@@ -424,4 +426,20 @@ prod_summary_table = vcat(
 )
 
 prod_summary_table = select(prod_summary_table, [:model, :Test_RMSE_mean, :Test_RMSE_CI, :Test_Cor_mean, :Test_Cor_CI])
+```
+
+### Suppl Tables XXXA and XXXB
+```julia
+function suppl_table(rf_model)
+    rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
+    rf_model_importances = rf_model_importances[rf_model_importances.variable .!= "ageMonths", :]
+    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(skipmissing(rf_model_importances.weightedImportance))
+    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
+    return rf_model_importances
+end
+
+supptblA = suppl_table(regression_currentCogScores_00to06mo_onlytaxa)
+CSV.write("manuscript/assets/SuppTableXX_A_RankedImportances_00to06.csv", supptblA)
+supptblB = suppl_table(regression_currentCogScores_18to120mo_onlytaxa)[1:70, :]
+CSV.write("manuscript/assets/SuppTableXX_B_RankedImportances_18to120.csv", supptblB)
 ```
