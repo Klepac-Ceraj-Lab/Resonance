@@ -57,6 +57,7 @@ lms_mat = let
     df = vcat(speclms_00to120, speclms_00to06, speclms_18to120)
     df.group = [fill("00to120", nrow(speclms_00to120)); fill("00to06", nrow(speclms_00to06)); fill("18to120", nrow(speclms_18to120))]
     sigs = subset(df, "qvalue"=> ByRow(<(0.2)))
+    sort!(sigs, :qvalue)
     sig_feats = unique(sigs.feature)
     gdf = groupby(df, ["feature", "group"])
     DataFrame(ThreadsX.map(eachindex(sig_feats)) do i
@@ -69,15 +70,15 @@ lms_mat = let
         corr_18to120 = cor(taxdf[taxdf.filter_18to120, "cogScore"], taxdf[taxdf.filter_18to120, ft])
         (; feature = ft, 
            prev_00to120 = only(prevalence(taxa[Regex(ft), mdata.filter_00to120])),
-           meanab_00to120 = mean(abundances(taxa[Regex(ft), mdata.filter_00to120])),
+           meanab_00to120 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_00to120]))),
            corr_00to120,
            q_00to120,
            prev_00to06 = only(prevalence(taxa[Regex(ft), mdata.filter_00to06])),
-           meanab_00to06 = mean(abundances(taxa[Regex(ft), mdata.filter_00to06])),
+           meanab_00to06 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_00to06]))),
            corr_00to06,
            q_00to06, 
            prev_18to120 = only(prevalence(taxa[Regex(ft), mdata.filter_18to120])),
-           meanab_18to120 = mean(abundances(taxa[Regex(ft), mdata.filter_18to120])),
+           meanab_18to120 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_18to120]))),
            corr_18to120,
            q_18to120,
         )
@@ -96,7 +97,7 @@ C = GridLayout(CDEF[1, 1])
 D = GridLayout(CDEF[1, 2])
 E = GridLayout(CDEF[1, 3])
 F = GridLayout(CDEF[1, 4])
-G = GridLayout(figure[3,1], alignmode=Outside())
+G = GridLayout(figure[3,1], alignmode=Mixed(; left=0))
 ```
 
 ```julia
@@ -106,17 +107,16 @@ aax = Axis(AB[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef."
                 xminorticksvisible=true, xminorticks = IntervalsBetween(3))
 
 scatter!(aax, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
-    color = map(q-> q < 0.2 ? :orange : :dodgerblue, speclms_18to120.qvalue))
+    color = map(q-> q < 0.2 ? ColorSchemes.tableau_10[3] : ColorSchemes.tableau_10[10], speclms_18to120.qvalue))
 ```
 ```julia
-
 B = GridLayout(AB[1, 2:3])
 
 bax1 = let groups = ["0-120m", "0-6m", "18-120m"]
     Axis(B[1, 1]; xticks = (1.5:length(groups) + 0.5, groups), 
                   yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
                   yticklabelfont = "TeX Gyre Heros Makie Italic",
-                  yticklabelsize = 12,
+                  yticklabelsize = 14,
                   xticklabelsize = 12
                   )
 end
@@ -148,9 +148,9 @@ end
 
 let clrs = log.(vcat((lms_mat[:, "meanab_$group"] for group in ("00to120", "00to06", "18to120"))...))
     poly!(bax2, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
-        color = clrs, colormap = :magma)
-    Colorbar(B[2,2]; colormap=:magma, colorrange=extrema(clrs),
-                    vertical = false, flipaxis = false,
+        color = clrs, colormap=:batlow)
+    Colorbar(B[2,2]; colormap=:batlow, colorrange=extrema(clrs),
+                    vertical=false, flipaxis=false,
                     label="Mean abundance (log)",
                     )
 end
@@ -159,10 +159,10 @@ let clrs = [isnan(x) ? 0.0 : x for x in vcat((lms_mat[:, "corr_$group"] for grou
     
     poly!(bax3, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
         color = clrs, colorrange=(-0.3, 0.3),
-        colormap = :RdBu)
+        colormap = Reverse(:RdBu))
     
     
-    Colorbar(B[2,3]; colormap=:RdBu,
+    Colorbar(B[2,3]; colormap=Reverse(:RdBu),
                     vertical = false, flipaxis = false,
                     label="Correlation",
                     limits=(-0.3, 0.3))
@@ -179,7 +179,6 @@ rowgap!(B, Fixed(4))
 
 
 ```julia
-
 let
     gs = "Acetate synthesis II"
     panel = C
@@ -187,7 +186,7 @@ let
     cs = filter(!isnan, cors_00to06.t[ixs])
     acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, cax, _) = Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
     Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
@@ -199,7 +198,7 @@ let
     cs = filter(!isnan, cors_00to06.t[ixs])
     acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, dax, _) = Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "", xticks = -0.7:0.2:0.0)
     Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
@@ -211,7 +210,7 @@ let
     cs = filter(!isnan, cors_18to120.t[ixs])
     acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, eax, _) =  Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "", xticks = -0.2:0.1:0.0)
     Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
@@ -224,11 +223,12 @@ let
     cs = filter(!isnan, cors_18to120.t[ixs])
     acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
-    Resonance.plot_fsea!(panel, cs, acs;
+    (_, fax, _) = Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
     Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
+    linkyaxes!(cax, dax, eax, fax)
 end
 
 ```
@@ -243,20 +243,20 @@ let
   
     df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
     ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="T stat", title="All ages")
+                xlabel="T stat", title="All ages", alignmode=Mixed(; left=-15))
     m = median(filter(x-> !isnan(x) && x < 7, cors_00to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
-            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
-            sign == "neg" ? colors[1] : colors[7]
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_00to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
@@ -273,13 +273,13 @@ let
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
-            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
-            sign == "neg" ? colors[1] : colors[7]
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to06.t[neuroactive_00to06[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
@@ -295,13 +295,13 @@ let
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
         c = row.qvalue > 0.2 ? :gray : 
-            row.qvalue > 0.05 ? (sign == "neg" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "neg" ? colors[2] : colors[6]) :
-            sign == "neg" ? colors[1] : colors[7]
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_18to120.t[neuroactive_18to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c, linewidth=2)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
@@ -309,8 +309,8 @@ let
                                     marker=:circle,
                                     strokecolor=:gray,
                                     strokewidth=0.5) for c in colors[[1:3..., 5:7...]]],
-                   ["(-) q < 0.01", "(-) q < 0.05", "(-) q < 0.2", 
-                    "(+) q < 0.20", "(+) q < 0.05", "(+) p < 0.01"])
+                   ["(+) q < 0.01", "(+) q < 0.05", "(+) q < 0.2", 
+                    "(-) q < 0.20", "(-) q < 0.05", "(-) p < 0.01"])
 end
 
 # rowsize!(figure.layout, 3, Relative(2/5))
@@ -319,34 +319,40 @@ colgap!(G, Fixed(4))
 
 ```julia
 Label(AB[1, 1, TopLeft()], "A",
-    textsize = 26,
+    fontsize = 26,
     font = "Open Sans Bold",
     padding = (0, 30, 5, 0),
     halign = :right)
 Label(AB[1, 2, TopLeft()], "B",
-    textsize = 26,
+    fontsize = 26,
     font = "Open Sans Bold",
-    padding = (0, 120, 5, 0),
+    padding = (0, 150, 5, 0),
     halign = :right)
 
 for (label, layout) in zip(["C", "D", "E", "F"], [C, D, E, F])
     Label(layout[1, 1, TopLeft()], label,
-        textsize = 26,
+        fontsize = 26,
         font = "Open Sans Bold",
         padding = (0, 30, 5, 0),
         halign = :right)
 end
 
-Label(G[1, 1, TopLeft()], "G",
-        textsize = 26,
-        font = "Open Sans Bold",
-        padding = (0, 120, 5, 0),
-        halign = :right
-)
-# colgap!(figure.layout, 2, -35)
+Label(figure[3, 1, TopLeft()], "G";
+             fontsize = 26,
+             font = "Open Sans Bold",
+             padding = (0, 30, 5, 0),
+             halign = :right
+       )
+
+rowsize!(figure.layout, 1, Relative(2/5))
+colsize!(G, 1, Relative(3/8))
+figure
+```
+
+
+```julia
 save("manuscript/assets/Figure2.png", figure)
 save(figurefiles("Figure2.svg"), figure)
-figure
 ```
 
 

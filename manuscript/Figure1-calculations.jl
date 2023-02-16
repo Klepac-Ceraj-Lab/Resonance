@@ -8,6 +8,7 @@ using CategoricalArrays
 #-
 
 mdata = Resonance.load(Metadata())
+mdata.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), mdata.education)
 
 species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
@@ -34,7 +35,7 @@ kosdm = Microbiome.braycurtis(kos)
 CSV.write(scratchfiles("kosdm.csv"), Tables.table(kosdm))
 # metdm = Microbiome.braycurtis(metabolites)
 # CSV.write(scratchfiles("metdm.csv"), Tables.table(metdm))
-brndm = Microbiome.braycurtis(brain)
+brndm = pairwise(Euclidean(), abundances(brain))
 CSV.write(scratchfiles("brndm.csv"), Tables.table(brndm))
 
 
@@ -49,7 +50,7 @@ p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[u
                         get(species, :cogScore)[uidx], 
                         get(species, :ageMonths)[uidx], 
                         get(species, :sex)[uidx], 
-                        get(species, :education)[uidx],
+                        get(species, :edfloat)[uidx],
                         get(species, :race)[uidx]
             ]; commlabels, mdlabels
 )
@@ -57,7 +58,7 @@ p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[u
 #                         get(metabolites, :cogScore), 
 #                         get(metabolites, :ageMonths), 
 #                         get(metabolites, :sex), 
-#                         get(metabolites, :education)
+#                         get(metabolites, :edfloat)
 #             ]; mdlabels
 # )
 # p2.label .= "metabolites"
@@ -67,7 +68,7 @@ p3 = permanovas(brndm[buidx, buidx], [
                         get(brain, :cogScore)[buidx], 
                         get(brain, :ageMonths)[buidx], 
                         get(brain, :sex)[buidx], 
-                        get(brain, :education)[buidx],
+                        get(brain, :edfloat)[buidx],
                         get(brain, :race)[buidx]
             ]; mdlabels
 )
@@ -83,7 +84,7 @@ p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
                         get(species, :cogScore)[idx], 
                         get(species, :ageMonths)[idx], 
                         get(species, :sex)[idx], 
-                        get(species, :education)[idx],
+                        get(species, :edfloat)[idx],
                         get(species, :race)[idx],
             ]; commlabels=["taxa", "UniRef90s"], mdlabels
 )
@@ -93,7 +94,7 @@ p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
 #                         get(metabolites, :cogScore)[idx], 
 #                         get(metabolites, :ageMonths)[idx], 
 #                         get(metabolites, :sex)[idx], 
-#                         get(metabolites, :education)[idx]
+#                         get(metabolites, :edfloat)[idx]
 #             ]; mdlabels
 # )
 # p2.label .= "metabolites"
@@ -105,7 +106,7 @@ p3 = permanovas(brndm[idx, idx], [
                         get(brain, :cogScore)[idx], 
                         get(brain, :ageMonths)[idx], 
                         get(brain, :sex)[idx], 
-                        get(brain, :education)[idx],
+                        get(brain, :edfloat)[idx],
                         get(brain, :race)[idx]
             ]; mdlabels
 )
@@ -122,7 +123,7 @@ p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
                         get(species, :cogScore)[idx], 
                         get(species, :ageMonths)[idx], 
                         get(species, :sex)[idx], 
-                        get(species, :education)[idx],
+                        get(species, :edfloat)[idx],
                         get(species, :race)[idx]
             ]; commlabels=["taxa", "UniRef90s"], mdlabels
 )
@@ -131,7 +132,7 @@ p3 = permanovas(brndm[bidx, bidx], [
                         get(brain, :cogScore)[bidx], 
                         get(brain, :ageMonths)[bidx], 
                         get(brain, :sex)[bidx], 
-                        get(brain, :education)[bidx],
+                        get(brain, :edfloat)[bidx],
                         get(brain, :race)[bidx]
             ]; mdlabels
 )

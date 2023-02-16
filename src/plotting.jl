@@ -161,7 +161,7 @@ function plot_fsea(setcors, notcors; label="", ylabel="enrichment", kwargs...)
     fig, ax1, ax2
 end
 
-function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", kwargs...)
+function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", linecolor=:gray, kwargs...)
     fullcors = [setcors; notcors]
     ncors = length(fullcors)
 
@@ -184,7 +184,7 @@ function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", kwarg
     ax2 = Axis(grid[2,1])
     hidedecorations!(ax2)
     
-    lines!(ax1, xs, ys)
+    lines!(ax1, xs, ys; color=linecolor)
     vlines!(ax2, ranks[1:length(setcors)]; color=:black)
     
     rowsize!(grid, 2, Relative(1/8))
