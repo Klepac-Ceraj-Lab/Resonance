@@ -23,7 +23,7 @@ terseinits=true,
 url=false
 ]{biblatex}
 
-\addbibresource{zotero_library}
+\addbibresource{zotero_lib}
 
 % Highlighting
 \usepackage{color}
@@ -32,6 +32,7 @@ url=false
 \usepackage{longtable,booktabs,array}
 \usepackage{multirow}
 \usepackage{graphicx}
+\graphicspath{assets}
 
 \title{Gut microbes and their genes or something else}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -215,29 +216,30 @@ driven largely by subject age (Figure 1C-F).
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{graph_a}
-    \caption{An example graph}
-    \label{fig:x cubed graph}
+    \includegraphics[width=\textwidth]{assets/Figure1.png}
+    \caption{
+        Study design and overview. (\textbf{A}) Stool samples, cognitive assessments and
+        neuroimaging were collected from participants in an accelerated
+        longitudinal design. (\textbf{B}) Cognitive function scores are assessed by
+        different instruments, but may be normalized to a common IQ-like scale.
+        (\textbf{C-D}) Principal coordinates analysis using Bray-Curtis dissimilarity on
+        taxonomic profiles demonstrates high beta diversity, with much of the
+        first axis of variation explained by increasing age and alpha diversity.
+        Differences in gene function profiles (\textbf{E}) and neuroimaging (PCA based on
+        the Euclidean distance of brain region volumes) (\textbf{F}) are likewise
+        dominated by changes as children age. (\textbf{G}) Permutation analysis of
+        variance (PERMANOVA) of taxonomic profiles, functional profiles
+        (annotated as UniRef90s) and neuroimaging, against the metadata of
+        interest. Variations in taxonomic and functional profiles explain a
+        modest but significant percent of the variation in cognitive development
+        in children over 18 months of age. (\textbf{H}) Mantel testing of different
+        microbial feature matrices, shows overlapping but distinct patterns of
+        variation. Dotted lines in (B) and (C) show 6 and 18 months, which are
+        used as cut-offs in some following models.
+    }
+    \label{fig:Figure 1}
 \end{figure}
 
-(A) Study design and overview. Stool samples, cognitive assessments and
-neuroimaging were collected from participants in an accelerated
-longitudinal design. (B) Cognitive function scores are assessed by
-different instruments, but may be normalized to a common IQ-like scale.
-(C-D) Principal coordinates analysis using Bray-Curtis dissimilarity on
-taxonomic profiles demonstrates high beta diversity, with much of the
-first axis of variation explained by increasing age and alpha diversity.
-Differences in gene function profiles (E) and neuroimaging (PCA based on
-the Euclidean distance of brain region volumes) (F) are likewise
-dominated by changes as children age. (G) Permutation analysis of
-variance (PERMANOVA) of taxonomic profiles, functional profiles
-(annotated as UniRef90s) and neuroimaging, against the metadata of
-interest. Variations in taxonomic and functional profiles explain a
-modest but significant percent of the variation in cognitive development
-in children over 18 months of age. (H) Mantel testing of different
-microbial feature matrices, shows overlapping but distinct patterns of
-variation. Dotted lines in (B) and (C) show 6 and 18 months, which are
-used as cut-offs in some following models.
 
 \textbf{Table1: Subject demographics}
 
@@ -301,8 +303,8 @@ cognitive function, we fit multivariable linear regression
 \cite{mallickMultivariableAssociationDiscovery2021}
 to the relative abundance of each species that had at least 15\%
 prevalence in a given age group (Figure 2A, N = 92 for 0--120 months, N
-= 46 for 0--6 months, N = 97 for 18--120 months). Only \emph{Blautia
-wexlerae} was significantly associated (q value = 0.14, β = 0.0015) with
+= 46 for 0--6 months, N = 97 for 18--120 months). Only \emph{Blautia wexlerae}
+was significantly associated (q value = 0.14, $\beta$ = 0.0015) with
 cognitive function in children under 6 months old after adjusting for
 age and maternal education (Figure 2B). \emph{B. wexlerae} was
 previously shown to be depleted in children with diabetes
@@ -325,27 +327,30 @@ and the SCFA-producing probiotic
 species such as \emph{Eubacterium eligens} and \emph{Faecalibacterium
 prausnitzii}
 \cite{ghoshMediterraneanDietIntervention2020}
-(Figure
-2B).
+(Figure 2B).
 
-\includegraphics[width=6.5in,height=4.83333in]{media/image4.png}
-
-\textbf{Figure 2 - Taxa and gene functional groups are associated with cognitive function.}
-
-(A) Volcano plot of multivariable linear model results showing the
-relationship between individual taxa and cognitive function score in
-children over 18 months of age, controlling for age, maternal education,
-and sequencing depth. Taxa that were significant after FDR correction (q
-\textless{} 0.2) are colored red. (B) For taxa that were significantly
-associated with cognitive function, heatmaps of prevalence, mean
-relative abundance, and correlation with cognitive function in different
-age groups. (C-F) Enrichment plots for selected neuroactive gene sets
-used in feature set enrichment analysis (FSEA). (G) summary of FSEA
-results across all samples (left) as well as in the under 6 months
-(middle) and over 18 months (right) subsets, colored based on the
-significance of the association. Markers indicate the individual
-correlation of genes within a gene set, and vertical bars represent the
-median correlation of that gene set.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{assets/Figure2.png}
+    \caption{
+        \textbf{Figure 2 - Taxa and gene functional groups are associated with cognitive function.}
+        (A) Volcano plot of multivariable linear model results showing the
+        relationship between individual taxa and cognitive function score in
+        children over 18 months of age, controlling for age, maternal education,
+        and sequencing depth. Taxa that were significant after FDR correction (q
+        \textless{} 0.2) are colored red. (B) For taxa that were significantly
+        associated with cognitive function, heatmaps of prevalence, mean
+        relative abundance, and correlation with cognitive function in different
+        age groups. (C-F) Enrichment plots for selected neuroactive gene sets
+        used in feature set enrichment analysis (FSEA). (G) summary of FSEA
+        results across all samples (left) as well as in the under 6 months
+        (middle) and over 18 months (right) subsets, colored based on the
+        significance of the association. Markers indicate the individual
+        correlation of genes within a gene set, and vertical bars represent the
+        median correlation of that gene set.
+    }
+    \label{fig:Figure 2}
+\end{figure}
 
 Given that different microbial species might occupy the same metabolic
 niche in different individuals, we hypothesized that microbial genes
@@ -353,8 +358,7 @@ grouped by functional activity would be associated with cognition. To
 test this, we performed feature set enrichment analysis (FSEA) on groups
 of genes with neuroactive potential
 \cite{valles-colomerNeuroactivePotentialHuman2019}
-and concurrent cognitive function score (Table 2,
-\protect\hyperlink{_i7fd3z19jdvg}{\uline{Figure 2}}C-G) and found that
+and concurrent cognitive function score (Table 2, Figure 2C-G) and found that
 several metabolic pathways were significantly enriched or depleted in
 children with higher cognitive function scores. This was true both when
 considering all age groups together, though the enrichment of most
@@ -368,11 +372,10 @@ for propionate synthesis were also significantly depleted in higher
 scoring children over 18 months (E.S. -0.676, q = 0.023), as were genes
 for synthesizing the 2 carbon SCFA acetate in children under 6 months
 old (acetate synthesis I, E.S. = -0.194, q = 0.153; acetate synthesis
-II, E.S. = -0.342, q = 0.020; acetate synthesis III, E.S. = -0.31, q =
-0.052). SCFAs are produced by anaerobic fermentation of dietary fiber
+II, E.S. = -0.342, q = 0.020; acetate synthesis III, E.S. = -0.31, q = 0.052).
+SCFAs are produced by anaerobic fermentation of dietary fiber
 and have been linked with immune system regulation as well as directly
-with brain function
-\cite{dalileRoleShortchainFatty2019}.
+with brain function \cite{dalileRoleShortchainFatty2019}.
 
 
 Synthesis of menaquinone (vitamin K) was also negatively associated with
@@ -401,8 +404,7 @@ microbial metabolic activity, particularly the metabolism (synthesis and
 degradation) of neuroactive compounds may have effects on cognitive
 development.
 
-\textbf{Table 2 - Feature set enrichment analysis on neuroactive
-microbial gene sets}
+\textbf{Table 2 - Feature set enrichment analysis on neuroactive microbial gene sets}
 
 \subsubsection{Gut microbial taxonomic and functional profiles predict cognitive function}
 
@@ -425,22 +427,25 @@ work out complex input feature interactions, such as those present in a
 microbiome-wide study, without the necessity to explicitly compute
 interaction terms.
 
-\includegraphics[width=6.5in,height=5.19444in]{media/image2.png}
-
-\textbf{Figure 3 - Random forest models predict concurrently measured
-cognitive function.}
-
-Comparison of RF predictor importance versus linear models for children
-between birth and 6 months old (A), and for those older than 18 months
-(B). Colors represent whether the species belong to the group of
-top-important features that account for 80\% of the cumulative
-importance on the RF model, if that species was significant (q
-\textless{} 0.2) in linear models, both, or neither. Ranked feature
-importance for taxa in RF models for children between birth and 6 months
-old (C), and for those older than 18 months (D). Taxa that are important
-for RF models both for children under 6 months and for those over 18
-months (E), only for children under 6 months (F), and only for children
-over 18 months (G)
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidt]{assets/Figure3.png}
+    \caption{
+        \textbf{Figure 3 - Random forest models predict concurrently measured cognitive function.}
+        Comparison of RF predictor importance versus linear models for children
+        between birth and 6 months old (A), and for those older than 18 months
+        (B). Colors represent whether the species belong to the group of
+        top-important features that account for 80\% of the cumulative
+        importance on the RF model, if that species was significant (q
+        \textless{} 0.2) in linear models, both, or neither. Ranked feature
+        importance for taxa in RF models for children between birth and 6 months
+        old (C), and for those older than 18 months (D). Taxa that are important
+        for RF models both for children under 6 months and for those over 18
+        months (E), only for children under 6 months (F), and only for children
+        over 18 months (G)
+    }
+    \label{fig:Figure 3}
+\end{figure}
 
 Given that gut microbial profiles, as well as neurocognitive
 development, may partially reflect socioeconomic and demographic
@@ -488,7 +493,6 @@ feature importance, which could indicate that decision branches based on
 microbial taxa have increased purity when considering the subject's age
 or that age itself is a useful predictor.
 
-
 \subsubsection{Gut microbial taxonomic profiles predict brain structure differences}
 
 If there are causal effects of microbial metabolism on cognitive
@@ -506,8 +510,7 @@ These included the L/R lingual gyrus (mean RF correlations, Left =
 high-performing models, such as that for the left accumbens area (mean
 RF correlations = 0.288; relative age importances = 1.2\%).
 
-\textbf{Table 4. Summary statistics for the neuroanatomy prediction
-benchmarks}
+\textbf{Table 4. Summary statistics for the neuroanatomy prediction benchmarks}
 
 We also observed that many brain regions had high accordance across the
 left and right hemispheres in terms of both model performance and
@@ -555,20 +558,23 @@ and the segments whose importance was more heavily loaded to further
 analyze the multiple relationships unveiled by the RF models
 (Figure 4 A and B)
 
-\includegraphics[width=6.5in,height=5.19444in]{media/image1.png}
-
-\textbf{Figure 4: Microbial feature importance in predicting brain
-volumes in children over 18 months of age.}
-
-(A) Average test-set correlations for prediction of MRI segmentation
-data from microbiome and demographics on select segments after repeated
-cross validation. (B) Heatmap of average individual relative taxa
-importances on each brain segment. Importances are reported as
-proportions relative to the sum of importances for each model - since
-every model is trained with 132 features, and even distribution of
-importance would be 0.75\% for each feature. Segments and taxa ordered
-by HCA on a select list of species with high ranks on average importances,
-and their respective highest-load segments (C).
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{graph_a}
+    \caption{
+        \textbf{Figure 4: Microbial feature importance in predicting brain volumes in children over 18 months of age.}
+        (A) Average test-set correlations for prediction of MRI segmentation
+        data from microbiome and demographics on select segments after repeated
+        cross validation. (B) Heatmap of average individual relative taxa
+        importances on each brain segment. Importances are reported as
+        proportions relative to the sum of importances for each model - since
+        every model is trained with 132 features, and even distribution of
+        importance would be 0.75\% for each feature. Segments and taxa ordered
+        by HCA on a select list of species with high ranks on average importances,
+        and their respective highest-load segments (C).
+    }
+    \label{fig:x cubed graph}
+\end{figure}
 
 Our analysis revealed two major patterns of importance distribution from
 taxa over the brain segments; some species portrayed high contributions
@@ -629,7 +635,6 @@ depression symptoms
 and increased levels of the \emph{Alistipes} genus have been
 observed in patients with depressive disorder
 \cite{jiangAlteredFecalMicrobiota2015}.
-
 While these reports are important, simultaneously probing of the gut
 metagenome and brain structure relationship is novel.
 
@@ -640,8 +645,7 @@ the right anterior cingulate (respectively, 3.0\% and 2.6\% relative
 importances), which has been linked to social cognition and reward-based
 decision making
 \cite{appsAnteriorCingulateGyrus2016,boesRightAnteriorCingulate2008,bushDorsalAnteriorCingulate2002}.
-Equol has a strong
-estrogenic effect
+Equol has a strong estrogenic effect
 \cite{setchellSEquolPotentLigand2005},
 and in anterior cingulate, estrogen, has been shown to regulate
 pain-related aversion
