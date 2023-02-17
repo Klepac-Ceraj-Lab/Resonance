@@ -1,0 +1,49 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/TeX Live for SUSE Linux) (preloaded format=pdflatex 2023.1.15)  17 FEB 2023 10:08
+entering extended mode
+ restricted \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**/home/kevin/Repos/Resonance/manuscript/tex/scifile.tex
+(/home/kevin/Repos/Resonance/manuscript/tex/scifile.tex
+LaTeX2e <2021-11-15> patch level 1
+L3 programming layer <2022-02-24> (/usr/share/texmf/tex/latex/base/article.cls
+Document Class: article 2021/10/04 v1.4n Standard LaTeX document class
+(/usr/share/texmf/tex/latex/base/size12.clo
+File: size12.clo 2021/10/04 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count185
+\c@section=\count186
+\c@subsection=\count187
+\c@subsubsection=\count188
+\c@paragraph=\count189
+\c@subparagraph=\count190
+\c@figure=\count191
+\c@table=\count192
+\abovecaptionskip=\skip47
+\belowcaptionskip=\skip48
+\bibindent=\dimen138
+)
+
+! LaTeX Error: File `scicite.sty' not found.
+
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: sty)
+
+Enter file name: 
+/home/kevin/Repos/Resonance/manuscript/tex/scifile.tex:12: Emergency stop.
+<read *> 
+         
+l.12 ^^M
+        
+*** (cannot \read from terminal in nonstop modes)
+
+ 
+Here is how much of TeX's memory you used:
+ 235 strings out of 479305
+ 3051 string characters out of 5872607
+ 289690 words of memory out of 5000000
+ 18367 multiletter control sequences out of 15000+600000
+ 469557 words of font info for 29 fonts, out of 8000000 for 9000
+ 475 hyphenation exceptions out of 8191
+ 33i,0n,38p,167b,36s stack positions out of 10000i,1000n,20000p,200000b,200000s
+/home/kevin/Repos/Resonance/manuscript/tex/scifile.tex:12:  ==> Fatal error occurred, no output PDF file produced!

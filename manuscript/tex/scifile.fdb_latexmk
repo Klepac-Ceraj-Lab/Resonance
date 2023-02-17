@@ -1,0 +1,16 @@
+# Fdb version 3
+["pdflatex"] 1676646490 "/home/kevin/Repos/Resonance/manuscript/tex/scifile.tex" "scifile.pdf" "scifile" 1676646490
+  "/etc/texmf/web2c/texmf.cnf" 1617974667 41134 c6edb751c63f98b31f19bd365fe083e9 ""
+  "/home/kevin/Repos/Resonance/manuscript/tex/scifile.tex" 1676646490 13445 3c634a8a9296b413490d1274d08b284f ""
+  "/usr/share/texmf/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
+  "/usr/share/texmf/fonts/tfm/public/cm/cmr12.tfm" 1136768653 1288 655e228510b4c2a1abe905c368440826 ""
+  "/usr/share/texmf/tex/latex/base/article.cls" 1636758526 20144 8a7de377ae7a11ee924a7499611f5a9d ""
+  "/usr/share/texmf/tex/latex/base/size12.clo" 1636758526 8449 bc7344e882df4d7e51c046514dee83e4 ""
+  "/usr/share/texmf/web2c/texmf.cnf" 1617974667 41134 c6edb751c63f98b31f19bd365fe083e9 ""
+  "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1673811030 2648468 e835327182631b5e7b29742d0e400e77 ""
+  "scicite.sty" 0 -1 0 ""
+  "scifile.aux" 1676646490 32 3985256e7290058c681f74d7a3565a19 ""
+  "scifile.tex" 1676646490 13445 3c634a8a9296b413490d1274d08b284f ""
+  (generated)
+  "scifile.log"
+  "scifile.pdf"
