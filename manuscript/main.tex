@@ -23,7 +23,7 @@ terseinits=true,
 url=false
 ]{biblatex}
 
-\addbibresource{zotero_lib}
+\addbibresource{zotero.bib}
 
 % Highlighting
 \usepackage{color}
@@ -31,6 +31,11 @@ url=false
 \usepackage{xurl}
 \usepackage{longtable,booktabs,array}
 \usepackage{multirow}
+
+% figures
+\usepackage{wrapfig}
+\usepackage{lscape}
+\usepackage{rotating}
 \usepackage{graphicx}
 \graphicspath{assets}
 
@@ -95,73 +100,73 @@ The gut and the brain are intimately linked. Signals from the brain
 reach the gut through the autonomic nervous system and the endocrine
 system, and the gut can communicate with the brain through the vagus
 nerve and through endocrine and immune (cytokine) signaling molecules
-\cite{cerdoEarlyNutritionGut2019,pronovostPerinatalInteractionsMicrobiome2019,sharonCentralNervousSystem2016,togniniGutMicrobiotaPotential2017}
+\citep{cerdoEarlyNutritionGut2019,pronovostPerinatalInteractionsMicrobiome2019,sharonCentralNervousSystem2016,togniniGutMicrobiotaPotential2017}
 In addition, the products of microbial metabolism generated in the gut can
 influence the brain, both indirectly by stimulating the enteric nervous
 and immune systems, as well as directly through molecules that enter
 circulation and cross the blood-brain barrier. Causal links between the
 gut microbiome and neural development, particularly atypical
 development, are increasingly being identified
-\cite{spichakMiningMicrobesMental2021}.
+\citep{spichakMiningMicrobesMental2021}.
 Both human epidemiology and animal models point to the effects
 of gut microbes on the development of autism spectrum disorder
-\cite{laueProspectiveAssociationsInfant2020,wanUnderdevelopmentGutMicrobiota2021}
+\citep{laueProspectiveAssociationsInfant2020,wanUnderdevelopmentGutMicrobiota2021}
 and particular microbial taxa have been associated with depression
-\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,valles-colomerNeuroactivePotentialHuman2019}
+\citep{mayneris-perxachsMicrobiotaAlterationsProline2022,valles-colomerNeuroactivePotentialHuman2019}
 and Alzheimer's disease
-\cite{fungInteractionsMicrobiotaImmune2017,kimProbioticSupplementationImproves2021}.
+\citep{fungInteractionsMicrobiotaImmune2017,kimProbioticSupplementationImproves2021}.
 But information about this "microbiome-gut-brain
 axis" in normal neurocognitive development remains lacking,
 particularly early in life.
 
 The first years of life are critical developmental windows for both the
 microbiome and the brain
-\cite{laueDevelopingMicrobiomeBirth2022}.
+\citep{laueDevelopingMicrobiomeBirth2022}.
 Fetal development \emph{in utero} is believed to be mostly sterile, but
 is rapidly seeded at birth through contact with the birth canal (if
 birthed vaginally), caregivers, food sources (breastmilk or formula),
 and other environmental sources such as antibiotics
-\cite{backhedDynamicsStabilizationHuman2015,bokulichAntibioticsBirthMode2016}.
+\citep{backhedDynamicsStabilizationHuman2015,bokulichAntibioticsBirthMode2016}.
 The early microbiome is characterized by low microbial
 diversity, rapid succession and evolution, and domination by
 Actinobacteria, particularly the genus \emph{Bifidobacterium},
 Bacteroidetes, especially \emph{Bacteroides}, and Proteobacteria
-\cite{koenigSuccessionMicrobialConsortia2011}.
+\citep{koenigSuccessionMicrobialConsortia2011}.
 Many of these microbes have specialized metabolic capabilities
 for digesting human breast milk, such as \emph{Bifidobacterium infantis}
 and \emph{Bacteroides fragilis}
-\cite{selaGenomeSequenceBifidobacterium2008}.
+\citep{selaGenomeSequenceBifidobacterium2008}.
 Upon the introduction of solid foods, the gut
 microbiome undergoes another categorical transformation, with most taxa
 of the infant microbiome being replaced by taxa more reminiscent of
 adult microbiomes
-\cite{backhedDynamicsStabilizationHuman2015}.
+\citep{backhedDynamicsStabilizationHuman2015}.
 Many prior studies have focused on either infant microbiomes or
 adult microbiomes, since performing statistical analyses across this
 transition poses particular challenges. Nevertheless, since this
 transition coincides with critical neural developmental windows and
 neural synaptogenesis, investigation across this solid-food boundary is
 incredibly important
-\cite{tauNormalDevelopmentBrain2010}.
+\citep{tauNormalDevelopmentBrain2010}.
 
 A child's brain undergoes remarkable anatomical, microstructural,
 organizational, and functional changes in the first years of life. By
 age 5, a child's brain has reached \textgreater85\% of its adult size,
 has achieved near-adult levels of myelination, and the pattern of axonal
 connections has been established
-\cite{silbereisCellularMolecularLandscapes2016}.
+\citep{silbereisCellularMolecularLandscapes2016}.
 Much of this development occurs in discrete windows or
 ``sensitive-'' or ``critical periods'' (CPs)
-\cite{knudsenSensitivePeriodsDevelopment2004}
+\citep{knudsenSensitivePeriodsDevelopment2004}
 when neural plasticity is particularly high,
 and particular modes of learning
 and skill development are preferred. The timing of these sensitive
 periods is driven in part by genetics, but can also be affected by the
 environment, including the gut microbiome
-\cite{cowanAnnualResearchReview2020}.
+\citep{cowanAnnualResearchReview2020}.
 In fact, emerging evidence suggests that the timing and duration of CPs
 may be driven in part by cues from the developing gut microbiome
-\cite{callaghanNestedSensitivePeriods2020}.
+\citep{callaghanNestedSensitivePeriods2020}.
 As such,
 understanding the normal spectrum of healthy microbiome
 development and how it relates to normal neurocognitive development may
@@ -192,20 +197,20 @@ neurocognitive assessments, including shotgun metagenomic sequencing,
 cognitive and behavioral assessments, and neuroimaging. In all, 361
 children from RESONANCE,
 an accelerated longitudinal cohort of early development
-\cite{forrestAdvancingScienceChildren2018}
+\citepp{forrestAdvancingScienceChildren2018}
 between the ages of 82 days and 10 years
 old (median age 2.21 years, Supplementary Figure 1) were included in
 this study (Table 1, Figure 1A). To measure cognitive function, we used
 age-appropriate assessments that can be normalized to a common, IQ-like
 scale (Figure 1B), including the Mullen scale of early learning (MSEL)
 for children from birth to 3 years of age
-\cite{mullenMullenScalesEarly1995},
+\citep{mullenMullenScalesEarly1995},
 Wechsler preschool and primary scale of intelligence (WPPSI)
 for 4-5 year-olds
-\cite{wechslerWechslerPreschoolPrimary2012},
+\citep{wechslerWechslerPreschoolPrimary2012},
 and the Wechsler intelligence scale for children (WISC)
 for children 6 years and up
-\cite{wechslerWechslerIntelligenceScale1949}.
+\citep{wechslerWechslerIntelligenceScale1949}.
 
 As expected, the greatest differences in microbial taxa were driven by
 age (Figure 1B-C, PCoA axis 1), while older children were primarily
@@ -214,7 +219,7 @@ high-\emph{Prevotella copri} (Supplementary Figure 2). Overall variation
 in gut microbial genes and also in brain volume profiles was similarly
 driven largely by subject age (Figure 1C-F).
 
-\begin{figure}[h]
+\begin{sidewaysfigure}[!htb]
     \centering
     \includegraphics[width=\textwidth]{assets/Figure1.png}
     \caption{
@@ -238,19 +243,18 @@ driven largely by subject age (Figure 1C-F).
         used as cut-offs in some following models.
     }
     \label{fig:Figure 1}
-\end{figure}
-
+\end{sidewaysfigure}
 
 \textbf{Table1: Subject demographics}
 
 
 Several studies have demonstrated links between specific taxa and
 measures of anxiety and depression
-\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022},
+\citep{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022},
 cognitive flexibility in adults
-\cite{magnussonRelationshipsDietrelatedChanges2015},
+\citep{magnussonRelationshipsDietrelatedChanges2015},
 and atypical neural development
-\cite{liuAlteredGutMicrobiota2019,wanUnderdevelopmentGutMicrobiota2021}.
+\citep{liuAlteredGutMicrobiota2019,wanUnderdevelopmentGutMicrobiota2021}.
 We, therefore, set out to identify whether specific taxa
 or gene functions were linked with normal cognitive development in
 children. In order to assess whether variations in gut microbial taxa,
@@ -282,14 +286,14 @@ associated with neuroimaging profiles (R\textsuperscript{2} = 0.256, q
 Consistent with prior studies, different microbial measurement types
 captured overlapping variation, with species profiles and gene function
 profiles (annotated with clusters of 90\% similarity
-\cite{suzekUniRefComprehensiveNonredundant2007}
+\citep{suzekUniRefComprehensiveNonredundant2007}
 ), both generated from DNA sequencing data, being tightly coupled
 (Figure 1H, p \textless{} 0.001). Interestingly, other functional
 groupings (Enzyme commission level4 - ECs
-\cite{bairochENZYMEDatabase20002000},
+\citep{bairochENZYMEDatabase20002000},
 and
 KEGG orthologues - KOs
-\cite{kanehisaKEGGResourceDeciphering2004}
+\citep{kanehisaKEGGResourceDeciphering2004}
 ) overlapped only slightly with taxonomic profiles in both age
 cohorts, despite being derived from UniRef90 labels. In children over 18
 months, some variation (15.9\%, p \textless{} 0.01) in neuroimaging
@@ -300,7 +304,7 @@ residual variation due to age in both measures.
 
 To assess whether individual microbial species were associated with
 cognitive function, we fit multivariable linear regression
-\cite{mallickMultivariableAssociationDiscovery2021}
+\citep{mallickMultivariableAssociationDiscovery2021}
 to the relative abundance of each species that had at least 15\%
 prevalence in a given age group (Figure 2A, N = 92 for 0--120 months, N
 = 46 for 0--6 months, N = 97 for 18--120 months). Only \emph{Blautia wexlerae}
@@ -308,32 +312,32 @@ was significantly associated (q value = 0.14, $\beta$ = 0.0015) with
 cognitive function in children under 6 months old after adjusting for
 age and maternal education (Figure 2B). \emph{B. wexlerae} was
 previously shown to be depleted in children with diabetes
-\cite{benitez-paezDepletionBlautiaSpecies2020},
+\citep{benitez-paezDepletionBlautiaSpecies2020},
 and that oral administration of \emph{B. wexlerae} partially
 ameliorated weight gain and inflammation from a high-fat diet in a mouse
 model of T2D
-\cite{hosomiOralAdministrationBlautia2022,liuBlautiaNewFunctional2021}.
+\citep{hosomiOralAdministrationBlautia2022,liuBlautiaNewFunctional2021}.
 In children over 18 months of age,
 several microbial species were significantly enriched (q-value
 \textless{} 0.20) in children with higher cognitive function scores,
 including \emph{Gordonibacter pamelaeae}, which produces the
 neuroprotective metabolite urolithin
-\cite{gongUrolithinAlleviatesBloodbrain2022,selmaDescriptionUrolithinProduction2014},
+\citep{gongUrolithinAlleviatesBloodbrain2022,selmaDescriptionUrolithinProduction2014},
 \emph{Asaccharobacter celatus} and
 \emph{Adelcreutzia equolifaciens}, which produce phytoestrogen-derived
 equol
-\cite{maruoAdlercreutziaEquolifaciensGen2008,thawornkunoBiotransformationDaidzeinEquol2009},
+\citep{maruoAdlercreutziaEquolifaciensGen2008,thawornkunoBiotransformationDaidzeinEquol2009},
 and the SCFA-producing probiotic
 species such as \emph{Eubacterium eligens} and \emph{Faecalibacterium
 prausnitzii}
-\cite{ghoshMediterraneanDietIntervention2020}
+\citep{ghoshMediterraneanDietIntervention2020}
 (Figure 2B).
 
-\begin{figure}[h]
+\begin{sidewaysfigure}[!htb]
     \centering
     \includegraphics[width=\textwidth]{assets/Figure2.png}
     \caption{
-        \textbf{Figure 2 - Taxa and gene functional groups are associated with cognitive function.}
+        Taxa and gene functional groups are associated with cognitive function.
         (A) Volcano plot of multivariable linear model results showing the
         relationship between individual taxa and cognitive function score in
         children over 18 months of age, controlling for age, maternal education,
@@ -350,14 +354,14 @@ prausnitzii}
         median correlation of that gene set.
     }
     \label{fig:Figure 2}
-\end{figure}
+\end{sidewaysfigure}
 
 Given that different microbial species might occupy the same metabolic
 niche in different individuals, we hypothesized that microbial genes
 grouped by functional activity would be associated with cognition. To
 test this, we performed feature set enrichment analysis (FSEA) on groups
 of genes with neuroactive potential
-\cite{valles-colomerNeuroactivePotentialHuman2019}
+\citep{valles-colomerNeuroactivePotentialHuman2019}
 and concurrent cognitive function score (Table 2, Figure 2C-G) and found that
 several metabolic pathways were significantly enriched or depleted in
 children with higher cognitive function scores. This was true both when
@@ -375,16 +379,16 @@ old (acetate synthesis I, E.S. = -0.194, q = 0.153; acetate synthesis
 II, E.S. = -0.342, q = 0.020; acetate synthesis III, E.S. = -0.31, q = 0.052).
 SCFAs are produced by anaerobic fermentation of dietary fiber
 and have been linked with immune system regulation as well as directly
-with brain function \cite{dalileRoleShortchainFatty2019}.
+with brain function \citep{dalileRoleShortchainFatty2019}.
 
 
 Synthesis of menaquinone (vitamin K) was also negatively associated with
 cognitive function score in older children (menaquinone synthesis I,
 E.S. = -0.170, q = 0.0183). Menaquinone has several isoforms, one of
 which, MK-4, has been found to be decreased in children diagnosed with ASD
-\cite{dongCorrelationSerumConcentrations2021}
+\citep{dongCorrelationSerumConcentrations2021}
 and is potentially neuroprotective in both rodents and humans
-\cite{elkattawyVitaminK2Menaquinone72022}.
+\citep{elkattawyVitaminK2Menaquinone72022}.
 In children over 18 months old,
 genes for the synthesis of the amino acids
 glutamate and tryptophan were significantly enriched in children with
@@ -394,11 +398,11 @@ critical neurotransmitter controlling neuronal excitatory/inhibitory
 signaling along with gamma-aminobutyric acid (GABA), and their balance
 in the brain controls neural plasticity and learning, particularly in
 the developing brain
-\cite{cohenkadoshLinkingGABAGlutamate2015,palomo-buitragoGlutamateInteractionsObesity2019}.
+\citep{cohenkadoshLinkingGABAGlutamate2015,palomo-buitragoGlutamateInteractionsObesity2019}.
 Tryptophan metabolism, including
 microbial metabolism of tryptophan, has previously been linked with
 autism in children
-\cite{hoshinoBloodSerotoninFree1984,xiaoFecalMicrobiomeTransplantation2021}.
+\citep{hoshinoBloodSerotoninFree1984,xiaoFecalMicrobiomeTransplantation2021}.
 Taken together, these results suggest that
 microbial metabolic activity, particularly the metabolism (synthesis and
 degradation) of neuroactive compounds may have effects on cognitive
@@ -416,22 +420,22 @@ the identification of underlying patterns in large numbers of individual
 features (here, microbial species). Previous studies have reported
 successful use of RFs for processing highly-dimensional and sparse data
 from the domain of genomics
-\cite{amaratungaEnrichedRandomForests2008,brieucPracticalIntroductionRandom2018,chenRandomForestsGenomic2012,franzosaGutMicrobiomeStructure2019,stephanRandomForestApproach2015},
+\citep{amaratungaEnrichedRandomForests2008,brieucPracticalIntroductionRandom2018,chenRandomForestsGenomic2012,franzosaGutMicrobiomeStructure2019,stephanRandomForestApproach2015},
 along with other works where it was used
 to predict cognitive conditions related to Alzheimer's disease in
 different scenarios
-\cite{ardekaniPredictionIncipientAlzheimer2017,velazquezRandomForestModel2021}.
+\citep{ardekaniPredictionIncipientAlzheimer2017,velazquezRandomForestModel2021}.
 Additionally, given the sequential
 nature of variable consideration in each tree, RFs are naturally able to
 work out complex input feature interactions, such as those present in a
 microbiome-wide study, without the necessity to explicitly compute
 interaction terms.
 
-\begin{figure}[h]
+\begin{sidewaysfigure}[h]
     \centering
-    \includegraphics[width=\textwidt]{assets/Figure3.png}
+    \includegraphics[width=\textwidth]{assets/Figure3.png}
     \caption{
-        \textbf{Figure 3 - Random forest models predict concurrently measured cognitive function.}
+        Random forest models predict concurrently measured cognitive function.
         Comparison of RF predictor importance versus linear models for children
         between birth and 6 months old (A), and for those older than 18 months
         (B). Colors represent whether the species belong to the group of
@@ -445,7 +449,8 @@ interaction terms.
         over 18 months (G)
     }
     \label{fig:Figure 3}
-\end{figure}
+\end{sidewaysfigure}
+
 
 Given that gut microbial profiles, as well as neurocognitive
 development, may partially reflect socioeconomic and demographic
@@ -517,14 +522,14 @@ left and right hemispheres in terms of both model performance and
 microbial feature importance. In contrast, other regions had substantial
 differences between the hemispheres. For example, the left accumbens
 area, which plays an important role in reward circuits
-\cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012},
+\citep{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012},
 has one of the highest test-set correlations of our
 brain region models (R = 0.288), as compared to the right accumbens
 models which could not adequately generalize, and had a negative mean
 test-set correlation (R = -0.041). Most healthy individuals have a
 rightward asymmetry in the nucleus accumbens, and reduced asymmetry has
 been linked to substance use disorder in young adults
-\cite{caoMappingCorticalSubcortical2021}.
+\citep{caoMappingCorticalSubcortical2021}.
 
 Feature importance for models of the left accumbens area were dominated
 by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.4\%
@@ -532,18 +537,18 @@ relative importance), \emph{B. ovatus} (3.7\% relative importance), and
 \emph{B. uniformis} (3.0\% relative importance).. The accumbens area is
 associated with reward control, and in individuals diagnosed with ADHD,
 it has been shown to have a divergent neuromorphology
-\cite{hoogmanSubcorticalBrainVolume2017}.
+\citep{hoogmanSubcorticalBrainVolume2017}.
 Independently, \emph{B. ovatus}, \emph{B. uniformis} and
 \emph{B. vulgatus} have been linked to ADHD
-\cite{wangGutMicrobiotaDietary2020}.
+\citep{wangGutMicrobiotaDietary2020}.
 
 In fact, there are studies showing that alterations on the striatal
 dopamine transporters can cause effects resembling hyperactivity and
 attention deficit
-\cite{yaelDisinhibitionNucleusAccumbens2019},
+\citep{yaelDisinhibitionNucleusAccumbens2019},
 and that \emph{B. uniformis} is gut-microbial modulator of the brain
 dopamine transporter
-\cite{hartstraInfusionDonorFeces2020}.
+\citep{hartstraInfusionDonorFeces2020}.
 
 
 Many of the taxa identified included taxa also identified in LMs and RF
@@ -558,11 +563,11 @@ and the segments whose importance was more heavily loaded to further
 analyze the multiple relationships unveiled by the RF models
 (Figure 4 A and B)
 
-\begin{figure}[h]
+\begin{sidewaysfigure}[!htb]
     \centering
-    \includegraphics[width=\textwidth]{graph_a}
+    \includegraphics[width=\textwidth]{assets/Figure4.png}
     \caption{
-        \textbf{Figure 4: Microbial feature importance in predicting brain volumes in children over 18 months of age.}
+        Microbial feature importance in predicting brain volumes in children over 18 months of age.
         (A) Average test-set correlations for prediction of MRI segmentation
         data from microbiome and demographics on select segments after repeated
         cross validation. (B) Heatmap of average individual relative taxa
@@ -573,8 +578,9 @@ analyze the multiple relationships unveiled by the RF models
         by HCA on a select list of species with high ranks on average importances,
         and their respective highest-load segments (C).
     }
-    \label{fig:x cubed graph}
-\end{figure}
+    \label{fig:Figure 4}
+\end{sidewaysfigure}
+
 
 Our analysis revealed two major patterns of importance distribution from
 taxa over the brain segments; some species portrayed high contributions
@@ -590,7 +596,7 @@ on the taxa of interest (Figure 4C).
 Among these, the most important variable is \emph{Anaerostipes hadrus},
 which is a butyrate-producing anaerobe that has been positively
 associated with cognitive function
-\cite{kantGenomeSequenceButyrateProducing2015,liCorrelationsGutMicrobiota2022}.
+\citep{kantGenomeSequenceButyrateProducing2015,liCorrelationsGutMicrobiota2022}.
 Its importance is, however, heavily loaded on the volume
 of entire major lobes (frontal, parietal), which cannot be readily
 correlated to specific cognitive functions. After accounting for the
@@ -613,16 +619,16 @@ assessment results. Previous works exploring Parkinson Disease patients
 found out that issues in the cognitive task of confrontation naming were
 positively correlated with thinning in the fusiform gyrus and
 parahippocampal gyrus
-\cite{pagonabarragaPatternRegionalCortical2013}.
+\citep{pagonabarragaPatternRegionalCortical2013}.
 Additionally, the left and right parahippocampal, where \emph{B.
 wexlerae} had the highest importance in both models, are important in
 visual/spatial processing and memory
-\cite{aminoffRoleParahippocampalCortex2013}.
+\citep{aminoffRoleParahippocampalCortex2013}.
 \emph{B. wexlerae} can also produce acetylcholine in the gut
-\cite{hosomiOralAdministrationBlautia2022},
+\citep{hosomiOralAdministrationBlautia2022},
 and this molecule plays an important role in modulating memory
 function
-\cite{haamCholinergicModulationHippocampal2017}.
+\citep{haamCholinergicModulationHippocampal2017}.
 
 
 Another notable importance cluster contains taxa associated with the
@@ -631,10 +637,10 @@ cluster contains the previously-discussed \emph{B. ovatus} and \emph{B.
 uniformis,} but also \emph{Alistipes finegoldii and Streptococcus
 salivaris.} Reduction in the nucleus accumbens has been associated with
 depression symptoms
-\cite{wackerRoleNucleusAccumbens2009},
+\citep{wackerRoleNucleusAccumbens2009},
 and increased levels of the \emph{Alistipes} genus have been
 observed in patients with depressive disorder
-\cite{jiangAlteredFecalMicrobiota2015}.
+\citep{jiangAlteredFecalMicrobiota2015}.
 While these reports are important, simultaneously probing of the gut
 metagenome and brain structure relationship is novel.
 
@@ -644,21 +650,21 @@ pattern, and had high importance in predicting the relative volume of
 the right anterior cingulate (respectively, 3.0\% and 2.6\% relative
 importances), which has been linked to social cognition and reward-based
 decision making
-\cite{appsAnteriorCingulateGyrus2016,boesRightAnteriorCingulate2008,bushDorsalAnteriorCingulate2002}.
+\citep{appsAnteriorCingulateGyrus2016,boesRightAnteriorCingulate2008,bushDorsalAnteriorCingulate2002}.
 Equol has a strong estrogenic effect
-\cite{setchellSEquolPotentLigand2005},
+\citep{setchellSEquolPotentLigand2005},
 and in anterior cingulate, estrogen, has been shown to regulate
 pain-related aversion
-\cite{xiaoEstrogenAnteriorCingulate2013}.
+\citep{xiaoEstrogenAnteriorCingulate2013}.
 
 Another example of this pattern is \emph{R. gnavus,} which was the only
 species with significant negative association with cognitive function.
 It is heavily associated with the left pars opercularis (2.7\% relative
 importance), a relationship that may be explained by the emerging
 understanding that this species is increased in individuals with insulin
-resistance and obesity \cite{leyHumanGutMicrobes2006},
+resistance and obesity \citep{leyHumanGutMicrobes2006},
 conditions that are known to produce structural abnormalities in the brain
-\cite{opelBrainStructuralAbnormalities2021}.
+\citep{opelBrainStructuralAbnormalities2021}.
 Finally, \emph{Coprococcus comes} displays an importance
 distribution that splits almost evenly among the two previously reported
 clusters. Its loading on the prediction of the left posterior cingulate
@@ -694,7 +700,7 @@ cognition in 3 year old subjects used 16S rRNA gene amplicon sequencing,
 and showed that genera from the Lachnospiraceae family as well as
 unclassified Clostridiales (now Eubacteriales) were associated with
 higher scores on the Ages and Stages Questionnaire
-\cite{sordilloAssociationInfantGut2019}.
+\citep{sordilloAssociationInfantGut2019}.
 However, each of these clades encompass dozens of genera with
 diverse functions, each of which may have different effects. Indeed,
 several of the taxa that were positively associated with cognitive
@@ -710,20 +716,20 @@ We identified several species in the family Eggerthelaceae that were
 associated with cognitive function, including \emph{Gordonibacter
 pamelaeae, Aldercreutzia equolofaciens, Asaccharobacter celatus}
 (formerly regarded a subspecies of \emph{A. equolofaciens}
-\cite{takahashiCompleteGenomeSequence2021}),
+\citep{takahashiCompleteGenomeSequence2021}),
 and \emph{Eggerthella lenta}. Many members of this family are
 known in part due to unique metabolic activities. For example, \emph{A.
 equolofaciens} produces the nonsteroidal estrogen equol from isoflaven
 found in soybeans
-\cite{wangEnantioselectiveSynthesisSEquol2005},
+\citep{wangEnantioselectiveSynthesisSEquol2005},
 and \emph{G. pamelaeae} can metabolize the polyphenol ellagic acid
 (found in pomegranates and some berries) into urolithin, which has been
 shown in some studies to have a neuroprotective effect
-\cite{gongUrolithinAlleviatesBloodbrain2022,selmaDescriptionUrolithinProduction2014}.
+\citep{gongUrolithinAlleviatesBloodbrain2022,selmaDescriptionUrolithinProduction2014}.
 \emph{E. lenta} has been extensively studied for
 its ability to metabolize drug compounds such as the plant-derived heart
 medication digoxin
-\cite{haiserPredictingManipulatingCardiac2013}.
+\citep{haiserPredictingManipulatingCardiac2013}.
 The metabolic versatility of this clade, and the large number of
 species that are associated with cognition make these microbes prime
 targets for further mechanistic studies.
@@ -760,7 +766,7 @@ the COVID-19 pandemic, and we and others have observed some reduction in
 measured scores for children that were assessed after the implementation
 of lockdowns. In our subject set for this study, these effects are more
 pronounced in some age groups due to our sampling schedule
-\cite{blackwellYouthWellbeingCOVID192022,deoniImpactCOVID19Pandemic2021}
+\citep{blackwellYouthWellbeingCOVID192022,deoniImpactCOVID19Pandemic2021}
 (Supplementary Figure 3).
 
 This analysis allowed us to establish links between microbial taxa and
@@ -800,8 +806,8 @@ RESONANCE study of healthy and neurotypical brain and cognitive
 development, based at Brown University in Providence, RI, USA. The
 RESONANCE study is part of the NIH initiative Environmental influences
 on Child Health Outcomes (ECHO)
-\href{https://www.zotero.org/google-docs/?0tZanX}{(Forrest et al., 2018;
-Gillman and Blaisdell, 2018)}, a longitudinal observational study of
+\citep{forrestAdvancingScienceChildren2018,gillmanEnvironmentalInfluencesChild2018},
+ a longitudinal observational study of
 healthy and neurotypical brain development that spans the fetal and
 infant to adolescent life stages, combining neuroimaging (magnetic
 resonance imaging, MRI), neurocognitive assessments, bio-specimen
@@ -842,13 +848,13 @@ collected at every assessment visit, if possible.
 Overall cognitive function was assessed using age-appropriate methods.
 For children from birth to 30 months, we used an Early Learning
 Composite as assessed via the Mullen Scales of Early Learning (MSEL)
-\href{https://www.zotero.org/google-docs/?NSyykd}{(Mullen and others,
-1995)}, a standardized and population-normed tool for assessing fine and
+\citep{mullenMullenScalesEarly1995},
+ a standardized and population-normed tool for assessing fine and
 gross motor, expressive and receptive language, and visual reception
 functioning in children from birth through 68 months of age. The
 Wechsler Intelligence Quotient for Children (WISC)
-\href{https://www.zotero.org/google-docs/?OopdA1}{(Wechsler, 2012)} is
-an individually administered standard intelligence test for children
+\citep{wechslerWechslerPreschoolPrimary2012}
+is an individually administered standard intelligence test for children
 aged 6 to 16 years. It derives a full scale intelligence quotient (IQ)
 score, which we used to assess overall cognitive functioning. The fourth
 edition of the Wechsler Preschool and Primary Scale of Intelligence
@@ -858,13 +864,12 @@ the increasing need for the assessment of preschoolers. Just as the
 WISC, it derives a full scale IQ score, which we used to assess overall
 cognitive functioning.
 
-\subsubsection{Stool Sample Collection an
-Sequencing}
+\subsubsection{Stool Sample Collection and Sequencing}
 
 Stool samples (n=493) were collected by parents in OMR-200 tubes
 (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada), stored on ice, and
 brought within 24 hrs to the lab in RI where they were immediately
-frozen at -80 ˚C. Stool samples were not collected if the subject had
+frozen at -80$^{\circ}$C. Stool samples were not collected if the subject had
 taken antibiotics within the last two weeks. DNA extraction was
 performed at Wellesley College (Wellesley, MA). Nucleic acids were
 extracted from stool samples using the RNeasy PowerMicrobiome kit,
@@ -882,8 +887,7 @@ then pooled onto a plate and sequenced on the Illumina NextSeq 550
 platform using 150+150 bp paired-end ``high output'' chemistry,
 generating 400 million raw reads and 120 Gb of sequence per plate.
 
-\subsubsection{Machine learning for cognitiv
-development}
+\subsubsection{Machine learning for cognitive development}
 
 Prediction of cognitive scores was carried out as a set of regression
 experiments targeting real-valued continuous assessment scores.
@@ -897,25 +901,22 @@ provided as a covariate for all models (Table 3).
 \textbf{Table 5. Experimental design and input composition for Random
 Forest experiments}
 
+Random Forests (RFs)
+\citep{breimanRandomForests2001}
+were selected as the prediction engine and processed using the
+DecisionTree.jl \citep{sadeghiDecisionTreeJlJulia2022}
+implementation, inside the MLJ.jl \citep{blaomMLJJuliaPackage2020}.
 
-
-Random Forests (RFs) \href{https://paperpile.com/c/dPbU4e/VDqU}{(Breiman
-1996)} were selected as the prediction engine and processed using the
-DecisionTree.jl
-\href{https://www.zotero.org/google-docs/?dQLyDs}{(Sadeghi et al.,
-2022)} implementation, inside the MLJ.jl
-\href{https://www.zotero.org/google-docs/?y8ywGI}{(Blaom et al., 2020)}
 Machine Learning framework. Independent RFs were trained for each
 experiment, using a set of default regression hyperparameters from
-Breiman and Cutler
-\href{https://www.zotero.org/google-docs/?d3gqFh}{(Breiman, 2001)}, on a
-repeated cross-validation approach with different RNG seeds. One hundred
+Breiman and Cutler \citep{breimanRandomForests2001},
+on a repeated cross-validation approach with different RNG seeds. One hundred
 repetitions of 3-fold CV with 10 different intra-fold RNG states each
 were employed, for a total of 3000 experiments per input set.
 
 After the training procedures, the root-mean-square error (RMSE) for
 cognitive assessment scores and mean absolute proportional error (MAPE)
-for the brain segmentation data, along with Pearson\textquotesingle s
+for the brain segmentation data, along with Pearson's
 correlation coefficient (R) were benchmarked on the validation and train
 sets. MAPE was chosen as the metric for brain segments due to magnitude
 differences between median volumes of each segment, which would hinder
@@ -933,7 +934,8 @@ higher benchmarks on the validation sets (or higher generalizability),
 while penalizing information from highly overfit models, drawing
 inspiration from the approach used on another work employing repeated CV
 on Random Forests with high-dimensional, low sample size microbiome
-datasets \{***\}. The resulting fitness-weighted importances were used
+datasets \citep{woodruffInflammationAutoreactivityDefine2022}.
+The resulting fitness-weighted importances were used
 to generate the values in Figure 3.
 
 \(fitness =\)
@@ -948,9 +950,8 @@ parameters: TE=5.6msec, TR=1400msec, FA=15 degrees, 1.1x1.1x1.1mm
 resolution, 160x160 matrix, with an average of 112 slices. FOV was
 adjusted to infant size. Using a combination of linear and nonlinear
 image registration, we created representative age-specific templates
-using the ANTs package
-\href{https://www.zotero.org/google-docs/?ZlWDfL}{(Avants et al.,
-2014)}. After age specific templates were created, a single flow from
+using the ANTs package \citep{avantsInsightToolKitImage2014}.
+After age specific templates were created, a single flow from
 each age to the 12-month template was estimated and a final warp from
 the 12-month template to standard adult MNI space was performed. For
 each individual infant/ child brain image, we then calculated the warp
@@ -961,20 +962,21 @@ to the space of an individual infant in a single step. In this case, we
 used the Harvard-Oxford brain atlas to provide a coarse-grained
 parcellation of individual brains into subcortical regions (e.g.,
 thalamus, putamen) and total grey and white matter volumes (included as
-part of the FSL package
-\href{https://www.zotero.org/google-docs/?AapPN7}{(Jenkinson et al.,
-2012)}. Total tissue and brainstem volume as well as left and right
+part of the FSL package \citep{jenkinsonFSL2012}).
+Total tissue and brainstem volume as well as left and right
 hemisphere volumes were derived for total white and cortical gray
 matter, lateral ventricle, thalamus, caudate, putamen, pallidum,
 hippocampus, amygdala, and accumbens as well as total brainstem volume
-\href{https://www.zotero.org/google-docs/?MCDDB9}{(Bruchhage et al.,
-n.d.)}.
+\citep{bruchhageLongitudinalBrainCognitive}.
 
 \subsubsection{Computational analysis of metagenomes}
 
 Shotgun metagenomic sequences were analyzed using the bioBakery suite of
-computational tools \href{https://paperpile.com/c/dPbU4e/vDau}{(Beghini
-et al. 2021)}. First, KneadData (v0.7.7) was used to perform quality
+computational tools
+(Beghini
+et al. 2021)
+\citep{}.
+ First, KneadData (v0.7.7) was used to perform quality
 control of raw sequence reads, such as read trimming and removal of
 reads matching a human genome reference. Next, MetaPhlAn (v3.0.7, using
 database mpa\_v30\_CHOCOPhlAn\_201901) was used to generate taxonomic
@@ -987,20 +989,26 @@ metagenomes.
 Taxonomic and functional microbial profiles, as well as subject
 demographics necessary for statistical analyses and machine learning are
 available on the Open Science Framework
-\href{https://www.zotero.org/google-docs/?61HLlM}{(Bonham et al.,
-2022)}. Data processing, generation of summary statistics, and
+(Bonham et al.,
+2022)
+\citep{}.
+ Data processing, generation of summary statistics, and
 generation of plots was performed using the julia programming language
-\href{https://www.zotero.org/google-docs/?zj3HnY}{(Bezanson et al.,
-2017; Bonham et al., 2021; Danisch and Krumbiegel, 2021)}. All code for
+(Bezanson et al.,
+2017; Bonham et al., 2021; Danisch and Krumbiegel, 2021)
+\citep{}.
+ All code for
 data analysis and figure generation, as well as scripts for automated
 download of input files are available on github \{\{CITE zenodo\}\}.
 
-\subsection{Research Standards}
+\section*{Research Standards}
 
-\subsection{Acknowledgements}
+\section*{Acknowledgements}
 
 Research funding: NIH UG3 OD023313 and Wellcome LEAP 1kD.
 
+\section*{References}
 
+\printbibliography
 
 \end{document}
