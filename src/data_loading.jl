@@ -152,12 +152,12 @@ end
 #     return comm
 # end
 
-function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield = "omni")
+function load(::Neuroimaging; timepoint_metadata = load(Metadata()), samplefield = "sample")
     Setup.datadownload(Setup.Neuro(); inputdir=inputfiles())
     df = CSV.read(inputfiles("brain_normalized.csv"), DataFrame)
-    mat = Matrix(select(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))' |> collect
+    mat = Matrix(select(df, Not(["subject", "timepoint"])))' |> collect
 
-    feats = brainvolume.(names(df, Not(["subject", "timepoint", "Sex", "AgeInDays"])))
+    feats = brainvolume.(names(df, Not(["subject", "timepoint"])))
     
     grp = groupby(timepoint_metadata, ["subject", "timepoint"])
 
