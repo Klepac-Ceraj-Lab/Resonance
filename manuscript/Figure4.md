@@ -180,12 +180,13 @@ interesting_taxa = [
 ```julia
 figure = Figure(resolution = (1920, 1536))
 
-A_subfig = GridLayout(figure[1,1])
-B_subfig = GridLayout(figure[1,2])
-C_subfig = GridLayout(figure[2,1:2], alignmode=Outside())
+AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
+A_subfig = GridLayout(AB_Subfig[1,1])
+B_subfig = GridLayout(AB_Subfig[1,2])
+C_subfig = GridLayout(figure[2,1], alignmode=Outside())
 
-colsize!(figure.layout, 1, Relative(0.2))
-colsize!(figure.layout, 2, Relative(0.8))
+colsize!(AB_Subfig, 1, Relative(0.2))
+colsize!(AB_Subfig, 2, Relative(0.8))
 rowsize!(figure.layout, 1, Relative(0.75))
 rowsize!(figure.layout, 2, Relative(0.25))
 ```
@@ -209,6 +210,22 @@ mean_brain_importances = reduce(
         for (i, j) in brain_models
     ]
 )
+
+relative_brain_importances = combine(
+    mean_brain_importances,
+    :variable => :variable,
+        Symbol.(names(mean_brain_importances))[2:end] .=> (x -> x ./ sum(x)) .=> Symbol.(names(mean_brain_importances)[2:end])
+)
+
+get_relative_importances_segment(sseg) = sort(select(relative_brain_importances, ["variable", sseg]), Symbol(sseg), rev=true)
+get_relative_importances_segment("left-posterior-cingulate")
+get_relative_importances_segment("left-pars-opercularis")
+get_relative_importances_segment("right-pars-opercularis")
+get_relative_importances_segment("left-precentral")
+get_relative_importances_segment("right-precentral")
+get_relative_importances_segment("left-paracentral")
+get_relative_importances_segment("right-paracentral")
+
 ```
 
 #### Filter the tables accordign to the lsit of interesting taxa and segments
@@ -332,14 +349,16 @@ axC = Axis(
     ylabel = "importances",
     title = "Importances on all brain segments, by taxa")
 
+CairoMakie.xlims!(axC, [0, nrow(noage)+1])
+
 imp_bugs = [
     "Anaerostipes_hadrus",
-    "Bacteroides_vulgatus",
     "Fusicatenibacter_saccharivorans",
-    "Ruminococcus_torques",
     "Eubacterium_rectale",
-    "Coprococcus_comes",
     "Blautia_wexlerae",
+    "Bacteroides_vulgatus",
+    "Ruminococcus_torques",
+    "Coprococcus_comes",
 ]
 maximp = maximum(Matrix(noage[!, 2:end]))
     
@@ -349,6 +368,10 @@ for (col, bug) in zip(ColorSchemes.Set3_12, imp_bugs)
 end
 CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
 Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = ColorSchemes.Set3_12[i]) for i in 1:length(imp_bugs)], imp_bugs)
+
+Label(A_subfig[1, 1, TopLeft()], "A", textsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
+Label(B_subfig[1, 1, TopLeft()], "B", textsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
+Label(C_subfig[1, 1, TopLeft()], "C", textsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
 
 save("manuscript/assets/Figure4.png", figure)
 ```
