@@ -47,12 +47,11 @@ end
 
 
 CSV.write(tablefiles("Table2.csv"), fseaout)
-h1 = Highlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] < 0; bold=true, foreground=:red)
-h2 = Highlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] > 0; bold=true, foreground=:blue)
+h1 = LatexHighlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] < 0; ["color{red}","textbf"])
+h2 = LatexHighlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] > 0; ["color{blue}","textbf"])
 
 pretty_table(fseaout; highlighters=(h1,h2),
     header = (map(n-> replace(replace(n, r"_.+" => ""), "geneset"=>"Age group"), names(fseaout)),
               map(n-> replace(replace(n, r".+_enrichment" => "E.S."), r".+_qvalue"=>"q value"), names(fseaout))
-    )
-    
+    ), backend=Val(:latex)
     )
