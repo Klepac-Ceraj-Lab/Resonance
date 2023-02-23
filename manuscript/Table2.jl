@@ -47,10 +47,11 @@ end
 
 
 CSV.write(tablefiles("Table2.csv"), fseaout)
-h1 = LatexHighlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] < 0; ["color{red}","textbf"])
-h2 = LatexHighlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] > 0; ["color{blue}","textbf"])
+formatter = (v, i, j) -> v isa AbstractFloat ? round(v, digits = 3) : v
+h1 = LatexHighlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] < 0, ["color{red}","textbf"])
+h2 = LatexHighlighter((data, i, j) -> j in (3,5,7) && data[i,j] < 0.2 && data[i,j-1] > 0, ["color{blue}","textbf"])
 
-pretty_table(fseaout; highlighters=(h1,h2),
+pretty_table(fseaout; highlighters=(h1,h2), formatters=ft_round(3),
     header = (map(n-> replace(replace(n, r"_.+" => ""), "geneset"=>"Age group"), names(fseaout)),
               map(n-> replace(replace(n, r".+_enrichment" => "E.S."), r".+_qvalue"=>"q value"), names(fseaout))
     ), backend=Val(:latex)

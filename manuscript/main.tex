@@ -35,6 +35,7 @@ url=false
 % tables
 \usepackage{longtable,booktabs,array}
 \usepackage{multirow}
+\usepackage{afterpage}
 
 % figures
 \usepackage{wrapfig}
@@ -192,7 +193,7 @@ performance and brain structure.
 
 \section*{Results}
 
-\subsubsection{Cohort overview and summary data}
+\subsubsection*{Cohort overview and summary data}
 
 We investigated the co-development of the brain and the microbiome in
 early childhood in a cohort of typically-developing children in their
@@ -225,7 +226,7 @@ driven largely by subject age (Figure 1C-F).
 
 \begin{sidewaysfigure}[!htb]
     \centering
-    \includegraphics[width=\textwidth]{assets/Figure1.png}
+    \includegraphics[width=0.9\textwidth]{assets/Figure1.png}
     \caption{
         Study design and overview. (\textbf{A}) Stool samples, cognitive assessments and
         neuroimaging were collected from participants in an accelerated
@@ -246,11 +247,13 @@ driven largely by subject age (Figure 1C-F).
         variation. Dotted lines in (B) and (C) show 6 and 18 months, which are
         used as cut-offs in some following models.
     }
-    \label{fig:Figure 1}
+    \label{fig:1}
 \end{sidewaysfigure}
 
-\textbf{Table1: Subject demographics}
-\begin{longtable}{|r|r|r|r|r|}
+
+
+\begin{longtable}[htb!]{|r|r|r|r|r|}
+    \caption{\label{tab:demo}Subject demographics} \\
     \hline\hline
     \textbf{group} & \textbf{subgroup} & \textbf{all} & \textbf{under6mo} & \textbf{over18mo} \\\hline
     \endhead
@@ -278,8 +281,8 @@ driven largely by subject age (Figure 1C-F).
         & Some college & 95 (26.3\%) & 25 (33.8\%) & 57 (22.2\%) \\ \cline{2-5}
         & College grad & 90 (24.9\%) & 17 (23.0\%) & 69 (26.8\%) \\ \cline{2-5}
         & Grad/professional school & 123 (34.1\%) & 15 (20.3\%) & 104 (40.5\%) \\\hline\hline
-    \label{Table 1}
-  \end{longtable}
+\end{longtable}
+
 
 Several studies have demonstrated links between specific taxa and
 measures of anxiety and depression
@@ -333,7 +336,7 @@ months, some variation (15.9\%, p \textless{} 0.01) in neuroimaging
 overlapped with microbial measures, though this may be due to the
 residual variation due to age in both measures.
 
-\subsubsection{Microbial species and neuroactive genes are associated with cognitive performance}
+\subsubsection*{Microbial species and neuroactive genes are associated with cognitive performance}
 
 To assess whether individual microbial species were associated with
 cognitive function, we fit multivariable linear regression
@@ -371,22 +374,22 @@ prausnitzii}
     \includegraphics[width=\textwidth]{assets/Figure2.png}
     \caption{
         Taxa and gene functional groups are associated with cognitive function.
-        (A) Volcano plot of multivariable linear model results showing the
+        (\textbf{A}) Volcano plot of multivariable linear model results showing the
         relationship between individual taxa and cognitive function score in
         children over 18 months of age, controlling for age, maternal education,
         and sequencing depth. Taxa that were significant after FDR correction (q
-        \textless{} 0.2) are colored red. (B) For taxa that were significantly
+        \textless{} 0.2) are colored red. (\textbf{B}) For taxa that were significantly
         associated with cognitive function, heatmaps of prevalence, mean
         relative abundance, and correlation with cognitive function in different
-        age groups. (C-F) Enrichment plots for selected neuroactive gene sets
-        used in feature set enrichment analysis (FSEA). (G) summary of FSEA
+        age groups. (\textbf{C-F}) Enrichment plots for selected neuroactive gene sets
+        used in feature set enrichment analysis (FSEA). (\textbf{G}) summary of FSEA
         results across all samples (left) as well as in the under 6 months
         (middle) and over 18 months (right) subsets, colored based on the
         significance of the association. Markers indicate the individual
         correlation of genes within a gene set, and vertical bars represent the
         median correlation of that gene set.
     }
-    \label{fig:Figure 2}
+    \label{fig:2}
 \end{sidewaysfigure}
 
 Given that different microbial species might occupy the same metabolic
@@ -441,9 +444,29 @@ microbial metabolic activity, particularly the metabolism (synthesis and
 degradation) of neuroactive compounds may have effects on cognitive
 development.
 
-\textbf{Table 2 - Feature set enrichment analysis on neuroactive microbial gene sets}
 
-\subsubsection{Gut microbial taxonomic and functional profiles predict cognitive function}
+\begin{table}[!h]
+    \begin{center}
+    \begin{tabular}{|r|r|r|r|r|r|r|}
+      \hline\hline
+      \textbf{Age group} & \multicolumn{2}{c}{\textbf{00to120}} & \multicolumn{2}{c}{\textbf{00to06}} & \multicolumn{2}{c}{\textbf{18to120}} \\ \hline
+      \texttt{geneset} & \texttt{E.S.} & \texttt{q value} & \texttt{E.S.} & \texttt{q value} & \texttt{E.S.} & \texttt{q value} \\\hline
+      Acetate syn. I & -0.122 & 0.555 & -0.194 & \color{red}{\textbf{0.153}} & 0.127 & 0.602 \\
+      Acetate syn. II & -0.22 & \color{red}{\textbf{0.066}} & -0.342 & \color{red}{\textbf{0.02}} & -0.095 & 0.92 \\
+      Acetate syn. III & -0.21 & \color{red}{\textbf{0.086}} & -0.31 & \color{red}{\textbf{0.052}} & -0.086 & 0.92 \\
+      Glutamate deg. I & -0.404 & \color{red}{\textbf{0.18}} & -0.284 & 0.816 & -0.249 & 0.602 \\
+      Glutamate syn. II & 0.095 & 0.602 & -0.134 & 0.98 & 0.242 & \color{blue}{\textbf{0.047}} \\
+      Menaquinone syn. I & -0.085 & 0.563 & -0.083 & 0.816 & -0.17 & \color{red}{\textbf{0.182}} \\
+      Propionate deg. I & -0.461 & \color{red}{\textbf{0.13}} & -0.542 & \color{red}{\textbf{0.02}} & -0.674 & \color{red}{\textbf{0.041}} \\
+      Propionate syn. I & -0.334 & 0.555 & -0.32 & 0.571 & -0.676 & \color{red}{\textbf{0.023}} \\
+      Tryptophan syn. & 0.057 & 0.974 & -0.072 & 0.816 & 0.119 & \color{blue}{\textbf{0.041}} \\\hline\hline
+    \end{tabular}
+    \caption{\label{tab:fsea}Feature set enrichment analysis on neuroactive microbial gene sets}
+    \end{center}
+\end{table}
+
+
+\subsubsection*{Gut microbial taxonomic and functional profiles predict cognitive function}
 
 FSEA relies on understanding functional relationships between individual
 genes. However, because the relationships between individual taxa are
@@ -464,24 +487,24 @@ work out complex input feature interactions, such as those present in a
 microbiome-wide study, without the necessity to explicitly compute
 interaction terms.
 
-\begin{sidewaysfigure}[h]
+\begin{sidewaysfigure}[!htb]
     \centering
     \includegraphics[width=\textwidth]{assets/Figure3.png}
     \caption{
         Random forest models predict concurrently measured cognitive function.
         Comparison of RF predictor importance versus linear models for children
-        between birth and 6 months old (A), and for those older than 18 months
-        (B). Colors represent whether the species belong to the group of
+        between birth and 6 months old (\textbf{A}), and for those older than 18 months
+        (\textbf{B}). Colors represent whether the species belong to the group of
         top-important features that account for 80\% of the cumulative
         importance on the RF model, if that species was significant (q
         \textless{} 0.2) in linear models, both, or neither. Ranked feature
         importance for taxa in RF models for children between birth and 6 months
-        old (C), and for those older than 18 months (D). Taxa that are important
+        old (\textbf{C}), and for those older than 18 months (\textbf{D}). Taxa that are important
         for RF models both for children under 6 months and for those over 18
-        months (E), only for children under 6 months (F), and only for children
-        over 18 months (G)
+        months (\textbf{E}), only for children under 6 months (\textbf{F}), and only for children
+        over 18 months (\textbf{G})
     }
-    \label{fig:Figure 3}
+    \label{fig:3}
 \end{sidewaysfigure}
 
 
@@ -531,7 +554,7 @@ feature importance, which could indicate that decision branches based on
 microbial taxa have increased purity when considering the subject's age
 or that age itself is a useful predictor.
 
-\subsubsection{Gut microbial taxonomic profiles predict brain structure differences}
+\subsubsection*{Gut microbial taxonomic profiles predict brain structure differences}
 
 If there are causal effects of microbial metabolism on cognitive
 function, they might be reflected in changes in neuroanatomy. We again
@@ -601,17 +624,17 @@ analyze the multiple relationships unveiled by the RF models
     \includegraphics[width=\textwidth]{assets/Figure4.png}
     \caption{
         Microbial feature importance in predicting brain volumes in children over 18 months of age.
-        (A) Average test-set correlations for prediction of MRI segmentation
+        (\textbf{A}) Average test-set correlations for prediction of MRI segmentation
         data from microbiome and demographics on select segments after repeated
-        cross validation. (B) Heatmap of average individual relative taxa
+        cross validation. (\textbf{B}) Heatmap of average individual relative taxa
         importances on each brain segment. Importances are reported as
         proportions relative to the sum of importances for each model - since
         every model is trained with 132 features, and even distribution of
         importance would be 0.75\% for each feature. Segments and taxa ordered
         by HCA on a select list of species with high ranks on average importances,
-        and their respective highest-load segments (C).
+        and their respective highest-load segments (\textbf{C}).
     }
-    \label{fig:Figure 4}
+    \label{fig:4}
 \end{sidewaysfigure}
 
 
@@ -825,14 +848,14 @@ medicinally useful molecules that can be applied in intervention.
 
 \section*{Material and methods}
 
-\subsubsection{Study Ethics}
+\subsubsection*{Study Ethics}
 
 All procedures for this study were approved by the local institutional
 review board at Rhode Island Hospital, and all experiments adhered to
 the regulation of the review board. Written informed consent was
 obtained from all parents or legal guardians of enrolled participants.
 
-\subsubsection{Participants}
+\subsubsection*{Participants}
 
 Data used in this study were drawn from the ongoing longitudinal
 RESONANCE study of healthy and neurotypical brain and cognitive
@@ -876,7 +899,7 @@ formula-feeding), child weight and height, were collected through
 questionnaires or direct examination as appropriate. All data were
 collected at every assessment visit, if possible.
 
-\subsubsection{Cognitive Assessments}
+\subsubsection*{Cognitive Assessments}
 
 Overall cognitive function was assessed using age-appropriate methods.
 For children from birth to 30 months, we used an Early Learning
@@ -897,7 +920,7 @@ the increasing need for the assessment of preschoolers. Just as the
 WISC, it derives a full scale IQ score, which we used to assess overall
 cognitive functioning.
 
-\subsubsection{Stool Sample Collection and Sequencing}
+\subsubsection*{Stool Sample Collection and Sequencing}
 
 Stool samples (n=493) were collected by parents in OMR-200 tubes
 (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada), stored on ice, and
@@ -920,7 +943,7 @@ then pooled onto a plate and sequenced on the Illumina NextSeq 550
 platform using 150+150 bp paired-end ``high output'' chemistry,
 generating 400 million raw reads and 120 Gb of sequence per plate.
 
-\subsubsection{Machine learning for cognitive development}
+\subsubsection*{Machine learning for cognitive development}
 
 Prediction of cognitive scores was carried out as a set of regression
 experiments targeting real-valued continuous assessment scores.
@@ -976,7 +999,7 @@ to generate the values in Figure 3.
 \textbf{Equation 1.} Mathematical expression of the fitness measure used
 to weight feature importances based on model benchmarks
 
-\subsubsection{MRI / segmentation}
+\subsubsection*{MRI / segmentation}
 
 MRI data was acquired at a 3T Siemens Trio scanner with the following
 parameters: TE=5.6msec, TR=1400msec, FA=15 degrees, 1.1x1.1x1.1mm
@@ -1002,7 +1025,7 @@ matter, lateral ventricle, thalamus, caudate, putamen, pallidum,
 hippocampus, amygdala, and accumbens as well as total brainstem volume
 \citep{bruchhageLongitudinalBrainCognitive}.
 
-\subsubsection{Computational analysis of metagenomes}
+\subsubsection*{Computational analysis of metagenomes}
 
 Shotgun metagenomic sequences were analyzed using the bioBakery suite of
 computational tools
@@ -1017,7 +1040,7 @@ profiles by aligning reads to a reference database of marker genes.
 Finally, HUMAnN (v3.0.0a4) was used to functionally profile the
 metagenomes.
 
-\subsubsection{Data and code availability}
+\subsubsection*{Data and code availability}
 
 Taxonomic and functional microbial profiles, as well as subject
 demographics necessary for statistical analyses and machine learning are
