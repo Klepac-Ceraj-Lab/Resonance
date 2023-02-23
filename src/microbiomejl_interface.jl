@@ -52,14 +52,8 @@ function read_arrow(filename; featurefunc = taxon)
     CommunityProfile(mat, fs, mdt.sample)
 end
 
-function comm2wide(cmp::CommunityProfile; feature_filter=identity, sample_filter=identity)
+function comm2wide(cmp::CommunityProfile; feature_filter=identity, sample_filter=identity, feature_funct=name)
     cmp = cmp[feature_filter(features(cmp)), sample_filter(samples(cmp))]
     md = DataFrame(metadata(cmp))
-
-    if typeof(features(cmp)[1]) == BrainVolume
-        return hcat(md, DataFrame(collect(abundances(cmp)'), string.(features(cmp)), makeunique=true))
-    else
-        return hcat(md, DataFrame(collect(abundances(cmp)'), featurenames(cmp), makeunique=true))
-    end
-
+        return hcat(md, DataFrame(collect(abundances(cmp)'), feature_func.(features(cmp)), makeunique=true))
 end
