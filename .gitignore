@@ -8,9 +8,9 @@ tables/*
 .envrc
 data/*
 figures/*.pdf
-slides/figures*
-!slides/figures.tex
 *scratch*
 /LocalPreferences.toml
 test/Manifest.toml
 models/*.jld
+manuscript/tex/main.*
+!manuscript/tex/main.tex

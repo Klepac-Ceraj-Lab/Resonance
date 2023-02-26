@@ -31,7 +31,8 @@ export loadings,
        plot_mantel!,
        plot_pcoa!,
        commonname,
-       comm2wide
+       comm2wide,       
+       runlms
 
 # Machine Learning
 export  # 0. structs/types
@@ -118,10 +119,14 @@ using Arrow
 using AlgebraOfGraphics
 using CairoMakie
 using CategoricalArrays
+using CodecZlib
 using ColorSchemes
 using Combinatorics
 using Dates
+using Dictionaries
+using GLM
 using LinearAlgebra
+using MultipleTesting
 using MultivariateStats
 using PERMANOVA
 using ProgressLogging
@@ -153,5 +158,6 @@ include("omnibus.jl")
 include("prediction.jl")
 include("data_loading.jl")
 include("percentiles.jl")
+include("lms.jl")
 
 end

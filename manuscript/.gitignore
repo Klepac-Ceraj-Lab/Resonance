@@ -1,0 +1,6 @@
+main.*
+!main.tex
+scifile.*
+!scifile.tex
+converted.*
+!converted.tex

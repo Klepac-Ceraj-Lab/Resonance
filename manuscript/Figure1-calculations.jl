@@ -8,45 +8,19 @@ using CategoricalArrays
 #-
 
 mdata = Resonance.load(Metadata())
-subset!(mdata, "ageMonths"=> ByRow(<(120)))
+mdata.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), mdata.education)
 
-taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
-taxa = taxa[:, findall(!ismissing, get(taxa, :ageMonths))]
-species = filter(t-> taxrank(t) == :species, taxa)
-
+species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
-unirefs = unirefs[:, findall(!ismissing, get(unirefs, :ageMonths))]
-unirefs = filter(!hastaxon, unirefs) # don't use species stratification for summaries
-
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
-ecs = ecs[:, findall(!ismissing, get(ecs, :ageMonths))]
-ecs = filter(!hastaxon, ecs)
-
 kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
-kos = kos[:, findall(!ismissing, get(kos, :ageMonths))]
-kos = filter(!hastaxon, kos)
 
 # metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
-brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
+brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata, samplefield="sample")
 
 
-@assert all(samplenames(species) .== samplenames(unirefs))
-@assert all(samplenames(species) .== samplenames(ecs))
-@assert all(samplenames(species) .== samplenames(kos))
-
-uidx = let md = DataFrame(Microbiome.metadata(taxa))
-    smp = Set(unique(md, :subject).sample)
-    findall(s-> s in smp, samplenames(taxa))
-end
-
-buidx = let md = DataFrame(Microbiome.metadata(brain))
-    grp = groupby(md, :subject)
-    smp = map(keys(grp)) do g
-        idx = findfirst(grp[g].hassample)
-        return isnothing(idx) ? first(grp[g].sample) : grp[g].sample[idx]
-    end
-    findall(s-> s in smp, samplenames(brain))
-end
+# @assert all(samplenames(species) .== samplenames(unirefs))
+@assert all(samplenames(species) .== samplenames(ecs) .== samplenames(kos) .== samplenames(unirefs))
 
 
 #-
@@ -61,102 +35,110 @@ kosdm = Microbiome.braycurtis(kos)
 CSV.write(scratchfiles("kosdm.csv"), Tables.table(kosdm))
 # metdm = Microbiome.braycurtis(metabolites)
 # CSV.write(scratchfiles("metdm.csv"), Tables.table(metdm))
-brndm = Microbiome.braycurtis(brain)
+brndm = pairwise(Euclidean(), abundances(brain))
 CSV.write(scratchfiles("brndm.csv"), Tables.table(brndm))
 
 
 #-
 
+uidx = get(species, :filter_00to120)
+buidx = get(brain, :filter_00to120)
 commlabels = ["taxa", "UniRef90s", "ECs", "KOs"]
-mdlabels = ["Cog. score", "Age", "Sex", "Maternal Edu."]
+mdlabels = ["Cog. score", "Age", "Sex", "Maternal Edu.", "Race"]
 
 p = permanovas([spedm[uidx, uidx], unidm[uidx, uidx], ecsdm[uidx, uidx], kosdm[uidx, uidx]], [
-                        get(species, :cogScorePercentile)[uidx], 
+                        get(species, :cogScore)[uidx], 
                         get(species, :ageMonths)[uidx], 
                         get(species, :sex)[uidx], 
-                        get(species, :education)[uidx]
+                        get(species, :edfloat)[uidx],
+                        get(species, :race)[uidx]
             ]; commlabels, mdlabels
 )
 # p2 = permanovas(metdm, [
-#                         get(metabolites, :cogScorePercentile), 
+#                         get(metabolites, :cogScore), 
 #                         get(metabolites, :ageMonths), 
 #                         get(metabolites, :sex), 
-#                         get(metabolites, :education)
+#                         get(metabolites, :edfloat)
 #             ]; mdlabels
 # )
 # p2.label .= "metabolites"
 # append!(p, p2)
 
 p3 = permanovas(brndm[buidx, buidx], [
-                        get(brain, :cogScorePercentile)[buidx], 
+                        get(brain, :cogScore)[buidx], 
                         get(brain, :ageMonths)[buidx], 
                         get(brain, :sex)[buidx], 
-                        get(brain, :education)[buidx]
+                        get(brain, :edfloat)[buidx],
+                        get(brain, :race)[buidx]
             ]; mdlabels
 )
 p3.label .= "neuroimg"
 append!(p, p3)
-CSV.write(scratchfiles("permanovas_all.csv"), p)
+CSV.write(scratchfiles("permanovas_00t18to1200.csv"), p)
 
 #-
 
 
-idx = findall(<(6), get(species, :ageMonths))
+idx = get(species, :filter_00to06)
 p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
-                        get(species, :cogScorePercentile)[idx], 
+                        get(species, :cogScore)[idx], 
                         get(species, :ageMonths)[idx], 
                         get(species, :sex)[idx], 
-                        get(species, :education)[idx]
+                        get(species, :edfloat)[idx],
+                        get(species, :race)[idx],
             ]; commlabels=["taxa", "UniRef90s"], mdlabels
 )
 
 # idx = findall(<(6), get(metabolites, :ageMonths))
 # p2 = permanovas(metdm[idx,idx], [
-#                         get(metabolites, :cogScorePercentile)[idx], 
+#                         get(metabolites, :cogScore)[idx], 
 #                         get(metabolites, :ageMonths)[idx], 
 #                         get(metabolites, :sex)[idx], 
-#                         get(metabolites, :education)[idx]
+#                         get(metabolites, :edfloat)[idx]
 #             ]; mdlabels
 # )
 # p2.label .= "metabolites"
 
 # append!(p, p2)
 
-idx = findall(<(6), get(brain, :ageMonths))
+idx = get(brain, :filter_00to06)
 p3 = permanovas(brndm[idx, idx], [
-                        get(brain, :cogScorePercentile)[idx], 
+                        get(brain, :cogScore)[idx], 
                         get(brain, :ageMonths)[idx], 
                         get(brain, :sex)[idx], 
-                        get(brain, :education)[idx]
+                        get(brain, :edfloat)[idx],
+                        get(brain, :race)[idx]
             ]; mdlabels
 )
 p3.label .= "neuroimg"
 append!(p, p3)
 
-CSV.write(scratchfiles("permanovas_u6mo.csv"), p)
+CSV.write(scratchfiles("permanovas_00to06.csv"), p)
 
 
 #-
 
-idx = findall(>(18), get(species, :ageMonths))
+idx = get(species, :filter_18to120)
 p = permanovas([spedm[idx, idx], unidm[idx, idx]], [
-                        get(species, :cogScorePercentile)[idx], 
+                        get(species, :cogScore)[idx], 
                         get(species, :ageMonths)[idx], 
                         get(species, :sex)[idx], 
-                        get(species, :education)[idx]
+                        get(species, :edfloat)[idx],
+                        get(species, :race)[idx]
             ]; commlabels=["taxa", "UniRef90s"], mdlabels
 )
-bidx = findall(>(18), get(brain, :ageMonths))
+bidx =  get(brain, :filter_18to120)
 p3 = permanovas(brndm[bidx, bidx], [
-                        get(brain, :cogScorePercentile)[bidx], 
+                        get(brain, :cogScore)[bidx], 
                         get(brain, :ageMonths)[bidx], 
                         get(brain, :sex)[bidx], 
-                        get(brain, :education)[bidx]
+                        get(brain, :edfloat)[bidx],
+                        get(brain, :race)[bidx]
             ]; mdlabels
 )
 p3.label .= "neuroimg"
 append!(p, p3)
-CSV.write(scratchfiles("permanovas_o18mo.csv"), p)
+CSV.write(scratchfiles("permanovas_18to120.csv"), p)
 
 #- Mantel -#
 
@@ -192,24 +174,24 @@ append!(mdf, m3)
 # m, p = mantel(metdm[ol5, ol5], brndm[ol6, ol6])
 # push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
-CSV.write(scratchfiles("mantel_all.csv"), mdf)
+CSV.write(scratchfiles("mantel_00to120.csv"), mdf)
 
 #- Under 6mo -#
 
-speidx = get(species, :ageMonths) .< 6
-# metidx = get(metabolites, :ageMonths) .< 6
-brnidx = get(brain, :ageMonths) .< 6
+speidx = get(species, :filter_00to06)
+# metidx = get(metabolites, :filter_00to06)
+brnidx = get(brain, :filter_00to06)
 
 
-speu6dm = spedm[speidx, speidx]
-uniu6dm = unidm[speidx, speidx]
-ecsu6dm = ecsdm[speidx, speidx]
-kosu6dm = kosdm[speidx, speidx]
-# metu6dm = metdm[metidx, metidx]
-brnu6dm = brndm[brnidx, brnidx]
+spe00to06dm = spedm[speidx, speidx]
+uni00to06dm = unidm[speidx, speidx]
+ecs00to06dm = ecsdm[speidx, speidx]
+kos00to06dm = kosdm[speidx, speidx]
+# met00to06dm = metdm[metidx, metidx]
+brn00to06dm = brndm[brnidx, brnidx]
 
 
-mdf = mantel([speu6dm, uniu6dm, ecsu6dm, kosu6dm]; commlabels)
+mdf = mantel([spe00to06dm, uni00to06dm, ecs00to06dm, kos00to06dm]; commlabels)
 
 # (ol1, ol2) = stp_overlap(
 #         collect(zip(get(species, :subject)[speidx],
@@ -223,8 +205,8 @@ mdf = mantel([speu6dm, uniu6dm, ecsu6dm, kosu6dm]; commlabels)
 
 
 # m2 = DataFrame()
-# for (i, dm1) in enumerate([speu6dm, uniu6dm, ecsu6dm, kosu6dm])
-#     m, p = mantel(dm1[ol1, ol1], metu6dm[ol2, ol2])
+# for (i, dm1) in enumerate([spe00to06dm, uni00to06dm, ecs00to06dm, kos00to06dm])
+#     m, p = mantel(dm1[ol1, ol1], met00to06dm[ol2, ol2])
 #     push!(m2, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="metabolites"))
 # end
 # append!(mdf, m2)
@@ -239,8 +221,8 @@ mdf = mantel([speu6dm, uniu6dm, ecsu6dm, kosu6dm]; commlabels)
                 )
 )
 m3 = DataFrame()
-for (i, dm1) in enumerate([speu6dm, uniu6dm, ecsu6dm, kosu6dm])
-    m, p = mantel(dm1[ol3, ol3], brnu6dm[ol4, ol4])
+for (i, dm1) in enumerate([spe00to06dm, uni00to06dm, ecs00to06dm, kos00to06dm])
+    m, p = mantel(dm1[ol3, ol3], brn00to06dm[ol4, ol4])
     push!(m3, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="neuroimg"))
 end
 append!(mdf, m3)
@@ -254,24 +236,24 @@ append!(mdf, m3)
 #                 ),
 # )
 
-# m, p = mantel(metu6dm[ol5, ol5], brnu6dm[ol6, ol6])
+# m, p = mantel(met00to06dm[ol5, ol5], brn00to06dm[ol6, ol6])
 # push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
-CSV.write(scratchfiles("mantel_u6.csv"), mdf)
+CSV.write(scratchfiles("mantel_00to06.csv"), mdf)
 
 #- Over 18mo -#
 
-speidx = get(species, :ageMonths) .> 18
-brnidx = get(brain, :ageMonths) .> 18
+speidx = get(species, :filter_18to120)
+brnidx = get(brain, :filter_18to120)
 
-speo18dm = spedm[speidx, speidx]
-unio18dm = unidm[speidx, speidx]
-ecso18dm = ecsdm[speidx, speidx]
-koso18dm = kosdm[speidx, speidx]
-brno18dm = brndm[brnidx, brnidx]
+spe18to120dm = spedm[speidx, speidx]
+uni18to120dm = unidm[speidx, speidx]
+ecs18to120dm = ecsdm[speidx, speidx]
+kos18to120dm = kosdm[speidx, speidx]
+brn18to120dm = brndm[brnidx, brnidx]
 
 
-mdf = mantel([speo18dm, unio18dm, ecso18dm, koso18dm]; commlabels)
+mdf = mantel([spe18to120dm, uni18to120dm, ecs18to120dm, kos18to120dm]; commlabels)
 
 
 (ol3, ol4) = Resonance.stp_overlap(
@@ -283,10 +265,10 @@ mdf = mantel([speo18dm, unio18dm, ecso18dm, koso18dm]; commlabels)
                 )
 )
 m3 = DataFrame()
-for (i, dm1) in enumerate([speo18dm, unio18dm, ecso18dm, koso18dm])
-    m, p = mantel(dm1[ol3, ol3], brno18dm[ol4, ol4])
+for (i, dm1) in enumerate([spe18to120dm, uni18to120dm, ecs18to120dm, kos18to120dm])
+    m, p = mantel(dm1[ol3, ol3], brn18to120dm[ol4, ol4])
     push!(m3, (; stat=m, pvalue=p, thing1=commlabels[i], thing2="neuroimg"))
 end
 append!(mdf, m3)   
 
-CSV.write(scratchfiles("mantel_o18.csv"), mdf)
+CSV.write(scratchfiles("mantel_18to120.csv"), mdf)
