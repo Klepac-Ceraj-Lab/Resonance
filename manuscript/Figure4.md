@@ -50,7 +50,7 @@ end
 ```julia
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-# concurrent cogScore reression from taxonomic profiles
+# concurrent brain regression from taxonomic profiles
 JLD2.@load "models/2023-02-15/brain_models.jld"
 
 ordered_brain_segments_list = [
