@@ -547,6 +547,22 @@ microbial taxonomic profiles (Table 3).
 prediction models. Confidence intervals are calculated from the
 distribution of metrics from repeated CV at a confidence level of 95\%}
 
+\begin{table}
+    \begin{tabular}{rrrrr}
+      \hline\hline
+      \textbf{Subject Ages (months)} & \textbf{Microbial feature} & \textbf{Demo.} & \textbf{Test set correlation (± C.I.)} & \textbf{Test set Root-mean-square error (± C.I.)} \\\hline
+      0 to 6 & - & + & 13.01 ± 0.05 & -0.14 ± 0.01 \\
+      0 to 6 & taxa & - & 12.66 ± 0.05 & -0.1 ± 0.01 \\
+      0 to 6 & taxa & + & 12.7 ± 0.05 & -0.12 ± 0.01 \\
+      0 to 6 & genes & - & 12.56 ± 0.05 & -0.01 ± 0.01 \\
+      0 to 6 & genes & + & 12.56 ± 0.05 & -0.02 ± 0.01 \\
+      18 to 120 & - & + & 16.27 ± 0.04 & 0.506 ± 0.003 \\
+      18 to 120 & taxa & - & 17.66 ± 0.04 & 0.363 ± 0.003 \\
+      18 to 120 & taxa & + & 17.29 ± 0.04 & 0.429 ± 0.003 \\
+      18 to 120 & genes & - & 18.01 ± 0.04 & 0.303 ± 0.003 \\
+      18 to 120 & genes & + & 17.86 ± 0.04 & 0.333 ± 0.004 \\\hline\hline
+    \end{tabular}
+\end{table}
 
 As with linear models, RF models for children under 6 months old were
 less generalizable (mean test-set correlation -0.13, mean RMSE 12.70),
@@ -600,6 +616,20 @@ high-performing models, such as that for the left accumbens area (mean
 RF correlations = 0.288; relative age importances = 1.2\%).
 
 \textbf{Table 4. Summary statistics for the neuroanatomy prediction benchmarks}
+
+\begin{table}
+    \begin{tabular}{rrr}
+      \hline\hline
+      \textbf{Statistic} & \textbf{Mean absolute proportional error (MAPE)} & \textbf{Correlation coefficient (R)} \\\hline
+      Mean & 0.073 & 0.137 \\
+      Standard deviation & 0.028 & 0.137 \\
+      Maximum & 0.206 & 0.605 \\
+      75th percentile & 0.082 & 0.195 \\
+      50th percentile & 0.067 & 0.134 \\
+      25th percentile & 0.057 & 0.062 \\
+      Minimum & 0.035 & -0.147 \\\hline\hline
+    \end{tabular}
+\end{table}
 
 We also observed that many brain regions had high accordance across the
 left and right hemispheres in terms of both model performance and
@@ -984,6 +1014,23 @@ provided as a covariate for all models (Table 3).
 
 \textbf{Table 5. Experimental design and input composition for Random
 Forest experiments}
+
+\begin{table}
+    \begin{tabular}{rrrr}
+      \hline\hline
+      \textbf{Input set} & \textbf{Age bracket} & \textbf{Microbiome encoding type} & \textbf{Demographics Provided? (sex, education)} \\\hline
+      1 & 0 to 6 months & Not provided & yes \\
+      2 & 0 to 6 months & Taxonomic profile & no \\
+      3 & 0 to 6 months & Taxonomic profile & yes \\
+      4 & 0 to 6 months & Functional Profile (ECs) & no \\
+      5 & 0 to 6 months & Functional Profile (ECs) & yes \\
+      6 & 18 to 120 months & Not provided & yes \\
+      7 & 18 to 120 months & Taxonomic profile & no \\
+      8 & 18 to 120 months & Taxonomic profile & yes \\
+      9 & 18 to 120 months & Functional Profile (ECs) & no \\
+      10 & 18 to 120 months & Functional Profile (ECs) & yes \\\hline\hline
+    \end{tabular}
+\end{table}
 
 Random Forests (RFs)
 \cite{breimanRandomForests2001}
