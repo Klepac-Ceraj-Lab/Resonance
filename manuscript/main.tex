@@ -11,10 +11,12 @@
 %\usepackage[none]{hyphenat} % use only if there is a problem
 % Use Unicode characters
 \usepackage[utf8]{inputenc}
+
+\usepackage{scicite}
 % Clean citations with biblatex
 \usepackage[
 backend=biber,
-style=numeric
+style=science
 ]{biblatex}
 
 \addbibresource{zotero.bib}
@@ -37,9 +39,20 @@ style=numeric
 \graphicspath{assets}
 \usepackage{times}
 
+
+\topmargin 0.0cm
+\oddsidemargin 0.2cm
+\textwidth 16cm 
+\textheight 21cm
+\footskip 1.0cm
+
+
+%The next command sets up an environment for the abstract to your paper.
+
 \newenvironment{sciabstract}{%
 \begin{quote} \bf}
 {\end{quote}}
+
 
 % Include your paper's title here
 
@@ -61,20 +74,17 @@ style=numeric
         Fatoumata Barry,$^{2}$
         Rosa Cano Lorente,$^{2}$
         The RESONANCE Consortium,
-        Jonathan O'Muircheartaigh,$^{3}$
         Curtis Huttenhower,$^{4}$
         Muriel Bruchhage,$^{3}$
-        Viren D’Sa,$^{2}$
+        Viren D'Sa,$^{2}$
         Sean Deoni,$^{2}$
         Vanja Klepac-Ceraj$^{1\ast}$
     }
 \\
-\normalsize{$^{1}$Department of Biological Sciences, Wellesley College,}\\
-\normalsize{106 Central St, Wellesley, MA \hl{02---}, USA}\\
-\normalsize{$^{2}$Rhode Island Hospital, Providence, RI, \hl{00000} USA}\\
-\normalsize{$^{3}$\hl{Locations for Muriel, Jonathan, Sean}}\\
-\normalsize{$^{4}$\hl{Department of Biostatistics, Harvard T.H. Chan School of Public Health}}\\
-\normalsize{\hl{address of HSPH...}}
+\normalsize{$^{1}$Department of Biological Sciences, Wellesley College, Wellesley, MA, USA}\\
+\normalsize{$^{2}$Rhode Island Hospital, Providence, RI, USA}\\
+\normalsize{$^{3}$Department of Psychology, University of Stavenger, Stavanger, Norway}\\
+\normalsize{$^{4}$Department of Biostatistics, Harvard T.H. Chan School of Public Health, Boston, MA, USA}\\
 \\
 \normalsize{$^\ast$To whom correspondence should be addressed; E-mail:  vklepacc@wellesley.edu.}
 }
@@ -89,7 +99,6 @@ style=numeric
 \baselineskip24pt
 
 % Make the title.
-
 \maketitle 
 
 \begin{abstract}
@@ -106,7 +115,8 @@ We investigated the relationship of the microbiome with the neuroanatomy
 and cognitive function of 361 healthy children, demonstrating that
 differences in gut microbial taxa and gene functions are associated with
 overall cognitive function as well as with differences in the size of
-multiple brain regions. Using a combination of multivariate linear
+multiple brain regions.
+Using a combination of multivariate linear
 models and machine learning (ML) models, we showed that many species,
 including \emph{Gordonibacter pamelae} and \emph{Blautia wexlerae}, were
 significantly associated with higher cognitive function, while some
@@ -114,7 +124,7 @@ species such as \emph{Ruminococcus gnavus} were more commonly found in
 children with low cognitive scores regardless of age or maternal
 education. Microbial genes for enzymes involved in the metabolism of
 neuroactive compounds, particularly short-chain fatty acids such as
-glutamate and propionate, were also associated with cognitive function.
+acetate and propionate, were also associated with cognitive function.
 In addition, ML models were able to use microbial taxa to predict the
 volume of brain regions, with particular taxa often dominating the
 feature importance metric for individual brain regions, such as \emph{B.
@@ -125,10 +135,14 @@ the future development of targets for early detection and early
 intervention.
 \end{abstract}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% Text of the preprint %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% use \emph{} for italics and \parencite{} to cite a reference and \ref{XX} to cite the \label{XX}
-% use \\ and a blank line to mark the end of paragraph and starting of a new one
+% Teaser
+% This one-sentence summary provides a snapshot of your research for
+% non-specialist readers and will be used to promote your article if accepted for publication.
+% These should complement rather than repeat the title. 
+
+% The microorganisms that colonize the gut of humans can influence
+% health and disease in numerous
+
 
 \section*{Introduction}
 
@@ -259,7 +273,7 @@ driven largely by subject age (Figure 1C-F).
     \centering
     \includegraphics[width=0.9\textwidth]{assets/Figure1.png}
     \caption{
-        Study design and overview. (\textbf{A}) Stool samples, cognitive assessments and
+        \label{fig:1} Study design and overview. (\textbf{A}) Stool samples, cognitive assessments and
         neuroimaging were collected from participants in an accelerated
         longitudinal design. (\textbf{B}) Cognitive function scores are assessed by
         different instruments, but may be normalized to a common IQ-like scale.
@@ -278,7 +292,7 @@ driven largely by subject age (Figure 1C-F).
         variation. Dotted lines in (B) and (C) show 6 and 18 months, which are
         used as cut-offs in some following models.
     }
-    \label{fig:1}
+
 \end{sidewaysfigure}
 
 
@@ -340,18 +354,18 @@ cognitive function score (Figure 1G, R\textsuperscript{2} = 0.0124, q
 (R\textsuperscript{2} = 0.0119, q \textless{} 0.001). Variation in
 microbial taxa and genes was not significantly associated with cognitive
 function in children under 6 months, though this may be due to the low
-taxonomic diversity, and broad lack of overlap between taxa in infants.
+taxonomic diversity and broad lack of overlap between taxa in infants.
 As expected, age was significantly associated with microbial beta
-diversity (taxa R\textsuperscript{2} = 0.0215, and UniRef90s
+diversity (taxa R\textsuperscript{2} = 0.0215, and  gene functions
+annotated with UniRef90s - clusters of 90\% similarity
+\cite{suzekUniRefComprehensiveNonredundant2007} -
 R\textsuperscript{2} = 0.0245, q \textless{} 0.001), and very strongly
-associated with neuroimaging profiles (R\textsuperscript{2} = 0.256, q
+associated with variation in neuroimaging profiles (R\textsuperscript{2} = 0.256, q
 \textless{} 0.001).
 
 Consistent with prior studies, different microbial measurement types
 captured overlapping variation, with species profiles and gene function
-profiles (annotated with clusters of 90\% similarity
-\cite{suzekUniRefComprehensiveNonredundant2007}
-), both generated from DNA sequencing data, being tightly coupled
+profiles, both generated from DNA sequencing data, being tightly coupled
 (Figure 1H, p \textless{} 0.001). Interestingly, other functional
 groupings (Enzyme commission level4 - ECs
 \cite{bairochENZYMEDatabase20002000},
@@ -367,9 +381,9 @@ residual variation due to age in both measures.
 \subsubsection*{Microbial species and neuroactive genes are associated with cognitive performance}
 
 To assess whether individual microbial species were associated with
-cognitive function, we fit multivariable linear regression
+cognitive function, we fit multivariable linear regression models
 \cite{mallickMultivariableAssociationDiscovery2021}
-to the relative abundance of each species that had at least 15\%
+for the relative abundance of each species that had at least 15\%
 prevalence in a given age group (Figure 2A, N = 92 for 0--120 months, N
 = 46 for 0--6 months, N = 97 for 18--120 months). Only \emph{Blautia wexlerae}
 was significantly associated (q value = 0.14, $\beta$ = 0.0015) with
@@ -430,7 +444,7 @@ and concurrent cognitive function score (Table 2, Figure 2C-G) and found that
 several metabolic pathways were significantly enriched or depleted in
 children with higher cognitive function scores. This was true both when
 considering all age groups together, though the enrichment of most
-pathways was more pronounced in children under 6 months or over 18
+pathways was more pronounced either in children under 6 months or those over 18
 months. For example, genes for degrading the 3-carbon SCFA propionate
 were significantly depleted in children with higher cognitive function
 scores across all age groups tested (Table 2; propionate degradation I,
@@ -543,14 +557,11 @@ education (a proxy of socioeconomic status (SES)), sex, and age were
 included as possible predictors, either alone or in combination with
 microbial taxonomic profiles (Table 3).
 
-\textbf{Table 3. Benchmark metrics for the cognitive assessment score
-prediction models. Confidence intervals are calculated from the
-distribution of metrics from repeated CV at a confidence level of 95\%}
-
-\begin{table}
+\begin{table}[!h]
+    \begin{center}
     \begin{tabular}{|r|r|r|r|r|}
       \hline\hline
-      \textbf{Subject Ages (months)} & \textbf{Microbial feature} & \textbf{Demo.} & \textbf{Test set correlation (± C.I.)} & \textbf{Test set RMSE (± C.I.)} \\\hline
+      \textbf{Subject Ages (months)} & \textbf{Microbial feature} & \textbf{Demo.} & \textbf{Test set RMSE (± C.I.)} & \textbf{Test set correlation (± C.I.)} \\\hline
       \multirow{5}{*}{0 to 6} & - & + & 13.01 ± 0.05 & -0.14 ± 0.01 \\ \cline{2-5}
             & \multirow{2}{*}{taxa} & - & 12.66 ± 0.05 & -0.1 ± 0.01 \\ \cline{3-5}
             &       & + & 12.7 ± 0.05 & -0.12 ± 0.01 \\ \cline{2-5}
@@ -562,6 +573,10 @@ distribution of metrics from repeated CV at a confidence level of 95\%}
             & \multirow{2}{*}{genes} & - & 18.01 ± 0.04 & 0.303 ± 0.003 \\ \cline{3-5}
             &       & + & 17.86 ± 0.04 & 0.333 ± 0.004 \\\hline\hline
     \end{tabular}
+    \caption{\label{tab:rfbench}Benchmark metrics for the cognitive assessment score
+    prediction models. Confidence intervals are calculated from the
+    distribution of metrics from repeated CV at a confidence level of 95.}
+    \end{center}
 \end{table}
 
 As with linear models, RF models for children under 6 months old were
@@ -571,7 +586,7 @@ and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE 17.29). For both age groups,
 species that were important in RF overlapped with those that were
 significant when testing the relationship with linear models (Figure
-3A-B, Supplementary Table XXA-B), though there were substantial
+3A-B, Supplementary Table \hl{XX}A-B), though there were substantial
 differences. For children under 6 months, only \emph{B. wexlerae} was
 significantly associated with cognitive function in linear models, but
 was ranked 20th in importance for RF models. The importance metric
@@ -606,7 +621,7 @@ employed a Random Forest modeling approach to associate gut taxonomic
 profiles with individual brain regions identified in MRI scans,
 normalized to total brain volume. Some brain regions were more readily
 predicted by RF models trained on microbial taxa (Table 4, Supplementary
-Table XX), in particular those that were highly correlated with age.
+Table \hl{XX}), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
 0.421, Right = 0.434; relative age importances, Left = 7.5\%, Right =
 8.3\%) and the L/R pericalcarine cortex (mean RF correlations, Left =
@@ -615,12 +630,12 @@ These included the L/R lingual gyrus (mean RF correlations, Left =
 high-performing models, such as that for the left accumbens area (mean
 RF correlations = 0.288; relative age importances = 1.2\%).
 
-\textbf{Table 4. Summary statistics for the neuroanatomy prediction benchmarks}
 
-\begin{table}
-    \begin{tabular}{rrr}
+\begin{table}[!h]
+    \begin{center}
+    \begin{tabular}{|r|r|r|}
       \hline\hline
-      \textbf{Statistic} & \textbf{Mean absolute proportional error (MAPE)} & \textbf{Correlation coefficient (R)} \\\hline
+      \textbf{Statistic} & \textbf{(MAPE)} & \textbf{R} \\\hline
       Mean & 0.073 & 0.137 \\
       Standard deviation & 0.028 & 0.137 \\
       Maximum & 0.206 & 0.605 \\
@@ -629,6 +644,10 @@ RF correlations = 0.288; relative age importances = 1.2\%).
       25th percentile & 0.057 & 0.062 \\
       Minimum & 0.035 & -0.147 \\\hline\hline
     \end{tabular}
+    \caption{\label{tab:neuro}Summary statistics for the neuroanatomy prediction benchmarks.
+    Mean absolute proportional error (MAPE) and correlation coeficient (R)
+    of test-set preditions are reported accross models for all brain regions.}
+    \end{center}
 \end{table}
 
 We also observed that many brain regions had high accordance across the
@@ -655,7 +674,6 @@ it has been shown to have a divergent neuromorphology
 Independently, \emph{B. ovatus}, \emph{B. uniformis} and
 \emph{B. vulgatus} have been linked to ADHD
 \cite{wangGutMicrobiotaDietary2020}.
-
 In fact, there are studies showing that alterations on the striatal
 dopamine transporters can cause effects resembling hyperactivity and
 attention deficit
@@ -665,8 +683,9 @@ dopamine transporter
 \cite{hartstraInfusionDonorFeces2020}.
 
 
-Many of the taxa identified included taxa also identified in LMs and RF
-models of cognitive function. Interesting to note, while RF models for
+Many of the taxa identified as important for models predicting brain structure
+were also identified in LMs and RF models of cognitive function. 
+Interestingly, while RF models for
 multiple brain regions had many important microbial taxa, others were
 dominated by a small number of taxa. In general, for all segments, a
 consistent number of species between 14 and 22 (median = 20) was
@@ -725,23 +744,20 @@ close occipital lobe, to which \emph{A. hadrus} belongs. The other
 species on this cluster are \emph{B. wexlerae}, \emph{R. torques},
 \emph{R. intestinalis, R. bicirculans} and \emph{F. saccahrivorans}, who
 contribute heavily to the entorhinal, fusiform, lingual and
-parahippocampal segments.
-
-This group of taxa and their related segments drew our attention because
+parahippocampal segments. This group of taxa and their related segments drew our attention because
 they contained \emph{B. wexlerae}, a highlight from the cognitive
 assessment results. Previous works exploring Parkinson Disease patients
 found out that issues in the cognitive task of confrontation naming were
 positively correlated with thinning in the fusiform gyrus and
 parahippocampal gyrus
 \cite{pagonabarragaPatternRegionalCortical2013}.
-Additionally, the left and right parahippocampal, where \emph{B.
+Additionally, the left and right parahippocampus, where \emph{B.
 wexlerae} had the highest importance in both models, are important in
 visual/spatial processing and memory
 \cite{aminoffRoleParahippocampalCortex2013}.
 \emph{B. wexlerae} can also produce acetylcholine in the gut
 \cite{hosomiOralAdministrationBlautia2022},
-and this molecule plays an important role in modulating memory
-function
+and this molecule plays an important role in modulating memory function
 \cite{haamCholinergicModulationHippocampal2017}.
 
 
@@ -750,14 +766,12 @@ basal forebrain, especially the cingulate and the accumbens. This
 cluster contains the previously-discussed \emph{B. ovatus} and \emph{B.
 uniformis,} but also \emph{Alistipes finegoldii and Streptococcus
 salivaris.} Reduction in the nucleus accumbens has been associated with
-depression symptoms
-\cite{wackerRoleNucleusAccumbens2009},
+depression symptoms \cite{wackerRoleNucleusAccumbens2009},
 and increased levels of the \emph{Alistipes} genus have been
 observed in patients with depressive disorder
 \cite{jiangAlteredFecalMicrobiota2015}.
 While these reports are important, simultaneously probing of the gut
 metagenome and brain structure relationship is novel.
-
 Both \emph{A. equolofaciens} and \emph{A. celatus,} two closely-related
 equol-producing species, are examples of the second contribution
 pattern, and had high importance in predicting the relative volume of
@@ -1016,18 +1030,18 @@ provided as a covariate for all models (Table 3).
 Forest experiments}
 
 \begin{table}
-    \begin{tabular}{rrrr}
+    \begin{tabular}{|r|r|r|r|}
       \hline\hline
       \textbf{Input set} & \textbf{Age bracket} & \textbf{Microbiome encoding type} & \textbf{Demographics Provided? (sex, education)} \\\hline
-      1 & \multirow{5}{*}{0 to 6 months} & Not provided & yes \\
-      2 &  & \multirow{2}{*}{Taxonomic profile} & no \\
-      3 &  &  & yes \\
-      4 &  & \multirow{2}{*}{Functional Profile (ECs)} & no \\
-      5 &  &  & yes \\
-      6 & \multirow{5}{*}{18 to 120 months} & Not provided & yes \\
-      7 &  & \multirow{2}{*}{Taxonomic profile} & no \\
-      8 &  &  & yes \\
-      9 &  & \multirow{2}{*}{Functional Profile (ECs)} & no \\
+      1 & \multirow{5}{*}{0 to 6 months} & Not provided & yes \\ \cline{3-4}
+      2 &  & \multirow{2}{*}{Taxonomic profile} & no \\ \cline{4-4}
+      3 &  &  & yes \\ \cline{3-4}
+      4 &  & \multirow{2}{*}{Functional Profile (ECs)} & no \\ \cline{4-4}
+      5 &  &  & yes \\ \cline{2-4}
+      6 & \multirow{5}{*}{18 to 120 months} & Not provided & yes \\ \cline{3-4}
+      7 &  & \multirow{2}{*}{Taxonomic profile} & no \\ \cline{4-4}
+      8 &  &  & yes \\ \cline{3-4}
+      9 &  & \multirow{2}{*}{Functional Profile (ECs)} & no \\ \cline{4-4}
       10 &  &  & yes \\\hline\hline
     \end{tabular}
 \end{table}
@@ -1069,10 +1083,10 @@ datasets \cite{woodruffInflammationAutoreactivityDefine2022}.
 The resulting fitness-weighted importances were used
 to generate the values in Figure 3.
 
-\(fitness =\)
+\begin{equation}
+    fitness = \sqrt{max(r_{train}, 0) \cdot max(r_{test}, 0)}
+\end{equation}
 
-\textbf{Equation 1.} Mathematical expression of the fitness measure used
-to weight feature importances based on model benchmarks
 
 \subsubsection*{MRI / segmentation}
 
@@ -1103,11 +1117,8 @@ hippocampus, amygdala, and accumbens as well as total brainstem volume
 \subsubsection*{Computational analysis of metagenomes}
 
 Shotgun metagenomic sequences were analyzed using the bioBakery suite of
-computational tools
-(Beghini
-et al. 2021)
-\cite{}.
- First, KneadData (v0.7.7) was used to perform quality
+computational tools \cite{beghiniIntegratingTaxonomicFunctional2021}.
+First, KneadData (v0.7.7) was used to perform quality
 control of raw sequence reads, such as read trimming and removal of
 reads matching a human genome reference. Next, MetaPhlAn (v3.0.7, using
 database mpa\_v30\_CHOCOPhlAn\_201901) was used to generate taxonomic
@@ -1120,19 +1131,13 @@ metagenomes.
 Taxonomic and functional microbial profiles, as well as subject
 demographics necessary for statistical analyses and machine learning are
 available on the Open Science Framework
-(Bonham et al.,
-2022)
-\cite{}.
+\cite{bonhamECHORESONANCEMicrobiome2022}.
  Data processing, generation of summary statistics, and
 generation of plots was performed using the julia programming language
-(Bezanson et al.,
-2017; Bonham et al., 2021; Danisch and Krumbiegel, 2021)
-\cite{}.
+\cite{bezansonJuliaFreshApproach2017,bonhamMicrobiomeJlBiobakeryUtils2021,danischMakieJlFlexible2021}.
  All code for
 data analysis and figure generation, as well as scripts for automated
-download of input files are available on github \{\{CITE zenodo\}\}.
-
-\section*{Research Standards}
+download of input files are available on github \hl{\{\{CITE zenodo\}\}}.
 
 \section*{Acknowledgements}
 
