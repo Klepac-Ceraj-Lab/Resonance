@@ -14,7 +14,6 @@ using Resonance
 using Distributions
 using Clustering, Distances
 using ColorSchemes
-using StatsPlots
 ml_rng = StableRNG(0)
 ```
 
