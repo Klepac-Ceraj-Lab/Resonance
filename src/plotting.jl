@@ -212,3 +212,35 @@ function plot_corrband!(ax, cors; bandres=5000)
     tightlimits!(ax)
 end
 
+function treepositions(hc; useheight = true, orientation = :vertical)
+    order = Dict(a=> i for (i,a) in enumerate(hc.order))
+    nodepos = Dict(-i => (float(order[i]), 0.0) for i in hc.order)
+    xs = []
+    ys = []
+    for i in 1:size(hc.merges, 1)
+        x1, y1 = nodepos[hc.merges[i, 1]]
+        x2, y2 = nodepos[hc.merges[i, 2]]
+        xpos = (x1 + x2) / 2
+        ypos = useheight ?  hc.heights[i] : (max(y1, y2) + 1)
+        nodepos[i] = (xpos, ypos)
+        push!(xs, [x1, x1, x2, x2])
+        push!(ys, [y1, ypos, ypos, y2])
+    end
+    if orientation == :horizontal
+        return ys, xs
+    else
+        return xs, ys
+    end
+end
+
+function dendrogram(h; color = :black, kwargs...)
+    ax = CairoMakie.Axis(Figure()[1, 1])
+    dendrogram!(ax, h; color, kwargs...)
+    current_figure()
+end
+
+function dendrogram!(ax, h; color = :black, kwargs...)
+    for (x, y) in zip(treepositions(h; kwargs...)...)
+        lines!(ax, x, y; color)
+    end
+end
