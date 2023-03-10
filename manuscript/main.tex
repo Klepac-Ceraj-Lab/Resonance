@@ -121,17 +121,20 @@ models and machine learning (ML) models, we showed that many species,
 including \emph{Gordonibacter pamelae} and \emph{Blautia wexlerae}, were
 significantly associated with higher cognitive function, while some
 species such as \emph{Ruminococcus gnavus} were more commonly found in
-children with low cognitive scores regardless of age or maternal
-education. Microbial genes for enzymes involved in the metabolism of
+children with low cognitive scores after controlling for sociodemographic factors.
+Microbial genes for enzymes involved in the metabolism of
 neuroactive compounds, particularly short-chain fatty acids such as
 acetate and propionate, were also associated with cognitive function.
 In addition, ML models were able to use microbial taxa to predict the
-volume of brain regions, with particular taxa often dominating the
-feature importance metric for individual brain regions, such as \emph{B.
-wexlerae} being the most dominant for the parahippocampal region or
-GABA-producing \emph{Bacteroidetes ovatus} for left accumbens. These
-findings provide potential biomarkers of neurocognition and may lead to
-the future development of targets for early detection and early
+volume of brain regions, with particular taxa, many that were identified
+as important in predicting cognitive function, dominating the
+feature importance metric for individual brain regions. For example, \emph{B.
+wexlerae} was dominant for the predicting the size of the parahippocampal region
+in both the left and right hemispheres, while several \textit{Bacteroitetes} species,
+including GABA-producing \emph{B. ovatus}, were important for predicting
+the size of the left accumbens area, but not the right. These
+findings provide potential biomarkers of neurocognition and brain development
+and may lead to the future development of targets for early detection and early
 intervention.
 \end{abstract}
 
@@ -150,7 +153,7 @@ The gut and the brain are intimately linked. Signals from the brain
 reach the gut through the autonomic nervous system and the endocrine
 system, and the gut can communicate with the brain through the vagus
 nerve and through endocrine and immune (cytokine) signaling molecules
-\cite{cerdoEarlyNutritionGut2019,pronovostPerinatalInteractionsMicrobiome2019,sharonCentralNervousSystem2016,togniniGutMicrobiotaPotential2017}
+\cite{cerdoEarlyNutritionGut2019,pronovostPerinatalInteractionsMicrobiome2019,sharonCentralNervousSystem2016,togniniGutMicrobiotaPotential2017}.
 In addition, the products of microbial metabolism generated in the gut can
 influence the brain, both indirectly by stimulating the enteric nervous
 and immune systems, as well as directly through molecules that enter
@@ -174,8 +177,8 @@ microbiome and the brain
 \cite{laueDevelopingMicrobiomeBirth2022}.
 Fetal development \emph{in utero} is believed to be mostly sterile, but
 is rapidly seeded at birth through contact with the birth canal (if
-birthed vaginally), caregivers, food sources (breastmilk or formula),
-and other environmental sources such as antibiotics
+birthed vaginally), caregivers, food sources (breast milk or formula),
+and other environmental sources
 \cite{backhedDynamicsStabilizationHuman2015,bokulichAntibioticsBirthMode2016}.
 The early microbiome is characterized by low microbial
 diversity, rapid succession and evolution, and domination by
@@ -205,13 +208,13 @@ age 5, a child's brain has reached \textgreater85\% of its adult size,
 has achieved near-adult levels of myelination, and the pattern of axonal
 connections has been established
 \cite{silbereisCellularMolecularLandscapes2016}.
-Much of this development occurs in discrete windows or
-``sensitive-'' or ``critical periods'' (CPs)
+Much of this development occurs in discrete windows called
+"sensitive-" or "critical periods" (CPs)
 \cite{knudsenSensitivePeriodsDevelopment2004}
 when neural plasticity is particularly high,
 and particular modes of learning
-and skill development are preferred. The timing of these sensitive
-periods is driven in part by genetics, but can also be affected by the
+and skill development are preferred. The timing of these CPs
+is driven in part by genetics, but can also be affected by the
 environment, including the gut microbiome
 \cite{cowanAnnualResearchReview2020}.
 In fact, emerging evidence suggests that the timing and duration of CPs
@@ -224,7 +227,7 @@ provide opportunities for identifying atypical development earlier and
 offer opportunities for intervention.
 
 To begin to address this need, we investigated the gut microbiome and
-neurocognitive development of children from infancy through 10 years of
+neurocognitive development of healthy, neurotypical children from infancy through 10 years of
 age in an accelerated longitudinal study design. Gut microbial
 communities were assessed using shotgun metagenomic sequencing, enabling
 profiling at both the taxonomic and gene-functional level, and
@@ -369,8 +372,7 @@ profiles, both generated from DNA sequencing data, being tightly coupled
 (Figure 1H, p \textless{} 0.001). Interestingly, other functional
 groupings (Enzyme commission level4 - ECs
 \cite{bairochENZYMEDatabase20002000},
-and
-KEGG orthologues - KOs
+and KEGG orthologues - KOs
 \cite{kanehisaKEGGResourceDeciphering2004}
 ) overlapped only slightly with taxonomic profiles in both age
 cohorts, despite being derived from UniRef90 labels. In children over 18
@@ -384,9 +386,9 @@ To assess whether individual microbial species were associated with
 cognitive function, we fit multivariable linear regression models
 \cite{mallickMultivariableAssociationDiscovery2021}
 for the relative abundance of each species that had at least 15\%
-prevalence in a given age group (Figure 2A, N = 92 for 0--120 months, N
-= 46 for 0--6 months, N = 97 for 18--120 months). Only \emph{Blautia wexlerae}
-was significantly associated (q value = 0.14, $\beta$ = 0.0015) with
+prevalence in a given age group (Figure 2A, N\textsubscript{species} = 92 for 0--120 months, 
+N\textsubscript{species} = 46 for 0--6 months, N\textsubscript{species} = 97 for 18--120 months).
+Only \emph{Blautia wexlerae} was significantly associated (q value = 0.14, $\beta$ = 0.0015) with
 cognitive function in children under 6 months old after adjusting for
 age and maternal education (Figure 2B). \emph{B. wexlerae} was
 previously shown to be depleted in children with diabetes
@@ -402,10 +404,9 @@ including \emph{Gordonibacter pamelaeae}, which produces the
 neuroprotective metabolite urolithin
 \cite{gongUrolithinAlleviatesBloodbrain2022,selmaDescriptionUrolithinProduction2014},
 \emph{Asaccharobacter celatus} and
-\emph{Adelcreutzia equolifaciens}, which produce phytoestrogen-derived
-equol
+\emph{Adelcreutzia equolifaciens}, which produce phytoestrogen-derived equol
 \cite{maruoAdlercreutziaEquolifaciensGen2008,thawornkunoBiotransformationDaidzeinEquol2009},
-and the SCFA-producing probiotic
+and SCFA-producing probiotic
 species such as \emph{Eubacterium eligens} and \emph{Faecalibacterium
 prausnitzii}
 \cite{ghoshMediterraneanDietIntervention2020}
@@ -512,7 +513,7 @@ development.
 
 FSEA relies on understanding functional relationships between individual
 genes. However, because the relationships between individual taxa are
-still largely unknown, we turned to Random Forest (RF) models, an
+still largely unknown, we turned to Random Forest (RF) models, a family of 
 unsupervised non-parametric machine learning (ML) method that enables
 the identification of underlying patterns in large numbers of individual
 features (here, microbial species). Previous studies have reported
@@ -528,6 +529,12 @@ nature of variable consideration in each tree, RFs are naturally able to
 work out complex input feature interactions, such as those present in a
 microbiome-wide study, without the necessity to explicitly compute
 interaction terms.
+Given that gut microbial profiles, as well as neurocognitive
+development, may partially reflect socioeconomic and demographic
+factors, we assessed the performance of RF regressors where maternal
+education (a proxy of socioeconomic status (SES)), sex, and age were
+included as possible predictors, either alone or in combination with
+microbial taxonomic profiles (Table 3).
 
 \begin{sidewaysfigure}[!htb]
     \centering
@@ -550,12 +557,6 @@ interaction terms.
 \end{sidewaysfigure}
 
 
-Given that gut microbial profiles, as well as neurocognitive
-development, may partially reflect socioeconomic and demographic
-factors, we assessed the performance of RF regressors where maternal
-education (a proxy of socioeconomic status (SES)), sex, and age were
-included as possible predictors, either alone or in combination with
-microbial taxonomic profiles (Table 3).
 
 \begin{table}[!h]
     \begin{center}
@@ -579,8 +580,8 @@ microbial taxonomic profiles (Table 3).
     \end{center}
 \end{table}
 
-As with linear models, RF models for children under 6 months old were
-less generalizable (mean test-set correlation -0.13, mean RMSE 12.70),
+As with linear models, RF models for children under 6 months old
+performed poorly (mean test-set correlation -0.13, mean RMSE 12.70),
 but RFs were consistently able to learn the relationship between taxa
 and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE 17.29). For both age groups,
@@ -618,8 +619,8 @@ or that age itself is a useful predictor.
 If there are causal effects of microbial metabolism on cognitive
 function, they might be reflected in changes in neuroanatomy. We again
 employed a Random Forest modeling approach to associate gut taxonomic
-profiles with individual brain regions identified in MRI scans,
-normalized to total brain volume. Some brain regions were more readily
+profiles with individual brain regions identified in MRI scans.
+Some brain regions were more readily
 predicted by RF models trained on microbial taxa (Table 4, Supplementary
 Table \hl{XX}), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
@@ -650,51 +651,49 @@ RF correlations = 0.288; relative age importances = 1.2\%).
     \end{center}
 \end{table}
 
-We also observed that many brain regions had high accordance across the
+While models for many regions were highly concordant across the
 left and right hemispheres in terms of both model performance and
-microbial feature importance. In contrast, other regions had substantial
+microbial feature importance, other regions had substantial
 differences between the hemispheres. For example, the left accumbens
 area, which plays an important role in reward circuits
 \cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012},
 has one of the highest test-set correlations of our
 brain region models (R = 0.288), as compared to the right accumbens
-models which could not adequately generalize, and had a negative mean
-test-set correlation (R = -0.041). Most healthy individuals have a
+models which had a negative mean test-set correlation (R = -0.041)
+indicated that generalizable models could not be identified.
+Most healthy individuals have a
 rightward asymmetry in the nucleus accumbens, and reduced asymmetry has
 been linked to substance use disorder in young adults
-\cite{caoMappingCorticalSubcortical2021}.
-
-Feature importance for models of the left accumbens area were dominated
-by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.4\%
-relative importance), \emph{B. ovatus} (3.7\% relative importance), and
-\emph{B. uniformis} (3.0\% relative importance).. The accumbens area is
+\cite{caoMappingCorticalSubcortical2021}. The accumbens area is also
 associated with reward control, and in individuals diagnosed with ADHD,
 it has been shown to have a divergent neuromorphology
 \cite{hoogmanSubcorticalBrainVolume2017}.
-Independently, \emph{B. ovatus}, \emph{B. uniformis} and
-\emph{B. vulgatus} have been linked to ADHD
+Feature importance for models of the left accumbens area were dominated
+by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.4\%
+relative importance), \emph{B. ovatus} (3.7\% relative importance), and
+\emph{B. uniformis} (3.0\% relative importance). Each of these species
+have been independently linked to ADHD
 \cite{wangGutMicrobiotaDietary2020}.
-In fact, there are studies showing that alterations on the striatal
-dopamine transporters can cause effects resembling hyperactivity and
-attention deficit
-\cite{yaelDisinhibitionNucleusAccumbens2019},
-and that \emph{B. uniformis} is gut-microbial modulator of the brain
-dopamine transporter
-\cite{hartstraInfusionDonorFeces2020}.
 
 
-Many of the taxa identified as important for models predicting brain structure
-were also identified in LMs and RF models of cognitive function. 
 Interestingly, while RF models for
 multiple brain regions had many important microbial taxa, others were
-dominated by a small number of taxa. In general, for all segments, a
+dominated by a small number of taxa, many of which
+were also identified in LMs and RF models of cognitive function. 
+In general, for all segments, a
 consistent number of species between 14 and 22 (median = 20) was
-responsible for one third of the fitness-weighted cumulative importance
-(see Methods), regardless of the model benchmarks. We proceeded to
-select a subset of the most important taxa (averaged over all segments)
-and the segments whose importance was more heavily loaded to further
-analyze the multiple relationships unveiled by the RF models
-(Figure 4 A and B)
+responsible for one third of the fitness-weighted cumulative importance,
+regardless of model performance (\hl{Suplementary Table XX}, Figure 4 A and B).
+We observed two major patterns of importance distribution from
+taxa over the brain segments; some species portrayed high contributions
+to multiple different segments, while others contributed modestly to
+just one or two brain segments. Notable cases of the first pattern
+included seven species - \emph{Anaerostipes hadrus}, \emph{Bacteroides
+vulgatus}, \emph{Fusicatenibacter saccharivorans}, \emph{Ruminococcus
+torques}, \emph{Eubacterium rectale}, \emph{Coprococcus comes} and
+\emph{Blautia wexlerae} - that combined, account for approximately one
+third of the cumulative relative importances, computed after subsetting
+on the taxa of interest (Figure 4C).
 
 \begin{sidewaysfigure}[!htb]
     \centering
@@ -714,39 +713,18 @@ analyze the multiple relationships unveiled by the RF models
     \label{fig:4}
 \end{sidewaysfigure}
 
-
-Our analysis revealed two major patterns of importance distribution from
-taxa over the brain segments; some species portrayed high contributions
-to multiple different segments, while others contributed modestly to
-just one or two brain segments. Notable cases of the first pattern
-included seven species - \emph{Anaerostipes hadrus}, \emph{Bacteroides
-vulgatus}, \emph{Fusicatenibacter saccharivorans}, \emph{Ruminococcus
-torques}, \emph{Eubacterium rectale}, \emph{Coprococcus comes} and
-\emph{Blautia wexlerae} - that combined, account for approximately one
-third of the cumulative relative importances, computed after subsetting
-on the taxa of interest (Figure 4C).
-
 Among these, the most important variable is \emph{Anaerostipes hadrus},
 which is a butyrate-producing anaerobe that has been positively
 associated with cognitive function
 \cite{kantGenomeSequenceButyrateProducing2015,liCorrelationsGutMicrobiota2022}.
 Its importance is, however, heavily loaded on the volume
 of entire major lobes (frontal, parietal), which cannot be readily
-correlated to specific cognitive functions. After accounting for the
-major lobes, it is found to be highly important on the prediction of the
-cerebellar vermal lobules VIII-X, pars opercularis, cuneus and
-precuneus, and anterior-cingulate (Figure 4B).
-
-To better understand this relationship, we performed hierarchical
-cluster analysis, which revealed a well defined cluster of species with
-high importance loadings on close segments of the lower temporal and
-close occipital lobe, to which \emph{A. hadrus} belongs. The other
-species on this cluster are \emph{B. wexlerae}, \emph{R. torques},
-\emph{R. intestinalis, R. bicirculans} and \emph{F. saccahrivorans}, who
-contribute heavily to the entorhinal, fusiform, lingual and
-parahippocampal segments. This group of taxa and their related segments drew our attention because
-they contained \emph{B. wexlerae}, a highlight from the cognitive
-assessment results. Previous works exploring Parkinson Disease patients
+correlated to specific cognitive functions, (Figure 4B).
+\emph{B. wexlerae}, which was important in RF models of cognitive function,
+and was the only species to be significantly associated
+with cogntive function in young children, 
+was also important in models of the entorhinal, fusiform, lingual and
+parahippocampal regions. Previous works exploring Parkinson Disease patients
 found out that issues in the cognitive task of confrontation naming were
 positively correlated with thinning in the fusiform gyrus and
 parahippocampal gyrus
@@ -759,46 +737,42 @@ visual/spatial processing and memory
 \cite{hosomiOralAdministrationBlautia2022},
 and this molecule plays an important role in modulating memory function
 \cite{haamCholinergicModulationHippocampal2017}.
-
-
-Another notable importance cluster contains taxa associated with the
+Another cluster of model importance contains taxa associated with the
 basal forebrain, especially the cingulate and the accumbens. This
 cluster contains the previously-discussed \emph{B. ovatus} and \emph{B.
-uniformis,} but also \emph{Alistipes finegoldii and Streptococcus
-salivaris.} Reduction in the nucleus accumbens has been associated with
+uniformis}, but also \emph{Alistipes finegoldii and Streptococcus
+salivaris}. Reduction in the nucleus accumbens has been associated with
 depression symptoms \cite{wackerRoleNucleusAccumbens2009},
 and increased levels of the \emph{Alistipes} genus have been
 observed in patients with depressive disorder
 \cite{jiangAlteredFecalMicrobiota2015}.
-While these reports are important, simultaneously probing of the gut
-metagenome and brain structure relationship is novel.
+
 Both \emph{A. equolofaciens} and \emph{A. celatus,} two closely-related
 equol-producing species, are examples of the second contribution
-pattern, and had high importance in predicting the relative volume of
+pattern, where a model is dominated by a small number of taxa.
+Each of these species were highly important in predicting the relative volume of
 the right anterior cingulate (respectively, 3.0\% and 2.6\% relative
 importances), which has been linked to social cognition and reward-based
 decision making
 \cite{appsAnteriorCingulateGyrus2016,boesRightAnteriorCingulate2008,bushDorsalAnteriorCingulate2002}.
 Equol has a strong estrogenic effect
 \cite{setchellSEquolPotentLigand2005},
-and in anterior cingulate, estrogen, has been shown to regulate
+and in the anterior cingulate, estrogen has been shown to regulate
 pain-related aversion
 \cite{xiaoEstrogenAnteriorCingulate2013}.
-
-Another example of this pattern is \emph{R. gnavus,} which was the only
-species with significant negative association with cognitive function.
+Another example of this pattern is \emph{R. gnavus}, which was the only
+species with significant negative association with cognitive function in linear models.
 It is heavily associated with the left pars opercularis (2.7\% relative
-importance), a relationship that may be explained by the emerging
-understanding that this species is increased in individuals with insulin
+importance). \textit{R. gnavus} is increased in individuals with insulin
 resistance and obesity \cite{leyHumanGutMicrobes2006},
 conditions that are known to produce structural abnormalities in the brain
 \cite{opelBrainStructuralAbnormalities2021}.
 Finally, \emph{Coprococcus comes} displays an importance
 distribution that splits almost evenly among the two previously reported
 clusters. Its loading on the prediction of the left posterior cingulate
-is the highest for a microbe in RF models (4.0\% relative importance)
-(only age had higher relative importance in any model), while also being
-one of the most important predictors for neighboring areas of the
+is the highest for a microbe in RF models (4.0\% relative importance) -
+only age had higher relative importance in any model. At the same time,
+\textit{C. comes} is one of the most important predictors for neighboring areas of the
 posterior cingulate such as the pars opercularis (relative importances,
 Left = 2.3\%, Right = 2.8\%), along with upper regions like the left
 precentral (2.3\% relative importance) and paracentral lobes (relative
@@ -810,8 +784,10 @@ The relationship between the gut microbiome and brain function via the
 gut-microbiome-brain axis has gained increasing acceptance largely as a
 result of human epidemiological studies investigating atypical
 neurocognition (eg anxiety and depression, neurodegeneration, attention
-deficit / hyperactivity disorder, and autism) and mechanistic studies in
-animal models. The results from these studies point to the possibility
+deficit / hyperactivity disorder, and autism \cite{romanGutBrainAxis2018,fosterGutBrainAxis2013})
+and mechanistic studies in animal models
+\cite{hsiaoMicrobiotaModulateBehavioral2013,needhamGutderivedMetaboliteAlters2022}.
+The results from these studies point to the possibility
 that gut microbes and their metabolism may be causally implicated in
 cognitive development, but this study is the first to our knowledge that
 directly investigates microbial species and their genes in relation to
@@ -848,16 +824,14 @@ pamelaeae, Aldercreutzia equolofaciens, Asaccharobacter celatus}
 and \emph{Eggerthella lenta}. Many members of this family are
 known in part due to unique metabolic activities. For example, \emph{A.
 equolofaciens} produces the nonsteroidal estrogen equol from isoflaven
-found in soybeans
-\cite{wangEnantioselectiveSynthesisSEquol2005},
+found in soybeans \cite{wangEnantioselectiveSynthesisSEquol2005},
 and \emph{G. pamelaeae} can metabolize the polyphenol ellagic acid
 (found in pomegranates and some berries) into urolithin, which has been
 shown in some studies to have a neuroprotective effect
 \cite{gongUrolithinAlleviatesBloodbrain2022,selmaDescriptionUrolithinProduction2014}.
 \emph{E. lenta} has been extensively studied for
 its ability to metabolize drug compounds such as the plant-derived heart
-medication digoxin
-\cite{haiserPredictingManipulatingCardiac2013}.
+medication digoxin \cite{haiserPredictingManipulatingCardiac2013}.
 The metabolic versatility of this clade, and the large number of
 species that are associated with cognition make these microbes prime
 targets for further mechanistic studies.
@@ -893,9 +867,20 @@ children. In addition, our study period overlapped with the beginning of
 the COVID-19 pandemic, and we and others have observed some reduction in
 measured scores for children that were assessed after the implementation
 of lockdowns. In our subject set for this study, these effects are more
-pronounced in some age groups due to our sampling schedule
+pronounced in some age groups due to the period when active recruitment for
+the study was occurring.
 \cite{blackwellYouthWellbeingCOVID192022,deoniImpactCOVID19Pandemic2021}
 (Supplementary Figure 3).
+
+
+% and alterations on the striatal
+% dopamine transporters can cause effects resembling hyperactivity and
+% attention deficit
+% \cite{yaelDisinhibitionNucleusAccumbens2019},
+% and that \emph{B. uniformis} is gut-microbial modulator of the brain
+% dopamine transporter
+% \cite{hartstraInfusionDonorFeces2020}.
+
 
 This analysis allowed us to establish links between microbial taxa and
 their functional potential with cognition and brain structure. Although
@@ -1113,6 +1098,8 @@ hemisphere volumes were derived for total white and cortical gray
 matter, lateral ventricle, thalamus, caudate, putamen, pallidum,
 hippocampus, amygdala, and accumbens as well as total brainstem volume
 \cite{bruchhageLongitudinalBrainCognitive}.
+Brain region volumes used in RF models were normalized to total brain volume
+(the sum of white and gray matter).
 
 \subsubsection*{Computational analysis of metagenomes}
 
