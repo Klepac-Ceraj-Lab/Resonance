@@ -263,7 +263,7 @@ due to the unique age-range and psychometric properties measured by each
 and the WISC-V for children older than 6), but were normalized to a common scale (Figure 1B), 
 
 As expected, the greatest differences in microbial taxa were observed across
-age (Figure 1B-C, PCoA axis 1), while older children were primarily
+child age (Figure 1B-C, PCoA axis 1), while older children were primarily
 stratified into Bacteroidetes-dominant, Firmicutes-dominant, or
 high-\emph{Prevotella copri} (Supplementary Figure 2). Overall variation
 in gut microbial genes and also in brain volume profiles was similarly
@@ -326,33 +326,28 @@ driven largely by subject age (Figure 1C-F).
     \caption{\label{tab:demo}Subject demographics}
 \end{table}
 
-Several studies have demonstrated links between specific taxa and
-measures of anxiety and depression
-\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022},
-cognitive flexibility in adults
-\cite{magnussonRelationshipsDietrelatedChanges2015},
-and atypical neural development
-\cite{liuAlteredGutMicrobiota2019,wanUnderdevelopmentGutMicrobiota2021}.
-We, therefore, set out to identify whether specific taxa
-or gene functions were linked with normal cognitive development in
-children. In order to assess whether variations in gut microbial taxa,
-their genes, or their metabolism are linked with neurocognitive
-development, we tested whether the beta diversity of microbial taxa and
-gene functions, as well as variation in brain development as assessed by
-neuroimaging, were associated with these contemporaneous measures of
-cognitive function using permutation analysis of variance (PERMANOVA).
-Due to the large ecological shift in the microbiome that occurs upon the
-introduction of solid food, and a relatively wide range of ages when
-infants are transitioned to solid food, we considered the pre-transition
-(less than 6 months old) and post-transition (over 18 months old)
-microbiomes separately. Even still, age was a major driver of variation
-in gut microbiomes in children over 18 months old (Figure 1G). We also
-found that overall variation in microbial species in children over 18
-months old was associated with a small but significant variation in
-cognitive function score (Figure 1G, R\textsuperscript{2} = 0.0124, q
-\textless{} 0.001), as was variation in microbial gene functions
-(R\textsuperscript{2} = 0.0119, q \textless{} 0.001). Variation in
-microbial taxa and genes was not significantly associated with cognitive
+As several prior studies have demonstrated links between specific gut taxa
+with ASD \cite{liuAlteredGutMicrobiota2019,wanUnderdevelopmentGutMicrobiota2021},
+adult cognitive skill (e.g., executive functioning)\cite{magnussonRelationshipsDietrelatedChanges2015},
+and adult mental health (both anxiety and depressive symptioms)\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022}
+we sought to determine if specific taxa or gene functions were linked with normal cognitive development in children.
+To test if variations in gut microbial taxa,
+their genes, or their metabolism are associated with neurocognitive
+development, we used permutation analysis of variance (PERMANOVA) 
+that included the @b diversity of microbial taxa and gene functions,
+neuroimaging-derived volume measures of cortical and subcortical structures,
+and general cognitive ability.
+Given the large ecological shift in the microbiome that occurs upon the introduction of solid food,
+and the relatively wide range of ages when over which infant transition from milk to solid foods,
+we considered the pre-transition (prior to 6 months of age old)
+and post-transition (over 18 months of age) microbiomes separately.
+However, even with this categorization, we find increasing variation
+in gut microbiomes in children over 18 months old (Figure 1G).
+We also found that overall variation in microbial species in children over 18 months old
+was associated with a small but significant variation in cognitive function score
+(Figure 1G, R\textsuperscript{2} = 0.0124, q \textless{} 0.001),
+as was variation in microbial gene functions (R\textsuperscript{2} = 0.0119, q \textless{} 0.001).
+Variation in microbial taxa and genes was not significantly associated with cognitive
 function in children under 6 months, though this may be due to the low
 taxonomic diversity and broad lack of overlap between taxa in infants.
 As expected, age was significantly associated with microbial beta
@@ -438,13 +433,13 @@ grouped by functional activity would be associated with cognition. To
 test this, we performed feature set enrichment analysis (FSEA) on groups
 of genes with neuroactive potential
 \cite{valles-colomerNeuroactivePotentialHuman2019}
-and concurrent cognitive function score (Table 2, Figure 2C-G) and found that
+and concurrent cognitive ability score (Table 2, Figure 2C-G) and found that
 several metabolic pathways were significantly enriched or depleted in
-children with higher cognitive function scores. This was true both when
-considering all age groups together, though the enrichment of most
+children with higher cognitive ability scores. This was true both when
+considering all ages together, though the enrichment of most
 pathways was more pronounced either in children under 6 months or those over 18
 months. For example, genes for degrading the 3-carbon SCFA propionate
-were significantly depleted in children with higher cognitive function
+were significantly depleted in children with higher cognitive ability
 scores across all age groups tested (Table 2; propionate degradation I,
 under 6 months, enrichment score (E.S.) = -0.542, corrected p-value (q)
 = 0.020; over 18 months, E.S. = -0.674, q = 0.041). Interestingly, genes
@@ -457,8 +452,7 @@ SCFAs are produced by anaerobic fermentation of dietary fiber
 and have been linked with immune system regulation as well as directly
 with brain function \cite{dalileRoleShortchainFatty2019}.
 
-
-Synthesis of menaquinone (vitamin K) was also negatively associated with
+We found that synthesis of menaquinone (vitamin K) was negatively associated with
 cognitive function score in older children (menaquinone synthesis I,
 E.S. = -0.170, q = 0.0183). Menaquinone has several isoforms, one of
 which, MK-4, has been found to be decreased in children diagnosed with ASD
@@ -651,16 +645,17 @@ RF correlations = 0.288; relative age importances = 1.2\%).
 While models for many regions were highly concordant across the
 left and right hemispheres in terms of both model performance and
 microbial feature importance, other regions had substantial
-differences between the hemispheres. For example, the left accumbens
-area, which plays an important role in reward circuits
-\cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012},
+bilateral differences. For example, the left accumbens area
 has one of the highest test-set correlations of our
-brain region models (R = 0.288), as compared to the right accumbens
-models which had a negative mean test-set correlation (R = -0.041)
-indicated that generalizable models could not be identified.
+brain region models (R = 0.288), as compared to the right which
+had a negative mean test-set correlation (R = -0.041)
+indicated that generalizable models were not identified.
 Most healthy individuals have a
-rightward asymmetry in the nucleus accumbens, and reduced asymmetry has
-been linked to substance use disorder in young adults
+rightward asymmetry in the nucleus accumbens,
+which is involved in reward learning and risk taking behaviours
+\cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012}.
+Reduced asymmetry between right and left nucleus accumbens
+has been associated with substance use disorder in young adults
 \cite{caoMappingCorticalSubcortical2021}. The accumbens area is also
 associated with reward control, and in individuals diagnosed with ADHD,
 it has been shown to have a divergent neuromorphology
