@@ -102,7 +102,7 @@ style=science
 \maketitle 
 
 \begin{abstract}
-The gastrointestinal tract, its resident microorganisms and the central
+The gastrointestinal tract, its resident microorganisms, and the central
 nervous system are connected by biochemical signaling, also known as
 "microbiome-gut-brain-axis." Both the human brain and the gut microbiome
 have critical developmental windows in the first three years of life,
@@ -175,7 +175,7 @@ particularly early in life.
 The first years of life are critical developmental windows for both the
 microbiome and the brain
 \cite{laueDevelopingMicrobiomeBirth2022}.
-Fetal development \emph{in utero} is believed to be mostly sterile, but
+Development \emph{in utero} is believed to be mostly sterile, but
 is rapidly seeded at birth through contact with the birth canal (if
 birthed vaginally), caregivers, food sources (breast milk or formula),
 and other environmental sources
@@ -194,12 +194,12 @@ microbiome undergoes another categorical transformation, with most taxa
 of the infant microbiome being replaced by taxa more reminiscent of
 adult microbiomes
 \cite{backhedDynamicsStabilizationHuman2015}.
-Many prior studies have focused on either infant microbiomes or
+Prior studies have typically focused on either infant microbiomes or
 adult microbiomes, since performing statistical analyses across this
 transition poses particular challenges. Nevertheless, since this
 transition coincides with critical neural developmental windows and
-neural synaptogenesis, investigation across this solid-food boundary is
-incredibly important
+associated neurodevelopmental processes including myelination, neurogenesis, and synaptic pruning,
+investigation across this solid-food boundary is important
 \cite{tauNormalDevelopmentBrain2010}.
 
 A child's brain undergoes remarkable anatomical, microstructural,
@@ -209,15 +209,12 @@ has achieved near-adult levels of myelination, and the pattern of axonal
 connections has been established
 \cite{silbereisCellularMolecularLandscapes2016}.
 Much of this development occurs in discrete windows called
-"sensitive-" or "critical periods" (CPs)
+sensitive periods (SPs)
 \cite{knudsenSensitivePeriodsDevelopment2004}
-when neural plasticity is particularly high,
-and particular modes of learning
-and skill development are preferred. The timing of these CPs
-is driven in part by genetics, but can also be affected by the
-environment, including the gut microbiome
+during which neural plasticity is particularly high. The timing of these SPs
+is driven by both genetic and environmental cues, including the gut microbiome
 \cite{cowanAnnualResearchReview2020}.
-In fact, emerging evidence suggests that the timing and duration of CPs
+Emerging evidence suggests that the timing and duration of SPs
 may be driven in part by cues from the developing gut microbiome
 \cite{callaghanNestedSensitivePeriods2020}.
 As such,
@@ -226,16 +223,23 @@ development and how it relates to normal neurocognitive development may
 provide opportunities for identifying atypical development earlier and
 offer opportunities for intervention.
 
-To begin to address this need, we investigated the gut microbiome and
-neurocognitive development of healthy, neurotypical children from infancy through 10 years of
-age in an accelerated longitudinal study design. Gut microbial
+To begin to address this need, we investigated trends and associations between
+the gut microbiome and
+neurocognitive development in a large cohort of healthy and neurotypically-developing
+children from infancy through 10 years of age. Gut microbial
 communities were assessed using shotgun metagenomic sequencing, enabling
-profiling at both the taxonomic and gene-functional level, and
-neurocognitive development was measured using expert-assessment of
-cognitive function and neuroimaging using magnetic resonance imaging
-(MRI). Using a combination of classical statistical analysis and machine
-learning, we showed that the development of the gut microbiome, the
-brain, and children's cognitive abilities are intimately linked, with
+profiling at both the taxonomic and gene-functional level.
+Cognitive skills and abilities were measured using age-appropriate
+psychometric assessments of cognitive function s, i.e.,
+the Mullen Scales of Early Learning (MSEL) \cite{mullenMullenScalesEarly1995},
+Weschler Preschool and Primary Scale of Intelligence, 4th Edition (WPPSI-4) 
+\cite{wechslerWechslerPreschoolPrimary2012}
+and Weschler Intelligence Scale for Children, 5th Edition (WISC-V)
+\cite{wechslerWechslerIntelligenceScale1949}.
+Finally, we also assessed emerging brain structure magnetic resonance imaging
+(MRI). Through a combination of classical statistical analysis and machine
+learning, we find that the development of the gut microbiome,
+children's cognitive abilities, and brain structure are intimately linked, with
 both microbial taxa and gene functions able to predict cognitive
 performance and brain structure.
 
@@ -244,29 +248,22 @@ performance and brain structure.
 \subsubsection*{Cohort overview and summary data}
 
 We investigated the co-development of the brain and the microbiome in
-early childhood in a cohort of typically-developing children in their
-first years of life using a variety of orthogonal microbial and
-neurocognitive assessments, including shotgun metagenomic sequencing,
-cognitive and behavioral assessments, and neuroimaging. In all, 361
-children from RESONANCE,
-an accelerated longitudinal cohort of early development
-\cite{forrestAdvancingScienceChildren2018}
-between the ages of 82 days and 10 years
-old (median age 2.21 years, Supplementary Figure 1) were included in
-this study (Table 1, Figure 1A). To measure cognitive function, we used
-age-appropriate assessments that can be normalized to a common, IQ-like
-scale (Figure 1B), including the Mullen scale of early learning (MSEL)
-for children from birth to 3 years of age
-\cite{mullenMullenScalesEarly1995},
-Wechsler preschool and primary scale of intelligence (WPPSI)
-for 4-5 year-olds
-\cite{wechslerWechslerPreschoolPrimary2012},
-and the Wechsler intelligence scale for children (WISC)
-for children 6 years and up
-\cite{wechslerWechslerIntelligenceScale1949}.
+361 healthy and neurotypically-developing children (163 female) between 82 days and 10 years of age
+(Table 1,  Figure 1A, Supplementary Figure 1)\cite{forrestAdvancingScienceChildren2018}
+using a variety of orthogonal microbial and neurocognitive measures.
+These included shotgun metagenomic sequencing,
+age-appropriate cognitive and behavioral assessments
+using full-scale composite scores from the MSEL, WPPSI-4 and WISC-V,
+and neuroimaging measures of cortical and sub-cortical morphology. 
+To measure cognitive function, we used
+age-appropriate assessments that can be 
+Different assessment instruments were used depending on the child's age
+due to the unique age-range and psychometric properties measured by each
+(i.e., the MSEL for children under 4 years of age, The WPPSI-3 for 3-6 year-olds,
+and the WISC-V for children older than 6), but were normalized to a common scale (Figure 1B), 
 
-As expected, the greatest differences in microbial taxa were driven by
-age (Figure 1B-C, PCoA axis 1), while older children were primarily
+As expected, the greatest differences in microbial taxa were observed across
+child age (Figure 1B-C, PCoA axis 1), while older children were primarily
 stratified into Bacteroidetes-dominant, Firmicutes-dominant, or
 high-\emph{Prevotella copri} (Supplementary Figure 2). Overall variation
 in gut microbial genes and also in brain volume profiles was similarly
@@ -329,33 +326,28 @@ driven largely by subject age (Figure 1C-F).
     \caption{\label{tab:demo}Subject demographics}
 \end{table}
 
-Several studies have demonstrated links between specific taxa and
-measures of anxiety and depression
-\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022},
-cognitive flexibility in adults
-\cite{magnussonRelationshipsDietrelatedChanges2015},
-and atypical neural development
-\cite{liuAlteredGutMicrobiota2019,wanUnderdevelopmentGutMicrobiota2021}.
-We, therefore, set out to identify whether specific taxa
-or gene functions were linked with normal cognitive development in
-children. In order to assess whether variations in gut microbial taxa,
-their genes, or their metabolism are linked with neurocognitive
-development, we tested whether the beta diversity of microbial taxa and
-gene functions, as well as variation in brain development as assessed by
-neuroimaging, were associated with these contemporaneous measures of
-cognitive function using permutation analysis of variance (PERMANOVA).
-Due to the large ecological shift in the microbiome that occurs upon the
-introduction of solid food, and a relatively wide range of ages when
-infants are transitioned to solid food, we considered the pre-transition
-(less than 6 months old) and post-transition (over 18 months old)
-microbiomes separately. Even still, age was a major driver of variation
-in gut microbiomes in children over 18 months old (Figure 1G). We also
-found that overall variation in microbial species in children over 18
-months old was associated with a small but significant variation in
-cognitive function score (Figure 1G, R\textsuperscript{2} = 0.0124, q
-\textless{} 0.001), as was variation in microbial gene functions
-(R\textsuperscript{2} = 0.0119, q \textless{} 0.001). Variation in
-microbial taxa and genes was not significantly associated with cognitive
+As several prior studies have demonstrated links between specific gut taxa
+with ASD \cite{liuAlteredGutMicrobiota2019,wanUnderdevelopmentGutMicrobiota2021},
+adult cognitive skill (e.g., executive functioning)\cite{magnussonRelationshipsDietrelatedChanges2015},
+and adult mental health (both anxiety and depressive symptioms)\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022}
+we sought to determine if specific taxa or gene functions were linked with normal cognitive development in children.
+To test if variations in gut microbial taxa,
+their genes, or their metabolism are associated with neurocognitive
+development, we used permutation analysis of variance (PERMANOVA) 
+that included the @b diversity of microbial taxa and gene functions,
+neuroimaging-derived volume measures of cortical and subcortical structures,
+and general cognitive ability.
+Given the large ecological shift in the microbiome that occurs upon the introduction of solid food,
+and the relatively wide range of ages when over which infant transition from milk to solid foods,
+we considered the pre-transition (prior to 6 months of age old)
+and post-transition (over 18 months of age) microbiomes separately.
+However, even with this categorization, we find increasing variation
+in gut microbiomes in children over 18 months old (Figure 1G).
+We also found that overall variation in microbial species in children over 18 months old
+was associated with a small but significant variation in cognitive function score
+(Figure 1G, R\textsuperscript{2} = 0.0124, q \textless{} 0.001),
+as was variation in microbial gene functions (R\textsuperscript{2} = 0.0119, q \textless{} 0.001).
+Variation in microbial taxa and genes was not significantly associated with cognitive
 function in children under 6 months, though this may be due to the low
 taxonomic diversity and broad lack of overlap between taxa in infants.
 As expected, age was significantly associated with microbial beta
@@ -441,13 +433,13 @@ grouped by functional activity would be associated with cognition. To
 test this, we performed feature set enrichment analysis (FSEA) on groups
 of genes with neuroactive potential
 \cite{valles-colomerNeuroactivePotentialHuman2019}
-and concurrent cognitive function score (Table 2, Figure 2C-G) and found that
+and concurrent cognitive ability score (Table 2, Figure 2C-G) and found that
 several metabolic pathways were significantly enriched or depleted in
-children with higher cognitive function scores. This was true both when
-considering all age groups together, though the enrichment of most
+children with higher cognitive ability scores. This was true both when
+considering all ages together, though the enrichment of most
 pathways was more pronounced either in children under 6 months or those over 18
 months. For example, genes for degrading the 3-carbon SCFA propionate
-were significantly depleted in children with higher cognitive function
+were significantly depleted in children with higher cognitive ability
 scores across all age groups tested (Table 2; propionate degradation I,
 under 6 months, enrichment score (E.S.) = -0.542, corrected p-value (q)
 = 0.020; over 18 months, E.S. = -0.674, q = 0.041). Interestingly, genes
@@ -460,8 +452,7 @@ SCFAs are produced by anaerobic fermentation of dietary fiber
 and have been linked with immune system regulation as well as directly
 with brain function \cite{dalileRoleShortchainFatty2019}.
 
-
-Synthesis of menaquinone (vitamin K) was also negatively associated with
+We found that synthesis of menaquinone (vitamin K) was negatively associated with
 cognitive function score in older children (menaquinone synthesis I,
 E.S. = -0.170, q = 0.0183). Menaquinone has several isoforms, one of
 which, MK-4, has been found to be decreased in children diagnosed with ASD
@@ -654,16 +645,17 @@ RF correlations = 0.288; relative age importances = 1.2\%).
 While models for many regions were highly concordant across the
 left and right hemispheres in terms of both model performance and
 microbial feature importance, other regions had substantial
-differences between the hemispheres. For example, the left accumbens
-area, which plays an important role in reward circuits
-\cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012},
+bilateral differences. For example, the left accumbens area
 has one of the highest test-set correlations of our
-brain region models (R = 0.288), as compared to the right accumbens
-models which had a negative mean test-set correlation (R = -0.041)
-indicated that generalizable models could not be identified.
+brain region models (R = 0.288), as compared to the right which
+had a negative mean test-set correlation (R = -0.041)
+indicated that generalizable models were not identified.
 Most healthy individuals have a
-rightward asymmetry in the nucleus accumbens, and reduced asymmetry has
-been linked to substance use disorder in young adults
+rightward asymmetry in the nucleus accumbens,
+which is involved in reward learning and risk taking behaviours
+\cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012}.
+Reduced asymmetry between right and left nucleus accumbens
+has been associated with substance use disorder in young adults
 \cite{caoMappingCorticalSubcortical2021}. The accumbens area is also
 associated with reward control, and in individuals diagnosed with ADHD,
 it has been shown to have a divergent neuromorphology
@@ -914,68 +906,56 @@ obtained from all parents or legal guardians of enrolled participants.
 
 \subsubsection*{Participants}
 
-Data used in this study were drawn from the ongoing longitudinal
-RESONANCE study of healthy and neurotypical brain and cognitive
-development, based at Brown University in Providence, RI, USA. The
-RESONANCE study is part of the NIH initiative Environmental influences
-on Child Health Outcomes (ECHO)
+Data used in this study were drawn from an ongoing longitudinal
+brain and cognitive development, termed RESONANCE, based in Providence, RI, USA,
+and spanning fetal through adolescent development. The
+RESONANCE cohort is part of the NIH Environmental influences
+on Child Health Outcomes (ECHO) study
 \cite{forrestAdvancingScienceChildren2018,gillmanEnvironmentalInfluencesChild2018},
- a longitudinal observational study of
-healthy and neurotypical brain development that spans the fetal and
-infant to adolescent life stages, combining neuroimaging (magnetic
+and includes neuroimaging (magnetic
 resonance imaging, MRI), neurocognitive assessments, bio-specimen
-analyses, subject genetics, environmental exposures such as lead, and
+analyses, subject genetics, broad environmental exposure data
+(such as chemical, water quality, nutrition, etc.), and
 rich demographic, socioeconomic, family and medical history information.
-From the RESONANCE cohort, 361 typically-developing children between the
-ages of 2.8 months and 10 years old (median age 2 years, 2 months) were
-selected for analysis in this study.
 
-General participant demographics are provided in Table 1. Children are
-representative of the RI population. Children in the RESONANCE cohort
-were born full-term (\textless{} 37 weeks gestation) with height and
-weight normal for gestational age, and from uncomplicated singleton
-pregnancies. Children with known major risk factors for developmental
-abnormalities at enrollment were excluded. In addition to screening at
+As a study of neurotypical development, mothers and their children
+were devoid of major risk factors for abnormal or atypical development.
+These included preterm birth (< 37 weeks gestation) low birth weight (<1500g),
+in utero exposure to alcohol, cigarette or illicit substance exposure;
+abnormalities on fetal ultrasound; non-singleton or complicated pregnancy,
+including preeclampsia, high blood pressure, or gestational diabetes;
+complicated vaginal or cesarian birth; 5 minute APGAR scores < 8;
+NICU admission; neurological disorder in the child
+(e.g., head injury resulting in loss of consciousness, epilepsy);
+and psychiatric or learning disorder (including maternal depression)
+in the infant, parents, or siblings requiring medication in the year prior to pregnancy.
+In addition to screening at
 the time of enrollment, on-going screening for worrisome behaviors using
 validated tools was performed to identify at-risk children and remove
 them from subsequent analysis.
-
-Exclusion criteria included: \emph{in utero} exposure to alcohol,
-cigarette or illicit substance exposure; preterm (\textless{} 37 weeks
-gestation) birth; small for gestational age or less than 1500 g; fetal
-ultrasound abnormalities; preeclampsia, high blood pressure, or
-gestational diabetes; 5 minute APGAR scores \textless{} 8; NICU
-admission; neurological disorder (e.g., head injury resulting in loss of
-consciousness, epilepsy); and psychiatric or learning disorder
-(including maternal depression) in the infant, parents, or siblings
-requiring medication in the year prior to pregnancy.
-
-Demographic and other non-biospecimen data such as race and ethnicity,
-parental education and occupation, feeding behavior (breast- and
-formula-feeding), child weight and height, were collected through
-questionnaires or direct examination as appropriate. All data were
-collected at every assessment visit, if possible.
+For this study, 361 typically-developing children between the
+ages of 2.8 months and 10 years old (median age 2 years, 2 months) were
+selected for analysis based on having provided at least one stool sample
+in the same week as being evaluated using one of the cogntitive ability
+assessments (MSEL, WPPSI, WISC-V).
 
 \subsubsection*{Cognitive Assessments}
 
-Overall cognitive function was assessed using age-appropriate methods.
-For children from birth to 30 months, we used an Early Learning
-Composite as assessed via the Mullen Scales of Early Learning (MSEL)
-\cite{mullenMullenScalesEarly1995},
- a standardized and population-normed tool for assessing fine and
-gross motor, expressive and receptive language, and visual reception
-functioning in children from birth through 68 months of age. The
-Wechsler Intelligence Quotient for Children (WISC)
-\cite{wechslerWechslerPreschoolPrimary2012}
-is an individually administered standard intelligence test for children
-aged 6 to 16 years. It derives a full scale intelligence quotient (IQ)
-score, which we used to assess overall cognitive functioning. The fourth
-edition of the Wechsler Preschool and Primary Scale of Intelligence
-(WPPSI-IV) is an individually administered standard intelligence test
-for children aged 2 years 6 months to 7 years 7 months, trying to meet
-the increasing need for the assessment of preschoolers. Just as the
-WISC, it derives a full scale IQ score, which we used to assess overall
-cognitive functioning.
+General cognitive ability was assessed using age-appropriate performance-based measures.
+For children under 3 years of age, we used the Early Learning
+Composite (ELC) from the Mullen Scales of Early Learning (MSEL)
+\cite{mullenMullenScalesEarly1995}.
+The MSEL isa standardized and population-normed tool that assesses 
+function in 5 major domains: fine and gross motor, expressive and receptive language,  
+and visual functioning.
+The ELC is an age-normalized composite derived from these individual domains
+with a mean of 100 and standard deviation of 15. For older children, full-scale IQ (FSIQ)
+was assessed using the Wechsler Preschool and Primary Scale of Intelligence 4th Edition
+(WPPSI-IV, children 3 to 6)\cite{wechslerWechslerPreschoolPrimary2012},
+and the Wechsler Intelligence Scale for Children 5th Edition (WISC-V)
+for children older than 6\cite{wechslerWechslerIntelligenceScale1949}. 
+Like the ELC, FSIQ is normalized to a mean of 100 and standard deviation of 15.
+
 
 \subsubsection*{Stool Sample Collection and Sequencing}
 
@@ -1075,29 +1055,26 @@ to generate the values in Figure 3.
 
 \subsubsection*{MRI / segmentation}
 
-MRI data was acquired at a 3T Siemens Trio scanner with the following
-parameters: TE=5.6msec, TR=1400msec, FA=15 degrees, 1.1x1.1x1.1mm
-resolution, 160x160 matrix, with an average of 112 slices. FOV was
-adjusted to infant size. Using a combination of linear and nonlinear
-image registration, we created representative age-specific templates
-using the ANTs package \cite{avantsInsightToolKitImage2014}.
-After age specific templates were created, a single flow from
-each age to the 12-month template was estimated and a final warp from
-the 12-month template to standard adult MNI space was performed. For
-each individual infant/ child brain image, we then calculated the warp
-from their native T1w image space to their nearest-in-age template.
-Using the resulting warps (native → nearest age template → 12-month
-template → MNI template), we could move the standard adult brain atlas
-to the space of an individual infant in a single step. In this case, we
-used the Harvard-Oxford brain atlas to provide a coarse-grained
-parcellation of individual brains into subcortical regions (e.g.,
-thalamus, putamen) and total grey and white matter volumes (included as
-part of the FSL package \cite{jenkinsonFSL2012}).
-Total tissue and brainstem volume as well as left and right
-hemisphere volumes were derived for total white and cortical gray
-matter, lateral ventricle, thalamus, caudate, putamen, pallidum,
-hippocampus, amygdala, and accumbens as well as total brainstem volume
-\cite{bruchhageLongitudinalBrainCognitive}.
+T1-weighted anatomical MRI data were acquired using a 3-Dimensional MP-RAGE sequence
+on 3T Siemens Trio scanner with the following parameters:
+TE=5.6msec, TR=1400msec, TI = 950msec, FA=15 degrees, and 1.1x1.1x1.1mm resolution.
+Image matrix and field-of-view were adjusted by infant size to achieve the desired image resolution.
+For children under ~4 years of age, MRI was performed during natural non-sedated sleep using previously described methods \hl{(Doug's paper ref)}.
+Older children were scanned awake whilst watching a movie or favorite TV show.
+To help minimize motion, pediatric (MedVac) immobilizers were used along with foam cushions and padding.
+Image quality was monitored during and following scanning.
+If motion artifacts were observed (e.g., ghosting, blurring, or other signal variations), scans were repeated or removed from analysis.
+
+Following data acquisition, brain region volumes corresponding to total white and gray matter,
+cortical gray matter, brainstem, and left and right hemisphere lateral ventricles,
+thalamus, caudate, putamen, pallidum, hippocampus, amygdala,
+and nucleus accumbens were calculated using an atlas matching approach\cite{bruchhageLongitudinalBrainCognitive}.
+Individual images were first nonlinearly aligned to MNI-space using
+a multi-step registration approach (ANTs 2.2 toolbox, \cite{avantsInsightToolKitImage2014}).
+The MNI-aligned Harvard-Oxford brain atlas was then aligned and superimposed onto the individual child
+by applying the inverse transformation, and the brain regions of interest delinated (segmented)
+and their volune calculated by summing the number of image voxels within each\cite{jenkinsonFSL2012}.
+
 Brain region volumes used in RF models were normalized to total brain volume
 (the sum of white and gray matter).
 
