@@ -616,26 +616,12 @@ has one of the highest test-set correlations of our
 brain region models (R = 0.288), as compared to the right which
 had a negative mean test-set correlation (R = -0.041)
 indicated that generalizable models were not identified.
-Most healthy individuals have a
-rightward asymmetry in the nucleus accumbens,
-which is involved in reward learning and risk taking behaviours
-\cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012}.
-Reduced asymmetry between right and left nucleus accumbens
-has been associated with substance use disorder in young adults
-\cite{caoMappingCorticalSubcortical2021}. The accumbens area is also
-associated with reward control, and in individuals diagnosed with ADHD,
-it has been shown to have a divergent neuromorphology
-\cite{hoogmanSubcorticalBrainVolume2017}.
 Feature importance for models of the left accumbens area were dominated
 by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.4\%
 relative importance), \emph{B. ovatus} (3.7\% relative importance), and
-\emph{B. uniformis} (3.0\% relative importance). Each of these species
-have been independently linked to ADHD
-\cite{wangGutMicrobiotaDietary2020}.
+\emph{B. uniformis} (3.0\% relative importance).
 
-
-Interestingly, while RF models for
-multiple brain regions had many important microbial taxa, others were
+While RF models for multiple brain regions had many important microbial taxa, others were
 dominated by a small number of taxa, many of which
 were also identified in LMs and RF models of cognitive function. 
 In general, for all segments, a
@@ -643,7 +629,7 @@ consistent number of species between 14 and 22 (median = 20) was
 responsible for one third of the fitness-weighted cumulative importance,
 regardless of model performance (\hl{Suplementary Table XX}, Figure 4 A and B).
 We observed two major patterns of importance distribution from
-taxa over the brain segments; some species portrayed high contributions
+species over the brain segments; some species portrayed high contributions
 to multiple different segments, while others contributed modestly to
 just one or two brain segments. Notable cases of the first pattern
 included seven species - \emph{Anaerostipes hadrus}, \emph{Bacteroides
@@ -671,60 +657,27 @@ on the taxa of interest (Figure 4C).
     \label{fig:4}
 \end{sidewaysfigure}
 
-Among these, the most important variable is \emph{Anaerostipes hadrus},
-which is a butyrate-producing anaerobe that has been positively
-associated with cognitive function
-\cite{kantGenomeSequenceButyrateProducing2015,liCorrelationsGutMicrobiota2022}.
-Its importance is, however, heavily loaded on the volume
-of entire major lobes (frontal, parietal), which cannot be readily
-correlated to specific cognitive functions, (Figure 4B).
+Among these, the most important variable is \emph{Anaerostipes hadrus}
+\hl{!!importance stats!!} (Figure 4B).
 \emph{B. wexlerae}, which was important in RF models of cognitive function,
 and was the only species to be significantly associated
-with cogntive function in young children, 
-was also important in models of the entorhinal, fusiform, lingual and
-parahippocampal regions. Previous works exploring Parkinson Disease patients
-found out that issues in the cognitive task of confrontation naming were
-positively correlated with thinning in the fusiform gyrus and
-parahippocampal gyrus
-\cite{pagonabarragaPatternRegionalCortical2013}.
-Additionally, the left and right parahippocampus, where \emph{B.
-wexlerae} had the highest importance in both models, are important in
-visual/spatial processing and memory
-\cite{aminoffRoleParahippocampalCortex2013}.
-\emph{B. wexlerae} can also produce acetylcholine in the gut
-\cite{hosomiOralAdministrationBlautia2022},
-and this molecule plays an important role in modulating memory function
-\cite{haamCholinergicModulationHippocampal2017}.
-Another cluster of model importance contains taxa associated with the
+with cogntive function in young children using LMs, 
+was also important in models of the entorhinal, fusiform and lingual areas
+and had the highest importance in models predicting the size of
+both the left and right right parahippocampus.
+Another cluster of model importance contained taxa associated with the
 basal forebrain, especially the cingulate and the accumbens. This
-cluster contains the previously-discussed \emph{B. ovatus} and \emph{B.
-uniformis}, but also \emph{Alistipes finegoldii and Streptococcus
-salivaris}. Reduction in the nucleus accumbens has been associated with
-depression symptoms \cite{wackerRoleNucleusAccumbens2009},
-and increased levels of the \emph{Alistipes} genus have been
-observed in patients with depressive disorder
-\cite{jiangAlteredFecalMicrobiota2015}.
+cluster contains \emph{B. ovatus} and \emph{B. uniformis},
+but also \emph{Alistipes finegoldii and Streptococcus salivaris}.
 
 Both \emph{A. equolofaciens} and \emph{A. celatus,} two closely-related
 equol-producing species, are examples of the second contribution
 pattern, where a model is dominated by a small number of taxa.
 Each of these species were highly important in predicting the relative volume of
 the right anterior cingulate (respectively, 3.0\% and 2.6\% relative
-importances), which has been linked to social cognition and reward-based
-decision making
-\cite{appsAnteriorCingulateGyrus2016,boesRightAnteriorCingulate2008,bushDorsalAnteriorCingulate2002}.
-Equol has a strong estrogenic effect
-\cite{setchellSEquolPotentLigand2005},
-and in the anterior cingulate, estrogen has been shown to regulate
-pain-related aversion
-\cite{xiaoEstrogenAnteriorCingulate2013}.
-Another example of this pattern is \emph{R. gnavus}, which was the only
+importances). Another example of this pattern is \emph{R. gnavus}, which was the only
 species with significant negative association with cognitive function in linear models.
-It is heavily associated with the left pars opercularis (2.7\% relative
-importance). \textit{R. gnavus} is increased in individuals with insulin
-resistance and obesity \cite{leyHumanGutMicrobes2006},
-conditions that are known to produce structural abnormalities in the brain
-\cite{opelBrainStructuralAbnormalities2021}.
+It is heavily associated with the left pars opercularis (2.7\% relative importance). 
 Finally, \emph{Coprococcus comes} displays an importance
 distribution that splits almost evenly among the two previously reported
 clusters. Its loading on the prediction of the left posterior cingulate
