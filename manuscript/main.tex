@@ -372,7 +372,7 @@ residual variation due to age in both measures.
 \subsubsection*{Microbial species and neuroactive genes are associated with cognitive performance}
 
 To assess whether individual microbial species were associated with
-cognitive function, we fit multivariable linear regression models
+cognitive function, we fit multivariable linear regression models (LMs)
 \cite{mallickMultivariableAssociationDiscovery2021}
 for the relative abundance of each species that had at least 15\%
 prevalence in a given age group (Figure 2A, N\textsubscript{species} = 92 for 0--120 months, 
@@ -484,14 +484,12 @@ from the domain of genomics
 \cite{amaratungaEnrichedRandomForests2008,brieucPracticalIntroductionRandom2018,chenRandomForestsGenomic2012,franzosaGutMicrobiomeStructure2019,stephanRandomForestApproach2015},
 along with other works where it was used
 to predict cognitive conditions related to Alzheimer's disease in
-different scenarios
-\cite{ardekaniPredictionIncipientAlzheimer2017,velazquezRandomForestModel2021}.
+different scenarios \cite{ardekaniPredictionIncipientAlzheimer2017,velazquezRandomForestModel2021}.
 Additionally, given the sequential
 nature of variable consideration in each tree, RFs are naturally able to
 work out complex input feature interactions, such as those present in a
 microbiome-wide study, without the necessity to explicitly compute
-interaction terms.
-Given that gut microbial profiles, as well as neurocognitive
+interaction terms. Given that gut microbial profiles, as well as neurocognitive
 development, may partially reflect socioeconomic and demographic
 factors, we assessed the performance of RF regressors where maternal
 education (a proxy of socioeconomic status (SES)), sex, and age were
@@ -542,33 +540,30 @@ microbial taxonomic profiles (Table 3).
     \end{center}
 \end{table}
 
-As with linear models, RF models for children under 6 months old
+As with LMs, RF models for children under 6 months old
 performed poorly (mean test-set correlation -0.13, mean RMSE 12.70),
 but RFs were consistently able to learn the relationship between taxa
 and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE 17.29). For both age groups,
 species that were important in RF overlapped with those that were
-significant when testing the relationship with linear models (Figure
-3A-B, Supplementary Table \hl{XX}A-B), though there were substantial
-differences. For children under 6 months, only \emph{B. wexlerae} was
-significantly associated with cognitive function in linear models, but
-was ranked 20th in importance for RF models. The importance metric
-employed (MDI) is a measure of how well the variable differentiates
-(splits) sets of samples by creating subgroups that reduce the
-intra-group deviations, while also accounting for the amount of samples
-affected by a split. All taxa significantly associated with cognitive
-function score in children over 18 months using LMs belong to the
-top-ranking group responsible for 80\% of the total relative importance,
-except for \emph{Eubacterium ramulus} (Table 3, Figure 3A).
+significant when testing the relationship with LMs (Figure
+3A-B, Supplementary Table \hl{XX}A-B); aside from except for \emph{Eubacterium ramulus}
+all taxa that were significant using LMs belonged to a group
+responsible for 80\% of the total relative importance in RF models
+(Table 3, Figure 3A).
+However, the rank-ordering of LM significance and RF importance
+were had substantive differences. For example, in children under 6 months,
+only \emph{B. wexlerae} was significantly associated with cognitive function in LMs, but
+was ranked 20th in importance for RF models. 
 
-Interestingly, several taxa highly ranked in importance in both age
-groups, including several that were significant in LMs for children over
+Many taxa highly ranked in importance in RF models in both age
+groups, including several that were identified in LMs for children over
 18 months old, including \emph{R. gnavus} (0--6 months, rank = 13;
 18--120 months, rank = 7) and \emph{G. pamelaeae} (0--6 months, rank =
 16; 18--120 months, rank = 20), while others such as \emph{Allistipes
-finegoldii} were age-group specific. Several taxa important in RF models
-were not statistically significant when using linear models after
-multiple hypothesis correction. However, these taxa had small nominal
+finegoldii} were age-group specific. A number of taxa that were important in RF models
+were not statistically significant when using LMs after
+multiple hypothesis correction. However, these taxa often had small nominal
 p-values. For example, \emph{Erysipelatoclostridium ramosum} was the
 most important feature in RF models for children under 6 months old and
 had an LM p-value of 0.04. Subject age was consistently ranked highly in
