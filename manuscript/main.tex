@@ -906,68 +906,56 @@ obtained from all parents or legal guardians of enrolled participants.
 
 \subsubsection*{Participants}
 
-Data used in this study were drawn from the ongoing longitudinal
-RESONANCE study of healthy and neurotypical brain and cognitive
-development, based at Brown University in Providence, RI, USA. The
-RESONANCE study is part of the NIH initiative Environmental influences
-on Child Health Outcomes (ECHO)
+Data used in this study were drawn from an ongoing longitudinal
+brain and cognitive development, termed RESONANCE, based in Providence, RI, USA,
+and spanning fetal through adolescent development. The
+RESONANCE cohort is part of the NIH Environmental influences
+on Child Health Outcomes (ECHO) study
 \cite{forrestAdvancingScienceChildren2018,gillmanEnvironmentalInfluencesChild2018},
- a longitudinal observational study of
-healthy and neurotypical brain development that spans the fetal and
-infant to adolescent life stages, combining neuroimaging (magnetic
+and includes neuroimaging (magnetic
 resonance imaging, MRI), neurocognitive assessments, bio-specimen
-analyses, subject genetics, environmental exposures such as lead, and
+analyses, subject genetics, broad environmental exposure data
+(such as chemical, water quality, nutrition, etc.), and
 rich demographic, socioeconomic, family and medical history information.
-From the RESONANCE cohort, 361 typically-developing children between the
-ages of 2.8 months and 10 years old (median age 2 years, 2 months) were
-selected for analysis in this study.
 
-General participant demographics are provided in Table 1. Children are
-representative of the RI population. Children in the RESONANCE cohort
-were born full-term (\textless{} 37 weeks gestation) with height and
-weight normal for gestational age, and from uncomplicated singleton
-pregnancies. Children with known major risk factors for developmental
-abnormalities at enrollment were excluded. In addition to screening at
+As a study of neurotypical development, mothers and their children
+were devoid of major risk factors for abnormal or atypical development.
+These included preterm birth (< 37 weeks gestation) low birth weight (<1500g),
+in utero exposure to alcohol, cigarette or illicit substance exposure;
+abnormalities on fetal ultrasound; non-singleton or complicated pregnancy,
+including preeclampsia, high blood pressure, or gestational diabetes;
+complicated vaginal or cesarian birth; 5 minute APGAR scores < 8;
+NICU admission; neurological disorder in the child
+(e.g., head injury resulting in loss of consciousness, epilepsy);
+and psychiatric or learning disorder (including maternal depression)
+in the infant, parents, or siblings requiring medication in the year prior to pregnancy.
+In addition to screening at
 the time of enrollment, on-going screening for worrisome behaviors using
 validated tools was performed to identify at-risk children and remove
 them from subsequent analysis.
-
-Exclusion criteria included: \emph{in utero} exposure to alcohol,
-cigarette or illicit substance exposure; preterm (\textless{} 37 weeks
-gestation) birth; small for gestational age or less than 1500 g; fetal
-ultrasound abnormalities; preeclampsia, high blood pressure, or
-gestational diabetes; 5 minute APGAR scores \textless{} 8; NICU
-admission; neurological disorder (e.g., head injury resulting in loss of
-consciousness, epilepsy); and psychiatric or learning disorder
-(including maternal depression) in the infant, parents, or siblings
-requiring medication in the year prior to pregnancy.
-
-Demographic and other non-biospecimen data such as race and ethnicity,
-parental education and occupation, feeding behavior (breast- and
-formula-feeding), child weight and height, were collected through
-questionnaires or direct examination as appropriate. All data were
-collected at every assessment visit, if possible.
+For this study, 361 typically-developing children between the
+ages of 2.8 months and 10 years old (median age 2 years, 2 months) were
+selected for analysis based on having provided at least one stool sample
+in the same week as being evaluated using one of the cogntitive ability
+assessments (MSEL, WPPSI, WISC-V).
 
 \subsubsection*{Cognitive Assessments}
 
-Overall cognitive function was assessed using age-appropriate methods.
-For children from birth to 30 months, we used an Early Learning
-Composite as assessed via the Mullen Scales of Early Learning (MSEL)
-\cite{mullenMullenScalesEarly1995},
- a standardized and population-normed tool for assessing fine and
-gross motor, expressive and receptive language, and visual reception
-functioning in children from birth through 68 months of age. The
-Wechsler Intelligence Quotient for Children (WISC)
-\cite{wechslerWechslerPreschoolPrimary2012}
-is an individually administered standard intelligence test for children
-aged 6 to 16 years. It derives a full scale intelligence quotient (IQ)
-score, which we used to assess overall cognitive functioning. The fourth
-edition of the Wechsler Preschool and Primary Scale of Intelligence
-(WPPSI-IV) is an individually administered standard intelligence test
-for children aged 2 years 6 months to 7 years 7 months, trying to meet
-the increasing need for the assessment of preschoolers. Just as the
-WISC, it derives a full scale IQ score, which we used to assess overall
-cognitive functioning.
+General cognitive ability was assessed using age-appropriate performance-based measures.
+For children under 3 years of age, we used the Early Learning
+Composite (ELC) from the Mullen Scales of Early Learning (MSEL)
+\cite{mullenMullenScalesEarly1995}.
+The MSEL isa standardized and population-normed tool that assesses 
+function in 5 major domains: fine and gross motor, expressive and receptive language,  
+and visual functioning.
+The ELC is an age-normalized composite derived from these individual domains
+with a mean of 100 and standard deviation of 15. For older children, full-scale IQ (FSIQ)
+was assessed using the Wechsler Preschool and Primary Scale of Intelligence 4th Edition
+(WPPSI-IV, children 3 to 6)\cite{wechslerWechslerPreschoolPrimary2012},
+and the Wechsler Intelligence Scale for Children 5th Edition (WISC-V)
+for children older than 6\cite{wechslerWechslerIntelligenceScale1949}. 
+Like the ELC, FSIQ is normalized to a mean of 100 and standard deviation of 15.
+
 
 \subsubsection*{Stool Sample Collection and Sequencing}
 
@@ -1067,29 +1055,26 @@ to generate the values in Figure 3.
 
 \subsubsection*{MRI / segmentation}
 
-MRI data was acquired at a 3T Siemens Trio scanner with the following
-parameters: TE=5.6msec, TR=1400msec, FA=15 degrees, 1.1x1.1x1.1mm
-resolution, 160x160 matrix, with an average of 112 slices. FOV was
-adjusted to infant size. Using a combination of linear and nonlinear
-image registration, we created representative age-specific templates
-using the ANTs package \cite{avantsInsightToolKitImage2014}.
-After age specific templates were created, a single flow from
-each age to the 12-month template was estimated and a final warp from
-the 12-month template to standard adult MNI space was performed. For
-each individual infant/ child brain image, we then calculated the warp
-from their native T1w image space to their nearest-in-age template.
-Using the resulting warps (native → nearest age template → 12-month
-template → MNI template), we could move the standard adult brain atlas
-to the space of an individual infant in a single step. In this case, we
-used the Harvard-Oxford brain atlas to provide a coarse-grained
-parcellation of individual brains into subcortical regions (e.g.,
-thalamus, putamen) and total grey and white matter volumes (included as
-part of the FSL package \cite{jenkinsonFSL2012}).
-Total tissue and brainstem volume as well as left and right
-hemisphere volumes were derived for total white and cortical gray
-matter, lateral ventricle, thalamus, caudate, putamen, pallidum,
-hippocampus, amygdala, and accumbens as well as total brainstem volume
-\cite{bruchhageLongitudinalBrainCognitive}.
+T1-weighted anatomical MRI data were acquired using a 3-Dimensional MP-RAGE sequence
+on 3T Siemens Trio scanner with the following parameters:
+TE=5.6msec, TR=1400msec, TI = 950msec, FA=15 degrees, and 1.1x1.1x1.1mm resolution.
+Image matrix and field-of-view were adjusted by infant size to achieve the desired image resolution.
+For children under ~4 years of age, MRI was performed during natural non-sedated sleep using previously described methods \hl{(Doug's paper ref)}.
+Older children were scanned awake whilst watching a movie or favorite TV show.
+To help minimize motion, pediatric (MedVac) immobilizers were used along with foam cushions and padding.
+Image quality was monitored during and following scanning.
+If motion artifacts were observed (e.g., ghosting, blurring, or other signal variations), scans were repeated or removed from analysis.
+
+Following data acquisition, brain region volumes corresponding to total white and gray matter,
+cortical gray matter, brainstem, and left and right hemisphere lateral ventricles,
+thalamus, caudate, putamen, pallidum, hippocampus, amygdala,
+and nucleus accumbens were calculated using an atlas matching approach\cite{bruchhageLongitudinalBrainCognitive}.
+Individual images were first nonlinearly aligned to MNI-space using
+a multi-step registration approach (ANTs 2.2 toolbox, \cite{avantsInsightToolKitImage2014}).
+The MNI-aligned Harvard-Oxford brain atlas was then aligned and superimposed onto the individual child
+by applying the inverse transformation, and the brain regions of interest delinated (segmented)
+and their volune calculated by summing the number of image voxels within each\cite{jenkinsonFSL2012}.
+
 Brain region volumes used in RF models were normalized to total brain volume
 (the sum of white and gray matter).
 
