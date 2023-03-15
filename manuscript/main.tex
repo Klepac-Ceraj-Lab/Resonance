@@ -234,7 +234,7 @@ Weschler Preschool and Primary Scale of Intelligence, 4th Edition (WPPSI-4)
 \cite{wechslerWechslerPreschoolPrimary2012}
 and Weschler Intelligence Scale for Children, 5th Edition (WISC-V)
 \cite{wechslerWechslerIntelligenceScale1949}.
-Finally, we also assessed emerging brain structure magnetic resonance imaging
+Finally, we also assessed emerging brain structure using magnetic resonance imaging
 (MRI). Through a combination of classical statistical analysis and machine
 learning, we find that the development of the gut microbiome,
 children's cognitive abilities, and brain structure are intimately linked, with
@@ -247,7 +247,7 @@ performance and brain structure.
 
 We investigated the co-development of the brain and the microbiome in
 361 healthy and neurotypically-developing children (163 female) between 82 days and 10 years of age
-(Table 1,  Figure 1A, Supplementary Figure 1)\cite{forrestAdvancingScienceChildren2018}
+(Table 1,  Figure 1A, Supplementary Figure 1)
 using a variety of orthogonal microbial and neurocognitive measures.
 These included shotgun metagenomic sequencing,
 age-appropriate cognitive and behavioral assessments
@@ -260,9 +260,9 @@ and the WISC-V for children older than 6), but were normalized to a common scale
 As expected, the greatest differences in microbial taxa were observed across
 child age (Figure 1C-D, PCoA axis 1), while older children were primarily
 stratified into Bacteroidetes-dominant, Firmicutes-dominant, or
-high-\emph{Prevotella copri} (Supplementary Figure 2). Overall variation
-in gut microbial genes and also in brain volume profiles was similarly
-driven largely by subject age (Figure 1E-F).
+high-abundance \emph{Prevotella copri} (Supplementary Figure 2).
+Overall subject-to-subject variation in gut microbial genes
+and brain volume profiles was similarly driven largely by subject age (Figure 1E-F).
 
 \begin{sidewaysfigure}[!htb]
     \centering
@@ -318,16 +318,19 @@ driven largely by subject age (Figure 1E-F).
         & College grad & 90 (24.9\%) & 17 (23.0\%) & 69 (26.8\%) \\ \cline{2-5}
         & Grad/professional school & 123 (34.1\%) & 15 (20.3\%) & 104 (40.5\%) \\\hline\hline
     \end{tabular}
-    \caption{\label{tab:demo}Subject demographics}
+    \caption{\label{tab:demo}Subject demographics of the ECHO RESONANCE cohort.}
 \end{table}
 
 As several prior studies have demonstrated links between specific gut taxa
 with ASD \cite{liuAlteredGutMicrobiota2019,wanUnderdevelopmentGutMicrobiota2021},
-adult cognitive skill (e.g., executive functioning)\cite{magnussonRelationshipsDietrelatedChanges2015},
-and adult mental health (both anxiety and depressive symptioms)\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022}
-we sought to determine if specific taxa or gene functions were linked with normal cognitive development in children.
+adult cognitive skill (e.g., executive functioning)
+\cite{magnussonRelationshipsDietrelatedChanges2015},
+and adult mental health (both anxiety and depressive symptioms)
+\cite{mayneris-perxachsMicrobiotaAlterationsProline2022,needhamGutderivedMetaboliteAlters2022},
+we sought to determine if specific taxa or gene functions were linked
+with normal cognitive development in children.
 To test if variations in gut microbial taxa,
-their genes, or their metabolism are associated with neurocognitive
+their genes, or their metabolism were associated with neurocognitive
 development, we used permutation analysis of variance (PERMANOVA) 
 that included the $\beta$ diversity of microbial taxa and gene functions,
 neuroimaging-derived volume measures of cortical and subcortical structures,
@@ -344,7 +347,7 @@ was associated with a small but significant variation in cognitive function scor
 as was variation in microbial gene functions (R\textsuperscript{2} = 0.0119, q \textless{} 0.001).
 Variation in microbial taxa and genes was not significantly associated with cognitive
 function in children under 6 months, though this may be due to the low
-taxonomic diversity and broad lack of overlap between taxa in infants.
+taxonomic diversity and broad lack of overlap between taxa in infants (Figure 1G).
 As expected, age was significantly associated with microbial beta
 diversity (taxa R\textsuperscript{2} = 0.0215, and  gene functions
 annotated with UniRef90s - clusters of 90\% similarity
@@ -421,11 +424,11 @@ test this, we performed feature set enrichment analysis (FSEA) on groups
 of genes with neuroactive potential
 \cite{valles-colomerNeuroactivePotentialHuman2019}
 and concurrent cognitive ability score (Table 2, Figure 2C-G) and found that
-several metabolic pathways were significantly enriched or depleted in
+several metabolic pathways were either significantly enriched or depleted in
 children with higher cognitive ability scores. This was true both when
-considering all ages together, though the enrichment of most
+considering all ages (0-120 months) together, though the enrichment of most
 pathways was more pronounced either in children under 6 months or those over 18
-months. For example, genes for degrading the 3-carbon SCFA propionate
+months. For example, genes for degrading the 3-carbon SCFA, propionate,
 were significantly depleted in children with higher cognitive ability
 scores across all age groups tested (Table 2; propionate degradation I,
 under 6 months, enrichment score (E.S.) = -0.542, corrected p-value (q)
@@ -475,8 +478,9 @@ FSEA relies on understanding functional relationships between individual
 genes. However, because the relationships between individual taxa are
 still largely unknown, we turned to Random Forest (RF) models, a family of 
 unsupervised non-parametric machine learning (ML) method that enables
-the identification of underlying patterns in large numbers of individual
-features (here, microbial species). Previous studies have reported
+the identification of underlying patterns in large numbers of individual features
+(here, microbial species).
+Previous studies have reported
 successful use of RFs for processing highly-dimensional and sparse data
 from the domain of genomics
 \cite{amaratungaEnrichedRandomForests2008,brieucPracticalIntroductionRandom2018,chenRandomForestsGenomic2012,franzosaGutMicrobiomeStructure2019,stephanRandomForestApproach2015},
