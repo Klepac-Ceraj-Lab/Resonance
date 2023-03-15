@@ -577,7 +577,7 @@ or that age itself is a useful predictor.
 
 If there are causal effects of microbial metabolism on cognitive
 function, they might be reflected in changes in neuroanatomy. We again
-employed a Random Forest modeling approach to associate gut taxonomic
+employed a RF modeling approach to associate gut taxonomic
 profiles with individual brain regions identified in MRI scans.
 Some brain regions were more readily
 predicted by RF models trained on microbial taxa (Table 4, Supplementary
@@ -623,9 +623,9 @@ by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.4\%
 relative importance), \emph{B. ovatus} (3.7\% relative importance), and
 \emph{B. uniformis} (3.0\% relative importance).
 
-While RF models for multiple brain regions had many important microbial taxa, others were
-dominated by a small number of taxa, many of which
-were also identified in LMs and RF models of cognitive function. 
+While RF models for multiple brain regions had many important microbial taxa,
+others were dominated by a small number of taxa, many of which
+were also identified in LMs and RF models of cognitive function (Figures 2 and 3). 
 In general, for all segments, a
 consistent number of species between 14 and 22 (median = 20) was
 responsible for one third of the fitness-weighted cumulative importance,
@@ -660,7 +660,7 @@ on the taxa of interest (Figure 4C).
 \end{sidewaysfigure}
 
 Among these, the most important variable is \emph{Anaerostipes hadrus}
-\hl{!!importance stats!!} (Figure 4B).
+\hl{!!importance stats!!} (Figure 4B and C).
 \emph{B. wexlerae}, which was important in RF models of cognitive function,
 and was the only species to be significantly associated
 with cogntive function in young children using LMs, 
@@ -683,7 +683,7 @@ It is heavily associated with the left pars opercularis (2.7\% relative importan
 Finally, \emph{Coprococcus comes} displays an importance
 distribution that splits almost evenly among the two previously reported
 clusters. Its loading on the prediction of the left posterior cingulate
-is the highest for a microbe in RF models (4.0\% relative importance) -
+is the highest for a microbe in RF models (4.0\% relative importance);
 only age had higher relative importance in any model. At the same time,
 \textit{C. comes} is one of the most important predictors for neighboring areas of the
 posterior cingulate such as the pars opercularis (relative importances,
@@ -898,8 +898,20 @@ Shotgun metagenomic sequencing was performed on all samples. A pooled
 library (max 96 samples per run) was prepared using the Illumina Nextera
 Flex Kit for MiSeq and NextSeq from 1 ng of each sample. Samples were
 then pooled onto a plate and sequenced on the Illumina NextSeq 550
-platform using 150+150 bp paired-end ``high output'' chemistry,
+platform using 150+150 bp paired-end "high output";' chemistry,
 generating 400 million raw reads and 120 Gb of sequence per plate.
+
+\subsubsection*{Computational analysis of metagenomes}
+
+Shotgun metagenomic sequences were analyzed using the bioBakery suite of
+computational tools \cite{beghiniIntegratingTaxonomicFunctional2021}.
+First, KneadData (v0.7.7) was used to perform quality
+control of raw sequence reads, such as read trimming and removal of
+reads matching a human genome reference. Next, MetaPhlAn (v3.0.7, using
+database mpa\_v30\_CHOCOPhlAn\_201901) was used to generate taxonomic
+profiles by aligning reads to a reference database of marker genes.
+Finally, HUMAnN (v3.0.0a4) was used to functionally profile the
+metagenomes.
 
 \subsubsection*{Machine learning for cognitive development}
 
@@ -910,7 +922,7 @@ representations of the gut microbiome (taxonomic profiles, Functional
 profiles encoded as ECs) would behave, with and without the addition of
 demographics (sex and maternal education as a proxy of socioeconomic
 status) on participants from different age groups. Age (in months) was
-provided as a covariate for all models (Table 3).
+provided as a covariate for all models (Table 5).
 
 \textbf{Table 5. Experimental design and input composition for Random
 Forest experiments}
@@ -998,18 +1010,6 @@ and their volune calculated by summing the number of image voxels within each\ci
 
 Brain region volumes used in RF models were normalized to total brain volume
 (the sum of white and gray matter).
-
-\subsubsection*{Computational analysis of metagenomes}
-
-Shotgun metagenomic sequences were analyzed using the bioBakery suite of
-computational tools \cite{beghiniIntegratingTaxonomicFunctional2021}.
-First, KneadData (v0.7.7) was used to perform quality
-control of raw sequence reads, such as read trimming and removal of
-reads matching a human genome reference. Next, MetaPhlAn (v3.0.7, using
-database mpa\_v30\_CHOCOPhlAn\_201901) was used to generate taxonomic
-profiles by aligning reads to a reference database of marker genes.
-Finally, HUMAnN (v3.0.0a4) was used to functionally profile the
-metagenomes.
 
 \subsubsection*{Data and code availability}
 
