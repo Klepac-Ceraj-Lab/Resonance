@@ -1,4 +1,4 @@
-# Figure3 - RandomForest prediction of cogScores from DEM, Taxonomic and Functional Profiles
+# Figure4 - RandomForest prediction of Brain Segments from DEMO + Taxonomic Profiles
 ```julia
 using Chain
 using CSV
@@ -48,7 +48,6 @@ end
 
 ## Loading the pretrained models
 ```julia
-RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain regression from taxonomic profiles
 JLD2.@load "models/2023-02-15/brain_models.jld"
@@ -148,31 +147,48 @@ symmetric_segment_strings = [
 ]
 
 interesting_taxa = [
-    # "ageMonths",
-    "Anaerostipes_hadrus",
-    "Fusicatenibacter_saccharivorans",
-    "Eubacterium_rectale",
-    "Eubacterium_hallii",
-    "Blautia_wexlerae",
-    "Bacteroides_vulgatus",
-    "Faecalibacterium_prausnitzii",
-    "Ruminococcus_torques",
-    "Bifidobacterium_longum",
-    "Bacteroides_ovatus",
-    "Bacteroides_uniformis",
-    "Coprococcus_comes",
+    "Adlercreutzia_equolifaciens",
+    "Agathobaculum_butyriciproducens",
+    "Akkermansia_muciniphila",
     "Alistipes_finegoldii",
-    "Flavonifractor_plautii",
-    "Roseburia_intestinalis",
-    "Streptococcus_salivarius",
-    "Eubacterium_eligens",
-    "Ruminococcus_bicirculans",
-    "Collinsella_aerofaciens",
-    "Ruminococcus_gnavus",
-    "Dorea_formicigenerans",
-    "Eggerthella_lenta",
+    "Alistipes_putredinis",
+    "Anaerostipes_hadrus",
     "Asaccharobacter_celatus",
-    "Gordonibacter_pamelaeae"
+    "Bacteroides_caccae",
+    "Bacteroides_ovatus",
+    "Bacteroides_stercoris",
+    "Bacteroides_thetaiotaomicron",
+    "Bacteroides_uniformis",
+    "Bacteroides_vulgatus",
+    "Bifidobacterium_longum",
+    "Bifidobacterium_pseudocatenulatum",
+    "Blautia_obeum",
+    "Blautia_wexlerae",
+    "Collinsella_aerofaciens",
+    "Coprococcus_comes",
+    "Coprococcus_eutactus",
+    "Dorea_formicigenerans",
+    "Dorea_longicatena",
+    "Escherichia_coli",
+    "Eubacterium_eligens",
+    "Eubacterium_hallii",
+    "Eubacterium_rectale",
+    "Faecalibacterium_prausnitzii",
+    "Flavonifractor_plautii",
+    "Fusicatenibacter_saccharivorans",
+    "Gemmiger_formicilis",
+    "Intestinibacter_bartlettii",
+    "Parabacteroides_distasonis",
+    "Parasutterella_excrementihominis",
+    "Prevotella_copri",
+    "Roseburia_faecis",
+    "Roseburia_intestinalis",
+    "Roseburia_inulinivorans",
+    "Ruminococcus_bicirculans",
+    "Ruminococcus_gnavus",
+    "Ruminococcus_torques",
+    "Streptococcus_salivarius",
+    "Streptococcus_thermophilus"
 ]
 ```
 
@@ -203,48 +219,39 @@ mean_brain_merits = reduce(
 
 #### Compute the mean importances loading of taxa on Brain sement regressions
 ```julia
-mean_brain_importances = reduce(
+weighted_brain_importances = reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
     [ 
-        DataFrame(:variable => j.importances.variable, Symbol(split(j.name, '_')[2]) => map(mean, eachrow(j.importances[:, 2:end]))) 
+        rename!(weighted_hpimportances(j), :weightedImportance => Symbol(split(j.name, '_')[2]))
         for (i, j) in brain_models
     ]
 )
 
-relative_brain_importances = combine(
-    mean_brain_importances,
+relative_brain_importances = DataFrames.combine(
+    weighted_brain_importances,
     :variable => :variable,
-        Symbol.(names(mean_brain_importances))[2:end] .=> (x -> x ./ sum(x)) .=> Symbol.(names(mean_brain_importances)[2:end])
+        Symbol.(names(weighted_brain_importances))[2:end] .=> (x -> x ./ sum(x)) .=> Symbol.(names(weighted_brain_importances)[2:end])
 )
-
-get_relative_importances_segment(sseg) = sort(select(relative_brain_importances, ["variable", sseg]), Symbol(sseg), rev=true)
-get_relative_importances_segment("left-posterior-cingulate")
-get_relative_importances_segment("left-pars-opercularis")
-get_relative_importances_segment("right-pars-opercularis")
-get_relative_importances_segment("left-precentral")
-get_relative_importances_segment("right-precentral")
-get_relative_importances_segment("left-paracentral")
-get_relative_importances_segment("right-paracentral")
-
 ```
 
-#### Filter the tables accordign to the lsit of interesting taxa and segments
+#### Filter the tables according to the list of interesting segments
 ```julia
 interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
-interesting_taxa_idxes = mean_brain_importances.variable .∈ Ref(interesting_taxa)
-
 mean_brain_merits = mean_brain_merits[interesting_segments_idxes, :]
-mean_brain_importances = mean_brain_importances[interesting_taxa_idxes, vcat(["variable"], interesting_segments) ]
+#relative_brain_importances = relative_brain_importances[:, vcat(["variable"], interesting_segments) ]
+
+interesting_taxa_idxes = relative_brain_importances.variable .∈ Ref(interesting_taxa)
+relative_brain_importances = relative_brain_importances[interesting_taxa_idxes, vcat(["variable"], interesting_segments) ]
 ```
 
 #### Perform hierarchical clustering
 ```julia
-transposedImportances = DataFrame(permutedims(Matrix(mean_brain_importances)), :auto)
+transposedImportances = DataFrame(permutedims(Matrix(relative_brain_importances)), :auto)
 transposedImportances = rename!(transposedImportances, Symbol.(Vector(transposedImportances[1,:])))[2:end,:]
 insertcols!(transposedImportances, 1, :symmetricSegment => symmetric_segment_strings)
 insertcols!(transposedImportances, 1, :longSegment => interesting_segments)
 
-combinedTransposedImportances = combine(
+combinedTransposedImportances = DataFrames.combine(
     groupby(transposedImportances, :symmetricSegment),
     Symbol.(names(transposedImportances))[3:end] .=> mean .=> Symbol.(names(transposedImportances))[3:end]
 )
@@ -280,7 +287,8 @@ plot_segments_order = reorder_segments_df.plot_order
 ### using the hclust to reorder all we need
 ```julia
 mean_brain_merits = mean_brain_merits[plot_segments_order, :]
-mean_brain_importances = mean_brain_importances[hclust_taxa_order, vcat( [ 1 ], (plot_segments_order .+ 1))]
+relative_brain_importances = relative_brain_importances[hclust_taxa_order, vcat( [ 1 ], (plot_segments_order .+ 1))]
+#relative_brain_importances = relative_brain_importances[sortperm(map(mean, eachrow(relative_brain_importances[:, 2:end])); rev=true), vcat( [ 1 ], (plot_segments_order .+ 1))]
 ```
 
 ### Calling the plot functions with the ordered data
@@ -311,20 +319,22 @@ barplot!(
 ######
 # Importance Heatmaps
 ######
+nbugs_toplot = length(interesting_taxa) # the top 1/3 bugs (out of 129) From intersecting the top mean importances and top max importances
+
 axB = Axis(
     B_subfig[1, 1];
     xlabel = "Predictor",
-    xticks = (collect(1:length(interesting_taxa)), mean_brain_importances.variable),
+    xticks = (collect(1:nbugs_toplot), relative_brain_importances.variable[1:nbugs_toplot]),
     xticklabelsize=16,
     xticklabelrotation= pi/4,
     ylabel = "Target brain segment",
-    yticks = (collect(1:length(interesting_segments)), names(mean_brain_importances)[2:end]),
+    yticks = (collect(1:length(interesting_segments)), names(relative_brain_importances)[2:end]),
     yticklabelsize=16,
     yreversed=true,
     title = "Brain segmentation data variable importances"
 )
 
-CairoMakie.heatmap!(axB, Matrix(mean_brain_importances[:, 2:end]), yflip=true)
+CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
 
 ######
 # Scatterplot
@@ -337,7 +347,9 @@ mean_brain_importances = reduce(
     ]
 )
 
-noage = mean_brain_importances[[1, 2, collect(4:end)...], :]
+weighted_brain_importances = weighted_brain_importances[:, vcat(["variable"], interesting_segments)]
+mean_brain_importances = weighted_brain_importances
+noage = mean_brain_importances[2:end, :]
 
 idx = sortperm([median(row[2:end]) for row in eachrow(noage)])
 ys = reduce(vcat, [values(noage[i, 2:end])...] for i in idx)
@@ -359,6 +371,10 @@ imp_bugs = [
     "Bacteroides_vulgatus",
     "Ruminococcus_torques",
     "Coprococcus_comes",
+    "Adlercreutzia_equolifaciens",
+    "Asaccharobacter_celatus",
+    "Agathobaculum_butyriciproducens",
+    "Ruminococcus_bromii"
 ]
 maximp = maximum(Matrix(noage[!, 2:end]))
     
@@ -369,9 +385,9 @@ end
 CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
 Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = ColorSchemes.Set3_12[i]) for i in 1:length(imp_bugs)], imp_bugs)
 
-Label(A_subfig[1, 1, TopLeft()], "A", textsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
-Label(B_subfig[1, 1, TopLeft()], "B", textsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
-Label(C_subfig[1, 1, TopLeft()], "C", textsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
+Label(A_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
+Label(B_subfig[1, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
+Label(C_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
 
 save("manuscript/assets/Figure4.png", figure)
 ```
@@ -417,7 +433,5 @@ save("manuscript/assets/Figure4.png", figure)
 #     )
 # )
 
-
 # println("$(median(vars_to_cumulative_threshold.vars_to_threshold)), $(std(vars_to_cumulative_threshold.vars_to_threshold))")
-
 ```
