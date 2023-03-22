@@ -67,7 +67,7 @@ supptblA = suppl_table(regression_currentCogScores_00to06mo_onlytaxa)
 tblformat_suppl_table!(supptblA)
 CSV.write("TableS1A.csv", supptblA)
 
-supptblB = suppl_table(regression_currentCogScores_18to120mo_onlytaxa)[1:70, :]
+supptblB = suppl_table(regression_currentCogScores_18to120mo_onlytaxa)
 tblformat_suppl_table!(supptblB)
 CSV.write("TableS1B.csv", supptblB)
 
