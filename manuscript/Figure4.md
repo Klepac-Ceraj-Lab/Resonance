@@ -191,22 +191,9 @@ interesting_taxa = [
 ]
 ```
 
-## Initializing Figure 4
-```julia
-figure = Figure(resolution = (1920, 1536))
+## Figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
 
-AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
-A_subfig = GridLayout(AB_Subfig[1,1])
-B_subfig = GridLayout(AB_Subfig[1,2])
-C_subfig = GridLayout(figure[2,1], alignmode=Outside())
-
-colsize!(AB_Subfig, 1, Relative(0.2))
-colsize!(AB_Subfig, 2, Relative(0.8))
-rowsize!(figure.layout, 1, Relative(0.75))
-rowsize!(figure.layout, 2, Relative(0.25))
-```
-
-### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
+### Additional calculations 
 
 #### Compute the mean figures of merit for the Brain sement regressions
 ```julia
@@ -283,14 +270,33 @@ sort!(reorder_segments_df, [:original_order, :left_or_unique])
 plot_segments_order = reorder_segments_df.plot_order
 ```
 
-### using the hclust to reorder all we need
+#### using the hclust to reorder all we need
 ```julia
 mean_brain_merits = mean_brain_merits[plot_segments_order, :]
 relative_brain_importances = relative_brain_importances[hclust_taxa_order, vcat( [ 1 ], (plot_segments_order .+ 1))]
 #relative_brain_importances = relative_brain_importances[sortperm(map(mean, eachrow(relative_brain_importances[:, 2:end])); rev=true), vcat( [ 1 ], (plot_segments_order .+ 1))]
 ```
 
-### Calling the plot functions with the ordered data
+### Plotting
+
+#### Initialize figure
+
+```julia
+figure = Figure(resolution = (1920, 1536))
+
+AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
+A_subfig = GridLayout(AB_Subfig[1,1])
+B_subfig = GridLayout(AB_Subfig[1,2])
+C_subfig = GridLayout(figure[2,1], alignmode=Outside())
+
+colsize!(AB_Subfig, 1, Relative(0.2))
+colsize!(AB_Subfig, 2, Relative(0.8))
+rowsize!(figure.layout, 1, Relative(0.75))
+rowsize!(figure.layout, 2, Relative(0.25))
+```
+
+
+#### Calling the plot functions with the ordered data
 ```julia
 axA = Axis(
     A_subfig[1, 1];
@@ -389,6 +395,7 @@ Label(B_subfig[1, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 
 Label(C_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
 
 save("manuscript/assets/Figure4.png", figure)
+figure
 ```
 
 ### Finding out the highest importance on the matrix
