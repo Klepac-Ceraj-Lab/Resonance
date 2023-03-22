@@ -693,62 +693,6 @@ importances, Left = 2.6\%, Right = 1.8\%).
 
 \section*{Discussion}
 
-\subsection*{Deleted}
-
-SCFAs are produced by anaerobic fermentation of dietary fiber
-and have been linked with immune system regulation as well as directly
-with brain function \cite{dalileRoleShortchainFatty2019}
-
-Menaquinone has several isoforms, one of
-which, MK-4, has been found to be decreased in children diagnosed with ASD
-\cite{dongCorrelationSerumConcentrations2021}
-and is potentially neuroprotective in both rodents and humans
-\cite{elkattawyVitaminK2Menaquinone72022}.
-
-Glutamate is a
-critical neurotransmitter controlling neuronal excitatory/inhibitory
-signaling along with gamma-aminobutyric acid (GABA), and their balance
-in the brain controls neural plasticity and learning, particularly in
-the developing brain
-\cite{cohenkadoshLinkingGABAGlutamate2015,palomo-buitragoGlutamateInteractionsObesity2019}.
-
-Tryptophan metabolism, including
-microbial metabolism of tryptophan, has previously been linked with
-autism in children
-\cite{hoshinoBloodSerotoninFree1984,xiaoFecalMicrobiomeTransplantation2021}.
-
-For children under 6 months, only \emph{B. wexlerae} was
-significantly associated with cognitive function in linear models, but
-was ranked 20th in importance for RF models.
-
-The importance metric
-employed (MDI) is a measure of how well the variable differentiates
-(splits) sets of samples by creating subgroups that reduce the
-intra-group deviations, while also accounting for the amount of samples
-affected by a split.
-
-[\emph{Anaerostipes hadrus}] is a butyrate-producing anaerobe that has been positively
-associated with cognitive function
-\cite{kantGenomeSequenceButyrateProducing2015,liCorrelationsGutMicrobiota2022}.
-Its importance is, however, heavily loaded on the volume
-of entire major lobes (frontal, parietal), which cannot be readily
-correlated to specific cognitive functions
-
-Reduction in the nucleus accumbens has been associated with
-depression symptoms \cite{wackerRoleNucleusAccumbens2009},
-and increased levels of the \emph{Alistipes} genus have been
-observed in patients with depressive disorder
-\cite{jiangAlteredFecalMicrobiota2015}.
-
-\textit{R. gnavus} is increased in individuals with insulin
-resistance and obesity \cite{leyHumanGutMicrobes2006},
-conditions that are known to produce structural abnormalities in the brain
-\cite{opelBrainStructuralAbnormalities2021}.
-
-
-
-\subsection*{Main}
-
 The relationship between the gut microbiome and brain function via the
 gut-microbiome-brain axis has gained increasing acceptance largely as a
 result of human epidemiological studies investigating atypical
@@ -760,7 +704,7 @@ The results from these studies point to the possibility
 that gut microbes and their metabolism may be causally implicated in
 cognitive development, but this study is the first to our knowledge that
 directly investigates microbial species and their genes in relation to
-typical development in young children. Understanding the gut-brain-axis
+typical development in young children. Understanding the gut-brain-microbiome axis
 in early life is particularly important, since differences or
 interventions in early life can have outsized and longer-term
 consequences than those at later ages. Further, even in the absence of
@@ -787,18 +731,18 @@ as it can metabolize the polyphenol ellagic acid
 (found in pomegranates and some berries) into urolithin, which has been
 shown in some studies to have a neuroprotective effect
 \cite{gongUrolithinAlleviatesBloodbrain2022,selmaDescriptionUrolithinProduction2014}.
-While we could not find evidence of neurological roles for \emph{E. lenta},
+While we could not find published evidence of neurological roles for \emph{E. lenta},
 it has been extensively studied for
 its ability to metabolize drug compounds such as the plant-derived heart
 medication digoxin \cite{haiserPredictingManipulatingCardiac2013}.
-The metabolic versatility of this clade, and the large number of
+The metabolic versatility of this clade and the large number of
 species that are associated with cognition make these microbes prime
 targets for further mechanistic studies.
 
 Other bacteria that were associated with both cognitive ability and
-brain structure had \hl{notable hints in the literature}. % This is stupid - find a better way to say this
+brain structure had also have intriguing connections in previous studies.
 For example, RF models predicting the size of the left nucleus accumbens
-(but not the right) were dominated by \textit{Bacteroides} species,
+were dominated by \textit{Bacteroides} species,
 especially \textit{B. vulgatus}, \textit{B. uniformis}, and \textit{B. ovatus}.
 \textit{B. ovatus} has previously been shown to produce
 a number of neuroactive compounds including SCFAs and neurotransmitters
@@ -807,11 +751,13 @@ Another \textit{Bacteroides} species, \textit{B. fragilis} was
 able to ameliorate ASD-like symptoms in a mouse model
 by consuming a microbially-dependent metabolite 4-ethylphenylsulfate (4EPS)
 \cite{hsiaoMicrobiotaModulateBehavioral2013},
-while \textit{B. ovatus} is the primary producer of a precursor to 4EPS
+while \textit{B. ovatus} is a primary producer of a precursor to 4EPS
 \cite{needhamGutderivedMetaboliteAlters2022} and increased anxiety
-behaviors
-
-Most healthy individuals have a
+behaviors in mice.
+The fact that the importance of these species in RF models,
+and the high performance of RF models in predicting this region
+were unilateral (affecting the left but not the right accumbens area)
+was also notable. Most healthy individuals have a
 rightward asymmetry in the nucleus accumbens,
 which is involved in reward learning and risk taking behaviours
 \cite{ernstAmygdalaNucleusAccumbens2005,yauNucleusAccumbensResponse2012}.
@@ -842,7 +788,18 @@ sequencing.
 In addition to improved species-level resolution, shotgun metagenomic
 sequencing also enables gene-functional insight. We showed here that
 genes for the metabolism of SCFAs, both their degradation and synthesis,
-are associated with cognitive function scores. However, while the
+are associated with cognitive function scores (Figure 2). 
+SCFAs are produced by anaerobic fermentation of dietary fiber
+and have been linked with immune system regulation as well as directly
+with brain function \cite{dalileRoleShortchainFatty2019}.
+Microbial metabolism of other potentially neuroactive molecules,
+were also associated with cognitive ability. We were particularly interested
+in genes for metabolizing glutamate, which is a
+critical neurotransmitter controlling neuronal excitatory/inhibitory
+signaling along with gamma-aminobutyric acid (GABA), and their balance
+in the brain controls neural plasticity and learning, particularly in
+the developing brain \cite{cohenkadoshLinkingGABAGlutamate2015,palomo-buitragoGlutamateInteractionsObesity2019}.
+However, while the
 differential abundance of genes for the metabolism of neuroactive
 compounds like these is suggestive, it is difficult to reason about the
 relationship between levels of these genes and the gut concentrations of
@@ -875,33 +832,24 @@ the study was occurring.
 \cite{blackwellYouthWellbeingCOVID192022,deoniImpactCOVID19Pandemic2021}
 (Supplementary Figure 3).
 
-
-% and alterations on the striatal
-% dopamine transporters can cause effects resembling hyperactivity and
-% attention deficit
-% \cite{yaelDisinhibitionNucleusAccumbens2019},
-% and that \emph{B. uniformis} is gut-microbial modulator of the brain
-% dopamine transporter
-% \cite{hartstraInfusionDonorFeces2020}.
-
-
 This analysis allowed us to establish links between microbial taxa and
 their functional potential with cognition and brain structure. Although
 we cannot test causality or the chemistry behind the interactions
-between gut microbial taxa, gut, and brain, this study provides clear
-and statistically significant associations between the infant and early
-child gut microbiota and neurocognition. Future studies should focus on
-characterizing the early-life microbiome and neurocognitive development
-across different geographic regions and lifestyles such as covering
-traditionally understudied low-resource urban, peri-urban and rural
-communities to obtain the more comprehensive understanding of the
+between gut microbial taxa and their genes, the gut, and the brain,
+this study provides clear and statistically significant associations
+between the infant and early child gut microbiota and neurocognition.
+Future studies should focus on characterizing the early-life microbiome
+and neurocognitive development across different geographic regions
+and lifestyles such as covering traditionally understudied populations,
+such as low-resource urban, peri-urban and rural communities
+to obtain the more comprehensive understanding of the
 variability within the different gut microbiomes reflects on
 neurocognition. These studies would also provide us with the wealth of
 data on different strains from the same species to better understand the
 effect of genes and their products. Furthermore, culturing and microbial
 community enrichment studies combined with genetic manipulation and
 genomic approaches to understand microbial metabolism at the molecular
-level is the key, as the metabolic functions shape and influence the
+level is key, as the metabolic functions shape and influence the
 human host and its health. The discovery of the neuroactive metabolites
 could provide us with biomarkers for early detection or necessary
 medicinally useful molecules that can be applied in intervention.
