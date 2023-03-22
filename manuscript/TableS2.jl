@@ -57,22 +57,16 @@ ordered_brain_segments_list = [
 ]
 
 ## 2. Calculating the Figures of Merit
-mean_brain_merits = reduce(
+tableS2 = reduce(
     vcat,
-    [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_MAPE), :Test_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE), :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
+    [ DataFrame(:variable => ordered_brain_segments_list[i], :Test_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
 )
 
-## 3. Building the actual table
+tableS2.variable = uppercasefirst.(map(x -> replace(x, "-"=>" "), tableS2.variable))
 
-table4 = DataFrame(
-    :statisic => [ "Mean", "Standard deviation", "Maximum", "75th percentile", "50th percentile", "25th percentile", "Minimum" ],
-    :test_MAPE => [ round(f(mean_brain_merits.Test_MAPE);digits=3) for f in [ mean, std, maximum, x -> quantile(x, 0.75), x -> quantile(x, 0.50), x -> quantile(x, 0.25), minimum ] ],
-    :test_Cor => [ round(f(mean_brain_merits.Test_Cor);digits=3) for f in [ mean, std, maximum, x -> quantile(x, 0.75), x -> quantile(x, 0.50), x -> quantile(x, 0.25), minimum ] ]
-)
+CSV.write("TableS2.csv", tableS2)
 
-CSV.write(tablefiles("Table4.csv"), table4)
-
-pretty_table(table4;
-    header = [ "Statistic", "Mean absolute proportional error (MAPE)", "Correlation coefficient (R)" ],
+pretty_table(tableS2;
+    header = [ "Segment", "Mean absolute proportional error (MAPE)", "Correlation coefficient (R)" ],
     backend = Val(:latex)
 )
