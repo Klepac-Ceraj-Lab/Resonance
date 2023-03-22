@@ -14,7 +14,6 @@ using Resonance
 using Distributions
 using Clustering, Distances
 using ColorSchemes
-using StatsPlots
 ml_rng = StableRNG(0)
 ```
 
@@ -50,7 +49,7 @@ end
 ```julia
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain regression from taxonomic profiles
-JLD2.@load "models/2023-02-15/brain_models.jld"
+brain_models = JLD2.load(modelfiles("2023-02-15", "brain_models.jld"))["brain_models"]
 
 ordered_brain_segments_list = [
     "left-temporal", "right-temporal",

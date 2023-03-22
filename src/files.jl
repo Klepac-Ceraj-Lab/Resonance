@@ -5,6 +5,7 @@ datafiles(args...) = joinpath(get(ENV, "DATA_FILES", "./data"), args...)
 outputfiles(args...) = joinpath(get(ENV, "OUTPUT_FILES", "./output"), args...)
 figurefiles(args...) = joinpath(get(ENV, "FIGURE_FILES", "./figures"), args...)
 tablefiles(args...) = joinpath(get(ENV, "TABLE_FILES", "./tables"), args...)
+modelfiles(args...) = joinpath(get(ENV, "MODEL_FILES", "./models"), args...)
 
 @testset "Dir functions" begin
     withenv("ANALYSIS_FILES"=> nothing, "SCRATCH_FILES"=> nothing, "DATA_FILES" => nothing) do
