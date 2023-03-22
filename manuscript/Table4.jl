@@ -14,7 +14,6 @@ isdir(tablefiles()) || mkpath(tablefiles())
 
 ## 1. Loading the model files
 
-RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain volumes regression from taxonomic profiles
 JLD2.@load "models/2023-02-15/brain_models.jld"
@@ -70,7 +69,6 @@ table4 = DataFrame(
     :test_MAPE => [ round(f(mean_brain_merits.Test_MAPE);digits=3) for f in [ mean, std, maximum, x -> quantile(x, 0.75), x -> quantile(x, 0.50), x -> quantile(x, 0.25), minimum ] ],
     :test_Cor => [ round(f(mean_brain_merits.Test_Cor);digits=3) for f in [ mean, std, maximum, x -> quantile(x, 0.75), x -> quantile(x, 0.50), x -> quantile(x, 0.25), minimum ] ]
 )
-
 
 CSV.write(tablefiles("Table4.csv"), table4)
 
