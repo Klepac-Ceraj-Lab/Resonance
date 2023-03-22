@@ -1,0 +1,110 @@
+---
+title: "Running Anpan"
+format: html
+---
+
+## Installation
+
+```{r}
+#| eval: false
+install.packages(c("ape", 
+                   "data.table",
+                   "dplyr", 
+                   "fastglm",
+                   "furrr", 
+                   "ggdendro",
+                   "ggnewscale",
+                   "ggplot2",
+                   "loo",
+                   "patchwork",
+                   "phylogram",
+                   "posterior",
+                   "progressr",
+                   "purrr",
+                   "R.utils",
+                   "remotes",
+                   "stringr",
+                   "tibble",
+                   "tidyselect"), Ncpus = 8) # add Ncpus = 4 to go faster
+
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+```
+
+
+```{r}
+#| eval: false
+library(cmdstanr)
+check_cmdstan_toolchain()
+install_cmdstan(cores = 4)
+```
+
+```{r}
+#| eval: false
+remotes::install_github("biobakery/anpan")
+```
+
+## Running
+
+After identifying samples with *B. wexlerae* in our sample set,
+I generated a table with stratified gene families by running
+
+```fish
+echo -e "sample\tfeature\tabundance" > data/bwexlerae_genefamilies.tsv
+for s in (cat has_bwex.txt)
+    fd "$s"_genefamilies /grace/sequencing/processed/mgx/humann/main/ -x rg s__Blautia_wexlerae | sd '^q' "$s\t" >> data/bwexlerae_genefamilies.tsv
+end
+
+sd '^.+\t(.+\t.+\t.+)$' '$1' data/bwexlerae_genefamilies.tsv
+sd '^FG\d+_S\d+\t$' '' data/bwexlerae_genefamilies.tsv
+
+```
+
+and then added a header manually.
+
+```{r}
+library(data.table)
+
+df <- fread("data/bwexlerae_genefamilies.tsv")
+df2 <- dcast(df[, .(feature, sample, abundance)],
+                 feature ~ sample,
+                 value.var = "abundance",
+                 fun.aggregate = sum)
+names(df2)[1] = "# Gene Family"
+```
+
+
+```{r}
+library(anpan)
+future::plan(future::multicore, workers=16)
+```
+
+
+```{r}
+bwex_results <- anpan(#bug_dir           = "/grace/sequencing/processed/mgx/humann/main",
+                        bug_file          = "./data/bwexlerae_genefamilies_wide.tsv",
+                        meta_file         = "./data/manuscript_meta.csv",
+                        out_dir           = "./data/anpan",
+                        # annotation_file   = "/path/to/annotation.tsv", #optional, used for plots
+                        filtering_method  = "kmeans",
+                        model_type        = "fastglm",
+                        covariates        = c("ageMonths", "sex", "education"),
+                        outcome           = "cogScore",
+                        plot_ext          = "pdf",
+                        save_filter_stats = TRUE)
+```
+
+```{r}
+input_path = file.path("data", "anpan", "filter_stats",
+                       "filtered_bwexlerae_genefamilies_wide.tsv")
+
+model_input = fread(input_path)
+
+plot_results(res         = bwex_results,
+             model_input = model_input,
+             covariates  = c("ageMonths", "sex", "education"), 
+             outcome     = "cogScore",
+             bug_name    = "Blautia wexlerae",
+             cluster     = "both",
+             show_trees  = TRUE)
+
+```
