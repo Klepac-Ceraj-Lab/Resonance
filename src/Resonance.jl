@@ -129,7 +129,6 @@ using LinearAlgebra
 using MultipleTesting
 using MultivariateStats
 using PERMANOVA
-using ProgressLogging
 using Random
 using Setup # dev package at `./Setup`
 using SparseArrays
@@ -138,7 +137,6 @@ using Tables
 using ThreadsX
 using MLJ
 using DecisionTree
-using CubicSplines
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
