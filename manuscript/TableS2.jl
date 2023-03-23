@@ -64,7 +64,7 @@ tableS2 = reduce(
 
 tableS2.variable = uppercasefirst.(map(x -> replace(x, "-"=>" "), tableS2.variable))
 
-CSV.write("TableS2.csv", tableS2)
+CSV.write("manuscript/assets/TableS2.csv", tableS2)
 
 pretty_table(tableS2;
     header = [ "Segment", "Mean absolute proportional error (MAPE)", "Correlation coefficient (R)" ],
