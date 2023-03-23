@@ -1,7 +1,6 @@
 using Resonance
 using Chain
 using CairoMakie
-using AlgebraOfGraphics
 
 mdata = Resonance.load_raw_metadata()
 taxa = Resonance.load_raw_metaphlan()
