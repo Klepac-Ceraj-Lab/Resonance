@@ -50,7 +50,7 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 
 ```julia
-figure = Figure(; resolution = (2000, 1200))
+figure = Figure(; resolution = (1500, 900))
 A = GridLayout(figure[1,1])
 B = GridLayout(figure[2,1])
 CDEF = GridLayout(figure[1:2,2])
@@ -65,7 +65,7 @@ GH = GridLayout(figure[3,1:2])
 For now, the graphic here is a place-holder, but we'll have something like this for 1A.
 
 ```julia
-A_img = Axis(A[1,1]; aspect = DataAspect(), alignmode=Inside())
+A_img = Axis(A[1,1]; aspect = DataAspect(), alignmode=Outside())
 hidedecorations!(A_img)
 hidespines!(A_img)
 
@@ -182,43 +182,43 @@ plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 ```julia
 
 Label(A[1, 1, TopLeft()], "A",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(B[1, 1, TopLeft()], "B",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(CDEF[1, 1, TopLeft()], "C",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(CDEF[2, 1, TopLeft()], "D",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(CDEF[1, 2, TopLeft()], "E",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(CDEF[2, 2, TopLeft()], "F",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 
 Label(G[1, 1, TopLeft()], "G",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(H[1, 1, TopLeft()], "H",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
