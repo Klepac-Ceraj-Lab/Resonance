@@ -116,7 +116,6 @@ using ReTest
 
 using Airtable
 using Arrow
-using AlgebraOfGraphics
 using CairoMakie
 using CategoricalArrays
 using CodecZlib
