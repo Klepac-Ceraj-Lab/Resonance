@@ -16,16 +16,16 @@ isdir(tablefiles()) || mkpath(tablefiles())
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore reression from taxonomic profiles
-regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlydemo.jld"))
-regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlytaxa.jld"))
-regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplustaxa.jld"))
-regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlyecs.jld"))
-regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplusecs.jld"))
-regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlydemo.jld"))
-regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlytaxa.jld"))
-regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplustaxa.jld"))
-regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlyecs.jld"))
-regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplusecs.jld"))
+regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlydemo.jld"))["regression_currentCogScores_00to06mo_onlydemo"]
+regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
+regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplustaxa.jld"))["regression_currentCogScores_00to06mo_demoplustaxa"]
+regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlyecs.jld"))["regression_currentCogScores_00to06mo_onlyecs"]
+regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplusecs.jld"))["regression_currentCogScores_00to06mo_demoplusecs"]
+regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlydemo.jld"))["regression_currentCogScores_18to120mo_onlydemo"]
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlytaxa.jld"))["regression_currentCogScores_18to120mo_onlytaxa"]
+regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplustaxa.jld"))["regression_currentCogScores_18to120mo_demoplustaxa"]
+regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlyecs.jld"))["regression_currentCogScores_18to120mo_onlyecs"]
+regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplusecs.jld"))["regression_currentCogScores_18to120mo_demoplusecs"]
 
 ## 2. Calculating the Figures of Merit
 
