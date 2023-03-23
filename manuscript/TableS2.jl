@@ -57,10 +57,6 @@ ordered_brain_segments_list = [
 ]
 
 ## 2. Calculating the Figures of Merit
-tableS2 = reduce(
-    vcat,
-    [ DataFrame(:variable => ordered_brain_segments_list[i], :Test_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
-)
 
 tableS2 = mapreduce( vcat, eachindex(ordered_brain_segments_list)) do i
     DataFrame(:variable => ordered_brain_segments_list[i],
