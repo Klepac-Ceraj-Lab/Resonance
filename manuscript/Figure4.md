@@ -420,7 +420,7 @@ Then resize
 
 colsize!(AB_Subfig, 1, Relative(0.2))
 colsize!(AB_Subfig, 2, Relative(0.8))
-rowsize!(AB_Subfig, 2, Relative(0.1))
+rowsize!(AB_Subfig, 2, Relative(0.15))
 rowsize!(figure.layout, 1, Relative(0.75))
 rowsize!(figure.layout, 2, Relative(0.25))
 
