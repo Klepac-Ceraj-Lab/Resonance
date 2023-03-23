@@ -2,7 +2,7 @@
 
 julia_version = "1.9.0-beta3"
 manifest_format = "2.0"
-project_hash = "422f55741d0d96aaa1bd972bcc0f638d4cf6cb31"
+project_hash = "c3300bfb008ec0b2301254fdcda34bc7ed7b6df9"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -1305,18 +1305,6 @@ git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.4.1"
 
-[[deps.OutlierDetectionInterface]]
-deps = ["CategoricalArrays", "MLJModelInterface", "Reexport"]
-git-tree-sha1 = "48f4fd9951360cd4d51345fc7a31ba108dc24350"
-uuid = "1722ece6-f894-4ffc-b6be-6ca1174e2011"
-version = "0.1.9"
-
-[[deps.OutlierDetectionNeighbors]]
-deps = ["Combinatorics", "Distances", "LinearAlgebra", "NearestNeighbors", "OutlierDetectionInterface", "Statistics"]
-git-tree-sha1 = "94e35d7a6c6d6ec2de1eb91bc470292ea9012f45"
-uuid = "51249a0a-cb36-4849-8e04-30c7f8d311bb"
-version = "0.1.3"
-
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
@@ -1375,12 +1363,6 @@ deps = ["Dates", "SnoopPrecompile"]
 git-tree-sha1 = "151d91d63d8d6c1a5789ecb7de51547e00480f1b"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.5.4"
-
-[[deps.PartialLeastSquaresRegressor]]
-deps = ["LinearAlgebra", "MLJModelInterface", "Random", "Statistics"]
-git-tree-sha1 = "21e053e5d9aed2ab883a5365fdcbf28729d325cf"
-uuid = "f4b1acfe-f311-436c-bb79-8483f53c17d5"
-version = "2.2.0"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
