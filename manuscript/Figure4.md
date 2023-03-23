@@ -14,7 +14,6 @@ using Resonance
 using Distributions
 using Clustering, Distances
 using ColorSchemes
-using StatsPlots
 ml_rng = StableRNG(0)
 ```
 
@@ -50,7 +49,7 @@ end
 ```julia
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain regression from taxonomic profiles
-JLD2.@load "models/2023-02-15/brain_models.jld"
+brain_models = JLD2.load(modelfiles("2023-02-15", "brain_models.jld"))["brain_models"]
 
 ordered_brain_segments_list = [
     "left-temporal", "right-temporal",
@@ -192,22 +191,9 @@ interesting_taxa = [
 ]
 ```
 
-## Initializing Figure 4
-```julia
-figure = Figure(resolution = (1920, 1536))
+## Figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
 
-AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
-A_subfig = GridLayout(AB_Subfig[1,1])
-B_subfig = GridLayout(AB_Subfig[1,2])
-C_subfig = GridLayout(figure[2,1], alignmode=Outside())
-
-colsize!(AB_Subfig, 1, Relative(0.2))
-colsize!(AB_Subfig, 2, Relative(0.8))
-rowsize!(figure.layout, 1, Relative(0.75))
-rowsize!(figure.layout, 2, Relative(0.25))
-```
-
-### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
+### Additional calculations 
 
 #### Compute the mean figures of merit for the Brain sement regressions
 ```julia
@@ -284,23 +270,47 @@ sort!(reorder_segments_df, [:original_order, :left_or_unique])
 plot_segments_order = reorder_segments_df.plot_order
 ```
 
-### using the hclust to reorder all we need
+#### using the hclust to reorder all we need
 ```julia
 mean_brain_merits = mean_brain_merits[plot_segments_order, :]
 relative_brain_importances = relative_brain_importances[hclust_taxa_order, vcat( [ 1 ], (plot_segments_order .+ 1))]
 #relative_brain_importances = relative_brain_importances[sortperm(map(mean, eachrow(relative_brain_importances[:, 2:end])); rev=true), vcat( [ 1 ], (plot_segments_order .+ 1))]
 ```
 
-### Calling the plot functions with the ordered data
+#### Some other subsets
+
+```julia
+weighted_brain_importances = weighted_brain_importances[:, vcat(["variable"], interesting_segments)]
+mean_brain_importances = weighted_brain_importances
+noage = mean_brain_importances[2:end, :]
+```
+
+### Plotting
+
+#### Initialize figure
+
+```julia
+figure = Figure(resolution = (1920, 1536))
+
+
+AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
+# A_subfig = GridLayout(AB_Subfig[1,1])
+# B_subfig = GridLayout(AB_Subfig[1,2])
+C_subfig = GridLayout(figure[2,1], alignmode=Outside())
+```
+
+
+#### Calling the plot functions with the ordered data
 ```julia
 axA = Axis(
-    A_subfig[1, 1];
+    AB_Subfig[1, 1];
     xlabel = "Correlation",
     yticks = (reverse(collect(1:length(interesting_segments))), mean_brain_merits.variable),
     ylabel = "Target Variable",
     xticks = [-0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
     title = "Mean Random Forest regression correlations",
-    yticklabelsize=16
+    yticklabelsize=16,
+    alignmode=Inside(),
     #yticklabelrotation= -pi/2
 )
 
@@ -316,26 +326,44 @@ barplot!(
     direction=:x
 )
 
+Legend(AB_Subfig[2,1],
+    [MarkerElement(; marker=:rect, color=c) for c in ("blue", "red", "purple")],
+    ["Left hemisphere", "Right hemisphere", "non-lateral"];
+)
+
 ######
 # Importance Heatmaps
 ######
 nbugs_toplot = length(interesting_taxa) # the top 1/3 bugs (out of 129) From intersecting the top mean importances and top max importances
 
 axB = Axis(
-    B_subfig[1, 1];
-    xlabel = "Predictor",
-    xticks = (collect(1:nbugs_toplot), relative_brain_importances.variable[1:nbugs_toplot]),
-    xticklabelsize=16,
-    xticklabelrotation= pi/4,
+    AB_Subfig[1, 2];
     ylabel = "Target brain segment",
     yticks = (collect(1:length(interesting_segments)), names(relative_brain_importances)[2:end]),
     yticklabelsize=16,
     yreversed=true,
     title = "Brain segmentation data variable importances"
 )
+hidexdecorations!(axB)
+axBticks = Axis(
+    AB_Subfig[2,2];
+    xlabel = "Predictor",
+    xticks = (collect(1:nbugs_toplot), relative_brain_importances.variable[1:nbugs_toplot]),
+    xticklabelsize=16,
+    xticklabelrotation= pi/4,
+    alignmode=Outside()
+)
 
-CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
+tightlimits!.([axB, axBticks])
 
+linkxaxes!(axB, axBticks)
+hidexdecorations!(axBticks; ticklabels=false, label=false)
+hideydecorations!(axBticks)
+hidespines!(axBticks)
+
+
+hm = CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
+Colorbar(AB_Subfig[1,3], hm; label= "Relative feature importance")
 ######
 # Scatterplot
 ######
@@ -346,10 +374,6 @@ mean_brain_importances = reduce(
         for (i, j) in brain_models
     ]
 )
-
-weighted_brain_importances = weighted_brain_importances[:, vcat(["variable"], interesting_segments)]
-mean_brain_importances = weighted_brain_importances
-noage = mean_brain_importances[2:end, :]
 
 idx = sortperm([median(row[2:end]) for row in eachrow(noage)])
 ys = reduce(vcat, [values(noage[i, 2:end])...] for i in idx)
@@ -388,8 +412,21 @@ Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = ColorSchemes.Set3_1
 Label(A_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
 Label(B_subfig[1, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
 Label(C_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
+```
+
+Then resize
+
+```julia
+
+colsize!(AB_Subfig, 1, Relative(0.2))
+colsize!(AB_Subfig, 2, Relative(0.8))
+rowsize!(AB_Subfig, 2, Relative(0.15))
+rowsize!(figure.layout, 1, Relative(0.75))
+rowsize!(figure.layout, 2, Relative(0.25))
+
 
 save("manuscript/assets/Figure4.png", figure)
+figure
 ```
 
 ### Finding out the highest importance on the matrix
