@@ -16,7 +16,7 @@ isdir(tablefiles()) || mkpath(tablefiles())
 
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain volumes regression from taxonomic profiles
-JLD2.@load "models/2023-02-15/brain_models.jld"
+brain_models = JLD2.load(modelfiles("2023-02-15", "brain_models.jld"))["brain_models"]
 
 ordered_brain_segments_list = [
     "left-temporal", "right-temporal",
@@ -64,7 +64,7 @@ tableS2 = reduce(
 
 tableS2.variable = uppercasefirst.(map(x -> replace(x, "-"=>" "), tableS2.variable))
 
-CSV.write("TableS2.csv", tableS2)
+CSV.write(joinpath("manuscript", "assets", "TableS2.csv"), tableS2)
 
 pretty_table(tableS2;
     header = [ "Segment", "Mean absolute proportional error (MAPE)", "Correlation coefficient (R)" ],

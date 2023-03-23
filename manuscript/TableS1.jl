@@ -17,8 +17,8 @@ isdir(tablefiles()) || mkpath(tablefiles())
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore reression from taxonomic profiles
-JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlytaxa.jld"
-JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlytaxa.jld"
+regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlytaxa.jld"))["regression_currentCogScores_18to120mo_onlytaxa"]
 
 ## 2. Relevant functions
 
@@ -65,11 +65,11 @@ end
 
 supptblA = suppl_table(regression_currentCogScores_00to06mo_onlytaxa)
 tblformat_suppl_table!(supptblA)
-CSV.write("TableS1A.csv", supptblA)
+CSV.write(joinpath("manuscript", "assets", "TableS1A.csv"), supptblA)
 
 supptblB = suppl_table(regression_currentCogScores_18to120mo_onlytaxa)
 tblformat_suppl_table!(supptblB)
-CSV.write("TableS1B.csv", supptblB)
+CSV.write(joinpath("manuscript", "assets", "TableS1B.csv"), supptblB)
 
 ## 4. LaTeX outputs
 
