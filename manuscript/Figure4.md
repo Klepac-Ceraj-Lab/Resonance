@@ -339,12 +339,13 @@ nbugs_toplot = length(interesting_taxa) # the top 1/3 bugs (out of 129) From int
 axB = Axis(
     AB_Subfig[1, 2];
     ylabel = "Target brain segment",
+    xticks = (collect(1:nbugs_toplot), relative_brain_importances.variable[1:nbugs_toplot]),
     yticks = (collect(1:length(interesting_segments)), names(relative_brain_importances)[2:end]),
     yticklabelsize=16,
     yreversed=true,
     title = "Brain segmentation data variable importances"
 )
-hidexdecorations!(axB)
+hidexdecorations!(axB; ticks=false)
 axBticks = Axis(
     AB_Subfig[2,2];
     xlabel = "Predictor",
