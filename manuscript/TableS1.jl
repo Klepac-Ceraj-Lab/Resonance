@@ -65,11 +65,11 @@ end
 
 supptblA = suppl_table(regression_currentCogScores_00to06mo_onlytaxa)
 tblformat_suppl_table!(supptblA)
-CSV.write("TableS1A.csv", supptblA)
+CSV.write("manuscript/assets/TableS1A.csv", supptblA)
 
 supptblB = suppl_table(regression_currentCogScores_18to120mo_onlytaxa)
 tblformat_suppl_table!(supptblB)
-CSV.write("TableS1B.csv", supptblB)
+CSV.write("manuscript/assets/TableS1A.csv", supptblB)
 
 ## 4. LaTeX outputs
 
