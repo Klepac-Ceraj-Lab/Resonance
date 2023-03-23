@@ -4,3 +4,5 @@ scifile.*
 !scifile.tex
 converted.*
 !converted.tex
+supplement.*
+!supplement.tex
