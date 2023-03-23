@@ -2,26 +2,10 @@
 
 \usepackage[letterpaper, margin=1in]{geometry}
 
-\usepackage{lineno}
-\linenumbers
 \usepackage{titlesec}
 %\usepackage[none]{hyphenat} % use only if there is a problem
 % Use Unicode characters
 \usepackage[utf8]{inputenc}
-
-\usepackage{scicite}
-% Clean citations with biblatex
-\usepackage[
-backend=biber,
-style=science
-]{biblatex}
-
-\addbibresource{zotero.bib}
-
-% Highlighting
-\usepackage{color}
-\usepackage{soul}
-\usepackage{xurl}
 
 % tables
 \usepackage{longtable,booktabs,array}
@@ -36,13 +20,7 @@ style=science
 \graphicspath{assets}
 \usepackage{times}
 \usepackage{caption}
-
-
-\topmargin 0.0cm
-\oddsidemargin 0.2cm
-\textwidth 16cm 
-\textheight 21cm
-\footskip 1.0cm
+\usepackage{float}
 
 \title{Supplementary material for "Gut microbes and their genes are associated with cognition and neuroanatomy in children"}
 
@@ -52,7 +30,7 @@ style=science
 
 \maketitle
 
-\begin{figure}[!htb]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{assets/Supp_Figure1.png}
     \captionsetup{labelformat=empty}
@@ -62,7 +40,7 @@ style=science
     }
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{assets/Supp_Figure2.png}
     \captionsetup{labelformat=empty}
@@ -75,7 +53,7 @@ style=science
 \end{figure}
 
 
-\begin{figure}[!htb]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{assets/Supp_Figure3.png}
     \captionsetup{labelformat=empty}
@@ -85,7 +63,9 @@ style=science
     }
 \end{figure}
 
-\begin{table}
+\begin{table}[H]
+    \begin{centering}
+    \tiny
     \begin{tabular}{|r|r|r|r|r|}
       \hline\hline
       \textbf{Rank} & \textbf{Variable} & \textbf{Average fitness-weighted importance} & \textbf{Relative fitness-weighted importance} & \textbf{Rank-cumulative relative importance } \\\hline
@@ -169,9 +149,16 @@ style=science
       78 & \textit{Fusicatenibacter saccharivorans} & 8.51867e-5 & 0.1 \% & 99.91 \% \\
       79 & \textit{Ruminococcus torques} & 7.57866e-5 & 0.09 \% & 100.0 \% \\\hline\hline
     \end{tabular}
+    \caption*{
+        \textbf{Table S1A}: Feature importances for RF models of cognitive performance
+        based on taxonomic profiles in children under 6 months old.
+    }
+    \end{centering}
   \end{table}
 
   \begin{table}
+  \begin{centering}
+    \tiny
     \begin{tabular}{|r|r|r|r|r|}
       \hline\hline
       \textbf{Rank} & \textbf{Variable} & \textbf{Average fitness-weighted importance} & \textbf{Relative fitness-weighted importance} & \textbf{Rank-cumulative relative importance } \\\hline
@@ -275,48 +262,20 @@ style=science
       98 & \textit{Turicibacter sanguinis} & 0.00122404 & 0.37 \% & 92.19 \% \\
       99 & \textit{Bifidobacterium catenulatum} & 0.00117205 & 0.36 \% & 92.55 \% \\
       100 & \textit{Bacteroides finegoldii} & 0.00114999 & 0.35 \% & 92.9 \% \\
-      101 & \textit{Phascolarctobacterium faecium} & 0.00114938 & 0.35 \% & 93.25 \% \\
-      102 & \textit{Clostridium disporicum} & 0.0011464 & 0.35 \% & 93.6 \% \\
-      103 & \textit{Eubacterium ventriosum} & 0.00106439 & 0.32 \% & 93.92 \% \\
-      104 & \textit{Haemophilus sp HMSC71H05} & 0.00105928 & 0.32 \% & 94.24 \% \\
-      105 & \textit{Coprococcus catus} & 0.00104443 & 0.32 \% & 94.56 \% \\
-      106 & \textit{Firmicutes bacterium CAG 145} & 0.00101707 & 0.31 \% & 94.87 \% \\
-      107 & \textit{Collinsella intestinalis} & 0.000958331 & 0.29 \% & 95.16 \% \\
-      108 & \textit{Clostridium clostridioforme} & 0.000878858 & 0.27 \% & 95.43 \% \\
-      109 & \textit{Oscillibacter sp CAG 241} & 0.000816014 & 0.25 \% & 95.68 \% \\
-      110 & \textit{Clostridium lavalense} & 0.000810827 & 0.25 \% & 95.93 \% \\
-      111 & \textit{Eisenbergiella tayi} & 0.000754959 & 0.23 \% & 96.16 \% \\
-      112 & \textit{Butyricimonas virosa} & 0.000744692 & 0.23 \% & 96.38 \% \\
-      113 & \textit{Bacteroides cellulosilyticus} & 0.000728753 & 0.22 \% & 96.6 \% \\
-      114 & \textit{Ruminococcus callidus} & 0.000717438 & 0.22 \% & 96.82 \% \\
-      115 & \textit{Bacteroides massiliensis} & 0.000683932 & 0.21 \% & 97.03 \% \\
-      116 & \textit{Clostridium citroniae} & 0.000672827 & 0.2 \% & 97.24 \% \\
-      117 & \textit{Dielma fastidiosa} & 0.00066642 & 0.2 \% & 97.44 \% \\
-      118 & \textit{Lawsonibacter asaccharolyticus} & 0.000654239 & 0.2 \% & 97.64 \% \\
-      119 & \textit{Clostridium bolteae CAG 59} & 0.000610466 & 0.19 \% & 97.82 \% \\
-      120 & \textit{Holdemania filiformis} & 0.000539614 & 0.16 \% & 97.99 \% \\
-      121 & \textit{Coprobacillus cateniformis} & 0.000523131 & 0.16 \% & 98.15 \% \\
-      122 & \textit{Romboutsia ilealis} & 0.000510476 & 0.16 \% & 98.3 \% \\
-      123 & \textit{Alistipes indistinctus} & 0.00047308 & 0.14 \% & 98.45 \% \\
-      124 & \textit{Coprobacter sp} & 0.000464703 & 0.14 \% & 98.59 \% \\
-      125 & \textit{Clostridium sp CAG 299} & 0.000463086 & 0.14 \% & 98.73 \% \\
-      126 & \textit{Roseburia sp CAG 309} & 0.000417242 & 0.13 \% & 98.86 \% \\
-      127 & \textit{Lactobacillus rogosae} & 0.00041713 & 0.13 \% & 98.98 \% \\
-      128 & \textit{Bacteroides faecis} & 0.000416208 & 0.13 \% & 99.11 \% \\
-      129 & \textit{Butyricimonas synergistica} & 0.00039991 & 0.12 \% & 99.23 \% \\
-      130 & \textit{Holdemanella biformis} & 0.000341544 & 0.1 \% & 99.33 \% \\
-      131 & \textit{Clostridium sp CAG 253} & 0.000320917 & 0.1 \% & 99.43 \% \\
-      132 & \textit{Firmicutes bacterium CAG 110} & 0.000320704 & 0.1 \% & 99.53 \% \\
-      133 & \textit{Eubacterium sp CAG 251} & 0.000320044 & 0.1 \% & 99.63 \% \\
-      134 & \textit{Slackia isoflavoniconvertens} & 0.000308029 & 0.09 \% & 99.72 \% \\
-      135 & \textit{Bacteroides intestinalis} & 0.000296781 & 0.09 \% & 99.81 \% \\
-      136 & \textit{Clostridium scindens} & 0.000246508 & 0.08 \% & 99.89 \% \\
-      137 & \textit{Clostridium sp CAG 167} & 0.000216779 & 0.07 \% & 99.95 \% \\
-      138 & \textit{Paraprevotella xylaniphila} & 0.000155169 & 0.05 \% & 100.0 \% \\\hline\hline
+      100+ & See Table file & ... & ... & ... \\\hline\hline
+
     \end{tabular}
+    \caption*{
+        \textbf{Table S1B}: Feature importances for RF models of cognitive performance
+        based on taxonomic profiles in children over 18 months old.
+    }
+    \end{centering}
   \end{table}
 
   \begin{table}
+  
+  \begin{centering}
+    \tiny
     \begin{tabular}{|r|r|r|}
       \hline\hline
       \textbf{Segment} & \textbf{Mean absolute proportional error (MAPE)} & \textbf{Correlation coefficient (R)} \\\hline
@@ -392,6 +351,11 @@ style=science
       Brain stem & 0.0765924 & 0.604747 \\
       CSF & 0.162364 & 0.0712952 \\\hline\hline
     \end{tabular}
+    \caption*{
+        \textbf{Table S2}: RF model performances predicting cortical and
+        subcortical brain regions.
+    }
+    \end{centering}
   \end{table}
 
 \end{document}
