@@ -17,8 +17,8 @@ isdir(tablefiles()) || mkpath(tablefiles())
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore reression from taxonomic profiles
-JLD2.@load "models/2023-02-15/regression_currentCogScores_00to06mo_onlytaxa.jld"
-JLD2.@load "models/2023-02-15/regression_currentCogScores_18to120mo_onlytaxa.jld"
+regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlytaxa"))
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlytaxa"))
 
 ## 2. Relevant functions
 
