@@ -16,7 +16,7 @@ isdir(tablefiles()) || mkpath(tablefiles())
 
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain volumes regression from taxonomic profiles
-brain_models = JLD2.load(modelfiles("2023-02-15", "brain_models"))
+brain_models = JLD2.load(modelfiles("2023-02-15", "brain_models.jld"))
 
 ordered_brain_segments_list = [
     "left-temporal", "right-temporal",
