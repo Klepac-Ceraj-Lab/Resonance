@@ -225,7 +225,7 @@ Label(H[1, 1, TopLeft()], "H",
 
  
 colsize!(figure.layout, 1, Relative(1/3))
-A_img.alignmode = Mixed(; top=-20, bottom=0, left=-20, right=-30)
+# A_img.alignmode = Mixed(; top=-20, bottom=0, left=-20, right=-30)
 figure
 ```
 
