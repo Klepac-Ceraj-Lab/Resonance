@@ -299,7 +299,23 @@ AB_Subfig = GridLayout(figure[1,1], alignmode=Outside())
 C_subfig = GridLayout(figure[2,1], alignmode=Outside())
 ```
 
+```julia
+imp_bugs = [
+    "Anaerostipes_hadrus",
+    "Fusicatenibacter_saccharivorans",
+    "Eubacterium_rectale",
+    "Blautia_wexlerae",
+    "Bacteroides_vulgatus",
+    "Ruminococcus_torques",
+    "Coprococcus_comes",
+    "Adlercreutzia_equolifaciens",
+    "Asaccharobacter_celatus",
+    "Agathobaculum_butyriciproducens",
+    "Ruminococcus_bromii"
+]
 
+impbugs_color = Dict(b=> c for (c,b) in zip(ColorSchemes.Set3_12, imp_bugs))
+```
 #### Calling the plot functions with the ordered data
 ```julia
 axA = Axis(
@@ -346,15 +362,19 @@ axB = Axis(
     title = "Brain segmentation data variable importances"
 )
 hidexdecorations!(axB; ticks=false)
-axBticks = Axis(
-    AB_Subfig[2,2];
-    xlabel = "Predictor",
-    xticks = (collect(1:nbugs_toplot), relative_brain_importances.variable[1:nbugs_toplot]),
-    xticklabelsize=16,
-    xticklabelrotation= pi/4,
-    alignmode=Outside()
-)
-
+axBticks = let
+    bugs = relative_brain_importances.variable[1:nbugs_toplot]
+    Axis(
+        AB_Subfig[2,2];
+        xlabel = "Predictor",
+        xticks = (collect(1:nbugs_toplot),
+                replace.(bugs, "_"=>" ")),
+        xticklabelsize=16,
+        xticklabelrotation= pi/4,
+        xticklabelfont="TeX Gyre Heros Makie Italic",
+        alignmode=Outside()
+    )
+end
 tightlimits!.([axB, axBticks])
 
 linkxaxes!(axB, axBticks)
@@ -364,6 +384,20 @@ hidespines!(axBticks)
 
 
 hm = CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
+let
+    bugs = relative_brain_importances.variable[1:nbugs_toplot]
+
+    topy = length(interesting_segments) + 0.5
+    for (i, bug) in enumerate(bugs)
+        if bug in imp_bugs
+            poly!(axB, Point2f[(i-0.5, 0.5), (i-0.5, topy), (i+0.5, topy), (i+0.5, 0.5)];
+                strokecolor=impbugs_color[bug], strokewidth=3,
+                color=RGBAf(0,0,0,0))
+            poly!(axBticks, Point2f[(i-0.5, 0), (i-0.5, 1), (i+0.5, 1), (i+0.5, 0)];
+                color=impbugs_color[bug])
+        end
+    end
+end
 Colorbar(AB_Subfig[1,3], hm; label= "Relative feature importance")
 ######
 # Scatterplot
@@ -388,46 +422,36 @@ axC = Axis(
 
 CairoMakie.xlims!(axC, [0, nrow(noage)+1])
 
-imp_bugs = [
-    "Anaerostipes_hadrus",
-    "Fusicatenibacter_saccharivorans",
-    "Eubacterium_rectale",
-    "Blautia_wexlerae",
-    "Bacteroides_vulgatus",
-    "Ruminococcus_torques",
-    "Coprococcus_comes",
-    "Adlercreutzia_equolifaciens",
-    "Asaccharobacter_celatus",
-    "Agathobaculum_butyriciproducens",
-    "Ruminococcus_bromii"
-]
 maximp = maximum(Matrix(noage[!, 2:end]))
-    
-for (col, bug) in zip(ColorSchemes.Set3_12, imp_bugs)
+   
+for bug in imp_bugs
     i = findfirst(==(bug), noage.variable[idx])
-    poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=col)
+    poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=impbugs_color[bug])
 end
 CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
-Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = ColorSchemes.Set3_12[i]) for i in 1:length(imp_bugs)], imp_bugs)
+Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = impbugs_color[bug]) for bug in imp_bugs],
+        replace.(imp_bugs, "_"=> " ");
+        labelfont="TeX Gyre Heros Makie Italic")
 
-Label(A_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
-Label(B_subfig[1, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
+Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
+Label(AB_subfig[1, 2, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
 Label(C_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
 ```
 
 Then resize
 
 ```julia
-
 colsize!(AB_Subfig, 1, Relative(0.2))
 colsize!(AB_Subfig, 2, Relative(0.8))
 rowsize!(AB_Subfig, 2, Relative(0.15))
 rowsize!(figure.layout, 1, Relative(0.75))
 rowsize!(figure.layout, 2, Relative(0.25))
-
-
-save("manuscript/assets/Figure4.png", figure)
 figure
+```
+
+```julia
+save(figurefiles("Figure4.svg"), figure)
+save("manuscript/assets/Figure4.png", figure)
 ```
 
 ### Finding out the highest importance on the matrix
