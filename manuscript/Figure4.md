@@ -333,7 +333,6 @@ axA = Axis(
 tightlimits!(axA, Top())
 tightlimits!(axA, Bottom())
 
-# Plot barplot
 barplot!(
     axA,
     reverse(collect(1:length(interesting_segments))),
@@ -443,7 +442,9 @@ Then resize
 ```julia
 colsize!(AB_Subfig, 1, Relative(0.2))
 colsize!(AB_Subfig, 2, Relative(0.8))
-rowsize!(AB_Subfig, 2, Relative(0.15))
+rowsize!(AB_Subfig, 2, Relative(0.22))
+axA.alignmode=Mixed(; bottom=-60)
+axB.alignmode=Mixed(; bottom=-20)
 rowsize!(figure.layout, 1, Relative(0.75))
 rowsize!(figure.layout, 2, Relative(0.25))
 figure
