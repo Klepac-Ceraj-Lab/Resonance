@@ -80,7 +80,7 @@ let
     u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
     o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
 
-    cs = ColorSchemes.colorschemes[:Set2_7]
+    cs = ColorSchemes.colorschemes[:tab20b][[1,6,15]]
     function colorage(age)
         age <= 36 && return cs[1] # mullen
         age <= 60 && return cs[2] # WPPSI
