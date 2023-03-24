@@ -71,12 +71,12 @@ hidespines!(A_img)
 
 image!(A_img, rotr90(load("manuscript/assets/Figure1A.jpg")))
 
-bax1 = Axis(B[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing), alignmode = Mixed(; left=-15))
+bax1 = Axis(B[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing))
 bax2 = Axis(B[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
 hideydecorations!(bax2)
 linkyaxes!(bax1, bax2)
 
-let
+bleg = let
     u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
     o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
 
@@ -96,7 +96,7 @@ let
     # TODO: add colors for training/test sets in later models
 
     Legend(B[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["MSEL", "WPPSI", "WISC"], "Assessment";
+                      ["MSEL", "WPPSI", "WISC"];
     )
 end
 
@@ -184,12 +184,12 @@ plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 Label(A[1, 1, TopLeft()], "A",
         fontsize = 20,
         font = "Open Sans Bold",
-        halign = :right
+        halign = :right,
 )
 Label(B[1, 1, TopLeft()], "B",
         fontsize = 20,
         font = "Open Sans Bold",
-        halign = :right
+        halign = :right,
 )
 Label(CDEF[1, 1, TopLeft()], "C",
         fontsize = 20,
@@ -225,6 +225,7 @@ Label(H[1, 1, TopLeft()], "H",
 
  
 colsize!(figure.layout, 1, Relative(1/3))
+A_img.alignmode = Mixed(; top=-20, bottom=0, left=-20, right=-30)
 figure
 ```
 
