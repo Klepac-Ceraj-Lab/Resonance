@@ -155,7 +155,6 @@ include("plotting.jl")
 include("omnibus.jl")
 include("prediction.jl")
 include("data_loading.jl")
-include("percentiles.jl")
 include("lms.jl")
 
 end

@@ -98,7 +98,8 @@ function plot_comparative_lmvsrf_scatterplots!(
     lm_path::String;
     exclude_from_importances= [ "ageMonths" ],
     cumulative_importance_threshold = 0.6,
-    plot_colorset = [:dodgerblue, :orange, :green, :purple])
+    plot_colorset = [:dodgerblue, :orange, :green, :purple],
+    kwargs...)
 
     ## 1. calculate the importances and the cumulative sum, excluding the relevant variables
     rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
@@ -118,13 +119,14 @@ function plot_comparative_lmvsrf_scatterplots!(
     is_over_threshold = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance)
     point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_significative_lm, is_over_threshold)
 
-    # @show DataFrame(:variable => plot_comparative_df.variable, :color => point_colors) # For Debug
+    @debug DataFrame(:variable => plot_comparative_df.variable, :color => point_colors)
 
     # 5. Plot scatterplot
     scatter!(
         plot_axis,
-        log.(plot_comparative_df.pvalue).*(-1), plot_comparative_df.weightedImportance,
-        color = point_colors
+        log.(plot_comparative_df.pvalue).*(-1), plot_comparative_df.weightedImportance;
+        color = point_colors,
+        kwargs...
     )
 
     return plot_axis
@@ -182,16 +184,16 @@ end
 RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore reression from taxonomic profiles
-regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlydemo"))
-regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlytaxa"))
-regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplustaxa"))
-regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlyecs"))
-regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplusecs"))
-regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlydemo"))
-regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlytaxa"))
-regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplustaxa"))
-regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlyecs"))
-regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplusecs"))
+regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlydemo.jld"))["regression_currentCogScores_00to06mo_onlydemo"]
+regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
+regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplustaxa.jld"))["regression_currentCogScores_00to06mo_demoplustaxa"]
+regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlyecs.jld"))["regression_currentCogScores_00to06mo_onlyecs"]
+regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_demoplusecs.jld"))["regression_currentCogScores_00to06mo_demoplusecs"]
+regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlydemo.jld"))["regression_currentCogScores_18to120mo_onlydemo"]
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlytaxa.jld"))["regression_currentCogScores_18to120mo_onlytaxa"]
+regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplustaxa.jld"))["regression_currentCogScores_18to120mo_demoplustaxa"]
+regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_onlyecs.jld"))["regression_currentCogScores_18to120mo_onlyecs"]
+regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_18to120mo_demoplusecs.jld"))["regression_currentCogScores_18to120mo_demoplusecs"]
 ```
 
 ## Initializing Figure 3
@@ -229,17 +231,17 @@ axB = Axis(
     title = "18 to 120 months",
 )
 
-plot_colorset = [:gray, ColorSchemes.tableau_10[3], ColorSchemes.tableau_10[1], ColorSchemes.tableau_10[7]]
-plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset)
-plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset)
+plot_colorset = [(:white, 0.), (ColorSchemes.tableau_10[3], 1.0), (ColorSchemes.tableau_10[1], 0.7), (ColorSchemes.tableau_10[7], 0.4)]
+plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset, strokewidth=1)
+plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset, strokewidth=1)
 
 Legend(
     AB_subfig[3, 1],
     [
-        MarkerElement(; marker=:circle, color=plot_colorset[3]),
-        MarkerElement(; marker=:circle, color=plot_colorset[2]),
-        MarkerElement(; marker=:circle, color=plot_colorset[4]),
-        MarkerElement(; marker=:circle, color=plot_colorset[1]),
+        MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
+        MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
+        MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
+        MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
     ],
     [
         ">60% ranked importance",
@@ -323,17 +325,21 @@ plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Alistipes_finegoldii";
 
 ### Panel labels
 ```julia
-Label(AB_subfig[1, 1, TopLeft()], "A", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(AB_subfig[2, 1, TopLeft()], "B", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(CD_subfig[1, 1, TopLeft()], "C", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(CD_subfig[1, 2, TopLeft()], "D", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(E_subfig[1, 1, TopLeft()], "E", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(E_subfig[1, 5, TopLeft()], "F", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(F_subfig[1, 5, TopLeft()], "G", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(AB_subfig[2, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 2, TopLeft()], "D", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 5, TopLeft()], "F", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
 
-Label(E_subfig[1:2, 1, Left()], "00 to 06 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
-Label(F_subfig[1:2, 1, Left()], "18 to 120 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(E_subfig[1:2, 1, Left()], "00 to 06 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+figure
+```
 
+```julia
+save(figurefiles("Figure3.svg"), figure)
 save("manuscript/assets/Figure3.png", figure)
 ```
 

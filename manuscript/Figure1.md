@@ -50,7 +50,7 @@ See the [Makie documentation](https://makie.juliaplots.org/stable/tutorials/layo
 
 
 ```julia
-figure = Figure(; resolution = (2000, 1200))
+figure = Figure(; resolution = (1500, 900))
 A = GridLayout(figure[1,1])
 B = GridLayout(figure[2,1])
 CDEF = GridLayout(figure[1:2,2])
@@ -65,22 +65,22 @@ GH = GridLayout(figure[3,1:2])
 For now, the graphic here is a place-holder, but we'll have something like this for 1A.
 
 ```julia
-A_img = Axis(A[1,1]; aspect = DataAspect(), alignmode=Inside())
+A_img = Axis(A[1,1]; aspect = DataAspect(), alignmode=Outside())
 hidedecorations!(A_img)
 hidespines!(A_img)
 
 image!(A_img, rotr90(load("manuscript/assets/Figure1A.jpg")))
 
-bax1 = Axis(B[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing), alignmode = Mixed(; left=-15))
+bax1 = Axis(B[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing))
 bax2 = Axis(B[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
 hideydecorations!(bax2)
 linkyaxes!(bax1, bax2)
 
-let
+bleg = let
     u2y = findall(p-> !ismissing(p[2]) && p[1] <= 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
     o2y = findall(p-> !ismissing(p[2]) && p[1] > 24, collect(zip(mdata.ageMonths, mdata.cogScore)))
 
-    cs = ColorSchemes.colorschemes[:Set2_7]
+    cs = ColorSchemes.colorschemes[:tab20b][[1,7,15]]
     function colorage(age)
         age <= 36 && return cs[1] # mullen
         age <= 60 && return cs[2] # WPPSI
@@ -96,7 +96,7 @@ let
     # TODO: add colors for training/test sets in later models
 
     Legend(B[1, 3], [MarkerElement(; marker=:circle, color=c) for c in cs[1:3]],
-                      ["MSEL", "WPPSI", "WISC"], "Assessment";
+                      ["MSEL", "WPPSI", "WISC"];
     )
 end
 
@@ -182,49 +182,50 @@ plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
 ```julia
 
 Label(A[1, 1, TopLeft()], "A",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
-        halign = :right
+        halign = :right,
 )
 Label(B[1, 1, TopLeft()], "B",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
-        halign = :right
+        halign = :right,
 )
 Label(CDEF[1, 1, TopLeft()], "C",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(CDEF[2, 1, TopLeft()], "D",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(CDEF[1, 2, TopLeft()], "E",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(CDEF[2, 2, TopLeft()], "F",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 
 Label(G[1, 1, TopLeft()], "G",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 Label(H[1, 1, TopLeft()], "H",
-        fontsize = 26,
+        fontsize = 20,
         font = "Open Sans Bold",
         halign = :right
 )
 
  
 colsize!(figure.layout, 1, Relative(1/3))
+# A_img.alignmode = Mixed(; top=-20, bottom=0, left=-20, right=-30)
 figure
 ```
 
