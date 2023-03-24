@@ -225,12 +225,15 @@ Label(H[1, 1, TopLeft()], "H",
 
  
 colsize!(figure.layout, 1, Relative(1/3))
-# A_img.alignmode = Mixed(; top=-20, bottom=0, left=-20, right=-30)
+bax1.alignmode = Mixed(; left=0, bottom=-45)
+bax2.alignmode = Mixed(; bottom=-45)
+A_img.alignmode = Mixed(; top=-20, bottom=-20, left=-20, right=-30)
 figure
 ```
 
 ```julia
-aw
+save("manuscript/assets/Figure1.png", figure)
+save(figurefiles("Figure1.svg"), figure)
 ```
 
 ![](figures/Figure1.png)
