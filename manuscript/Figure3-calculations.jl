@@ -1,6 +1,6 @@
-#####
-# Cognitive Assessment Score calculation notebook
-#####
+##########
+# Concurrent cognitive assessment Score regression notebook
+##########
 
 #####
 # 0. Loading libraries
