@@ -2,78 +2,20 @@
 # 0. Hierarchical Structures and Types #
 ########################################
 
-struct CustomRangeNormalizer
-    rmin::Float64
-    rmax::Float64
-    tmin::Float64
-    tmax::Float64
-end
-
 abstract type Prediction end
 struct Classification <: Prediction end
 struct Regression <: Prediction end
 
-abstract type Predictor end
-abstract type UnivariatePredictor <: Resonance.Predictor end
-abstract type MultivariatePredictor <: Resonance.Predictor end
-
-mutable struct ExpandedRandomForestClassifier
-    model::Machine
-    train_accuracy::Float64
-    test_accuracy::Float64
-    fitness::Float64
-end
-
-mutable struct UnivariateRandomForestClassifier <: Resonance.UnivariatePredictor
-    name::String
-    original_data::DataFrame
-    inputs_outputs::Tuple{DataFrame, CategoricalArrays.CategoricalVector{Bool, UInt32, Bool, CategoricalArrays.CategoricalValue{Bool, UInt32}, Union{}}}
-    n_splits::Int64
-    dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
-    models:: Vector{Vector{ExpandedRandomForestClassifier}}
-    selected_split::Tuple{Float64, Int64}
-    train_accuracies::Vector{Float64}
-    test_accuracies::Vector{Float64}
-end
-
-mutable struct UnivariateRandomForestRegressor <: Resonance.UnivariatePredictor
-    name::String
-    original_data::DataFrame
-    inputs_outputs::Tuple{DataFrame, Vector{Float64}}
-    n_splits::Int64
-    dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
-    models::Vector{Machine}
-    scale_corrections::Vector{CustomRangeNormalizer}
-    selected_split::Tuple{Float64, Int64}
-    train_rmses::Vector{Float64}
-    test_rmses::Vector{Float64}
-    train_cors::Vector{Float64}
-    test_cors::Vector{Float64}
-end
-
-mutable struct ExpandedRandomForestRegressor <: Resonance.UnivariatePredictor
-    model::Machine
-    scale_correction::CustomRangeNormalizer
-    train_rmse::Float64
-    test_rmse::Float64
-    train_cor::Float64
-    test_cor::Float64
-    fitness::Float64
-end
-
-mutable struct UnivariatePredictorEnsemble
-    screen_names::Vector{String}
-    col_names::Vector{Symbol}
-    predictors::Vector{T where T <: Resonance.UnivariatePredictor}
-end
-
 struct ProbeData
     name::String
+    original_df::DataFrame
     n_folds::Int64
     n_replicas::Int64
     n_rngs::Int64
     merits::DataFrame
     importances::DataFrame
+    saved_predictions::DataFrame
+    saved_pertinences::DataFrame
 end
 
 ########################################
