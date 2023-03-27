@@ -37,6 +37,8 @@ style=science
 \usepackage{rotating}
 \usepackage{graphicx}
 \graphicspath{assets}
+\usepackage{float}
+
 \usepackage{times}
 
 
@@ -105,7 +107,7 @@ style=science
 The gastrointestinal tract, its resident microorganisms, and the central
 nervous system are connected by biochemical signaling, also known as
 "microbiome-gut-brain-axis." Both the human brain and the gut microbiome
-have critical developmental windows in the first three years of life,
+have critical developmental windows in the first years of life,
 raising the possibility that their development is co-occurring and
 likely co-dependent. Emerging evidence implicates gut microorganisms and
 microbiota composition in cognitive outcomes and neurodevelopmental
@@ -291,7 +293,6 @@ and brain volume profiles was similarly driven largely by subject age (Figure 1E
 
 \end{sidewaysfigure}
 
-
 \begin{table}[!htb]
     \centering
     \begin{tabular}{|r|r|r|r|r|}
@@ -351,7 +352,7 @@ function in children under 6 months, though this may be due to the low
 taxonomic diversity and broad lack of overlap between taxa in infants (Figure 1G).
 As expected, age was significantly associated with microbial beta
 diversity (taxa R\textsuperscript{2} = 0.0215, and  gene functions
-annotated with UniRef90s - clusters of 90\% similarity
+annotated with UniRef90s clusters of 90\% similarity
 \cite{suzekUniRefComprehensiveNonredundant2007} -
 R\textsuperscript{2} = 0.0245, q \textless{} 0.001), and very strongly
 associated with variation in neuroimaging profiles (R\textsuperscript{2} = 0.256, q
@@ -388,7 +389,8 @@ several mirobial species were significantly enriched (q-value
 including \emph{Gordonibacter pamelaeae},
 \emph{Asaccharobacter celatus} and \emph{Adelcreutzia equolifaciens}
 (also known as \textit{Adlercreutzia equolifaciens} subsp. \textit{celatus}
-and \textit{Adlercreutzia equolifaciens} subsp. \textit{equolifaciens} \cite{maruoAdlercreutziaEquolifaciensGen2008}),
+and \textit{Adlercreutzia equolifaciens} subsp. \textit{equolifaciens} respectively
+\cite{maruoAdlercreutziaEquolifaciensGen2008}),
 and SCFA-producing probiotic
 species such as \emph{Eubacterium eligens} and \emph{Faecalibacterium
 prausnitzii}
@@ -452,7 +454,7 @@ degradation) of neuroactive compounds may have effects on cognitive
 development.
 
 
-\begin{table}[!h]
+\begin{table}[!htb]
     \begin{center}
     \begin{tabular}{|r|r|r|r|r|r|r|}
       \hline\hline
@@ -550,12 +552,12 @@ and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE 17.29). For both age groups,
 species that were important in RF overlapped with those that were
 significant when testing the relationship with LMs (Figure
-3A-B, Table S1A-B); aside from except for \emph{Eubacterium ramulus}
+3A-B, Table S1A-B); except for \emph{Eubacterium ramulus}
 all taxa that were significant using LMs belonged to a group
 responsible for 80\% of the total relative importance in RF models
 (Table 3, Figure 3A).
 However, the rank-ordering of LM significance and RF importance
-were had substantive differences. For example, in children under 6 months,
+had substantive differences. For example, in children under 6 months,
 only \emph{B. wexlerae} was significantly associated with cognitive function in LMs, but
 was ranked 20th in importance for RF models. 
 
@@ -595,7 +597,7 @@ RF correlations = 0.288; relative age importances = 1.2\%).
     \begin{center}
     \begin{tabular}{|r|r|r|}
       \hline\hline
-      \textbf{Statistic} & \textbf{(MAPE)} & \textbf{R} \\\hline
+      \textbf{Statistic} & \textbf{MAPE} & \textbf{R} \\\hline
       Mean & 0.073 & 0.137 \\
       Standard deviation & 0.028 & 0.137 \\
       Maximum & 0.206 & 0.605 \\
@@ -616,10 +618,10 @@ microbial feature importance, other regions had substantial
 bilateral differences. For example, the left accumbens area
 has one of the highest test-set correlations of our
 brain region models (R = 0.288), as compared to the right which
-had a negative mean test-set correlation (R = -0.041)
-indicated that generalizable models were not identified.
+had a negative mean test-set correlation (R = -0.041),
+indicating that generalizable models were not identified.
 Feature importance for models of the left accumbens area were dominated
-by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.4\%
+by three species of \emph{Bacteroides}: \emph{B. vulgatus} (3.4\%
 relative importance), \emph{B. ovatus} (3.7\% relative importance), and
 \emph{B. uniformis} (3.0\% relative importance).
 
@@ -769,8 +771,11 @@ it has been shown to have a divergent neuromorphology
 \cite{hoogmanSubcorticalBrainVolume2017}.
 
 The use of shotgun metagenomic sequencing enabled us to get
-species-level resolution of microbial taxa. A previous study of
-cognition in 3 year old subjects used 16S rRNA gene amplicon sequencing,
+species-level resolution of microbial taxa. There are many examples
+in which different members of the same genus may play opposing roles,
+as with \textit{B. fragilis} and \textit{B. ovatus} mentioned above.
+A previous study of
+cognition in 3 year old subjects used 16S rRNA gene amplicon sequencing
 and showed that genera from the Lachnospiraceae family as well as
 unclassified Clostridiales (now Eubacteriales) were associated with
 higher scores on the Ages and Stages Questionnaire
