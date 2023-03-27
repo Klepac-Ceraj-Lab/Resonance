@@ -47,7 +47,14 @@ export  # 0. structs/types
         probe_prod_randomforest,
         # postprocessing functions
         CustomRangeNormalizer,
-        compute_custom_scale
+        compute_custom_scale,
+        calculate_fitness,
+        weighted_hpimportances,
+        compute_joined_importances,
+        plot_comparativedemo_importance_barplots!,
+        attribute_colors,
+        plot_comparative_lmvsrf_scatterplots!,
+        plot_taxon_deepdive!
 
 # Percentiles
 export  AgeBracketPercentiles,
