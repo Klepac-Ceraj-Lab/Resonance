@@ -5,7 +5,8 @@ of the NIH **E**nvironmental influencences on **C**hild **H**ealth **O**utcomes 
 
 Grant #  NIH UG3 OD023313 (VK-C).
 
-[![DOI](https://zenodo.org/badge/448058945.svg)](https://zenodo.org/badge/latestdoi/448058945)
+[![zenodo DOI](https://zenodo.org/badge/448058945.svg)](https://zenodo.org/badge/latestdoi/448058945)
+[![OSF.io DOI](https://img.shields.io/badge/OSF.io-10.17605%2FOSF.IO%2FYBS32-informational)](https://doi.org/10.17605/OSF.IO/YBS32)
 
 ## Repo organization
 
