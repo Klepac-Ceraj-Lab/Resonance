@@ -22,177 +22,45 @@ end
 # 1. Preprocessing/Wrangling Functions #
 ########################################
 
-## 1.1. Helper/utility functions
-dropnan(vv) = vv[.!(isnan.(vv))]
+function filter_prevalences(
+    mdata_profile_df::DataFrame,
 
-## 1.1.1. \xor used to aggregate columns that contain parts of the same original data
-function myxor(a::Float64, b::Float64)
-    a == b && (return a)
-    a > b && (return a)
-    a < b && (return b)
-end
+    label_col::Symbol,
+    metadata_cols::Vector{Symbol},
+    cols_to_delete::Vector{Symbol};
+    lbound = 0.1,
+    ubound = 1.0,
+    education2int = true,
+    sex2int = true
+    )
 
-## 1.2. Raw data processing functions
+    ## Step 1. Remove unnecessary stuff
+    profile_df = select(mdata_profile_df, Not(vcat(label_col, metadata_cols, cols_to_delete)))
 
-### 1.2.1. Age bracket filtering for concurrent prediction
-function filter_age_bracket(df, min_age, max_age)
-    prediction_df = @chain df begin
-        subset(:ageMonths => x -> min_age .<= x .< max_age)    
-    end
-    return prediction_df
-end
+    ## Step 2. Calculate prevalences
+    prevalences = map( x -> mean(x .> 0.0), eachcol(profile_df) )
+    columns_to_keep = (prevalences .>= lbound) .& (prevalences .<= ubound)
 
-### 1.2.2. Build a DataFrame for prediction of future target variables from mdata
-function build_metadata_prediction_df(base_df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}; keep_demographic = true)
+    ## Step 3. update profile_df
+    filtered_profile_df = profile_df[:, columns_to_keep]
 
-    subjects = unique(base_df.subject)
-    has_stool = findall(.!(ismissing.(base_df.sample)))
-    has_cogscore = findall(.!(ismissing.(base_df.cogScorePercentile)))
-
-    subjects_stool_idx = [ intersect(findall(base_df.subject .== el), has_stool) for el in subjects ]
-    subjects_cogscore_idx = [ intersect(findall(base_df.subject .== el), has_cogscore) for el in subjects ]
-
-    line_combinations = vcat( [ vec(collect(Base.product(subjects_stool_idx[i], subjects_cogscore_idx[i]))) for i in 1:length(subjects) ]... )
-    line_combinations = line_combinations[ [ el[2] > el[1] for el in line_combinations ] ]
-
-    targets_df = @chain base_df[ [el[2] for el in line_combinations], :] begin
-        select( [:subject, :timepoint, :ageMonths, targets...] )
-        rename!( [:timepoint => :futureTimepoint, :ageMonths => :futureAgeMonths, (targets .=> Symbol.("future" .* uppercasefirst.(String.(targets))))...] )
-    end
-
-    inputs_df = @chain base_df[ [el[1] for el in line_combinations], :] begin
-        select( Not(:subject) )
-    end
-
-    prediction_df = hcat(targets_df, inputs_df)
-    prediction_df.ageMonthsDelta = prediction_df.futureAgeMonths .- prediction_df.ageMonths 
-    prediction_df.timepointDelta = prediction_df.futureTimepoint .- prediction_df.timepoint 
-   
-    if keep_demographic
-        select!(
-            prediction_df,
-            [
-                :subject, :timepoint, :ageMonths, 
-                :sex, :education,
-                :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta,
-                targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...
-            ]
+    ## Step 4. append label and metadata to the beginning of the dataFrame
+    filtered_profile_df = hcat(
+        mdata_profile_df[:, vcat(label_col, metadata_cols)],
+        filtered_profile_df
         )
-    else
-        select!(
-            prediction_df,
-            [
-                :subject, :timepoint, :ageMonths,
-                :futureAgeMonths, :futureTimepoint, :ageMonthsDelta, :timepointDelta,
-                targets..., Symbol.("future" .* uppercasefirst.(String.(targets)))..., inputs...
-            ]
-        )    end
-    sort!(prediction_df, [:subject, :timepoint, :futureTimepoint])
     
-    return prediction_df
-
+    if education2int
+        filtered_profile_df.education = coerce(int.(skipmissing(filtered_profile_df.education), type = Int), OrderedFactor)
 end
 
-### 1.2.3. process dataframe built by function 1.2.2.
-function prepare_future_prediction_df(df::DataFrame, inputs::Vector{Symbol}, targets::Vector{Symbol}, max_stool_ageMonths = 12.0, max_future_ageMonths = 24.0; filterout = [ :cogScorePercentile ] )
-
-    future_prediction_df = @chain df begin
-        build_metadata_prediction_df(inputs, targets)
-        select( Not(filterout) ) # Toggle this and the next line for dropping/filtering original cogScore
-    #    subset(:cogScore => x -> .!(ismissing.(x)))
-        subset(:ageMonths => x -> .!(ismissing.(x)))
-        subset(:futureAgeMonths => x -> x .<= max_future_ageMonths)
-        subset(:ageMonths => x -> x .<= max_stool_ageMonths)
-        unique([:subject, :timepoint])
-        unique([:subject, :futureTimepoint])
-        dropmissing()
+    if sex2int
+        filtered_profile_df.sex = coerce(int.(skipmissing(filtered_profile_df.sex), type = Int), OrderedFactor)
     end
 
-    return future_prediction_df
+    return (filtered_profile_df)
 
 end
-
-### 1.2.4. Meanclass (true/false if above/below vector mean)
-meanclass(x::Vector{T} where T <: Real) = coerce(x .>= mean(x), OrderedFactor)
-
-## 1.3. Univariate outlier detection
-
-## 1.3.1. Computation of Tietjen-Moore r for outlier detection
-function compute_tietjenmoore(data, k, n)
-    r_all = abs.(data .- mean(data))
-    filteredData = data[sortperm(r_all)][1:(n-k)]
-    ksub = (filteredData .- mean(filteredData))
-
-    return( sum(ksub .^ 2) / sum(r_all .^ 2) )
-end
-
-## 1.3.2. Tietjen-Moore outlier detection test
-function test_tietjenmoore(dataSeries,k, n, alpha, sim_trials)
-    ek = compute_tietjenmoore(dataSeries,k, n)
-    simulation = [ compute_tietjenmoore(randn(length(dataSeries)), k, n) for i in 1:sim_trials ]
-    Talpha=quantile(simulation,alpha)
-
-    return(ek, Talpha)
-end
-
-## 1.3.3. Verbatim execution of Tietjen-Moore outlier test
-function univariate_tietjenmoore(values::Vector{T} where T <: Real, k::Int64; alpha = 0.05, sim_trials = 100000)
-
-    @info "----- Begin Tietjen-Moore Outlier test -----\n
-        H0: There are no outliers in the data set.\n
-        H1: There are exactly k outliers in the data set"
-
-    n = length(values)
-    L_set, L_critical = test_tietjenmoore(values, k, n, alpha, sim_trials)
-
-    if L_set < L_critical
-        @info "Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))\n
-            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))\n
-            L_set < L_critical\n
-            **SUCCESSFUL REJECTION OF H0** with confidence level $alpha" 
-        r_all = abs.(values .- mean(values))
-        outlier_indexes = sortperm(r_all)[(n-k+1):end]
-        return outlier_indexes
-    else
-        @info """
-            Set L-statistic for $n samples and $k outliers: $(round(L_set, digits = 4))
-            Critical L for $n samples and $k outliers: $(round(L_critical, digits = 4))
-            L_set > L_critical !
-            **CANNOT REJECT H0** with confidence level $alpha
-            """
-        return Int64[]
-    end # endif L_set < L_critical
-end # end function
-
-## 1.3.4. Automated Tietjen-Moore outlier test for differente numbers of outliers
-function try_outliers(f, data, n; reverse=true)
-
-    if reverse
-
-        for i in n:-1:1
-            outlier_idx = f(data, i)
-            if length(outlier_idx) != 0
-                return(i, outlier_idx)
-            end
-        end
-    else
-
-        for i in 1:n
-            outlier_idx = f(data, i)
-            if length(outlier_idx) != 0
-                return(i, outlier_idx)
-            end
-         end
-    end
-    return 0, Int64[]
-end
-
-####################################
-# 2. Training/Processing Functions #
-####################################
-
-RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 
 ## N-fold CV
 function partitionvec(x,stride,i,longtail::Bool=true)
@@ -205,37 +73,30 @@ function partitionvec(x,stride,i,longtail::Bool=true)
     return train, test
 end
 
-## 2.1. Train Tandom Forest Classifier
+RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 
-function train_randomforest(
-    type::Resonance.Classification,
-    ref_name::String,
+function probe_prod_randomforest(
+    ::Regression,
+    name::String,
     original_df::DataFrame,
     data_preparation_fun::Function,
-    class_function::Function,
     input_cols,
     output_col;
-    n_splits = 5,
+    n_folds = 10,
+    n_replicas = 10,
+    n_rngs = 100,
     tuning_space = (;
         maxnodes_range = [ -1 ],
-        nodesize_range = [ 0 ],
+        nodesize_range = [ 5 ],
         sampsize_range = [ 0.7 ],
-        mtry_range = [ 5 ],
+        mtry_range = [ -1 ],
         ntrees_range = [ 10 ]
     ),
-    stress_draws=51,
-    select_stress_percentile = 0.841,
     train_rng=Random.GLOBAL_RNG
     )
 
     # ## 1. Subsetting Data and shuffling DataFrame
     prediction_df = data_preparation_fun(original_df)
-    Random.seed!(train_rng, 0)
-    prediction_df = prediction_df[Random.randperm(train_rng, nrow(prediction_df)), :]
-    
-    # ## 2. Separating inputs/outputs
-    X = prediction_df[:, input_cols]
-    y = class_function(prediction_df[:, output_col])
 
     # ## 3. Building hyperparameter tuning grid
     tuning_grid = vec(collect(Base.product(
@@ -246,364 +107,128 @@ function train_randomforest(
         tuning_space.ntrees_range
     )))
 
-    # ## 4. Initializing meta-arrays to record tuning results for each split
-    trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
-    trial_machines = Vector{Vector{ExpandedRandomForestClassifier}}(undef, n_splits)
-    trial_train_accuracies = zeros(Float64, n_splits)
-    trial_test_accuracies = zeros(Float64, n_splits)
+    dataset_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}()
+    for fold_idx in 1:n_folds
+        train, test = partitionvec(collect(1:nrow(prediction_df)),floor(Int64, nrow(prediction_df)/n_folds),fold_idx, true)
+        push!(dataset_partitions, (train, test))
+    end
 
-    # ## 5. Tuning/training loop
-    @info "Performing $(n_splits) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples."
+    ys = Vector{Vector{Any}}()
+    hyperpar_idxes = Vector{Int64}()
+    replica_idxes = Vector{Int64}()
+    fold_idxes = Vector{Int64}()
+    rng_idxes = Vector{Int64}()
+    train_rmses = Vector{Float64}()
+    test_rmses = Vector{Float64}()
+    train_mapes = Vector{Float64}()
+    test_mapes = Vector{Float64}()
+    train_cors = Vector{Float64}()
+    test_cors = Vector{Float64}()
+    importances = DataFrame(:variable => [])
+    saved_predictions = DataFrame(:subject => [])
+    saved_pertinences = DataFrame(:subject => [])
 
-    for this_trial in 1:n_splits
+    model_index = 0
 
-        fitness_threshold = 0.0
+    for hp_idx in eachindex(tuning_grid)
 
-        ## 5.1. Splitting training data between train and test
-        train, test = partitionvec(collect(1:nrow(prediction_df)),floor(Int64, nrow(prediction_df)/n_splits),this_trial, true)
-        trial_partitions[this_trial] = (train, test)
+        for rep_idx in 1:n_replicas
 
-        ## 5.2. Tuning hyperparameter for this split
-        for i in eachindex(tuning_grid)
+            Random.seed!(train_rng, rep_idx-1)
+            shuffled_df = prediction_df[Random.randperm(train_rng, nrow(prediction_df)), :]
+            X = shuffled_df[:, input_cols]
+            y = shuffled_df[:, output_col]
 
-            expanded_models = try_stress_hyperparameters(
-                Resonance.Classification(),
-                X, y, train, test,
-                (;
-                    max_depth = tuning_grid[i][1],
-                    min_samples_leaf = tuning_grid[i][2],
-                    sampling_fraction = tuning_grid[i][3],
-                    n_subfeatures = tuning_grid[i][4],
-                    n_trees = tuning_grid[i][5]
-                ),
-                stress_draws;
-                train_rng=train_rng)
+            for fold_idx in 1:n_folds
 
-            merits = report_merits(expanded_models)
-            target_percentile = sort(merits[1:stress_draws, :Fitness])[floor(Int64, select_stress_percentile*stress_draws)]
-            selected_fitness_index = findfirst(merits[1:stress_draws, :Fitness] .== target_percentile)
-            selected_fitness = merits[selected_fitness_index, :Fitness]
+                train, test = dataset_partitions[fold_idx]
 
-            ## 5.2.4. Compare benchmark results with previous best model
-            selected_fitness > fitness_threshold ? begin
-                fitness_threshold = selected_fitness
-                trial_train_accuracies[this_trial] = merits[selected_fitness_index, :Train_ACC]
-                trial_test_accuracies[this_trial] = merits[selected_fitness_index, :Test_ACC]
-                trial_machines[this_trial] = deepcopy(expanded_models)
-            end : continue
+                for rng_idx in 1:n_rngs
 
-        end # end for i in 1:length(tuning_grid) - each set of hyperparameters
+                    Random.seed!(train_rng, rng_idx-1)
 
-        println("Split done!")
-
-    end # end for this_trial - each different train/test split
-
-    # ## 6. Returning optimization results
-    results = UnivariateRandomForestClassifier(
-        ref_name,                       #name::String
-        prediction_df,                  #original_data::DataFrame
-        (X,y),                          #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
-        n_splits,                       #n_splits::Int64
-        trial_partitions,               #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
-        trial_machines,                 #models::Vector{Machine}
-        findmax(trial_test_accuracies),  #selected_split::Tuple{Float64, Int64}
-        trial_train_accuracies,         #train_accuracies::Vector{Float64}
-        trial_test_accuracies,          #test_accuracies::Vector{Float64}
-    )
-
-    @info "Done!"
-    return results
-
-end # end function
-
-## 2.2. Train Tandom Forest Regressor
-
-function train_randomforest(
-    type::Resonance.Regression,
-    ref_name::String,
-    original_df::DataFrame,
-    data_preparation_fun::Function,
-    input_cols,
-    output_col;
-    n_splits = 2,
-    tuning_space = (;
-        maxnodes_range = [ -1 ] ,
-        nodesize_range = [ 0 ],
-        sampsize_range = [ 0.7 ],
-        mtry_range = [ 5 ],
-        ntrees_range = [ 10 ]
-    ),
-    split_proportion=0.6,
-    train_rng=Random.GLOBAL_RNG
-    )
-
-    # ## 1. Subsetting Data and shuffling DataFrame
-    prediction_df = data_preparation_fun(original_df)
-    Random.seed!(train_rng, 0)
-    prediction_df = prediction_df[Random.randperm(train_rng, nrow(prediction_df)), :]
-    
-    # ## 2. Separating inputs/outputs
-    X = prediction_df[:, input_cols]
-    y = prediction_df[:, output_col]
-
-    # ## 3. Building hyperparameter tuning grid
-    tuning_grid = vec(collect(Base.product(
-        tuning_space.maxnodes_range,
-        tuning_space.nodesize_range,
-        tuning_space.sampsize_range,
-        tuning_space.mtry_range,
-        tuning_space.ntrees_range
-    )))
-
-    # ## 4. Initializing meta-arrays to record tuning results for each split
-    trial_partitions = Vector{Tuple{Vector{Int64}, Vector{Int64}}}(undef, n_splits)
-    trial_machines = Vector{Machine}(undef, n_splits)
-    trial_scalecorrections = Vector{CustomRangeNormalizer}(undef, n_splits)
-    trial_train_rmses = repeat([Inf], n_splits)
-    trial_test_rmses = repeat([Inf], n_splits)
-    trial_train_cors = repeat([-1.0], n_splits)
-    trial_test_cors = repeat([-1.0], n_splits)
-
-    # ## 5. Tuning/training loop
-    @info "Performing $(n_splits) different train/test splits and tuning $(length(tuning_grid)) different hyperparmeter combinations\nfor the $(nrow(prediction_df)) samples."
-
-    for this_trial in 1:n_splits
-
-        fitness_threshold = -1.0
-
-        ## 5.1. Splitting training data between train and test
-        # Random.seed!(train_rng, this_trial)
-        # train, test = partition(eachindex(1:size(X, 1)), split_proportion, shuffle=true, rng=train_rng)
-        train, test = partitionvec(collect(1:nrow(prediction_df)),floor(Int64, nrow(prediction_df)/n_splits),this_trial, true)
-        trial_partitions[this_trial] = (train, test)
-
-        ## 5.2. Tuning hyperparameter for this split
-        for i in eachindex(tuning_grid)
-            Random.seed!(train_rng, 0)
-
-            ## 5.2.1. Construct model with a candidate set of hyperparameters
             rf_model = RandomForestRegressor(
-                max_depth = tuning_grid[i][1],
-                min_samples_leaf = tuning_grid[i][2],
-                sampling_fraction = tuning_grid[i][3],
-                n_subfeatures = tuning_grid[i][4],
-                n_trees = tuning_grid[i][5],
-                rng=train_rng
+                        max_depth = tuning_grid[hp_idx][1],
+                        min_samples_leaf = tuning_grid[hp_idx][2],
+                        sampling_fraction = tuning_grid[hp_idx][3],
+                        n_subfeatures = tuning_grid[hp_idx][4],
+                        n_trees = tuning_grid[hp_idx][5],
+                        rng = train_rng
             )
 
-            ## 5.2.2. Fit model on training data
             rf_machine = machine(rf_model, X[train, :], y[train])
             MLJ.fit!(rf_machine, verbosity=0)
-            ## 5.2.2.1. Fit scale correction on training data
+            
             train_y_hat = MLJ.predict(rf_machine, X[train, :])
-            scale_correction = compute_custom_scale(train_y_hat, y[train])
-            train_y_hat = scale_normalization(train_y_hat, scale_correction)
-            train_rmse = rms(train_y_hat, y[train])
+                    train_rmse = rmse(train_y_hat, y[train])
+                    train_mape = mean(abs.(train_y_hat .- y[train]) ./ y[train])
             train_cor = Statistics.cor(train_y_hat, y[train])
-
-            ## 5.2.3. Benchmark model on independent testing data
             test_y_hat = MLJ.predict(rf_machine, X[test, :])
-            test_y_hat = scale_normalization(test_y_hat, scale_correction)
-            test_rmse = rms(test_y_hat, y[test])
+                    test_rmse = rmse(test_y_hat, y[test])
+                    test_mape = mean(abs.(test_y_hat .- y[test]) ./ y[test])
             test_cor = Statistics.cor(test_y_hat, y[test])
 
-            ## 5.2.4. Compare benchmark results with previous best model
-            # model_fitness = sqrt(Complex(train_rmse*test_rmse))
-            model_fitness = sqrt((train_cor^2)*(test_cor^2)) # Penalizing test_cor to avoid lucky test sets.
-            # model_fitness = Complex(train_cor*test_cor*test_cor).re ^ 1.0/3.0
+                    model_index += 1
+                    model_colname = Symbol("model_"*lpad(string(model_index),6,"0"))
 
-            ## 5.2.4. Compare benchmark results with previous best model
-            # ((model_fitness.im == 0) & (model_fitness.re > fitness_threshold) & (train_cor != -1.0) & (test_cor != -1.0)) ? begin
-            # ((model_fitness.re < fitness_threshold) & (train_cor > -0.0)) ? begin
-            ((model_fitness > fitness_threshold) & (train_cor > -0.1) & (test_cor > -0.1)) ? begin
-                println(model_fitness)
-                println(train_cor)
-                println(test_cor)
-                fitness_threshold = model_fitness
-                trial_train_rmses[this_trial] = train_rmse
-                trial_train_cors[this_trial] = train_cor
-                trial_test_rmses[this_trial] = test_rmse
-                trial_test_cors[this_trial] = test_cor
-                trial_machines[this_trial] = deepcopy(rf_machine)
-                trial_scalecorrections[this_trial] = scale_correction
-            end : continue
-
-        end # end for i in 1:length(tuning_grid) - each set of hyperparameters
-
-        println("Split done!")
-
-    end # end for this_trial - each different train/test split
-
-    # ## 6. Returning optimization results
-    results = UnivariateRandomForestRegressor(
-        ref_name,                   #name::String
-        prediction_df,              #original_data::DataFrame
-        (X,y),                      #inputs_outputs::Tuple{DataFrame, Vector{Float64}}
-        n_splits,                   #n_splits::Int64
-        trial_partitions,           #dataset_partitions::Vector{Tuple{Vector{Int64}, Vector{Int64}}}
-        trial_machines,             #models::Vector{Machine}
-        trial_scalecorrections,     #scale_correction::Vector{}
-        findmin(trial_test_rmses),  #selected_split::Tuple{Float64, Int64}
-        trial_train_rmses,          #train_rmses::Vector{Float64}
-        trial_test_rmses,           #test_rmses::Vector{Float64}
-        trial_train_cors,           #train_cor::Vector{Float64}
-        trial_test_cors,            #test_cor::Vector{Float64}
-    )
-
-    @info "Done!"
-    return results
-
-end # end function
-
-function try_stress_hyperparameters(
-    ::Resonance.Classification,
-    X,
-    y,
-    train,
-    test,
-    pars = (;
-        maxnodes_range = -1 ,
-        nodesize_range = 0,
-        sampsize_range = 0.7,
-        mtry_range = 5,
-        ntrees_range = 1
-    ),
-    n_expanded_models = 101;
-    train_rng=Random.GLOBAL_RNG)
-
-    expanded_models = Vector{ExpandedRandomForestClassifier}(undef, n_expanded_models)
-
-    for i in 1:n_expanded_models
-        Random.seed!(train_rng, i-1)
-
-        rf_model = RandomForestClassifier(
-            max_depth = pars[1],
-            min_samples_leaf = pars[2],
-            sampling_fraction = pars[3],
-            n_subfeatures = pars[4],
-            n_trees = pars[5],
-            rng=train_rng
-        )
-        rf_machine = machine(rf_model, X[train, :], y[train])
-        MLJ.fit!(rf_machine, verbosity=0)
-
-        train_y_hat = MLJ.predict_mode(rf_machine, X[train, :]) 
-        train_acc = mean(train_y_hat .== y[train])
-        test_y_hat = MLJ.predict_mode(rf_machine, X[test, :]) 
-        test_acc = mean(test_y_hat .== y[test])
-        fitness = sqrt(train_acc*test_acc)
-
-        expanded_models[i] = ExpandedRandomForestClassifier(
-            deepcopy(rf_machine),
-            train_acc,
-            test_acc,
-            fitness
+                    this_predictions = DataFrame(
+                        :subject => vcat(shuffled_df[train, :subject], shuffled_df[test, :subject]),
+                        model_colname => map(x -> round(x; digits = 0), vcat(train_y_hat, test_y_hat))
         )
 
+                    this_pertinences = DataFrame(
+                        :subject => vcat(shuffled_df[train, :subject], shuffled_df[test, :subject]),
+                        model_colname => vcat(repeat([ "train" ], length(train)),repeat([ "test" ], length(test)))
+        )
+
+                    push!(hyperpar_idxes, hp_idx)
+                    push!(replica_idxes, rep_idx)
+                    push!(fold_idxes, fold_idx)
+                    push!(rng_idxes, rng_idx)
+                    push!(train_rmses, train_rmse)
+                    push!(test_rmses, test_rmse)
+                    push!(train_mapes, train_mape)
+                    push!(test_mapes, test_mape)
+                    push!(train_cors, train_cor)
+                    push!(test_cors, test_cor)
+                    importances = outerjoin(importances, DataFrame(:variable => names(X), model_colname => impurity_importance(rf_machine.fitresult)), on = :variable)
+                    saved_predictions = outerjoin(saved_predictions, this_predictions, on = [ :subject => :subject ])
+                    saved_pertinences = outerjoin(saved_pertinences, this_pertinences, on = [ :subject => :subject ])
+                end
     end
 
-    return expanded_models
+            push!(ys, y)
 
 end
-
-function expand_pretrained_model(
-    model::Resonance.UnivariateRandomForestClassifier,
-    selected_split::Int64,
-    n_expanded_models::Int64;
-    train_rng=Random.GLOBAL_RNG
-    )
-
-    X = model.inputs_outputs[1]
-    y = model.inputs_outputs[2]
-    train, test = model.dataset_partitions[selected_split]
-
-    expanded_models = Vector{ExpandedRandomForestClassifier}(undef, n_expanded_models)
-
-    for i in 1:n_expanded_models
-        Random.seed!(train_rng, i-1)
-
-        rf_model = RandomForestClassifier(
-            max_depth = model.models[selected_split].model.max_depth,
-            min_samples_leaf = model.models[selected_split].model.min_samples_leaf,
-            sampling_fraction = model.models[selected_split].model.sampling_fraction,
-            n_subfeatures = model.models[selected_split].model.n_subfeatures,
-            n_trees = model.models[selected_split].model.n_trees,
-            rng=train_rng
-        )
-        rf_machine = machine(rf_model, X[train, :], y[train])
-        MLJ.fit!(rf_machine, verbosity=0)
-
-        train_y_hat = MLJ.predict_mode(rf_machine, X[train, :]) 
-        train_acc = mean(train_y_hat .== y[train])
-        test_y_hat = MLJ.predict_mode(rf_machine, X[test, :]) 
-        test_acc = mean(test_y_hat .== y[test])
-
-        expanded_models[i] = ExpandedRandomForestClassifier(
-            deepcopy(rf_machine),
-            train_acc,
-            test_acc
-        )
-
     end
 
-    @info "Done!"
-    return expanded_models
-
-end # end function
-
-function expand_pretrained_model(
-    model::Resonance.UnivariateRandomForestRegressor,
-    selected_split::Int64,
-    n_expanded_models::Int64;
-    train_rng=Random.GLOBAL_RNG
-    )
-
-    X = model.inputs_outputs[1]
-    y = model.inputs_outputs[2]
-    train, test = model.dataset_partitions[selected_split]
-
-    expanded_models = Vector{ExpandedRandomForestRegressor}(undef, n_expanded_models)
-
-    for i in 1:n_expanded_models
-        Random.seed!(train_rng, i-1)
-
-        rf_model = RandomForestRegressor(
-            max_depth = model.models[selected_split].model.max_depth,
-            min_samples_leaf = model.models[selected_split].model.min_samples_leaf,
-            sampling_fraction = model.models[selected_split].model.sampling_fraction,
-            n_subfeatures = model.models[selected_split].model.n_subfeatures,
-            n_trees = model.models[selected_split].model.n_trees,
-            rng=train_rng
-        )
-        rf_machine = machine(rf_model, X[train, :], y[train])
-        MLJ.fit!(rf_machine, verbosity=0)
-
-        train_y_hat = MLJ.predict(rf_machine, X[train, :])
-        scale_correction = compute_custom_scale(train_y_hat, y[train])
-        train_y_hat = scale_normalization(train_y_hat, scale_correction)
-        train_rmse = rms(train_y_hat, y[train])
-        train_cor = Statistics.cor(train_y_hat, y[train])
-
-        test_y_hat = MLJ.predict(rf_machine, X[test, :])
-        test_y_hat = scale_normalization(test_y_hat, scale_correction)
-        test_rmse = rms(test_y_hat, y[test])
-        test_cor = Statistics.cor(test_y_hat, y[test])
-
-        expanded_models[i] = ExpandedRandomForestRegressor(
-            deepcopy(rf_machine),
-            scale_correction,
-            train_rmse,
-            test_rmse,
-            train_cor,
-            test_cor
+    report_df = DataFrame(
+        :Hyperpar_Idx => hyperpar_idxes,
+        :Replica_Idx => replica_idxes,
+        :Fold_Idx => fold_idxes,
+        :Rng_Idx => rng_idxes,
+        :Train_RMSE=> train_rmses,
+        :Test_RMSE => test_rmses,
+        :Train_MAPE=> train_mapes,
+        :Test_MAPE => test_mapes,
+        :Train_Cor=> train_cors,
+        :Test_Cor => test_cors
         )
 
+    results = ProbeData(
+        name,
+        original_df,
+        n_folds,
+        n_replicas,
+        n_rngs,
+        report_df,
+        importances,
+        sort(saved_predictions, :subject),
+        sort(saved_pertinences, :subject)
+        )
+
+    return results
     end
-
-    @info "Done!"
-    return expanded_models
-
-end # end function
 
 #########################################
 # 3. Post-processing/Analysis Functions #
