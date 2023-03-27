@@ -163,16 +163,16 @@ plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Alistipes_finegoldii";
 
 ### Panel labels
 ```julia
-Label(AB_subfig[1, 1, TopLeft()], "A", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(AB_subfig[2, 1, TopLeft()], "B", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(CD_subfig[1, 1, TopLeft()], "C", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(CD_subfig[1, 2, TopLeft()], "D", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(E_subfig[1, 1, TopLeft()], "E", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(E_subfig[1, 5, TopLeft()], "F", textsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(F_subfig[1, 5, TopLeft()], "G", textsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(AB_subfig[2, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(CD_subfig[1, 2, TopLeft()], "D", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(E_subfig[1, 5, TopLeft()], "F", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
 
-Label(E_subfig[1:2, 1, Left()], "00 to 06 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
-Label(F_subfig[1:2, 1, Left()], "18 to 120 months", textsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(E_subfig[1:2, 1, Left()], "00 to 06 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 
 save("manuscript/assets/Figure3.png", figure)
 ```
