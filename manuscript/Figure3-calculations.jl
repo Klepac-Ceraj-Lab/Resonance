@@ -58,46 +58,6 @@ taxa_prevalence_threshold_upper = 1.00
 ecs_prevalence_threshold_lower = 0.25
 ecs_prevalence_threshold_upper = 0.85
 
-function filter_prevalences(
-    mdata_profile_df::DataFrame,
-
-    label_col::Symbol,
-    metadata_cols::Vector{Symbol},
-    cols_to_delete::Vector{Symbol};
-    lbound = 0.1,
-    ubound = 1.0,
-    education2int = true,
-    sex2int = true
-    )
-
-    ## Step 1. Remove unnecessary stuff
-    profile_df = select(mdata_profile_df, Not(vcat(label_col, metadata_cols, cols_to_delete)))
-    
-    ## Step 2. Calculate prevalences
-    prevalences = map( x -> mean(x .> 0.0), eachcol(profile_df) )
-    columns_to_keep = (prevalences .>= lbound) .& (prevalences .<= ubound)
-
-    ## Step 3. update profile_df
-    filtered_profile_df = profile_df[:, columns_to_keep]
-
-    ## Step 4. append label and metadata to the beginning of the dataFrame
-    filtered_profile_df = hcat(
-        mdata_profile_df[:, vcat(label_col, metadata_cols)],
-        filtered_profile_df
-    )
-
-    if education2int
-        filtered_profile_df.education = coerce(int.(skipmissing(filtered_profile_df.education), type = Int), OrderedFactor)
-    end
-
-    if sex2int
-        filtered_profile_df.sex = coerce(int.(skipmissing(filtered_profile_df.sex), type = Int), OrderedFactor)
-    end
-
-    return (filtered_profile_df)
-
-end
-
 ## 00 to 06 months
 
 filtered_mdata_taxa_df_00to06 = filter_prevalences(
