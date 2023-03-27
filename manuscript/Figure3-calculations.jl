@@ -63,8 +63,8 @@ ecs_prevalence_threshold_upper = 0.85
 filtered_mdata_taxa_df_00to06 = filter_prevalences(
     dropmissing(mdata_taxa_df[mdata_taxa_df.filter_00to06, :], Not([:race, :read_depth])),
     :cogScore,
-    [:sex, :education, :ageMonths],
-    [:sample, :sample_base, :subject, :timepoint, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
+    [:subject, :timepoint, :sex, :education, :ageMonths],
+    [:sample, :sample_base, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
     lbound = taxa_prevalence_threshold_lower,
     ubound = taxa_prevalence_threshold_upper
 )
@@ -72,8 +72,8 @@ filtered_mdata_taxa_df_00to06 = filter_prevalences(
 filtered_mdata_ecs_df_00to06 = filter_prevalences(
     dropmissing(mdata_ecs_df[mdata_ecs_df.filter_00to06, :], Not([:race, :read_depth])),
     :cogScore,
-    [:sex, :education, :ageMonths],
-    [:sample, :sample_base, :subject, :timepoint, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
+    [:subject, :timepoint, :sex, :education, :ageMonths],
+    [:sample, :sample_base, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
     lbound = ecs_prevalence_threshold_lower,
     ubound = ecs_prevalence_threshold_upper
 )
@@ -81,8 +81,8 @@ filtered_mdata_ecs_df_00to06 = filter_prevalences(
 filtered_mdata_taxa_df_18to120 = filter_prevalences(
     dropmissing(mdata_taxa_df[mdata_taxa_df.filter_18to120, :], Not([:race, :read_depth])),
     :cogScore,
-    [:sex, :education, :ageMonths],
-    [:sample, :sample_base, :subject, :timepoint, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
+    [:subject, :timepoint, :sex, :education, :ageMonths],
+    [:sample, :sample_base, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
     lbound = taxa_prevalence_threshold_lower,
     ubound = taxa_prevalence_threshold_upper
 )
@@ -90,8 +90,8 @@ filtered_mdata_taxa_df_18to120 = filter_prevalences(
 filtered_mdata_ecs_df_18to120 = filter_prevalences(
     dropmissing(mdata_ecs_df[mdata_ecs_df.filter_18to120, :], Not([:race, :read_depth])),
     :cogScore,
-    [:sex, :education, :ageMonths],
-    [:sample, :sample_base, :subject, :timepoint, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
+    [:subject, :timepoint, :sex, :education, :ageMonths],
+    [:sample, :sample_base, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
     lbound = ecs_prevalence_threshold_lower,
     ubound = ecs_prevalence_threshold_upper
 )
