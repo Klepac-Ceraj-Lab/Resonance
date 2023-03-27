@@ -22,39 +22,11 @@ ml_rng = StableRNG(0)
 # Loading Data
 #####
 
-## 2. Taxonomic Profiles
+## 1. Taxonomic Profiles
 taxa = Resonance.load(TaxonomicProfiles())
 mdata_taxa_df = sort(Resonance.comm2wide(taxa), [ :subject, :timepoint ]);
 
-open("taxa_present_echo_all.txt", "w") do io
-    for i in [ f.name for f in features(taxa) ]
-        println(io, i)
-    end
-end
-
-open("taxa_present_echo_6mo.txt", "w") do io
-    taxa_6mo = @chain mdata_taxa_df begin
-        subset(:ageMonths => x -> x .< 6.0)
-        select( _ , names( _ )[15:end])
-        select( _ , names( _ )[[ sum(coll) > 0.0 for coll in eachcol(_) ]])
-    end
-    for i in names(taxa_6mo)
-        println(io, i)
-    end
-end
-
-open("taxa_present_echo_18mo.txt", "w") do io
-    taxa_6mo = @chain mdata_taxa_df begin
-        subset(:ageMonths => x -> 18.0 .< x .< 120.0)
-        select( _ , names( _ )[15:end])
-        select( _ , names( _ )[[ sum(coll) > 0.0 for coll in eachcol(_) ]])
-    end
-    for i in names(taxa_6mo)
-        println(io, i)
-    end
-end
-
-## 3. Functional Profiles
+## 2. Functional Profiles
 ecs = Resonance.load(ECProfiles())
 mdata_ecs_df = sort(Resonance.comm2wide(ecs), [ :subject, :timepoint ]);
 
