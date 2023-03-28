@@ -27,7 +27,7 @@ end
 function prettyformat_suppltable!(suptbl)
     suptbl = @chain suptbl begin
         insertcols!(1, :rank => 1:nrow(suptbl))
-        transform!(:weightedImportance => (x -> string.(round.(x; digits = 5)).*" %") => :weightedImportance, renamecols = false)
+        transform!(:weightedImportance => (x -> string.(round.(x; digits = 5))) => :weightedImportance, renamecols = false)
         transform!(:relativeWeightedImportance => (x -> string.(round.(100*x; digits = 2)).*" %"), renamecols = false)
         transform!(:cumulativeWeightedImportance => (x -> string.(round.(100*x; digits = 2)).*" %"), renamecols = false)
     end    
