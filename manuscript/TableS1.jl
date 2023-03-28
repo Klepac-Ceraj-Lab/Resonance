@@ -35,17 +35,15 @@ function prettyformat_suppltable!(suptbl)
 end
 
 ## 3. Building the tables
-
-supptblA = suppl_table(regression_currentCogScores_00to06mo_onlytaxa)
-tblformat_suppl_table!(supptblA)
+supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06mo_onlytaxa)
+prettyformat_suppltable!(supptblA)
 CSV.write(joinpath("manuscript", "assets", "TableS1A.csv"), supptblA)
 
-supptblB = suppl_table(regression_currentCogScores_18to120mo_onlytaxa)
-tblformat_suppl_table!(supptblB)
+supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
+prettyformat_suppltable!(supptblB)
 CSV.write(joinpath("manuscript", "assets", "TableS1B.csv"), supptblB)
 
 ## 4. LaTeX outputs
-
 spec_hl = LatexHighlighter((val, i, j) -> j == 2, ["textit"])
 spec_ft = (val, i, j) -> j == 2 ? replace(val, "_"=> " ") : val
 
