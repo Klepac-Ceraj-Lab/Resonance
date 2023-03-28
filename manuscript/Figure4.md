@@ -124,7 +124,7 @@ C_subfig = GridLayout(figure[2,1], alignmode=Outside())
 ```
 
 ```julia
-imp_bugs = [
+highlight_bugs = [
     "Anaerostipes_hadrus",
     "Bacteroides_vulgatus",
     "Blautia_wexlerae",
@@ -137,7 +137,7 @@ imp_bugs = [
     "Coprococcus_eutactus"
 ]
 
-impbugs_color = Dict(b=> c for (c,b) in zip(ColorSchemes.Set3_12, imp_bugs))
+hlbugs_color = Dict(b=> c for (c,b) in zip(ColorSchemes.Set3_12, highlight_bugs))
 ```
 #### Calling the plot functions with the ordered data
 ```julia
@@ -211,12 +211,12 @@ let
 
     topy = length(interesting_segments) + 0.5
     for (i, bug) in enumerate(bugs)
-        if bug in imp_bugs
+        if bug in highlight_bugs
             poly!(axB, Point2f[(i-0.5, 0.5), (i-0.5, topy), (i+0.5, topy), (i+0.5, 0.5)];
-                strokecolor=impbugs_color[bug], strokewidth=3,
+                strokecolor=hlbugs_color[bug], strokewidth=3,
                 color=RGBAf(0,0,0,0))
             poly!(axBticks, Point2f[(i-0.5, 0), (i-0.5, 1), (i+0.5, 1), (i+0.5, 0)];
-                color=impbugs_color[bug])
+                color=hlbugs_color[bug])
         end
     end
 end
@@ -224,17 +224,19 @@ Colorbar(AB_Subfig[1,3], hm; label= "Relative feature importance")
 ######
 # Scatterplot
 ######
-mean_brain_importances = reduce(
+weighted_brain_importances = reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
-    [ 
-        DataFrame(:variable => j.importances.variable, Symbol(split(j.name, '_')[2]) => map(mean, eachrow(j.importances[:, 2:end]))) 
-        for (i, j) in brain_models
-    ]
+        [ rename!(weighted_hpimportances(j; normalize_importances=true), 
+                :weightedImportance => Symbol(split(j.name, '_')[2])) for (i, j) in brain_models ]
 )
 
-idx = sortperm([median(row[2:end]) for row in eachrow(noage)])
-ys = reduce(vcat, [values(noage[i, 2:end])...] for i in idx)
-xs = repeat(1:length(idx); inner=ncol(noage)-1)
+# weighted_brain_importances = dropmissing(weighted_brain_importances[:, vcat(["variable"], interesting_segments) ])
+weighted_noage_importances = weighted_brain_importances[2:end, :]
+
+
+idx = sortperm([median(row[2:end]) for row in eachrow(weighted_noage_importances)])
+ys = reduce(vcat, [values(weighted_noage_importances[i, 2:end])...] for i in idx)
+xs = repeat(1:length(idx); inner=ncol(weighted_noage_importances)-1)
 
 axC = Axis(
     C_subfig[1,1];
@@ -242,17 +244,17 @@ axC = Axis(
     ylabel = "importances",
     title = "Importances on all brain segments, by taxa")
 
-CairoMakie.xlims!(axC, [0, nrow(noage)+1])
+CairoMakie.xlims!(axC, [0, nrow(weighted_noage_importances)+1])
 
-maximp = maximum(Matrix(noage[!, 2:end]))
+maximp = maximum(Matrix(weighted_noage_importances[!, 2:end]))
    
-for bug in imp_bugs
+for bug in highlight_bugs
     i = findfirst(==(bug), noage.variable[idx])
-    poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=impbugs_color[bug])
+    poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=hlbugs_color[bug])
 end
 CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
-Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = impbugs_color[bug]) for bug in imp_bugs],
-        replace.(imp_bugs, "_"=> " ");
+Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) for bug in highlight_bugs],
+        replace.(highlight_bugs, "_"=> " ");
         labelfont="TeX Gyre Heros Makie Italic")
 
 Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
