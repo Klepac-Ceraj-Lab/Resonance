@@ -24,7 +24,7 @@ mdata_taxa_df = sort(Resonance.comm2wide(taxa), [ :subject, :timepoint ]);
 
 ## 2. Brain data
 brain = Resonance.load(Neuroimaging())
-mdata_brain_df = sort(Resonance.comm2wide(brain), [ :subject, :timepoint ]);
+mdata_brain_df = sort(Resonance.comm2wide(brain; feature_func = string), [ :subject, :timepoint ]);
 mdata_brain_df = dropmissing(mdata_brain_df[mdata_brain_df.filter_18to120, :])
 TBV = mdata_brain_df."White-matter" .+ mdata_brain_df."Gray-matter"
 
