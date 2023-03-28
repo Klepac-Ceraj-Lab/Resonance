@@ -19,8 +19,8 @@ include("manuscript/Figure4-definitions.jl")
 ## 2. Calculating the Figures of Merit
 tableS2 = mapreduce( vcat, eachindex(ordered_brain_segments_list)) do i
     DataFrame(:variable => ordered_brain_segments_list[i],
-              :Test_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE), 
-              :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor))
+              :Test_MAPE => round(mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE); digits = 4), 
+              :Test_Cor => round(mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor); digits = 4))
 end
 tableS2.variable = uppercasefirst.(map(x -> replace(x, "-"=>" "), tableS2.variable))
 
