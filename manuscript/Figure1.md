@@ -144,8 +144,8 @@ This is a permutation test of variance
 ```julia
 G = GridLayout(GH[1,1])
 # Ba = Axis(B[1:2,1]; alignmode=Outside())
-Ga = Axis(G[1,1]; title="Under 6mo", alignmode = Mixed(; left=-15))
-Gb = Axis(G[1,2]; title="Over 18mo")
+Ga = Axis(G[1,1]; title="Under 6 months", alignmode = Mixed(; left=-15))
+Gb = Axis(G[1,2]; title="Over 18 months")
 
 # plot_permanovas!(Ba, CSV.read(scratchfiles("permanovas_all.csv"), DataFrame))
 plot_permanovas!(Ga, CSV.read(scratchfiles("permanovas_00to06.csv"), DataFrame))
@@ -164,8 +164,8 @@ colsize!(G, 1, Relative(4/7))
 H = GridLayout(GH[1,2])
 
 # Ca = Axis(C[1:2, 1]; alignmode=Outside())
-Ha = Axis(H[1,1]; title="Under 6mo", alignmode = Mixed(; left=-15))
-Hb = Axis(H[1,2]; title="Over 18mo")
+Ha = Axis(H[1,1]; title="Under 6 months", alignmode = Mixed(; left=-15))
+Hb = Axis(H[1,2]; title="Over 18 months")
 hideydecorations!(Hb)
 
 # plot_mantel!(Ca, CSV.read(scratchfiles("mantel_all.csv"), DataFrame))

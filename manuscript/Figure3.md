@@ -221,7 +221,7 @@ axA = Axis(
     AB_subfig[1, 1];
     xlabel = "-log(p) for LM coefficients",
     ylabel = "Fitness-weighted importance from  RFs",
-    title = "00 to 06 months",
+    title = "0 to 6 months",
 )
 
 axB = Axis(
@@ -244,7 +244,7 @@ Legend(
         MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
     ],
     [
-        ">60% ranked importance",
+        "> 60% ranked importance",
         "q < 0.2 in LM",
         "Both",
         "None"
@@ -277,7 +277,7 @@ axC = Axis(
     yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_00to06.variable[1:nbars_toplot], "_"=>" ")),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
     ylabel = "Feature",
-    title = "00 to 06 months",
+    title = "0 to 6 months",
     # yticklabelrotation= -pi/2
 )
 
@@ -333,7 +333,7 @@ Label(E_subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 
 Label(E_subfig[1, 5, TopLeft()], "F", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
 Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
 
-Label(E_subfig[1:2, 1, Left()], "00 to 06 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(E_subfig[1:2, 1, Left()], "0 to 6 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 figure
 ```
