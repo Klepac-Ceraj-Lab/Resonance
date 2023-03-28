@@ -21,7 +21,7 @@ ml_rng = StableRNG(0)
 
 ```julia
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-# concurrent cogScore reression from taxonomic profiles
+# concurrent cogScore regression from taxonomic profiles
 regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_onlydemo.jld"))["regression_currentCogScores_00to06mo_onlydemo"]
 regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
 regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_demoplustaxa.jld"))["regression_currentCogScores_00to06mo_demoplustaxa"]
@@ -69,17 +69,17 @@ axB = Axis(
     title = "18 to 120 months",
 )
 
-plot_colorset = [:gray, ColorSchemes.tableau_10[3], ColorSchemes.tableau_10[1], ColorSchemes.tableau_10[7]]
-plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset)
-plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset)
+plot_colorset = [(:white, 0.), (ColorSchemes.tableau_10[3], 1.0), (ColorSchemes.tableau_10[1], 0.7), (ColorSchemes.tableau_10[7], 0.4)]
+plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset, strokewidth=1)
+plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset, strokewidth=1)
 
 Legend(
     AB_subfig[3, 1],
     [
-        MarkerElement(; marker=:circle, color=plot_colorset[3]),
-        MarkerElement(; marker=:circle, color=plot_colorset[2]),
-        MarkerElement(; marker=:circle, color=plot_colorset[4]),
-        MarkerElement(; marker=:circle, color=plot_colorset[1]),
+        MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
+        MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
+        MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
+        MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
     ],
     [
         ">60% ranked importance",
@@ -173,6 +173,10 @@ Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0,
 
 Label(E_subfig[1:2, 1, Left()], "00 to 06 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+figure
+```
 
+```julia
+save(figurefiles("Figure3.svg"), figure)
 save("manuscript/assets/Figure3.png", figure)
 ```
