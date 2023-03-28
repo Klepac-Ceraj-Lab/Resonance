@@ -147,7 +147,7 @@ for brain_segment in brain_segments_list
             model_name,
             prediction_df,
             identity,
-            collect(2:ncol(prediction_df)),
+            collect(4:ncol(prediction_df)),
             :target;
             n_folds = 3,
             n_replicas = 100,
