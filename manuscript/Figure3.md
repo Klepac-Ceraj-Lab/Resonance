@@ -58,14 +58,14 @@ rowsize!(figure.layout, 3, Relative(0.2))
 axA = Axis(
     AB_subfig[1, 1];
     xlabel = "-log(p) for LM coefficients",
-    ylabel = "Fraction of fitness-weighted importance\nfrom Random Forests (RFs)",
+    ylabel = "Relative (normalized) fitness-weighted\n feature importance from Random Forests (RFs)",
     title = "00 to 06 months",
 )
 
 axB = Axis(
     AB_subfig[2, 1];
     xlabel = "-log(p) for LM coefficients",
-    ylabel = "Fraction of fitness-weighted importance\nfrom Random Forests (RFs)",
+    ylabel = "Relative (normalized) fitness-weighted\nfeature importance from Random Forests (RFs)",
     title = "18 to 120 months",
 )
 
@@ -111,7 +111,7 @@ joined_importances_18to120 = compute_joined_importances(
 
 axC = Axis(
     CD_subfig[1, 1];
-    xlabel = "Proportional (normalized) feature Importance",
+    xlabel = "Relative (normalized) fitness-weighted feature Importance",
     yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_00to06.variable[1:nbars_toplot], "_"=>" ")),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
     ylabel = "Feature",
@@ -121,7 +121,7 @@ axC = Axis(
 
 axD = Axis(
     CD_subfig[1, 2];
-    xlabel = "Proportional (normalized) feature Importance",
+    xlabel = "Relative (normalized) fitness-weighted feature Importance",
     yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_18to120.variable[1:nbars_toplot], "_"=>" ")),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
     ylabel = "Feature",
