@@ -156,7 +156,7 @@ axB = Axis(
     yticks = (collect(1:length(interesting_segments)), names(relative_brain_importances)[2:end]),
     yticklabelsize=16,
     yreversed=true,
-    title = "Brain segmentation data variable importances"
+    title = "Relative variable importances for brain segmentation data"
 )
 
 CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
@@ -179,7 +179,7 @@ axC = Axis(
     C_subfig[1,1];
     xlabel="Bugs (rank median)",
     ylabel = "importances",
-    title = "Importances on all brain segments, by taxa")
+    title = "Proportional (relative) feature importances on all brain segments, by taxa")
 
 CairoMakie.xlims!(axC, [0, nrow(weighted_noage_importances)+1])
 
