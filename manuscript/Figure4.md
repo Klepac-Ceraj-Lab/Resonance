@@ -111,9 +111,14 @@ relative_brain_importances = relative_brain_importances[hclust_taxa_order, vcat(
 #### Some other subsets
 
 ```julia
-weighted_brain_importances = weighted_brain_importances[:, vcat(["variable"], interesting_segments)]
-mean_brain_importances = weighted_brain_importances
-noage = mean_brain_importances[2:end, :]
+weighted_brain_importances = reduce(
+    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+        [ rename!(weighted_hpimportances(j; normalize_importances=true), 
+                :weightedImportance => Symbol(split(j.name, '_')[2])) for (i, j) in brain_models ]
+)
+
+weighted_brain_importances = dropmissing(weighted_brain_importances[:, vcat(["variable"], interesting_segments) ])
+weighted_noage_importances = weighted_brain_importances[2:end, :]
 ```
 
 ### Plotting
@@ -212,9 +217,10 @@ linkxaxes!(axB, axBticks)
 hidexdecorations!(axBticks; ticklabels=false, label=false)
 hideydecorations!(axBticks)
 hidespines!(axBticks)
-
-
 hm = CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
+```
+
+```julia
 let
     bugs = relative_brain_importances.variable[1:nbugs_toplot]
 
@@ -230,19 +236,10 @@ let
     end
 end
 Colorbar(AB_Subfig[1,3], hm; label= "Relative feature importance")
-######
-# Scatterplot
-######
-weighted_brain_importances = reduce(
-    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
-        [ rename!(weighted_hpimportances(j; normalize_importances=true), 
-                :weightedImportance => Symbol(split(j.name, '_')[2])) for (i, j) in brain_models ]
-)
-
-# weighted_brain_importances = dropmissing(weighted_brain_importances[:, vcat(["variable"], interesting_segments) ])
-weighted_noage_importances = weighted_brain_importances[2:end, :]
+```
 
 
+```julia
 idx = sortperm([median(row[2:end]) for row in eachrow(weighted_noage_importances)])
 ys = reduce(vcat, [values(weighted_noage_importances[i, 2:end])...] for i in idx)
 xs = repeat(1:length(idx); inner=ncol(weighted_noage_importances)-1)
@@ -266,8 +263,8 @@ Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) 
         replace.(highlight_bugs, "_"=> " ");
         labelfont="TeX Gyre Heros Makie Italic")
 
-Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
-Label(AB_subfig[1, 2, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
+Label(AB_Subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
+Label(AB_Subfig[1, 2, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
 Label(C_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
 ```
 
