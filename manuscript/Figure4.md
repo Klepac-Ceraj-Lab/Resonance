@@ -224,12 +224,8 @@ hm = CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 
 let
     bugs = relative_brain_importances.variable[1:nbugs_toplot]
 
-    topy = length(interesting_segments) + 0.5
     for (i, bug) in enumerate(bugs)
         if bug in highlight_bugs
-            poly!(axB, Point2f[(i-0.5, 0.5), (i-0.5, topy), (i+0.5, topy), (i+0.5, 0.5)];
-                strokecolor=hlbugs_color[bug], strokewidth=3,
-                color=RGBAf(0,0,0,0))
             poly!(axBticks, Point2f[(i-0.5, 0), (i-0.5, 1), (i+0.5, 1), (i+0.5, 0)];
                 color=hlbugs_color[bug])
         end
