@@ -1,7 +1,6 @@
 #####
-# Table 4. Summary statistics for the neuroanatomy prediction benchmarks
+# Supplementary Table 2. Summary statistics for the neuroanatomy prediction benchmarks
 #####
-
 using Resonance
 using CategoricalArrays
 using Statistics
@@ -13,7 +12,6 @@ using DataFrames.PrettyTables
 isdir(tablefiles()) || mkpath(tablefiles())
 
 ## 1. Loading the model files
-
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain volumes regression from taxonomic profiles
 brain_models = JLD2.load(modelfiles("2023-02-15", "brain_models.jld"))["brain_models"]
