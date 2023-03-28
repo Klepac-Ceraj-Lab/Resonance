@@ -1,7 +1,6 @@
 #####
 # Supplementary Table S1A-B. List of most important taxa for Random Forest models on the (A) 00-06 and (B) 18-120 months age bracket, MICROBIOME ONLY, ordered by relative weighted importance rank
 #####
-
 using Resonance
 using CategoricalArrays
 using Statistics
@@ -13,7 +12,6 @@ using DataFrames.PrettyTables
 isdir(tablefiles()) || mkpath(tablefiles())
 
 ## 1. Loading the model files
-
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore reression from taxonomic profiles
 regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("2023-02-15", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
