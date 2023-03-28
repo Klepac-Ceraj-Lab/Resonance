@@ -148,7 +148,7 @@ regression_currentCogScores_00to06mo_onlydemo = probe_prod_randomforest(
     train_rng=ml_rng
 )
     
-JLD2.@save "models/regression_currentCogScores_00to06mo_onlydemo.jld" regression_currentCogScores_00to06mo_onlydemo
+jldsave(modelfiles("regression_currentCogScores_00to06mo_onlydemo.jld"), regression_currentCogScores_00to06mo_onlydemo)
 
 ## 2. Only taxonomic profiles
 regression_currentCogScores_00to06mo_onlytaxa = probe_prod_randomforest(
@@ -165,7 +165,7 @@ regression_currentCogScores_00to06mo_onlytaxa = probe_prod_randomforest(
     train_rng=ml_rng
 )
     
-JLD2.@save "models/regression_currentCogScores_00to06mo_onlytaxa.jld" regression_currentCogScores_00to06mo_onlytaxa
+jldsave(modelfiles("regression_currentCogScores_00to06mo_onlytaxa.jld"), regression_currentCogScores_00to06mo_onlytaxa)
 
 ## 3. SES + taxonomic profiles
 regression_currentCogScores_00to06mo_demoplustaxa = probe_prod_randomforest(
@@ -182,7 +182,7 @@ regression_currentCogScores_00to06mo_demoplustaxa = probe_prod_randomforest(
     train_rng=ml_rng
 )
 
-JLD2.@save "models/regression_currentCogScores_00to06mo_demoplustaxa.jld" regression_currentCogScores_00to06mo_demoplustaxa
+jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"), regression_currentCogScores_00to06mo_demoplustaxa)
 
 ## 4. Only functional profiles
 regression_currentCogScores_00to06mo_onlyecs = probe_prod_randomforest(
@@ -199,7 +199,7 @@ regression_currentCogScores_00to06mo_onlyecs = probe_prod_randomforest(
     train_rng=ml_rng
 )
 
-JLD2.@save "models/regression_currentCogScores_00to06mo_onlyecs.jld" regression_currentCogScores_00to06mo_onlyecs
+jldsave(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"), regression_currentCogScores_00to06mo_onlyecs)
 
 ## 5. SES + functional profiles
 regression_currentCogScores_00to06mo_demoplusecs = probe_prod_randomforest(
@@ -216,7 +216,7 @@ regression_currentCogScores_00to06mo_demoplusecs = probe_prod_randomforest(
     train_rng=ml_rng
 )
 
-JLD2.@save "models/regression_currentCogScores_00to06mo_demoplusecs.jld" regression_currentCogScores_00to06mo_demoplusecs
+jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"), regression_currentCogScores_00to06mo_demoplusecs)
 
 #####
 # 18 to 120 months
@@ -237,7 +237,7 @@ regression_currentCogScores_18to120mo_onlydemo = probe_prod_randomforest(
     train_rng=ml_rng
 )
     
-JLD2.@save "models/regression_currentCogScores_18to120mo_onlydemo.jld" regression_currentCogScores_18to120mo_onlydemo
+jldsave(modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld"), regression_currentCogScores_18to120mo_onlydemo)
 
 ## 7. Only taxonomic profiles
 regression_currentCogScores_18to120mo_onlytaxa = probe_prod_randomforest(
@@ -254,7 +254,7 @@ regression_currentCogScores_18to120mo_onlytaxa = probe_prod_randomforest(
     train_rng=ml_rng
 )
     
-JLD2.@save "models/regression_currentCogScores_18to120mo_onlytaxa.jld" regression_currentCogScores_18to120mo_onlytaxa
+jldsave(modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld"), regression_currentCogScores_18to120mo_onlytaxa)
 
 ## 8. SES + taxonomic profiles
 regression_currentCogScores_18to120mo_demoplustaxa = probe_prod_randomforest(
@@ -271,7 +271,7 @@ regression_currentCogScores_18to120mo_demoplustaxa = probe_prod_randomforest(
     train_rng=ml_rng
 )
 
-JLD2.@save "models/regression_currentCogScores_18to120mo_demoplustaxa.jld" regression_currentCogScores_18to120mo_demoplustaxa
+jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"), regression_currentCogScores_18to120mo_demoplustaxa)
 
 ## 9. Only functional profiles
 regression_currentCogScores_18to120mo_onlyecs = probe_prod_randomforest(
@@ -288,7 +288,7 @@ regression_currentCogScores_18to120mo_onlyecs = probe_prod_randomforest(
     train_rng=ml_rng
 )
 
-JLD2.@save "models/regression_currentCogScores_18to120mo_onlyecs.jld" regression_currentCogScores_18to120mo_onlyecs
+jldsave(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"), regression_currentCogScores_18to120mo_onlyecs)
 
 ## 10. SES + functional profiles
 regression_currentCogScores_18to120mo_demoplusecs = probe_prod_randomforest(
@@ -305,4 +305,4 @@ regression_currentCogScores_18to120mo_demoplusecs = probe_prod_randomforest(
     train_rng=ml_rng
 )
 
-JLD2.@save "models/regression_currentCogScores_18to120mo_demoplusecs.jld" regression_currentCogScores_18to120mo_demoplusecs
+jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"), regression_currentCogScores_18to120mo_demoplusecs)

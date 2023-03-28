@@ -161,4 +161,4 @@ for brain_segment in brain_segments_list
 
 end
     
-JLD2.@save "models/brain_models.jld" brain_models
+jldsave(modelfiles("brain_models.jld"), brain_models)
