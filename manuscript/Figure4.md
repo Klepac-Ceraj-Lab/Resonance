@@ -17,34 +17,6 @@ using ColorSchemes
 ml_rng = StableRNG(0)
 ```
 
-## Defining relevant functions
-
-### Calculating fitness-weighted importances
-```julia
-function calculate_fitness(train_cor::Vector{Float64}, test_cor::Vector{Float64})
-    positive_train_cor = map( x -> maximum([x, 0.0]), train_cor)
-    positive_test_cor = map( x -> maximum([x, 0.0]), test_cor)
-    return positive_train_cor .* positive_test_cor
-end
-
-function weighted_hpimportances(m, hp = 1; change_hashnames=false, hashnamestable::Union{Nothing, DataFrame} = nothing)
-    merits = m.merits
-    importances = m.importances
-    fitnesses = calculate_fitness(merits.Train_Cor, merits.Test_Cor)
-    fitness_subset_idx = findall(merits.Hyperpar_Idx .== hp)
-
-    mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/sum(fitnesses[fitness_subset_idx] .> 0.0), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
-    mean_importances_df = sort( DataFrame(:variable => importances[:,1], :weightedImportance => mean_importances), :weightedImportance; rev=true)
-
-    if change_hashnames
-        newnames = leftjoin(mean_importances_df, hashnamestable, on = :variable => :hashname).longname
-        mean_importances_df.variable = newnames
-    end
-
-    return mean_importances_df
-end
-```
-
 ## Loading the pretrained models
 ```julia
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
