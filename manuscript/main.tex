@@ -552,7 +552,7 @@ species that were important in RF overlapped with those that were
 significant when testing the relationship with LMs (Figure
 3A-B, Table S1A-B); except for \emph{Eubacterium ramulus}
 all taxa that were significant using LMs belonged to a group
-responsible for 80\% of the total fitness-weighted relative importance in RF models
+responsible for 80\% of the total importance in RF models
 (Table 3, Figure 3A).
 However, the rank-ordering of LM significance and RF importance
 had substantive differences. For example, in children under 6 months,
@@ -583,9 +583,9 @@ profiles with individual brain regions identified in MRI scans.
 Some brain regions were more readily
 predicted by RF models trained on microbial taxa (Table 4, Table S2), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
-0.421, Right = 0.434; relative weighted importance for age, Left = 7.5\%, Right =
+0.421, Right = 0.434; importance for age, Left = 7.5\%, Right =
 8.3\%) and the L/R pericalcarine cortex (mean RF correlations, Left =
-0.200, Right = 0.273; relative weighted importance for age, Left = 3.6\%, Right = 6.3\%).
+0.200, Right = 0.273; importance for age, Left = 3.6\%, Right = 6.3\%).
 In many cases, however, age was not an important variable in
 high-performing models, such as that for the left accumbens area (mean
 RF correlations = 0.288; relative age importances = 1.2\%).
@@ -619,15 +619,15 @@ brain region models (R = 0.288), as compared to the right which
 had a negative mean test-set correlation (R = -0.041),
 indicating that generalizable models were not identified.
 Feature importance for models of the left accumbens area were dominated
-by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.3\%
-relative weighted importance), \emph{B. ovatus} (3.7\% relative weighted importance), and
-\emph{B. uniformis} (2.9\% relative weighted importance).
+by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.3\% importance),
+\emph{B. ovatus} (3.7\% importance), and
+\emph{B. uniformis} (2.9\% importance).
 
 While RF models for multiple brain regions had many important microbial taxa,
 others were dominated by a small number of taxa, many of which
 were also identified in LMs and RF models of cognitive function (Figures 2 and 3). 
 In general, for all segments, a consistent number of species between 31 and 45 (median = 37, less than 30\% of the input features)
-was responsible for half of the fitness-weighted cumulative importance,
+was responsible for half of the cumulative importance,
 regardless of model performance (Figure 4A-B, Table S2).
 We observed two major patterns of importance distribution from
 species over the brain segments; some species portrayed high contributions
@@ -675,20 +675,19 @@ Both \emph{A. equolofaciens} and \emph{A. celatus}, two closely-related
 equol-producing species, are examples of the second contribution
 pattern, where a taxon only contributes significantly to a very small number of segments. 
 Each of these species were highly important in predicting the relative volume of
-the right anterior cingulate (respectively, 3.0\% and 2.6\% relative weighted
-importances). Another example of this pattern is \emph{R. gnavus}, which was the only
+the right anterior cingulate (respectively, 3.0\% and 2.6\% importances).
+Another example of this pattern is \emph{R. gnavus}, which was the only
 species with significant negative association with cognitive function in linear models.
-It is heavily associated with the left pars opercularis (2.7\% relative weighted importance). 
-Finally, \emph{C. comes} displays an importance
+It is heavily associated with the left pars opercularis (2.7\% importance). 
+Finally, \emph{C. comes} has an importance
 distribution that splits almost evenly among the two previously reported
 clusters. Its loading on the prediction of the left posterior cingulate
-is the highest for a microbe in RF models (4.0\% relative weighted importance);
+is the highest for a microbe in RF models (4.0\% importance);
 only age had higher relative importance in any model. At the same time,
 \textit{C. comes} is one of the most important predictors for neighboring areas of the
-posterior cingulate such as the pars opercularis (relative weighted importances,
+posterior cingulate such as the pars opercularis (importances,
 Left = 2.3\%, Right = 2.8\%), along with upper regions like the left
-precentral (2.3\% relative weighted importance) and paracentral lobes (relative weighted
-importances, Left = 2.6\%, Right = 1.9\%).
+precentral (2.3\% importance) and paracentral lobes (importances, Left = 2.6\%, Right = 1.9\%).
 
 \section*{Discussion}
 
@@ -992,14 +991,16 @@ distribution of results from the extensive repeated cross validation
 experiments, rather than electing a representative model or picking the
 highest validation-set correlation, a measure of model fitness
 (\textbf{Equation 1}) was designed to weight the importances from each
-trained forest. The objective was to give more weight to those with
+trained forest, and all "importance" values reported refer to 
+the average fitness-weighted importance accross all models.
+The objective was to give more weight to those with
 higher benchmarks on the validation sets (or higher generalizability),
 while penalizing information from highly overfit models, drawing
 inspiration from the approach used on another work employing repeated CV
-on Random Forests with high-dimensional, low sample size microbiome
+on Random Forests with high-dimensional, low sample size
 datasets \cite{woodruffInflammationAutoreactivityDefine2022}.
 The resulting fitness-weighted importances were used
-to generate the values in Figure 3.
+to generate the values in Figures 3-4.
 
 \begin{equation}
     fitness = \sqrt{max(r_{train}, 0) \cdot max(r_{test}, 0)}
