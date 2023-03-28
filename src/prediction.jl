@@ -391,7 +391,11 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, spec::
         ylabel="relative abundance",#\n$taxon_to_dive",
         title = replace(taxon_to_dive, "_"=>" "),
         titlefont = "TeX Gyre Heros Makie Italic")
-    ax2 = Axis(figure_layout[2,figure_col]; xticks = (1:3, ["lower", "mid", "upper"]), xlabel="quartile", ylabel = "Intra-q\nPrevalence")
+    ax2 = Axis(
+        figure_layout[2,figure_col];
+        xticks = (1:3, ["lower", "mid", "upper"]),
+        xlabel="quartile",
+        ylabel = "Intra-q\nPrevalence")
     ylims!(ax2, [0, 1.0])
 
     boxplot!(ax1, repeat([ 1.0 ], length(g1)), g1, color = (Makie.wong_colors()[1], 0.5), show_notch = false, show_outliers=false)
@@ -407,6 +411,11 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, spec::
     
     hidexdecorations!(ax1; grid=false)
     rowsize!(figure_layout, 2, Relative(1/3))
+
+    # Code block to align the y axis labels on ax1 and ax2
+    yspace = maximum(tight_yticklabel_spacing!, [ax1, ax2])
+    ax1.yticklabelspace = yspace
+    ax2.yticklabelspace = yspace
 
     return figure_layout
 end
