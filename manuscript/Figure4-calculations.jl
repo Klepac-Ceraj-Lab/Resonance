@@ -157,7 +157,7 @@ for brain_segment in brain_segments_list
         )
     )
 
-    println("finished!")
+    println("finished $(string(brain_segment))!")
 
 end
     
