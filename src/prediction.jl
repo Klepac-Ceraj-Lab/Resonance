@@ -278,7 +278,7 @@ function weighted_hpimportances(m, hp = 1; change_hashnames=false, hashnamestabl
     # mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/sum(fitnesses[fitness_subset_idx] .> 0.0), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
     # Option 2: divide importances by total number of models
     mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/length(fitness_subset_idx), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
-    mean_importances_df = sort( DataFrame(:variable => importances[:,1], :weightedImportance => mean_importances), :weightedImportance; rev=true)
+    mean_importances_df = sort( DataFrame(:variable => string.(importances[:,1]), :weightedImportance => mean_importances), :weightedImportance; rev=true)
 
     if normalize_importances
         mean_importances_df.weightedImportance = mean_importances_df.weightedImportance ./ sum(mean_importances_df.weightedImportance)
