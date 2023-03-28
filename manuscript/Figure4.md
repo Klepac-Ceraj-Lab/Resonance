@@ -18,16 +18,18 @@ ml_rng = StableRNG(0)
 ```
 
 ## Loading the pretrained models
+
 ```julia
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain regression from taxonomic profiles
-brain_models = JLD2.load(modelfiles("manuscript", "brain_models.jld"))["brain_models"]
+brain_models = JLD2.load(modelfiles("brain_models.jld"))["brain_models"]
 include("Figure4-definitions.jl")
 ```
 
 ### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
 
-#### Compute the mean figures of merit for the Brain sement regressions
+#### Compute the mean figures of merit for the Brain segment regressions
+
 ```julia
 mean_brain_merits = reduce(
     vcat,
@@ -35,7 +37,8 @@ mean_brain_merits = reduce(
 )
 ```
 
-#### Compute the mean importances loading of taxa on Brain sement regressions
+#### Compute the mean importances loading of taxa on Brain segment regressions
+
 ```julia
 weighted_brain_importances = reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
@@ -49,6 +52,7 @@ relative_brain_importances = reduce(
 ```
 
 #### Filter the merits and importances tables according to the list of interesting segments and taxa
+
 ```julia
 interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
 mean_brain_merits = mean_brain_merits[interesting_segments_idxes, :]
@@ -58,6 +62,7 @@ relative_brain_importances = dropmissing(relative_brain_importances[interesting_
 ```
 
 #### Perform hierarchical clustering
+
 ```julia
 ## Transpose the matrix to add information about the symmetric segments
 transposedImportances = permutedims(relative_brain_importances, :variable)
@@ -76,6 +81,7 @@ hclust_taxa_order = hcl_taxa.order
 hclust_symmetric_segment_order = hcl_segments.order
 ```
 #### Reordering the tables according to the HClust analysis
+
 ```julia
 reorder_segments_df = innerjoin(
     DataFrame(
@@ -95,6 +101,7 @@ plot_segments_order = reorder_segments_df.plot_order
 ```
 
 #### using the hclust to reorder all we need
+
 ```julia
 mean_brain_merits = mean_brain_merits[plot_segments_order, :]
 relative_brain_importances = relative_brain_importances[hclust_taxa_order, vcat( [ 1 ], (plot_segments_order .+ 1))]
@@ -140,6 +147,7 @@ highlight_bugs = [
 hlbugs_color = Dict(b=> c for (c,b) in zip(ColorSchemes.Set3_12, highlight_bugs))
 ```
 #### Calling the plot functions with the ordered data
+
 ```julia
 axA = Axis(
     AB_Subfig[1, 1];
@@ -168,10 +176,11 @@ Legend(AB_Subfig[2,1],
     [MarkerElement(; marker=:rect, color=c) for c in ("blue", "red", "purple")],
     ["Left hemisphere", "Right hemisphere", "non-lateral"];
 )
+```
 
-######
-# Importance Heatmaps
-######
+#### Importance Heatmaps
+
+```julia
 nbugs_toplot = length(interesting_taxa) # the top 1/3 bugs (out of 129) From intersecting the top mean importances and top max importances
 
 axB = Axis(
