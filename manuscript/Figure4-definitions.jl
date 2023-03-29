@@ -64,33 +64,7 @@ interesting_segments = [
     "cerebellar-vermal-lobules-I-V", "cerebellar-vermal-lobules-VI-VII", "cerebellar-vermal-lobules-VIII-X",
 ]
 
-symmetric_segment_strings = [
-    "temporal", "temporal",
-    "orbitofrontal", "orbitofrontal",
-    "parietal", "parietal",
-    "middle-frontal", "middle-frontal",
-    "anterior-cingulate", "anterior-cingulate",
-    "lateral-occipital", "lateral-occipital",
-    "thalamus-proper", "thalamus-proper",
-    "hippocampus", "hippocampus",
-    "amygdala", "amygdala",
-    "accumbens-area", "accumbens-area",
-    "cuneus", "cuneus", 
-    "entorhinal", "entorhinal",
-    "fusiform", "fusiform",
-    "isthmus-cingulate", "isthmus-cingulate",
-    "lingual", "lingual",
-    "parahippocampal", "parahippocampal",
-    "paracentral", "paracentral",
-    "pars-opercularis", "pars-opercularis",
-    "pars-orbitalis", "pars-orbitalis",
-    "pericalcarine", "pericalcarine",
-    "posterior-cingulate", "posterior-cingulate",
-    "precentral", "precentral",
-    "precuneus", "precuneus",
-    "superior-frontal", "superior-frontal",
-    "cerebellar-vermal-lobules-I-V", "cerebellar-vermal-lobules-VI-VII", "cerebellar-vermal-lobules-VIII-X",
-]
+symmetric_segment_strings =  replace.(interesting_segments, r"(left|right)-"=>"")
 
 interesting_taxa = [
     "Adlercreutzia_equolifaciens",

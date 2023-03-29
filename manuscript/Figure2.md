@@ -30,11 +30,11 @@ taxdf = comm2wide(taxa)
 
 
 ```julia
-speclms_00to120 = subset(CSV.read(tablefiles("lms_species_00to120.csv"), DataFrame), "t"=> ByRow(!isnan))
-speclms_00to06 = subset(CSV.read(tablefiles("lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
-speclms_18to120 = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_00to120 = subset(CSV.read(tablefiles("figure2", "lms_species_00to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_00to06 = subset(CSV.read(tablefiles("figure2", "lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_18to120 = subset(CSV.read(tablefiles("figure2", "lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
 
-speclms_pa = CSV.read(tablefiles("lms_species_18to120_pa.csv"), DataFrame)
+speclms_pa = CSV.read(tablefiles("figure2", "lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
 fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
 fsdf_00to06 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
@@ -42,9 +42,9 @@ fsdf2_00to06 = CSV.read(scratchfiles("figure2", "fsea_all_00to06.csv"), DataFram
 fsdf_18to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_18to120.csv"), DataFrame)
 fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_all_18to120.csv"), DataFrame)
 
-cors_00to120 = CSV.read(tablefiles("lms_unirefs_00to120.csv"), DataFrame)
-cors_00to06 = CSV.read(tablefiles("lms_unirefs_00to06.csv"), DataFrame)
-cors_18to120 = CSV.read(tablefiles("lms_unirefs_18to120.csv"), DataFrame)
+cors_00to120 = CSV.read(tablefiles("figure2", "lms_unirefs_00to120.csv"), DataFrame)
+cors_00to06 = CSV.read(tablefiles("figure2", "lms_unirefs_00to06.csv"), DataFrame)
+cors_18to120 = CSV.read(tablefiles("figure2", "lms_unirefs_18to120.csv"), DataFrame)
 neuroactive_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to120.species); consolidate=false)
 neuroactive_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to06.species); consolidate=false)
 neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_18to120.species); consolidate=false)
