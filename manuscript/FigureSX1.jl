@@ -69,41 +69,8 @@ lines!(
     collect(1:nrow(supptblA)), (100 .* supptblA.cumulativeWeightedImportance),
     color = curvecolor, linewidth = 5)
 
-ax1L = Axis(
-    figure[1,1],
-    xlabel = "Feature",
-    xticks = (collect(1:nrow(supptblA)), replace.(supptblA.variable, "_"=>" ")),
-    xticklabelsize=8,
-    xticklabelrotation= pi/4,
-    xticklabelfont="TeX Gyre Heros Makie Italic",
-    title = "0 to 6 months",
-    ylabel = "Individual relative importance")
-ax1R = Axis(
-    figure[1,1],
-    xlabel = "Feature",
-    xticks = (collect(1:nrow(supptblA))),
-    ylabel = "Cumulative relative importance",
-    yticks = 0:10:100,
-    yaxisposition = :right)
-
-ylims!(ax1L, [0.0, 10.0])
-ylims!(ax1R, [0.0, 100.0])
-hidexdecorations!(ax1R)
-# hidespines!(ax1R)
-linkxaxes!(ax1L, ax1R)
-
-barplot!(
-    ax1L,
-    collect(1:nrow(supptblA)), (100 .* supptblA.relativeWeightedImportance),
-    color = barcolor, strokecolor = :black, strokewidth = 1)
-scatter!(
-    ax1R,
-    collect(1:nrow(supptblA)), (100 .* supptblA.cumulativeWeightedImportance),
-    color = curvecolor, markersize = 15)
-lines!(
-    ax1R,
-    collect(1:nrow(supptblA)), (100 .* supptblA.cumulativeWeightedImportance),
-    color = curvecolor, linewidth = 5)
+tightlimits(ax1L, Left(), Right())
+tightlimits(ax1R, Left(), Right())
 
 ax2L = Axis(
     figure[2,1],
@@ -140,5 +107,8 @@ lines!(
     ax2R,
     collect(1:nrow(supptblB)), (100 .* supptblB.cumulativeWeightedImportance),
     color = curvecolor, linewidth = 5)
+
+tightlimits(ax1L, Left(), Right())
+tightlimits(ax1R, Left(), Right())
 
 figure
