@@ -90,8 +90,7 @@ Legend(
         "q < 0.2 in LM",
         "Both",
         "None"
-    ],
-    "Input composition",
+    ];
     tellheight = true,
     tellwidth = false,
     nbanks = 2,
@@ -137,7 +136,7 @@ plot_comparativedemo_importance_barplots!(axC, joined_importances_00to06; n_rows
 plot_comparativedemo_importance_barplots!(axD, joined_importances_18to120; n_rows = nbars_toplot)
 
 Legend(
-    CD_subfig[1, 2], [MarkerElement(; marker=:rect, color=:gray), MarkerElement(; marker=:star8, color=:red)], ["Microbiome alone", "Microbiome + demographics"], "Input composition",
+    CD_subfig[1, 2], [MarkerElement(; marker=:rect, color=:gray), MarkerElement(; marker=:star8, color=:red)], ["Microbiome alone", "Microbiome + demographics"];
     tellheight = false,
     tellwidth = false,
     margin = (10, 10, 10, 10),
@@ -180,4 +179,4 @@ figure
 ```julia
 save(figurefiles("Figure3.svg"), figure)
 save("manuscript/assets/Figure3.png", figure)
-```
+``` 
