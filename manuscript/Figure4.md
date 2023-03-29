@@ -311,8 +311,8 @@ let fig = Figure(; resolution=(2000, 500))
     )
     scatter!(ax, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
     xlims!(ax, 0, nrow(importances)+1)
-    save(figurefiles("Supp_Figure5.svg"), fig)
-    save("manuscript/assets/Supp_Figure5.png", fig)
+    save(figurefiles("Supp_Figure6.svg"), fig)
+    save("manuscript/assets/Supp_Figure6.png", fig)
     fig
 end
 
