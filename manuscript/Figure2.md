@@ -6,7 +6,6 @@ using CairoMakie
 using Statistics
 using HypothesisTests
 using MultipleTesting
-using KernelDensity
 using MultivariateStats
 using Distributions
 using CategoricalArrays
@@ -31,11 +30,11 @@ taxdf = comm2wide(taxa)
 
 
 ```julia
-speclms_00to120 = subset(CSV.read(tablefiles("lms_species_00to120.csv"), DataFrame), "t"=> ByRow(!isnan))
-speclms_00to06 = subset(CSV.read(tablefiles("lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
-speclms_18to120 = subset(CSV.read(tablefiles("lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_00to120 = subset(CSV.read(tablefiles("figure2", "lms_species_00to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_00to06 = subset(CSV.read(tablefiles("figure2", "lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
+speclms_18to120 = subset(CSV.read(tablefiles("figure2", "lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
 
-speclms_pa = CSV.read(tablefiles("lms_species_18to120_pa.csv"), DataFrame)
+speclms_pa = CSV.read(tablefiles("figure2", "lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
 fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
 fsdf_00to06 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
@@ -43,9 +42,9 @@ fsdf2_00to06 = CSV.read(scratchfiles("figure2", "fsea_all_00to06.csv"), DataFram
 fsdf_18to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_18to120.csv"), DataFrame)
 fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_all_18to120.csv"), DataFrame)
 
-cors_00to120 = CSV.read(tablefiles("lms_unirefs_00to120.csv"), DataFrame)
-cors_00to06 = CSV.read(tablefiles("lms_unirefs_00to06.csv"), DataFrame)
-cors_18to120 = CSV.read(tablefiles("lms_unirefs_18to120.csv"), DataFrame)
+cors_00to120 = CSV.read(tablefiles("figure2", "lms_unirefs_00to120.csv"), DataFrame)
+cors_00to06 = CSV.read(tablefiles("figure2", "lms_unirefs_00to06.csv"), DataFrame)
+cors_18to120 = CSV.read(tablefiles("figure2", "lms_unirefs_18to120.csv"), DataFrame)
 neuroactive_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to120.species); consolidate=false)
 neuroactive_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to06.species); consolidate=false)
 neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_18to120.species); consolidate=false)
@@ -249,14 +248,14 @@ let
 
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
-        c = row.qvalue > 0.2 ? :gray : 
+        c = row.qvalue > 0.2 ? :white : 
             row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
             row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
             sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_00to120[row.geneset]])
-        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
+        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
@@ -272,14 +271,14 @@ let
 
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
-        c = row.qvalue > 0.2 ? :gray : 
+        c = row.qvalue > 0.2 ? :white : 
             row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
             row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
             sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_00to06.t[neuroactive_00to06[row.geneset]])
-        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
+        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
@@ -294,18 +293,18 @@ let
 
     for (i, row) in enumerate(eachrow(df))
         sign = row.enrichment < 0 ? "neg" : "pos"
-        c = row.qvalue > 0.2 ? :gray : 
+        c = row.qvalue > 0.2 ? :white : 
             row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
             row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
             sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_18to120.t[neuroactive_18to120[row.geneset]])
-        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.3), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :gray , linewidth=2)
+        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
-    Legend(G[1,4], [MarkerElement(; color = (c, 0.3),
+    Legend(G[1,4], [MarkerElement(; color = (c, 0.5),
                                     marker=:circle,
                                     strokecolor=:gray,
                                     strokewidth=0.5) for c in colors[[1:3..., 5:7...]]],

@@ -25,14 +25,16 @@ brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata, samplefield="
 
 #-
 
+isdir(tablefiles("figure1")) || mkdir(tablefiles("figure1"))
+
 spedm = Microbiome.braycurtis(species)
-CSV.write(scratchfiles("spedm.csv"), Tables.table(spedm))
+CSV.write(tablefiles("figure1", "spedm.csv"), Tables.table(spedm))
 unidm = Microbiome.braycurtis(unirefs)
-CSV.write(scratchfiles("unidm.csv"), Tables.table(unidm))
+CSV.write(tablefiles("figure1", "unidm.csv"), Tables.table(unidm))
 ecsdm = Microbiome.braycurtis(ecs)
-CSV.write(scratchfiles("ecsdm.csv"), Tables.table(ecsdm))
+CSV.write(tablefiles("figure1", "ecsdm.csv"), Tables.table(ecsdm))
 kosdm = Microbiome.braycurtis(kos)
-CSV.write(scratchfiles("kosdm.csv"), Tables.table(kosdm))
+CSV.write(tablefiles("figure1", "kosdm.csv"), Tables.table(kosdm))
 # metdm = Microbiome.braycurtis(metabolites)
 # CSV.write(scratchfiles("metdm.csv"), Tables.table(metdm))
 brndm = pairwise(Euclidean(), abundances(brain))
@@ -74,7 +76,7 @@ p3 = permanovas(brndm[buidx, buidx], [
 )
 p3.label .= "neuroimg"
 append!(p, p3)
-CSV.write(scratchfiles("permanovas_00t18to1200.csv"), p)
+CSV.write(tablefiles("figure1", "permanovas_00t18to1200.csv"), p)
 
 #-
 
@@ -113,7 +115,7 @@ p3 = permanovas(brndm[idx, idx], [
 p3.label .= "neuroimg"
 append!(p, p3)
 
-CSV.write(scratchfiles("permanovas_00to06.csv"), p)
+CSV.write(tablefiles("figure1", "permanovas_00to06.csv"), p)
 
 
 #-
@@ -138,7 +140,7 @@ p3 = permanovas(brndm[bidx, bidx], [
 )
 p3.label .= "neuroimg"
 append!(p, p3)
-CSV.write(scratchfiles("permanovas_18to120.csv"), p)
+CSV.write(tablefiles("figure1", "permanovas_18to120.csv"), p)
 
 #- Mantel -#
 
@@ -174,7 +176,7 @@ append!(mdf, m3)
 # m, p = mantel(metdm[ol5, ol5], brndm[ol6, ol6])
 # push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
-CSV.write(scratchfiles("mantel_00to120.csv"), mdf)
+CSV.write(tablefiles("figure1", "mantel_00to120.csv"), mdf)
 
 #- Under 6mo -#
 
@@ -239,7 +241,7 @@ append!(mdf, m3)
 # m, p = mantel(met00to06dm[ol5, ol5], brn00to06dm[ol6, ol6])
 # push!(mdf, (; stat=m, pvalue=p, thing1="metabolites", thing2="neuroimg"))        
 
-CSV.write(scratchfiles("mantel_00to06.csv"), mdf)
+CSV.write(tablefiles("figure1", "mantel_00to06.csv"), mdf)
 
 #- Over 18mo -#
 
@@ -271,4 +273,4 @@ for (i, dm1) in enumerate([spe18to120dm, uni18to120dm, ecs18to120dm, kos18to120d
 end
 append!(mdf, m3)   
 
-CSV.write(scratchfiles("mantel_18to120.csv"), mdf)
+CSV.write(tablefiles("figure1", "mantel_18to120.csv"), mdf)

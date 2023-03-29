@@ -15,6 +15,9 @@ using JLD2
 using MultipleTesting
 
 const adjust = MultipleTesting.adjust
+
+isdir(tablefiles("figure2")) || mkpath(tablefiles("figure2"))
+
 ## Data Loading
 
 mdata = Resonance.load(Metadata())
@@ -70,13 +73,13 @@ ecsdf.quartile = specdf.quartile
 
 ## GLMs
 
-runlms(specdf[specdf.filter_00to120, :], tablefiles("lms_species_00to120.csv"), names(specdf, Not(non_spec_cols)))
-runlms(specdf[specdf.filter_18to120, :], tablefiles("lms_species_18to120.csv"), names(specdf, Not(non_spec_cols)))
-runlms(specdf[specdf.filter_00to06, :], tablefiles("lms_species_00to06.csv"), names(specdf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_00to120, :], tablefiles("figure2", "lms_species_00to120.csv"), names(specdf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_18to120, :], tablefiles("figure2", "lms_species_18to120.csv"), names(specdf, Not(non_spec_cols)))
+runlms(specdf[specdf.filter_00to06, :], tablefiles("figure2", "lms_species_00to06.csv"), names(specdf, Not(non_spec_cols)))
 
 let 
     indf = unique(sort(braindf, [:subject, :timepoint]; rev=true), :subject)
-    outfile = tablefiles("lms_species_brain.csv")
+    outfile = tablefiles("figure2", "lms_species_brain.csv")
     lmresults = DataFrame()
 
     for roi in brain_roi
@@ -124,7 +127,7 @@ end
 
 let
     indf = specdf[specdf.filter_18to120, :]
-    outfile = tablefiles("lms_species_18to120_pa.csv")
+    outfile = tablefiles("figure2", "lms_species_18to120_pa.csv")
     lmresults = DataFrame()
 
     for spc in names(indf, Not(non_spec_cols))
@@ -165,7 +168,7 @@ end
 
 let 
     indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("lms_unirefs_18to120.csv")
+    outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     lmresults = DataFrame()
 
     for feat in names(indf, Not(non_spec_cols))
@@ -244,14 +247,11 @@ relativeabundance!(unirefs_00to120)
 
 
 
-isdir(scratchfiles("figure2")) || mkpath(scratchfiles("figure2"))
-
-
 ## Run LMs
 
 let 
     indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("lms_unirefs_18to120.csv")
+    outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     lmresults = DataFrame()
     i = 0
     for feat in features(unirefs_18to120)
@@ -286,7 +286,7 @@ end
 
 let 
     indf = DataFrame(metadata(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("lms_unirefs_00to120.csv")
+    outfile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     lmresults = DataFrame()
     i = 0
     for feat in features(unirefs_00to120)
@@ -321,7 +321,7 @@ end
 
 let 
     indf = DataFrame(metadata(unirefs_00to06))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("lms_unirefs_00to06.csv")
+    outfile = tablefiles("figure2", "lms_unirefs_00to06.csv")
     lmresults = DataFrame()
     i = 0
     for feat in features(unirefs_00to06)
@@ -360,8 +360,8 @@ end
 
 ### All ages
 
-let infile = tablefiles("lms_unirefs_00to120.csv")
-    outfile = scratchfiles("figure2", "fsea_consolidated_00to120.csv")
+let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
+    outfile = tablefiles("figure2", "fsea_consolidated_00to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species))
@@ -385,8 +385,8 @@ let infile = tablefiles("lms_unirefs_00to120.csv")
     CSV.write(outfile, tmp)
 end
 
-let infile = tablefiles("lms_unirefs_00to120.csv")
-    outfile = scratchfiles("figure2", "fsea_all_00to120.csv")
+let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
+    outfile = tablefiles("figure2", "fsea_all_00to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species); consolidate=false)
@@ -414,8 +414,8 @@ end
 
 ### Kids Under 6 months
 
-let infile = tablefiles("lms_unirefs_00to06.csv")
-    outfile = scratchfiles("figure2", "fsea_consolidated_00to06.csv")
+let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
+    outfile = tablefiles("figure2", "fsea_consolidated_00to06.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species))
@@ -439,8 +439,8 @@ let infile = tablefiles("lms_unirefs_00to06.csv")
     CSV.write(outfile, tmp)
 end
 
-let infile = tablefiles("lms_unirefs_00to06.csv")
-    outfile = scratchfiles("figure2", "fsea_all_00to06.csv")
+let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
+    outfile = tablefiles("figure2", "fsea_all_00to06.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species); consolidate=false)
@@ -465,8 +465,8 @@ let infile = tablefiles("lms_unirefs_00to06.csv")
 end
 ### Kids over 18 months
 
-let infile = tablefiles("lms_unirefs_18to120.csv")
-    outfile = scratchfiles("figure2", "fsea_consolidated_18to120.csv")
+let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
+    outfile = tablefiles("figure2", "fsea_consolidated_18to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species))
@@ -490,8 +490,8 @@ let infile = tablefiles("lms_unirefs_18to120.csv")
     CSV.write(outfile, tmp)
 end
 
-let infile = tablefiles("lms_unirefs_18to120.csv")
-    outfile = scratchfiles("figure2", "fsea_all_18to120.csv")
+let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
+    outfile = tablefiles("figure2", "fsea_all_18to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species); consolidate=false)

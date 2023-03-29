@@ -1,0 +1,72 @@
+variable,Test_MAPE,Test_Cor
+Left temporal,0.0405,0.1278
+Right temporal,0.0393,0.0683
+Left orbitofrontal,0.0554,0.1862
+Right orbitofrontal,0.0614,0.1325
+Left parietal,0.0352,0.1767
+Right parietal,0.0451,-0.1471
+Left middle frontal,0.0521,-0.0002
+Right middle frontal,0.0385,0.0829
+Left anterior cingulate,0.0685,0.0917
+Right anterior cingulate,0.0739,0.2447
+Left lateral occipital,0.0622,0.2237
+Right lateral occipital,0.0544,0.2208
+Left cerebellum white matter,0.0667,0.4132
+Right cerebellum white matter,0.0698,0.4344
+Left thalamus proper,0.0534,0.1696
+Right thalamus proper,0.0499,0.1616
+Left caudate,0.099,0.0287
+Right caudate,0.083,-0.01
+Left putamen,0.0592,0.1541
+Right putamen,0.0658,0.0107
+Left pallidum,0.0641,0.2967
+Right pallidum,0.0613,0.2644
+Left hippocampus,0.0541,0.0749
+Right hippocampus,0.0593,-0.0937
+Left amygdala,0.0632,0.2879
+Right amygdala,0.0704,0.1787
+Left accumbens area,0.0941,0.2877
+Right accumbens area,0.1024,-0.0406
+Left basal forebrain,0.2059,0.1544
+Right basal forebrain,0.1169,0.1234
+Left cuneus,0.0816,0.2345
+Right cuneus,0.075,0.0647
+Left entorhinal,0.0798,0.1904
+Right entorhinal,0.0822,0.0993
+Left fusiform,0.0572,0.3331
+Right fusiform,0.053,0.2482
+Left isthmus cingulate,0.0774,-0.0409
+Right isthmus cingulate,0.0854,0.0735
+Left lingual,0.0688,0.4212
+Right lingual,0.0719,0.4336
+Left parahippocampal,0.0576,0.1535
+Right parahippocampal,0.0602,0.1341
+Left paracentral,0.0781,0.1309
+Right paracentral,0.084,0.0231
+Left pars opercularis,0.057,0.1464
+Right pars opercularis,0.0595,0.0301
+Left pars orbitalis,0.0821,0.0032
+Right pars orbitalis,0.1118,0.0235
+Left pars triangularis,0.0633,0.1743
+Right pars triangularis,0.0762,0.0434
+Left pericalcarine,0.1105,0.1997
+Right pericalcarine,0.0885,0.2729
+Left postcentral,0.0516,0.1681
+Right postcentral,0.0595,0.1349
+Left posterior cingulate,0.1338,0.1365
+Right posterior cingulate,0.1394,0.0628
+Left precentral,0.0654,0.2478
+Right precentral,0.0463,0.0656
+Left precuneus,0.0561,0.1443
+Right precuneus,0.0685,0.1499
+Left superior frontal,0.0398,0.1008
+Right superior frontal,0.0436,-0.0961
+Left supramarginal,0.0668,0.0611
+Right supramarginal,0.0682,-0.0008
+Left insula,0.0571,-0.119
+Right insula,0.0562,0.0771
+Cerebellar vermal lobules I V,0.0846,0.1562
+Cerebellar vermal lobules VI VII,0.0813,0.006
+Cerebellar vermal lobules VIII X,0.0825,0.0781
+Brain stem,0.0766,0.6047
+CSF,0.1624,0.0713
