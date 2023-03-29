@@ -36,12 +36,12 @@ for oldname in names(mdata_ecs_df)[15:2414]
     rename!(mdata_ecs_df, oldname => randstring(['A':'Z'; 'a':'z'], 12))
 end
 newnames = names(mdata_ecs_df)[15:2414]
-open("longnames.txt", "w") do io
+open(scratchfiles("longnames.txt"), "w") do io # @Hugemiler I can't figure out where these are used
     for i in oldnames
         println(io, i)
     end
 end
-open("hashnames.txt", "w") do io
+open(scratchfiles("hashnames.txt"), "w") do io # @Hugemiler I can't figure out where these are used
     for i in newnames
         println(io, i)
     end
@@ -94,10 +94,13 @@ filtered_mdata_ecs_df_18to120 = filter_prevalences(
 )
 
 # ## Exports
-CSV.write("00to06_taxa.csv", filtered_mdata_taxa_df_00to06)
-CSV.write("00to06_ecs.csv", filtered_mdata_ecs_df_00to06)
-CSV.write("18to120_taxa.csv", filtered_mdata_taxa_df_18to120)
-CSV.write("18to120_ecs.csv", filtered_mdata_ecs_df_18to120)
+
+isdir(tablefiles("figure3")) || mkdir(tablefiles("figure3"))
+
+CSV.write(tablefiles("figure3", "00to06_taxa.csv"), filtered_mdata_taxa_df_00to06) # @Hugemiler what are these used for?
+CSV.write(tablefiles("figure3", "00to06_ecs.csv"), filtered_mdata_ecs_df_00to06)
+CSV.write(tablefiles("figure3", "18to120_taxa.csv"), filtered_mdata_taxa_df_18to120)
+CSV.write(tablefiles("figure3", "18to120_ecs.csv"), filtered_mdata_ecs_df_18to120)
 
 #####
 # Training models
