@@ -36,12 +36,12 @@ for oldname in names(mdata_ecs_df)[15:2414]
     rename!(mdata_ecs_df, oldname => randstring(['A':'Z'; 'a':'z'], 12))
 end
 newnames = names(mdata_ecs_df)[15:2414]
-open(scratchfiles("longnames.txt"), "w") do io # @Hugemiler I can't figure out where these are used
+open(scratchfiles("longnames.txt"), "w") do io
     for i in oldnames
         println(io, i)
     end
 end
-open(scratchfiles("hashnames.txt"), "w") do io # @Hugemiler I can't figure out where these are used
+open(scratchfiles("hashnames.txt"), "w") do io
     for i in newnames
         println(io, i)
     end
