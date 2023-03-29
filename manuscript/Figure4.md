@@ -251,7 +251,7 @@ CairoMakie.xlims!(axC, [0, nrow(weighted_noage_importances)+1])
 maximp = maximum(Matrix(weighted_noage_importances[!, 2:end]))
    
 for bug in highlight_bugs
-    i = findfirst(==(bug), noage.variable[idx])
+    i = findfirst(==(bug), weighted_noage_importances.variable[idx])
     poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=hlbugs_color[bug])
 end
 CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
@@ -280,4 +280,40 @@ figure
 ```julia
 save(figurefiles("Figure4.svg"), figure)
 save("manuscript/assets/Figure4.png", figure)
+```
+
+## Supplementary Figures
+
+### Supp Figure related to 4C
+
+```julia
+let fig = Figure(; resolution=(2000, 500))
+    importances = reduce(
+        (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+            [ rename!(weighted_hpimportances(j; normalize_importances=true), 
+                    :weightedImportance => Symbol(split(j.name, '_')[2])) for (i, j) in brain_models ]
+    )
+    subset!(importances, "variable" => ByRow(v-> v != "ageMonths"))
+
+    idx = sortperm([median(row[2:end]) for row in eachrow(importances)])
+    ys = reduce(vcat, [values(importances[i, 2:end])...] for i in idx)
+    xs = repeat(1:length(idx); inner=ncol(importances)-1)
+    @info length(ys) length(xs)
+    
+    ax = Axis(fig[1,1]; 
+        xlabel="Bugs (rank median)",
+        ylabel = "importances",
+        xticks = (1:nrow(importances), replace.(importances[idx, "variable"], "_"=>"")),
+        xticklabelrotation = π/4,
+        xticklabelfont="TeX Gyre Heros Makie Italic",
+        xticklabelsize=10
+
+    )
+    scatter!(ax, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
+    xlims!(ax, 0, nrow(importances)+1)
+    save(figurefiles("Supp_Figure5.svg"), fig)
+    save("manuscript/assets/Supp_Figure5.png", fig)
+    fig
+end
+
 ```
