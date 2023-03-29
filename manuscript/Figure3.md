@@ -20,18 +20,21 @@ ml_rng = StableRNG(0)
 ## Loading the pretrained models
 
 ```julia
+mdata = Resonance.load(Metadata())
+spec = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore regression from taxonomic profiles
-regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_onlydemo.jld"))["regression_currentCogScores_00to06mo_onlydemo"]
-regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
-regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_demoplustaxa.jld"))["regression_currentCogScores_00to06mo_demoplustaxa"]
-regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_onlyecs.jld"))["regression_currentCogScores_00to06mo_onlyecs"]
-regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_demoplusecs.jld"))["regression_currentCogScores_00to06mo_demoplusecs"]
-regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_18to120mo_onlydemo.jld"))["regression_currentCogScores_18to120mo_onlydemo"]
-regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_18to120mo_onlytaxa.jld"))["regression_currentCogScores_18to120mo_onlytaxa"]
-regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_18to120mo_demoplustaxa.jld"))["regression_currentCogScores_18to120mo_demoplustaxa"]
-regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_18to120mo_onlyecs.jld"))["regression_currentCogScores_18to120mo_onlyecs"]
-regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_18to120mo_demoplusecs.jld"))["regression_currentCogScores_18to120mo_demoplusecs"]
+regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlydemo.jld"), "regression_currentCogScores_00to06mo_onlydemo")
+regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlytaxa.jld"), "regression_currentCogScores_00to06mo_onlytaxa")
+regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"), "regression_currentCogScores_00to06mo_demoplustaxa")
+regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"), "regression_currentCogScores_00to06mo_onlyecs")
+regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"), "regression_currentCogScores_00to06mo_demoplusecs")
+regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld"), "regression_currentCogScores_18to120mo_onlydemo")
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld"), "regression_currentCogScores_18to120mo_onlytaxa")
+regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"), "regression_currentCogScores_18to120mo_demoplustaxa")
+regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"), "regression_currentCogScores_18to120mo_onlyecs")
+regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"), "regression_currentCogScores_18to120mo_demoplusecs")
 ```
 
 ## Initializing Figure 3
@@ -70,8 +73,9 @@ axB = Axis(
 )
 
 plot_colorset = [(:white, 0.), (ColorSchemes.tableau_10[3], 1.0), (ColorSchemes.tableau_10[1], 0.7), (ColorSchemes.tableau_10[7], 0.4)]
-plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_00to06.csv"; plot_colorset = plot_colorset, strokewidth=1)
-plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/lms_species_18to120.csv"; plot_colorset = plot_colorset, strokewidth=1)
+plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, tablefiles("lms_species_00to06.csv"); plot_colorset = plot_colorset, strokewidth=1)
+plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, tablefiles("lms_species_18to120.csv");  
+    plot_colorset = plot_colorset, strokewidth=1)
 
 Legend(
     AB_subfig[3, 1],
@@ -143,9 +147,6 @@ Legend(
 
 ### Plot panel E - Deep dives on taxa
 ```julia
-mdata = Resonance.load(Metadata())
-spec = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
-
 plot_taxon_deepdive!(E_subfig, 1, spec, :filter_00to06, "Blautia_wexlerae";)
 plot_taxon_deepdive!(E_subfig, 2, spec, :filter_00to06, "Gordonibacter_pamelaeae";)
 plot_taxon_deepdive!(E_subfig, 3, spec, :filter_00to06, "Bifidobacterium_longum";)
