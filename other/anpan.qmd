@@ -1,0 +1,218 @@
+---
+title: "Running Anpan"
+format: html
+---
+
+## Installation
+
+```{r}
+#| eval: false
+install.packages(c("ape", 
+                   "data.table",
+                   "dplyr", 
+                   "fastglm",
+                   "furrr", 
+                   "ggdendro",
+                   "ggnewscale",
+                   "ggplot2",
+                   "loo",
+                   "patchwork",
+                   "phylogram",
+                   "posterior",
+                   "progressr",
+                   "purrr",
+                   "R.utils",
+                   "remotes",
+                   "stringr",
+                   "tibble",
+                   "tidyselect"), Ncpus = 8) # add Ncpus = 4 to go faster
+
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+```
+
+
+```{r}
+#| eval: false
+library(cmdstanr)
+check_cmdstan_toolchain()
+install_cmdstan(cores = 4)
+```
+
+```{r}
+#| eval: false
+remotes::install_github("biobakery/anpan")
+```
+
+## Identifying taxa
+
+```{julia}
+using Resonance
+
+species = Resonance.load(TaxonomicProfiles())
+
+bugs = [
+    "Blautia_wexlerae",
+    "Ruminococcus_gnavus",
+    "Erysipelatoclostridium_ramosum",
+    "Bifidobacterium_longum"
+]
+
+for bug in bugs
+    ss = filter(s-> species[Taxon(bug, :species), s] > 0, samples(species))
+    open(joinpath("data", "anpan", "has_" * lowercase(replace(bug, r"([A-Z])[a-z]+_([a-z]{3}).+"=> s"\1\2")) * ".txt"), "w") do io
+        println.(io, name.(ss))
+    end
+end
+```
+
+```{julia}
+mdata = Resonance.load(Metadata())
+pathways = Resonance.load_raw_humann(; kind="pathabundance", sample_filter=mdata.sample, stratified = true)
+
+for bug in bugs
+    comm = pathways[findall(f-> !ismissing(taxon(f)) && replace(name(taxon(f)), r".+s__(.+)"=> s"\1") == bug, features(pathways)), :]
+    df = DataFrame(comm)
+    df.features = string.(df.features)
+    rename!(df, "features"=> "# Gene Family")
+    df = df[!, findall(col-> col == "# Gene Family" || any(>(0), df[!, col]), names(df))]
+    CSV.write(joinpath("data", "anpan", bug * "_pathabundance.tsv"))
+end
+```
+
+## Running
+
+After identifying samples with *B. wexlerae* in our sample set
+
+
+```{r}
+library(data.table)
+```
+
+
+```{r}
+library(anpan)
+future::plan(future::multicore, workers=16)
+```
+
+## Blautia_wexlerae
+
+```{r}
+bwex_results <- anpan(#bug_dir           = "/grace/sequencing/processed/mgx/humann/main",
+                        bug_file          = "./data/anpan/Blautia_wexlerae_pathabundance.tsv",
+                        meta_file         = "./data/anpan/manuscript_meta.csv",
+                        out_dir           = "./data/anpan/Blautia_wexlerae",
+                        # annotation_file   = "/path/to/annotation.tsv", #optional, used for plots
+                        filtering_method  = "kmeans",
+                        model_type        = "fastglm",
+                        covariates        = c("ageMonths", "sex", "education"),
+                        outcome           = "cogScore",
+                        plot_ext          = "pdf",
+                        save_filter_stats = TRUE)
+```
+
+
+```{r}
+input_path = file.path("data", "anpan", "Blautia_wexlerae", "filter_stats",
+                       "filtered_Blautia_wexlerae_pathabundance.tsv.gz")
+
+model_input = fread(input_path)
+
+plot_results(res         = bwex_results,
+             model_input = model_input,
+             covariates  = c("ageMonths", "sex", "education"), 
+             outcome     = "cogScore",
+             bug_name    = "Blautia wexlerae",
+             cluster     = "both",
+             show_trees  = TRUE)
+
+```
+
+## Ruminococcus_gnavus
+
+```{r}
+results <- anpan(#bug_dir           = "/grace/sequencing/processed/mgx/humann/main",
+                        bug_file          = "./data/anpan/Ruminococcus_gnavus_pathabundance.tsv",
+                        meta_file         = "./data/anpan/manuscript_meta.csv",
+                        out_dir           = "./data/anpan/Ruminococcus_gnavus",
+                        # annotation_file   = "/path/to/annotation.tsv", #optional, used for plots
+                        filtering_method  = "kmeans",
+                        model_type        = "fastglm",
+                        covariates        = c("ageMonths", "sex", "education"),
+                        outcome           = "cogScore",
+                        plot_ext          = "pdf",
+                        save_filter_stats = TRUE)
+
+input_path = file.path("data", "anpan", "Ruminococcus_gnavus", "filter_stats",
+                       "filtered_Ruminococcus_gnavus_pathabundance.tsv.gz")
+
+model_input = fread(input_path)
+
+plot_results(res         = results,
+             model_input = model_input,
+             covariates  = c("ageMonths", "sex", "education"), 
+             outcome     = "cogScore",
+             bug_name    = "R. gnavus",
+             cluster     = "both",
+             show_trees  = TRUE)
+
+```
+
+## Erysipelatoclostridium_ramosum
+
+```{r}
+results <- anpan(#bug_dir           = "/grace/sequencing/processed/mgx/humann/main",
+                        bug_file          = "./data/anpan/Erysipelatoclostridium_ramosum_pathabundance.tsv",
+                        meta_file         = "./data/anpan/manuscript_meta.csv",
+                        out_dir           = "./data/anpan/Erysipelatoclostridium_ramosum",
+                        # annotation_file   = "/path/to/annotation.tsv", #optional, used for plots
+                        filtering_method  = "kmeans",
+                        model_type        = "fastglm",
+                        covariates        = c("ageMonths", "sex", "education"),
+                        outcome           = "cogScore",
+                        plot_ext          = "pdf",
+                        save_filter_stats = TRUE)
+
+input_path = file.path("data", "anpan", "Erysipelatoclostridium_ramosum", "filter_stats",
+                       "filtered_Erysipelatoclostridium_ramosum_pathabundance.tsv.gz")
+
+model_input = fread(input_path)
+
+plot_results(res         = results,
+             model_input = model_input,
+             covariates  = c("ageMonths", "sex", "education"), 
+             outcome     = "cogScore",
+             bug_name    = "E. ramosum",
+             cluster     = "both",
+             show_trees  = TRUE)
+
+```
+
+## Bifidobacterium_longum
+
+```{r}
+results <- anpan(#bug_dir           = "/grace/sequencing/processed/mgx/humann/main",
+                        bug_file          = "./data/anpan/Bifidobacterium_longum_pathabundance.tsv",
+                        meta_file         = "./data/anpan/manuscript_meta.csv",
+                        out_dir           = "./data/anpan/Bifidobacterium_longum",
+                        # annotation_file   = "/path/to/annotation.tsv", #optional, used for plots
+                        filtering_method  = "kmeans",
+                        model_type        = "fastglm",
+                        covariates        = c("ageMonths", "sex", "education"),
+                        outcome           = "cogScore",
+                        plot_ext          = "pdf",
+                        save_filter_stats = TRUE)
+
+input_path = file.path("data", "anpan", "Bifidobacterium_longum", "filter_stats",
+                       "filtered_Bifidobacterium_longum_pathabundance.tsv.gz")
+
+model_input = fread(input_path)
+
+plot_results(res         = results,
+             model_input = model_input,
+             covariates  = c("ageMonths", "sex", "education"), 
+             outcome     = "cogScore",
+             bug_name    = "B. longum",
+             cluster     = "both",
+             show_trees  = TRUE)
+
+```
