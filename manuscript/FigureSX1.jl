@@ -29,59 +29,20 @@ this_curvecolor = :orange
 plot_importances_pareto!(figure[1,1], supptblA, "Pareto Plot - 0 to 6 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
 plot_importances_pareto!(figure[2,1], supptblB[1:70, :], "Pareto Plot - 18 to 120 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
 
-barplot!(
-    ax1L,
-    collect(1:nrow(supptblA)), (100 .* supptblA.relativeWeightedImportance),
-    color = barcolor, strokecolor = :black, strokewidth = 1)
-scatter!(
-    ax1R,
-    collect(1:nrow(supptblA)), (100 .* supptblA.cumulativeWeightedImportance),
-    color = curvecolor, markersize = 15)
-lines!(
-    ax1R,
-    collect(1:nrow(supptblA)), (100 .* supptblA.cumulativeWeightedImportance),
-    color = curvecolor, linewidth = 5)
+Legend(
+    figure[3, 1],
+    [
+        PolyElement(; color = this_barcolor, strokewidth = 1, strokecolor = :black),
+        LineElement(; color = this_curvecolor, linewidth = 5)
+    ] , [
+        "Individual relative Importance",
+        "Cumulative relative importance"
 
-tightlimits(ax1L, Left(), Right())
-tightlimits(ax1R, Left(), Right())
-
-ax2L = Axis(
-    figure[2,1],
-    xlabel = "Feature",
-    xticks = (collect(1:nrow(supptblB)), replace.(supptblB.variable, "_"=>" ")),
-    xticklabelsize=8,
-    xticklabelrotation= pi/4,
-    xticklabelfont="TeX Gyre Heros Makie Italic",
-    title = "18 to 120 months",
-    ylabel = "Individual relative importance")
-ax2R = Axis(
-    figure[2,1],
-    xlabel = "Feature",
-    xticks = (collect(1:nrow(supptblB))),
-    ylabel = "Cumulative relative importance",
-    yticks = 0:10:100,
-    yaxisposition = :right)
-
-ylims!(ax2L, [0.0, 10.0])
-ylims!(ax2R, [0.0, 100.0])
-hidexdecorations!(ax2R)
-# hidespines!(ax1R)
-linkxaxes!(ax2L, ax2R)
-
-barplot!(
-    ax2L,
-    collect(1:nrow(supptblB)), (100 .* supptblB.relativeWeightedImportance),
-    color = barcolor, strokecolor = :black, strokewidth = 1)
-scatter!(
-    ax2R,
-    collect(1:nrow(supptblB)), (100 .* supptblB.cumulativeWeightedImportance),
-    color = curvecolor, markersize = 15)
-lines!(
-    ax2R,
-    collect(1:nrow(supptblB)), (100 .* supptblB.cumulativeWeightedImportance),
-    color = curvecolor, linewidth = 5)
-
-tightlimits(ax1L, Left(), Right())
-tightlimits(ax1R, Left(), Right())
+    ],
+    tellheight = false,
+    tellwidth = false,
+    margin = (10, 10, 10, 10),
+    halign = :right, valign = :bottom, orientation = :vertical
+)
 
 figure
