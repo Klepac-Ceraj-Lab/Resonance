@@ -282,7 +282,7 @@ save(figurefiles("Figure4.svg"), figure)
 save("manuscript/assets/Figure4.png", figure)
 ```
 
-# Supplement to Figure 4
+# Supplementary Figure 5
 ```julia
 relative_brain_importances = reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
