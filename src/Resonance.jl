@@ -55,7 +55,9 @@ export  # 0. structs/types
         plot_comparativedemo_importance_barplots!,
         attribute_colors,
         plot_comparative_lmvsrf_scatterplots!,
-        plot_taxon_deepdive!
+        plot_taxon_deepdive!,
+        singlemodel_importances_suppltable,
+        plot_importances_pareto!
 
 # Percentiles
 export  AgeBracketPercentiles,
