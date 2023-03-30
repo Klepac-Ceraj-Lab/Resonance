@@ -16,15 +16,7 @@ RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
 regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_18to120mo_onlytaxa.jld"))["regression_currentCogScores_18to120mo_onlytaxa"]
 
-## 2. Defining Suppl Table Functions
-function singlemodel_importances_suppltable(rf_model)
-    rf_model_importances = weighted_hpimportances(rf_model; normalize_importances=false, change_hashnames=false)
-    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(skipmissing(rf_model_importances.weightedImportance))
-    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
-    return rf_model_importances
-end
-
-## 3. Building the tables
+## 2. Building the tables
 supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06mo_onlytaxa)
 supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
 
