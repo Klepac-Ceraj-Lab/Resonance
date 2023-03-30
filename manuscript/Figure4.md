@@ -251,7 +251,7 @@ CairoMakie.xlims!(axC, [0, nrow(weighted_noage_importances)+1])
 maximp = maximum(Matrix(weighted_noage_importances[!, 2:end]))
    
 for bug in highlight_bugs
-    i = findfirst(==(bug), noage.variable[idx])
+    i = findfirst(==(bug), weighted_noage_importances.variable[idx])
     poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=hlbugs_color[bug])
 end
 CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
