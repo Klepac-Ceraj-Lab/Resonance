@@ -281,3 +281,66 @@ figure
 save(figurefiles("Figure4.svg"), figure)
 save("manuscript/assets/Figure4.png", figure)
 ```
+
+# Supplement to Figure 4
+```julia
+relative_brain_importances = reduce(
+    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+    [ rename!(weighted_hpimportances(j; normalize_importances=true), :weightedImportance => Symbol(split(j.name, '_')[2]))
+      for (i, j) in brain_models ]
+)
+
+## Filter the merits and importances tables according to the list of interesting segments
+interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
+relative_brain_importances = dropmissing(relative_brain_importances[:, vcat(["variable"], interesting_segments)]) # no row filter because the purpose of this is full-dataset
+
+## Perform hierarchical clustering
+transposedImportances = permutedims(relative_brain_importances, :variable)
+dist_taxa = pairwise(Euclidean(), Matrix(transposedImportances[:, 2:end]); dims=2)
+dist_segments = pairwise(Euclidean(), Matrix(transposedImportances[:, 2:end]); dims=1)
+hcl_taxa = hclust(dist_taxa; linkage=:average, branchorder=:optimal)
+hcl_segments = hclust(dist_segments; linkage=:average, branchorder=:optimal)
+hclust_taxa_order = hcl_taxa.order
+hclust_segments_order = hcl_segments.order
+
+## Initialize figure
+figure = Figure(resolution = (1920, 1080))
+relative_brain_importances = relative_brain_importances[hclust_taxa_order, vcat( [ 1 ], (hclust_segments_order .+ 1))]
+
+## Importance Heatmap
+ax = Axis(
+    figure[1, 1];
+    ylabel = "Target brain segment",
+    xticks = (collect(1:nrow(relative_brain_importances)), relative_brain_importances.variable),
+    yticks = (collect(1:length(interesting_segments)), names(relative_brain_importances)[2:end]),
+    yticklabelsize=14,
+    yreversed=true,
+    title = "Brain segmentation data variable importances"
+)
+hidexdecorations!(ax; ticks=false)
+ax_ticks = let
+    bugs = relative_brain_importances.variable
+    Axis(
+        figure[1, 1];
+        xlabel = "Predictor",
+        xticks = (collect(1:nrow(relative_brain_importances)),
+                replace.(bugs, "_"=>" ")),
+        xticklabelsize=10,
+        xticklabelrotation= pi/4,
+        xticklabelfont="TeX Gyre Heros Makie Italic"
+    )
+end
+
+tightlimits!.([ax, ax_ticks])
+linkxaxes!(ax, ax_ticks)
+hidexdecorations!(ax_ticks; ticklabels=false, label=false)
+hideydecorations!(ax_ticks)
+hidespines!(ax_ticks)
+
+hm = CairoMakie.heatmap!(ax, Matrix(relative_brain_importances[:, 2:end]), yflip=true, colorrange = (0.0, 0.04), highclip = :yellow)
+Colorbar(figure[1,2], hm; label= "Relative feature importance")
+
+## Saving
+save(figurefiles("Supp_Figure5.svg"), figure)
+save("manuscript/assets/Supp_Figure5.png", figure)
+```
