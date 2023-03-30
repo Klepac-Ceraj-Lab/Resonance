@@ -180,3 +180,39 @@ figure
 save(figurefiles("Figure3.svg"), figure)
 save("manuscript/assets/Figure3.png", figure)
 ```
+
+# Supplement to Figure 3
+```julia
+## 1. Building the supplementary-style tables
+supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06mo_onlytaxa)
+supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
+
+## 2. Building the Figure
+figure = Figure(resolution = (1200, 1200))
+
+this_barcolor = :lightblue
+this_curvecolor = :orange
+
+plot_importances_pareto!(figure[1,1], supptblA, "Pareto Plot - 0 to 6 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
+plot_importances_pareto!(figure[2,1], supptblB[1:70, :], "Pareto Plot - 18 to 120 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
+
+Legend(
+    figure[3, 1],
+    [
+        PolyElement(; color = this_barcolor, strokewidth = 1, strokecolor = :black),
+        LineElement(; color = this_curvecolor, linewidth = 5)
+    ] , [
+        "Individual relative Importance",
+        "Cumulative relative importance"
+
+    ],
+    tellheight = true,
+    tellwidth = false,
+    margin = (10, 10, 10, 10),
+    orientation = :horizontal
+)
+
+## Saving
+save(figurefiles("Supp_Figure4.svg"), figure)
+save("manuscript/assets/Supp_Figure4.png", figure)
+```
