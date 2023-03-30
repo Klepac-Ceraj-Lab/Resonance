@@ -428,3 +428,54 @@ function singlemodel_importances_suppltable(rf_model)
     return rf_model_importances
 end
 
+## Importance Pareto Plot from SuppTable
+function plot_importances_pareto!(
+    figpos::GridPosition,
+    supptbl::DataFrame,
+    figtitle = "Pareto Plot";
+    barcolor = :lightblue,
+    curvecolor = :orange,
+    leftlims = [0.0, 10.0],
+    rightlims = [0.0, 100.0]
+    )
+    
+    axL = Axis(
+        figpos,
+        xlabel = "Feature",
+        xticks = (collect(1:nrow(supptbl)), replace.(supptbl.variable, "_"=>" ")),
+        xticklabelsize=8,
+        xticklabelrotation= pi/4,
+        xticklabelfont="TeX Gyre Heros Makie Italic",
+        title = figtitle,
+        ylabel = "Individual relative importance (%)")
+    axR = Axis(
+        figpos,
+        xlabel = "Feature",
+        xticks = (collect(1:nrow(supptbl))),
+        ylabel = "Cumulative relative importance (%)",
+        yticks = 0:10:100,
+        yaxisposition = :right)
+
+    ylims!(axL, leftlims)
+    ylims!(axR, rightlims)
+    hidexdecorations!(axR)
+    linkxaxes!(axL, axR)
+
+    barplot!(
+        axL,
+        collect(1:nrow(supptbl)), (100 .* supptbl.relativeWeightedImportance),
+        color = barcolor, strokecolor = :black, strokewidth = 1)
+    scatter!(
+        axR,
+        collect(1:nrow(supptbl)), (100 .* supptbl.cumulativeWeightedImportance),
+        color = curvecolor, markersize = 15)
+    lines!(
+        axR,
+        collect(1:nrow(supptbl)), (100 .* supptbl.cumulativeWeightedImportance),
+        color = curvecolor, linewidth = 5)
+
+    # tightlimits!(axL, Left(), Right())
+    # tightlimits!(axR, Left(), Right()) # Not working as we want it to. Check on a later opportunity.
+
+    return figpos
+end
