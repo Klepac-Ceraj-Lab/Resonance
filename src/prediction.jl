@@ -419,3 +419,12 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, spec::
 
     return figure_layout
 end
+
+## Importance supplementary table from ProbeData
+function singlemodel_importances_suppltable(rf_model)
+    rf_model_importances = weighted_hpimportances(rf_model; normalize_importances=false, change_hashnames=false)
+    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(skipmissing(rf_model_importances.weightedImportance))
+    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
+    return rf_model_importances
+end
+
