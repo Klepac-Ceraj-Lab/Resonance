@@ -34,12 +34,12 @@ We'll calculate them once for each profile rather
 rather than separately for each test.
 
 ```julia
-spedm = CSV.read(scratchfiles("spedm.csv"), DataFrame) |> Matrix
-unidm = CSV.read(scratchfiles("unidm.csv"), DataFrame) |> Matrix
-ecsdm = CSV.read(scratchfiles("ecsdm.csv"), DataFrame) |> Matrix
-kosdm = CSV.read(scratchfiles("kosdm.csv"), DataFrame) |> Matrix
-# metdm = CSV.read(scratchfiles("metdm.csv"), DataFrame) |> Matrix
-brndm = CSV.read(scratchfiles("brndm.csv"), DataFrame) |> Matrix
+spedm = CSV.read(tablefiles("figure1", "spedm.csv"), DataFrame) |> Matrix
+unidm = CSV.read(tablefiles("figure1", "unidm.csv"), DataFrame) |> Matrix
+ecsdm = CSV.read(tablefiles("figure1", "ecsdm.csv"), DataFrame) |> Matrix
+kosdm = CSV.read(tablefiles("figure1", "kosdm.csv"), DataFrame) |> Matrix
+# metdm = CSV.read(tablefiles("figure1", "metdm.csv"), DataFrame) |> Matrix
+brndm = CSV.read(tablefiles("figure1", "brndm.csv"), DataFrame) |> Matrix
 
 divr = shannon(species) |> vec
 ```
@@ -144,13 +144,13 @@ This is a permutation test of variance
 ```julia
 G = GridLayout(GH[1,1])
 # Ba = Axis(B[1:2,1]; alignmode=Outside())
-Ga = Axis(G[1,1]; title="Under 6mo", alignmode = Mixed(; left=-15))
-Gb = Axis(G[1,2]; title="Over 18mo")
+Ga = Axis(G[1,1]; title="Under 6 months", alignmode = Mixed(; left=-15))
+Gb = Axis(G[1,2]; title="Over 18 months")
 
-# plot_permanovas!(Ba, CSV.read(scratchfiles("permanovas_all.csv"), DataFrame))
-plot_permanovas!(Ga, CSV.read(scratchfiles("permanovas_00to06.csv"), DataFrame))
+# plot_permanovas!(Ba, CSV.read(tablefiles("figure1", "permanovas_all.csv"), DataFrame))
+plot_permanovas!(Ga, CSV.read(tablefiles("figure1", "permanovas_00to06.csv"), DataFrame))
 hideydecorations!(Gb)
-plot_permanovas!(Gb, CSV.read(scratchfiles("permanovas_18to120.csv"), DataFrame))
+plot_permanovas!(Gb, CSV.read(tablefiles("figure1", "permanovas_18to120.csv"), DataFrame))
 
 colsize!(GH, 1, Relative(1/2))
 Ga.alignmode = Mixed(; left=0)
@@ -164,13 +164,13 @@ colsize!(G, 1, Relative(4/7))
 H = GridLayout(GH[1,2])
 
 # Ca = Axis(C[1:2, 1]; alignmode=Outside())
-Ha = Axis(H[1,1]; title="Under 6mo", alignmode = Mixed(; left=-15))
-Hb = Axis(H[1,2]; title="Over 18mo")
+Ha = Axis(H[1,1]; title="Under 6 months", alignmode = Mixed(; left=-15))
+Hb = Axis(H[1,2]; title="Over 18 months")
 hideydecorations!(Hb)
 
-# plot_mantel!(Ca, CSV.read(scratchfiles("mantel_all.csv"), DataFrame))
-plot_mantel!(Ha, CSV.read(scratchfiles("mantel_00to06.csv"), DataFrame))
-plot_mantel!(Hb, CSV.read(scratchfiles("mantel_18to120.csv"), DataFrame))
+# plot_mantel!(Ca, CSV.read(tablefiles("figure1", "mantel_all.csv"), DataFrame))
+plot_mantel!(Ha, CSV.read(tablefiles("figure1", "mantel_00to06.csv"), DataFrame))
+plot_mantel!(Hb, CSV.read(tablefiles("figure1", "mantel_18to120.csv"), DataFrame))
 
 # Label(GH[0,2], "Mantel"; tellwidth=false)
 ```

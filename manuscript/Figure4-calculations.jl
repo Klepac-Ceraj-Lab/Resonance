@@ -14,6 +14,8 @@ using JLD2
 using Resonance
 ml_rng = StableRNG(0)
 
+isdir(tablefiles("figure4")) || mkdir(tablefiles("figure4"))
+
 #####
 # Loading Data
 #####
@@ -52,7 +54,7 @@ filtered_mdata_taxa_df_18to120 = filter_prevalences(
     ubound = taxa_prevalence_threshold_upper
 )[:, 2:end]
 
-CSV.write("18to120_brain_taxa.csv", hcat(filtered_mdata_taxa_df_18to120, mdata_brain_df[:, 16:end-2]))
+CSV.write(tablefiles("figure4", "18to120_brain_taxa.csv"), hcat(filtered_mdata_taxa_df_18to120, mdata_brain_df[:, 16:end-2]))
 
 #####
 # Training models
@@ -92,49 +94,13 @@ mdata_brain_df."right-middle-frontal" = mdata_brain_df."right-caudal-middle-fron
 mdata_brain_df."left-anterior-cingulate" = mdata_brain_df."left-caudal-anterior-cingulate" .+ mdata_brain_df."left-rostral-anterior-cingulate"
 mdata_brain_df."right-anterior-cingulate" = mdata_brain_df."right-caudal-anterior-cingulate" .+ mdata_brain_df."right-rostral-anterior-cingulate"
 
-brain_segments_list = [
-    "left-temporal", "right-temporal",
-    "left-orbitofrontal", "right-orbitofrontal",
-    "left-parietal", "right-parietal",
-    "left-middle-frontal", "right-middle-frontal",
-    "left-anterior-cingulate", "right-anterior-cingulate",
-    "left-lateral-occipital", "right-lateral-occipital",
-    "left-cerebellum-white-matter", "right-cerebellum-white-matter",
-    "left-thalamus-proper", "right-thalamus-proper",
-    "left-caudate", "right-caudate",
-    "left-putamen", "right-putamen",
-    "left-pallidum", "right-pallidum",
-    "left-hippocampus", "right-hippocampus",
-    "left-amygdala", "right-amygdala",
-    "left-accumbens-area", "right-accumbens-area",
-    "left-basal-forebrain", "right-basal-forebrain", 
-    "left-cuneus", "right-cuneus", 
-    "left-entorhinal", "right-entorhinal",
-    "left-fusiform", "right-fusiform",
-    "left-isthmus-cingulate", "right-isthmus-cingulate",
-    "left-lingual", "right-lingual",
-    "left-parahippocampal", "right-parahippocampal",
-    "left-paracentral", "right-paracentral",
-    "left-pars-opercularis", "right-pars-opercularis",
-    "left-pars-orbitalis", "right-pars-orbitalis",
-    "left-pars-triangularis", "right-pars-triangularis",
-    "left-pericalcarine", "right-pericalcarine",
-    "left-postcentral", "right-postcentral",
-    "left-posterior-cingulate", "right-posterior-cingulate",
-    "left-precentral", "right-precentral",
-    "left-precuneus", "right-precuneus",
-    "left-superior-frontal", "right-superior-frontal",
-    "left-supramarginal", "right-supramarginal",
-    "left-insula", "right-insula",
-    "cerebellar-vermal-lobules-I-V", "cerebellar-vermal-lobules-VI-VII", "cerebellar-vermal-lobules-VIII-X",
-    "Brain-stem", "CSF"
-]
+include("Figure4-definitions.jl")
 
 # ## 7. Only taxonomic profiles
 
 brain_models = Dict{String, ProbeData}()
 
-for brain_segment in brain_segments_list
+for brain_segment in ordered_brain_segments_list
 
     tmp_df = deepcopy(filtered_mdata_taxa_df_18to120)
     prediction_df = insertcols!(tmp_df, 1, :target => mdata_brain_df[:, brain_segment])

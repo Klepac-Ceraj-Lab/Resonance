@@ -336,7 +336,8 @@ function plot_comparative_lmvsrf_scatterplots!(
     lm_path::String;
     exclude_from_importances= [ "ageMonths" ],
     cumulative_importance_threshold = 0.6,
-    plot_colorset = [:dodgerblue, :orange, :green, :purple])
+    plot_colorset = [:dodgerblue, :orange, :green, :purple],
+    kwargs...)
 
     ## 1. calculate the importances and the cumulative sum, excluding the relevant variables
     rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
@@ -362,7 +363,8 @@ function plot_comparative_lmvsrf_scatterplots!(
     scatter!(
         plot_axis,
         log.(plot_comparative_df.pvalue).*(-1), plot_comparative_df.weightedImportance,
-        color = point_colors
+        color = point_colors;
+        kwargs...
     )
 
     return plot_axis

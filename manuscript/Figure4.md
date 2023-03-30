@@ -282,7 +282,10 @@ save(figurefiles("Figure4.svg"), figure)
 save("manuscript/assets/Figure4.png", figure)
 ```
 
-# Supplementary Figure 5
+## Supplementary Figures
+
+### Supplementary Figure 5
+
 ```julia
 relative_brain_importances = reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
@@ -345,7 +348,44 @@ save(figurefiles("Supp_Figure5.svg"), figure)
 save("manuscript/assets/Supp_Figure5.png", figure)
 ```
 
-# Supplementary Figure 7
+### Supp Figure 6
+
+```julia
+let fig = Figure(; resolution=(2000, 500))
+    importances = reduce(
+        (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+            [ rename!(weighted_hpimportances(j; normalize_importances=true), 
+                    :weightedImportance => Symbol(split(j.name, '_')[2])) for (i, j) in brain_models ]
+    )
+    subset!(importances, "variable" => ByRow(v-> v != "ageMonths"))
+
+    idx = sortperm([median(row[2:end]) for row in eachrow(importances)])
+    ys = reduce(vcat, [values(importances[i, 2:end])...] for i in idx)
+    xs = repeat(1:length(idx); inner=ncol(importances)-1)
+    @info length(ys) length(xs)
+    
+    ax = Axis(fig[1,1]; 
+        xlabel="Bugs (rank median)",
+        ylabel = "importances",
+        xticks = (1:nrow(importances), replace.(importances[idx, "variable"], "_"=>"")),
+        xticklabelrotation = π/4,
+        xticklabelfont="TeX Gyre Heros Makie Italic",
+        xticklabelsize=10
+
+    )
+    scatter!(ax, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
+    xlims!(ax, 0, nrow(importances)+1)
+    save(figurefiles("Supp_Figure6.svg"), fig)
+    save("manuscript/assets/Supp_Figure6.png", fig)
+    fig
+end
+
+```
+
+
+
+### Supplementary Figure 7
+
 ```julia
 relative_brain_importances = reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
