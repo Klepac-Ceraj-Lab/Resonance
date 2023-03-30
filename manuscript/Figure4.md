@@ -340,12 +340,13 @@ hidexdecorations!(ax_ticks; ticklabels=false, label=false)
 hideydecorations!(ax_ticks)
 hidespines!(ax_ticks)
 
-hm = CairoMakie.heatmap!(ax, Matrix(relative_brain_importances[:, 2:end]), yflip=true, colorrange = (0.0, 0.04), highclip = :yellow)
-Colorbar(figure[1,2], hm; label= "Relative feature importance")
+hm = CairoMakie.heatmap!(ax, Matrix(relative_brain_importances[:, 2:end]), yflip=true, colorrange = (0.0, 0.04), highclip = :white)
+Colorbar(figure[1,2], hm; label= "Relative feature importance", ticks=0:0.01:0.04, minorticksvisible=true)
 
 ## Saving
 save(figurefiles("Supp_Figure5.svg"), figure)
 save("manuscript/assets/Supp_Figure5.png", figure)
+figure
 ```
 
 ### Supp Figure 6
