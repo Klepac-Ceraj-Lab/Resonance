@@ -231,7 +231,7 @@ let
         end
     end
 end
-Colorbar(AB_Subfig[1,3], hm; label= "Relative feature importance")
+Colorbar(AB_Subfig[1,3], hm; label= "Relative feature importance", ticks=0:0.01:0.04, minorticksvisible=true)
 ```
 
 
