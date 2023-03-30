@@ -20,33 +20,14 @@ regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("manuscrip
 supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06mo_onlytaxa)
 supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
 
-## 4. Building the Figure
+## 3. Building the Figure
 figure = Figure(resolution = (1200, 1200))
-barcolor = :lightblue
-curvecolor = :orange
 
-ax1L = Axis(
-    figure[1,1],
-    xlabel = "Feature",
-    xticks = (collect(1:nrow(supptblA)), replace.(supptblA.variable, "_"=>" ")),
-    xticklabelsize=8,
-    xticklabelrotation= pi/4,
-    xticklabelfont="TeX Gyre Heros Makie Italic",
-    title = "0 to 6 months",
-    ylabel = "Individual relative importance")
-ax1R = Axis(
-    figure[1,1],
-    xlabel = "Feature",
-    xticks = (collect(1:nrow(supptblA))),
-    ylabel = "Cumulative relative importance",
-    yticks = 0:10:100,
-    yaxisposition = :right)
+this_barcolor = :lightblue
+this_curvecolor = :orange
 
-ylims!(ax1L, [0.0, 10.0])
-ylims!(ax1R, [0.0, 100.0])
-hidexdecorations!(ax1R)
-# hidespines!(ax1R)
-linkxaxes!(ax1L, ax1R)
+plot_importances_pareto!(figure[1,1], supptblA, "Pareto Plot - 0 to 6 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
+plot_importances_pareto!(figure[2,1], supptblB[1:70, :], "Pareto Plot - 18 to 120 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
 
 barplot!(
     ax1L,
