@@ -71,6 +71,7 @@ struct TaxonomicProfiles <: Dataset end
 struct UnirefProfiles <: Dataset end
 struct KOProfiles <: Dataset end
 struct ECProfiles <: Dataset end
+struct PathwayProfiles <: Dataset end
 # struct MetabolicProfiles <: Dataset end
 struct Neuroimaging <: Dataset end
 
@@ -139,6 +140,15 @@ end
 function load(::ECProfiles; timepoint_metadata = load(Metadata()))
     Setup.datadownload(Setup.ECs(); inputdir=inputfiles())
     comm = read_arrow(inputfiles("ecs.arrow"); featurefunc = genefunction)
+    insert!(comm, timepoint_metadata; namecol=:sample)
+    return comm[:, timepoint_metadata.sample]
+end
+
+function load(::PathwayProfiles; timepoint_metadata = load(Metadata()))
+    # Setup.datadownload(Setup.ECs(); inputdir=inputfiles())
+    # comm = read_arrow(inputfiles("ecs.arrow"); featurefunc = genefunction)
+
+    
     insert!(comm, timepoint_metadata; namecol=:sample)
     return comm[:, timepoint_metadata.sample]
 end

@@ -1,6 +1,6 @@
 function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false, sample_filter=nothing)
     root = analysisfiles("humann", names ? "rename" : 
-                                    kind == "genefamilies" ? "main" : "regroup"
+                                    kind in ("genefamilies", "pathabundance") ? "main" : "regroup"
     )
     stripper = "_$kind" * (names ? "_rename.tsv" : ".tsv")
     filt = Regex(string(raw"FG\d+_S\d+_", kind))
