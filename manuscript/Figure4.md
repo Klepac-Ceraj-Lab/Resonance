@@ -344,3 +344,41 @@ Colorbar(figure[1,2], hm; label= "Relative feature importance")
 save(figurefiles("Supp_Figure5.svg"), figure)
 save("manuscript/assets/Supp_Figure5.png", figure)
 ```
+
+# Supplementary Figure 7
+```julia
+relative_brain_importances = reduce(
+    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+    [ rename!(weighted_hpimportances(j; normalize_importances=true), :weightedImportance => Symbol(split(j.name, '_')[2]))
+      for (i, j) in brain_models ]
+)
+
+interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
+relative_brain_importances = dropmissing(relative_brain_importances[:, vcat(["variable"], interesting_segments)]) # no row filter 
+
+supptbl_like_braincombine = DataFrame(
+    :variable => relative_brain_importances.variable,
+    :relativeWeightedImportance => map(mean, eachrow(Matrix(relative_brain_importances[:, 2:end])))
+)
+sort!(supptbl_like_braincombine, :relativeWeightedImportance; rev = true)
+supptbl_like_braincombine.cumulativeWeightedImportance = cumsum(supptbl_like_braincombine.relativeWeightedImportance)
+
+## Initialize figure and plot Pareto
+figure = Figure(resolution = (1920, 1080))
+this_barcolor = :lightblue
+this_curvecolor = :orange
+plot_importances_pareto!(figure[1,1], supptbl_like_braincombine, "Pareto Plot - average over all regions"; barcolor = this_barcolor, curvecolor = this_curvecolor)
+
+Legend(
+    figure[2, 1],
+    [ PolyElement(; color = this_barcolor, strokewidth = 1, strokecolor = :black), LineElement(; color = this_curvecolor, linewidth = 5)],
+    [ "Individual relative Importance", "Cumulative relative importance" ],
+    tellheight = true, tellwidth = false,
+    margin = (10, 10, 10, 10),
+    orientation = :horizontal
+)
+
+## Saving
+save(figurefiles("Supp_Figure7.svg"), figure)
+save("manuscript/assets/Supp_Figure7.png", figure)
+```
