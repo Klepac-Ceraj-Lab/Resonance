@@ -1,6 +1,3 @@
-%%%%%%%%%%TO FORMAT A PREPRINT FOR A PCI%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \documentclass{article}
 
 \usepackage[letterpaper, margin=1in]{geometry}
@@ -38,6 +35,8 @@ style=science
 \usepackage{graphicx}
 \graphicspath{assets}
 \usepackage{float}
+\floatstyle{plaintop}
+\restylefloat{table}
 
 \usepackage{times}
 
@@ -472,7 +471,7 @@ development.
     \end{tabular}
     \caption{\label{tab:fsea}Feature set enrichment analysis on neuroactive microbial gene sets.
     Red and blue text indicates significant (q value \textless 0.2) genesets with a positive or negative
-    pseudomedian respectively.}
+    pseudomedian, respectively.}
     \end{center}
 \end{table}
 
@@ -552,7 +551,7 @@ and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE 17.29). For both age groups,
 species that were important in RF overlapped with those that were
 significant when testing the relationship with LMs (Figure
-3A-B, Table S1A-B); except for \emph{Eubacterium ramulus}
+3A-B, Table S1A-B); except for \emph{Eubacterium ramulus},
 all taxa that were significant using LMs belonged to a group
 responsible for 80\% of the total importance in RF models
 (Table 3, Figure 3A).
