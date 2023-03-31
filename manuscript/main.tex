@@ -920,7 +920,7 @@ Like the ELC, FSIQ is normalized to a mean of 100 and standard deviation of 15.
 
 \subsubsection*{Stool Sample Collection and Sequencing}
 
-Stool samples (n=493) were collected by parents in OMR-200 tubes
+Stool samples (n = 493) were collected by parents in OMR-200 tubes
 (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada), stored on ice, and
 brought within 24 hrs to the lab in RI where they were immediately
 frozen at -80$^{\circ}$C. Stool samples were not collected if the subject had
@@ -958,7 +958,7 @@ metagenomes.
 Prediction of cognitive scores was carried out as a set of regression
 experiments targeting real-valued continuous assessment scores.
 Different experiment sets were designed to probe how different
-representations of the gut microbiome (taxonomic profiles, Functional
+representations of the gut microbiome (taxonomic profiles, functional
 profiles encoded as ECs) would behave, with and without the addition of
 demographics (sex and maternal education as a proxy of socioeconomic
 status) on participants from different age groups. Age (in months) was
@@ -969,8 +969,7 @@ Random Forests (RFs)
 were selected as the prediction engine and processed using the
 DecisionTree.jl \cite{sadeghiDecisionTreeJlJulia2022}
 implementation, inside the MLJ.jl \cite{blaomMLJJuliaPackage2020}.
-
-Machine Learning framework. Independent RFs were trained for each
+Independent RFs were trained for each
 experiment, using a set of default regression hyperparameters from
 Breiman and Cutler \cite{breimanRandomForests2001},
 on a repeated cross-validation approach with different RNG seeds. One hundred
@@ -1014,7 +1013,7 @@ T1-weighted anatomical MRI data were acquired using a 3-Dimensional MP-RAGE sequ
 on 3T Siemens Trio scanner with the following parameters:
 TE=5.6msec, TR=1400msec, TI = 950msec, FA=15 degrees, and 1.1x1.1x1.1mm resolution.
 Image matrix and field-of-view were adjusted by infant size to achieve the desired image resolution.
-For children under ~4 years of age, MRI was performed during natural non-sedated sleep using previously described methods\cite{deanPediatricNeuroimagingUsing2014}.
+For children under 4 years of age, MRI was performed during natural non-sedated sleep using previously described methods \cite{deanPediatricNeuroimagingUsing2014}.
 Older children were scanned awake whilst watching a movie or favorite TV show.
 To help minimize motion, pediatric (MedVac) immobilizers were used along with foam cushions and padding.
 Image quality was monitored during and following scanning.
@@ -1024,13 +1023,12 @@ scans were repeated or removed from analysis.
 Following data acquisition, brain region volumes corresponding to total white and gray matter,
 cortical gray matter, brainstem, and left and right hemisphere lateral ventricles,
 thalamus, caudate, putamen, pallidum, hippocampus, amygdala,
-and nucleus accumbens were calculated using an atlas matching approach\cite{bruchhageLongitudinalBrainCognitive}.
+and nucleus accumbens were calculated using an atlas matching approach \cite{bruchhageLongitudinalBrainCognitive}.
 Individual images were first nonlinearly aligned to MNI-space using
-a multi-step registration approach (ANTs 2.2 toolbox, \cite{avantsInsightToolKitImage2014}).
+a multi-step registration approach (ANTs 2.2 toolbox \cite{avantsInsightToolKitImage2014}).
 The MNI-aligned Harvard-Oxford brain atlas was then aligned and superimposed onto the individual child
 by applying the inverse transformation, and the brain regions of interest delinated (segmented)
-and their volune calculated by summing the number of image voxels within each\cite{jenkinsonFSL2012}.
-
+and their volume calculated by summing the number of image voxels within each \cite{jenkinsonFSL2012}.
 Brain region volumes used in RF models were normalized to total brain volume
 (the sum of white and gray matter).
 
@@ -1054,11 +1052,11 @@ and 3rd party packages
     douglas_bates_2023_7734970}.
 Information for replicating the package environment
 as well as code for data analysis and figure generation, as well as scripts for automated
-download of input files are available on github \cite{kevin_bonham_2023_7647510}.
+download of input files are available on GitHub \cite{kevin_bonham_2023_7647510}.
 
 \section*{References}
 
-\printbibliography
+\printbibliography[heading=none]
 
 \section*{Acknowledgements}
 % https://www.science.org/content/page/science-advances-information-authors#acknowledgments
