@@ -127,6 +127,34 @@ plot_results(res         = bwex_results,
 
 ```
 
+```{r}
+bwex_results <- anpan(#bug_dir           = "/grace/sequencing/processed/mgx/humann/main",
+                        bug_file          = "./data/anpan/Blautia_wexlerae_pathabundance.tsv",
+                        meta_file         = "./data/anpan/manuscript_meta.csv",
+                        out_dir           = "./data/anpan/Blautia_wexlerae",
+                        # annotation_file   = "/path/to/annotation.tsv", #optional, used for plots
+                        filtering_method  = "kmeans",
+                        model_type        = "fastglm",
+                        covariates        = c("sex", "education"),
+                        outcome           = "ageMonths",
+                        plot_ext          = "pdf",
+                        save_filter_stats = TRUE)
+
+input_path = file.path("data", "anpan", "Blautia_wexlerae", "filter_stats",
+                       "filtered_Blautia_wexlerae_pathabundance.tsv.gz")
+
+model_input = fread(input_path)
+
+plot_results(res         = bwex_results,
+             model_input = model_input,
+             covariates        = c("sex", "education"),
+            outcome           = "ageMonths",
+             bug_name    = "Blautia wexlerae",
+             cluster     = "both",
+             show_trees  = TRUE)
+
+```
+
 ## Ruminococcus_gnavus
 
 ```{r}
