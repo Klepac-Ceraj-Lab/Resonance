@@ -1,6 +1,3 @@
-%%%%%%%%%%TO FORMAT A PREPRINT FOR A PCI%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \documentclass{article}
 
 \usepackage[letterpaper, margin=1in]{geometry}
@@ -38,6 +35,8 @@ style=science
 \usepackage{graphicx}
 \graphicspath{assets}
 \usepackage{float}
+\floatstyle{plaintop}
+\restylefloat{table}
 
 \usepackage{times}
 
@@ -58,7 +57,7 @@ style=science
 
 % Include your paper's title here
 
-\title{Gut-resident microbial species and their genes are associated with cognition and neuroanatomy in children}
+\title{Gut-resident microorganisms and their genes are associated with cognition and neuroanatomy in children}
 
 % Place the author information here.  Please hand-code the contact
 % information and notecalls; do *not* use \footnote commands.  Let the
@@ -171,14 +170,14 @@ and specific microbial taxa have been associated with depression
 \cite{mayneris-perxachsMicrobiotaAlterationsProline2022,valles-colomerNeuroactivePotentialHuman2019}
 and Alzheimer's disease
 \cite{fungInteractionsMicrobiotaImmune2017,kimProbioticSupplementationImproves2021}.
-But information about this "microbiome-gut-brain
+However, information about this "microbiome-gut-brain
 axis" in normal neurocognitive development remains lacking,
 particularly early in life.
 
 The first years of life are critical developmental windows for both the
 microbiome and the brain
 \cite{laueDevelopingMicrobiomeBirth2022}.
-Fetal development is believed to be mostly sterile, but newborns
+Fetal development is believed to occur in a sterile environment, but newborns
 are rapidly seeded at birth through contact with the birth canal (if
 birthed vaginally), caregivers, food (breast milk or formula),
 and other environmental sources
@@ -223,14 +222,14 @@ development and how it relates to normal neurocognitive development may
 provide opportunities for identifying atypical development earlier and
 offer opportunities for intervention.
 
-To begin to address this need, we investigated trends and associations between
+To begin to address this need, we investigated relationship between
 the gut microbiome and
 neurocognitive development in a large cohort of healthy and neurotypically-developing
 children from infancy through 10 years of age. Gut microbial
 communities were assessed using shotgun metagenomic sequencing, enabling
 profiling at both the taxonomic and gene-functional level.
 Cognitive skills and abilities were measured using age-appropriate
-psychometric assessments of cognitive function s, i.e.,
+psychometric assessments of cognitive function, i.e.,
 the Mullen Scales of Early Learning (MSEL) \cite{mullenMullenScalesEarly1995},
 Weschler Preschool and Primary Scale of Intelligence, 4th Edition (WPPSI-4) 
 \cite{wechslerWechslerPreschoolPrimary2012}
@@ -472,7 +471,7 @@ development.
     \end{tabular}
     \caption{\label{tab:fsea}Feature set enrichment analysis on neuroactive microbial gene sets.
     Red and blue text indicates significant (q value \textless 0.2) genesets with a positive or negative
-    pseudomedian respectively.}
+    pseudomedian, respectively.}
     \end{center}
 \end{table}
 
@@ -507,7 +506,7 @@ or in combination with microbial taxonomic profiles (Table 3).
         Comparison of RF predictor importance versus linear models for children
         between birth and 6 months old (\textbf{A}), and for those older than 18 months
         (\textbf{B}). Colors represent whether the species belong to the group of
-        top-important features that account for 80\% of the cumulative
+        top-important features that account for 60\% of the cumulative
         importance on the RF model, if that species was significant (q
         \textless{} 0.2) in linear models, both, or neither. Ranked feature
         importance for taxa in RF models for children between birth and 6 months
@@ -552,9 +551,9 @@ and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE 17.29). For both age groups,
 species that were important in RF overlapped with those that were
 significant when testing the relationship with LMs (Figure
-3A-B, Table S1A-B); except for \emph{Eubacterium ramulus}
+3A-B, Table S1A-B); except for \emph{Eubacterium ramulus},
 all taxa that were significant using LMs belonged to a group
-responsible for 80\% of the total importance in RF models
+responsible for 60\% of the total importance in RF models
 (Table 3, Figure 3A).
 However, the rank-ordering of LM significance and RF importance
 had substantive differences. For example, in children under 6 months,
@@ -581,7 +580,8 @@ or that age itself is a useful predictor.
 If there are causal effects of microbial metabolism on cognitive
 function, they might be reflected in changes in neuroanatomy. We again
 used RF modeling to associate gut taxonomic
-profiles with individual brain regions identified in MRI scans.
+profiles with individual brain regions identified in MRI scans
+(children over 18 months old, N = 121).
 Some brain regions were more readily
 predicted by RF models trained on microbial taxa (Table 4, Table S2), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
@@ -715,8 +715,7 @@ causal impacts of microbial metabolism, identifying risk factors that
 could point to other early interventions would also have value.
 
 We identified several species in the family Eggerthelaceae that were
-associated with cognitive function, including \emph{Gordonibacter
-pamelaeae, Aldercreutzia equolofaciens, Asaccharobacter celatus}
+associated with cognitive function, including \emph{G.pamelaeae, A. equolofaciens, A. celatus}
 (formerly regarded a subspecies of \emph{A. equolofaciens}
 \cite{takahashiCompleteGenomeSequence2021}),
 and \emph{Eggerthella lenta}. Many members of this family are
@@ -726,9 +725,9 @@ found in soybeans \cite{wangEnantioselectiveSynthesisSEquol2005}.
 This is particularly intriguing, since both \emph{A. equolofaciens} and \emph{A. celatus}
 were also the most important features in RF models of the
 right anterior cingulate, which has been linked to social cognition
-and reward-based decision making\cite{appsAnteriorCingulateGyrus2016,boesRightAnteriorCingulate2008,bushDorsalAnteriorCingulate2002},
+and reward-based decision making \cite{appsAnteriorCingulateGyrus2016,boesRightAnteriorCingulate2008,bushDorsalAnteriorCingulate2002},
 and estrogen has previously been shown to have activity 
-in this brain region\cite{xiaoEstrogenAnteriorCingulate2013}.
+in this brain region \cite{xiaoEstrogenAnteriorCingulate2013}.
 \emph{G. pamelaeae} also has a unique metabolism that may impact the brain,
 as it can metabolize the polyphenol ellagic acid
 (found in pomegranates and some berries) into urolithin, which has been
@@ -749,7 +748,7 @@ were dominated by \textit{Bacteroides} species,
 especially \textit{B. vulgatus}, \textit{B. uniformis}, and \textit{B. ovatus}.
 \textit{B. ovatus} has been shown to produce
 a number of neuroactive compounds including SCFAs and neurotransmitters
-such as GABA\cite{horvathBacteroidesOvatusColonization2022}.
+such as GABA \cite{horvathBacteroidesOvatusColonization2022}.
 Another \textit{Bacteroides} species, \textit{B. fragilis} was
 able to ameliorate ASD-like symptoms in a mouse model
 by consuming a microbially-dependent metabolite 4-ethylphenylsulfate (4EPS)
@@ -773,8 +772,8 @@ it has been shown to have a divergent neuromorphology
 
 As is made apparent by the potentially opposing roles of 
 \textit{B. fragilis} and \textit{B. ovatus},
-individual species from the same genus may play different
-or even opposing roles. As such, the use of shotgun metagenomic sequencing
+individual species from the same genus may play different roles.
+As such, the use of shotgun metagenomic sequencing
 may be crucial to identifying microbial influences on the brain,
 since it enables species-level resolution of microbial taxa.
 A previous study of
@@ -832,7 +831,7 @@ the COVID-19 pandemic, and we and others have observed some reduction in
 measured scores for children that were assessed after the implementation
 of lockdowns. In our subject set for this study, these effects are more
 pronounced in some age groups due to the period when active recruitment for
-the study was occurring.
+the study was occurring
 \cite{blackwellYouthWellbeingCOVID192022,deoniImpactCOVID19Pandemic2021}
 (Figure S3).
 
@@ -883,11 +882,11 @@ rich demographic, socioeconomic, family and medical history information.
 
 As a study of neurotypical development, mothers and their children
 were devoid of major risk factors for abnormal or atypical development.
-These included preterm birth (< 37 weeks gestation) low birth weight (<1500g),
+These included preterm birth (\textless 37 weeks gestation) low birth weight (\textless 1500g),
 in utero exposure to alcohol, cigarette or illicit substance exposure;
 abnormalities on fetal ultrasound; non-singleton or complicated pregnancy,
 including preeclampsia, high blood pressure, or gestational diabetes;
-complicated vaginal or cesarian birth; 5 minute APGAR scores < 8;
+complicated vaginal or cesarian birth; 5 minute APGAR scores \textless 8;
 NICU admission; neurological disorder in the child
 (e.g., head injury resulting in loss of consciousness, epilepsy);
 and psychiatric or learning disorder (including maternal depression)
@@ -914,15 +913,15 @@ and visual functioning.
 The ELC is an age-normalized composite derived from these individual domains
 with a mean of 100 and standard deviation of 15. For older children, full-scale IQ (FSIQ)
 was assessed using the Wechsler Preschool and Primary Scale of Intelligence 4th Edition
-(WPPSI-IV, children 3 to 6)\cite{wechslerWechslerPreschoolPrimary2012},
+(WPPSI-IV, children 3 to 6) \cite{wechslerWechslerPreschoolPrimary2012},
 and the Wechsler Intelligence Scale for Children 5th Edition (WISC-V)
-for children older than 6\cite{wechslerWechslerIntelligenceScale1949}. 
+for children older than 6 \cite{wechslerWechslerIntelligenceScale1949}. 
 Like the ELC, FSIQ is normalized to a mean of 100 and standard deviation of 15.
 
 
 \subsubsection*{Stool Sample Collection and Sequencing}
 
-Stool samples (n=493) were collected by parents in OMR-200 tubes
+Stool samples (n = 493) were collected by parents in OMR-200 tubes
 (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada), stored on ice, and
 brought within 24 hrs to the lab in RI where they were immediately
 frozen at -80$^{\circ}$C. Stool samples were not collected if the subject had
@@ -960,7 +959,7 @@ metagenomes.
 Prediction of cognitive scores was carried out as a set of regression
 experiments targeting real-valued continuous assessment scores.
 Different experiment sets were designed to probe how different
-representations of the gut microbiome (taxonomic profiles, Functional
+representations of the gut microbiome (taxonomic profiles, functional
 profiles encoded as ECs) would behave, with and without the addition of
 demographics (sex and maternal education as a proxy of socioeconomic
 status) on participants from different age groups. Age (in months) was
@@ -971,8 +970,7 @@ Random Forests (RFs)
 were selected as the prediction engine and processed using the
 DecisionTree.jl \cite{sadeghiDecisionTreeJlJulia2022}
 implementation, inside the MLJ.jl \cite{blaomMLJJuliaPackage2020}.
-
-Machine Learning framework. Independent RFs were trained for each
+Independent RFs were trained for each
 experiment, using a set of default regression hyperparameters from
 Breiman and Cutler \cite{breimanRandomForests2001},
 on a repeated cross-validation approach with different RNG seeds. One hundred
@@ -1016,7 +1014,7 @@ T1-weighted anatomical MRI data were acquired using a 3-Dimensional MP-RAGE sequ
 on 3T Siemens Trio scanner with the following parameters:
 TE=5.6msec, TR=1400msec, TI = 950msec, FA=15 degrees, and 1.1x1.1x1.1mm resolution.
 Image matrix and field-of-view were adjusted by infant size to achieve the desired image resolution.
-For children under ~4 years of age, MRI was performed during natural non-sedated sleep using previously described methods\cite{deanPediatricNeuroimagingUsing2014}.
+For children under 4 years of age, MRI was performed during natural non-sedated sleep using previously described methods \cite{deanPediatricNeuroimagingUsing2014}.
 Older children were scanned awake whilst watching a movie or favorite TV show.
 To help minimize motion, pediatric (MedVac) immobilizers were used along with foam cushions and padding.
 Image quality was monitored during and following scanning.
@@ -1026,13 +1024,12 @@ scans were repeated or removed from analysis.
 Following data acquisition, brain region volumes corresponding to total white and gray matter,
 cortical gray matter, brainstem, and left and right hemisphere lateral ventricles,
 thalamus, caudate, putamen, pallidum, hippocampus, amygdala,
-and nucleus accumbens were calculated using an atlas matching approach\cite{bruchhageLongitudinalBrainCognitive}.
+and nucleus accumbens were calculated using an atlas matching approach \cite{bruchhageLongitudinalBrainCognitive}.
 Individual images were first nonlinearly aligned to MNI-space using
-a multi-step registration approach (ANTs 2.2 toolbox, \cite{avantsInsightToolKitImage2014}).
+a multi-step registration approach (ANTs 2.2 toolbox \cite{avantsInsightToolKitImage2014}).
 The MNI-aligned Harvard-Oxford brain atlas was then aligned and superimposed onto the individual child
 by applying the inverse transformation, and the brain regions of interest delinated (segmented)
-and their volune calculated by summing the number of image voxels within each\cite{jenkinsonFSL2012}.
-
+and their volume calculated by summing the number of image voxels within each \cite{jenkinsonFSL2012}.
 Brain region volumes used in RF models were normalized to total brain volume
 (the sum of white and gray matter).
 
@@ -1056,11 +1053,11 @@ and 3rd party packages
     douglas_bates_2023_7734970}.
 Information for replicating the package environment
 as well as code for data analysis and figure generation, as well as scripts for automated
-download of input files are available on github \cite{kevin_bonham_2023_7647510}.
+download of input files are available on GitHub \cite{kevin_bonham_2023_7647510}.
 
 \section*{References}
 
-\printbibliography
+\printbibliography[heading=none]
 
 \section*{Acknowledgements}
 % https://www.science.org/content/page/science-advances-information-authors#acknowledgments
