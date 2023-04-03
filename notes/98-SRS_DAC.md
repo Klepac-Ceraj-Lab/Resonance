@@ -453,6 +453,10 @@ files = [readdir("/lovelace/sequencing/raw/mgx/fastq"; join=true);
          readdir("/lovelace/sequencing/raw/mgx/sra_uploads"; join=true)]
 newdir = "/lovelace/sequencing/raw/mgx/echo_dac"
 
+isdir(newdir) || mkpath(newdir)
+
+b2_batch = CSV.read(datafiles("10701_1_SampleInformation_MicroBatchFile_2022_1001.csv"), DataFrame)
+
 using ThreadsX
 
 for row in eachrow(unique(b2_batch, "fastq_file_name"))
