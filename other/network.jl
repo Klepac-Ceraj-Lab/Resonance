@@ -11,8 +11,7 @@ using GraphMakie
 #-
 
 mdata = Resonance.load(Metadata())
-
-mdata.sample
+species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
 
 #-
 
@@ -114,7 +113,20 @@ function node_color(node)
 end
 
 layout = Spring(; Ptype=Float32)
-(f, ax, p) = graphplot(g; layout, node_color=[node_color(node) for node in labels(g)])
+(f, ax, p) = graphplot(g; layout, node_color=[(node_color(node),0.3) for node in labels(g)])
 
 
 #-
+
+adj = zeros(nv(g), nv(g))
+for (i, l) in enumerate(labels(g))
+    for (j, m) in enumerate(labels(g))
+        l == m && continue
+        has_edge(g, i, j) && (adj[i,j] = g[l, m])
+    end
+end
+
+df = DataFrame(adj, collect(labels(g)))
+df.label = collect(labels(g))
+select!(df, Cols("label", :))
+CSV.write("data/graph_attempt1.csv", df)
