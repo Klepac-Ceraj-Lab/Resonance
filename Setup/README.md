@@ -119,7 +119,7 @@ run `instantiate` from the `Pkg` REPL
 
 ```
 (Resonance) pkg> instantiate
-  Installed SIMDDualNumbers ────────────────── v0.1.1
+  Installed SIMDDualNumbers ────────────────── v0.1.1                                                     
   Installed StatsFuns ──────────────────────── v1.1.1
   Installed CategoricalDistributions ───────── v0.1.9
   Installed JpegTurbo_jll ──────────────────── v2.1.2+0

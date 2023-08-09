@@ -25,7 +25,7 @@ brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata, samplefield="
 
 #-
 
-isdir(tablefiles("figure1")) || mkdir(tablefiles("figure1"))
+isdir(tablefiles("figure1")) || mkpath(tablefiles("figure1"))
 
 spedm = Microbiome.braycurtis(species)
 CSV.write(tablefiles("figure1", "spedm.csv"), Tables.table(spedm))
