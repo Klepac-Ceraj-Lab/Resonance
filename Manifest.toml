@@ -2,7 +2,7 @@
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "9198ee30adb8c38e937698d330c0486e6379a19f"
+project_hash = "77689ba095257cd0dfc3ec147fa0037f673786ec"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -1825,7 +1825,7 @@ uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 version = "1.1.1"
 
 [[deps.Setup]]
-deps = ["Comonicon", "Downloads", "Random"]
+deps = ["Chain", "Comonicon", "Downloads", "Random"]
 path = "Setup"
 uuid = "df7026d2-1fa7-4e92-9c5e-4669e13f0f5c"
 version = "0.0.0"
@@ -2079,6 +2079,11 @@ version = "0.1.1"
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
+[[deps.TestItems]]
+git-tree-sha1 = "8621ba2637b49748e2dc43ba3d84340be2938022"
+uuid = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
+version = "0.1.1"
+
 [[deps.TexTables]]
 deps = ["Compat", "DataFrames", "DataStructures", "Distributions", "Formatting", "GLM", "Parameters", "StatsBase", "StatsModels"]
 git-tree-sha1 = "b1adb560810b2cd88e505f50e02b245730447149"
@@ -2172,6 +2177,14 @@ deps = ["REPL"]
 git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
+
+[[deps.VKCComputing]]
+deps = ["Airtable", "BiobakeryUtils", "CSV", "Chain", "DataFrames", "Dates", "Dictionaries", "JSON3", "Preferences", "TestItems", "ThreadsX", "TimeZones"]
+git-tree-sha1 = "54181ed11617bf3ed27365fd7595b882496a371d"
+repo-rev = "main"
+repo-url = "https://github.com/Klepac-Ceraj-Lab/VKCComputing.jl"
+uuid = "329a1d7f-a79a-43b8-8671-feb503123859"
+version = "0.2.0"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static", "StaticArrayInterface"]
