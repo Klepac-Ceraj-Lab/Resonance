@@ -2,9 +2,9 @@
 
 
 function load_raw_metadata(;
-    subject_centric_path = datafiles("Subject_centric_120522.xlsx"),
-    sample_centric_path  = datafiles("Sample_centric_120522.xlsx"),
-    timepoint_centric_path = datafiles("Timepoint_centric_120522.xlsx"))
+    subject_centric_path = datafiles("Participant_Centric_081023.xlsx"),
+    sample_centric_path  = datafiles("Sample_Centric_081023.xlsx"),
+    timepoint_centric_path = datafiles("Timepoint_Centric_081023.xlsx"))
 
     samplemeta = @chain airtable_metadata() begin
         groupby(["subject", "timepoint"])
@@ -15,7 +15,8 @@ function load_raw_metadata(;
 
     fmp_samples = @chain DataFrame(XLSX.readtable(sample_centric_path, "Sheet1", infer_eltypes=true)) begin
         rename!(Dict("studyID"=> "subject", "collectionNum"=> "timepoint", "SampleID"=>"sample"))
-        subset!("subject"   => ByRow(s-> s in samplemeta.subject),
+        subset!("sample"    => ByRow(!ismissing),
+                "subject"   => ByRow(s-> !ismissing(s) && s in samplemeta.subject),
                 "timepoint" => ByRow(!ismissing))
     end
 
