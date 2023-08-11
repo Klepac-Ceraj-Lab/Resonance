@@ -94,7 +94,7 @@ end
 
 mbx_xlsx_files = filter(f-> endswith(f, ".xlsx") && !contains(f, r"centric"i), readdir("input/", join=true))
 
-mbx_long = mapreduce(vcat, mbx_xlsx_files) do file
+function mbx_xlsx_to_df(file)
     xf = XLSX.readxlsx(file)
     sh = xf[first(XLSX.sheetnames(xf))]
     mat = sh[:]
@@ -104,6 +104,20 @@ mbx_long = mapreduce(vcat, mbx_xlsx_files) do file
     end
 
     df = DataFrame(mat[startrow+1:size(mat, 1), 1:endcol], vec(mat[startrow, 1:endcol]); makeunique=true)
+end
+
+dfs = collect((mbx_xlsx_to_df(file) for file in sort(mbx_xlsx_files)))
+
+
+#-
+
+
+
+#-
+
+
+mbx_long = mapreduce(vcat, dfs) do df
+
     rename!(df, first(names(df, r"HMDB_ID_")) => "HMDB_ID_Certainty")
     for n in names(df)
         df[!, n] = fixcol(df[!, n], n)
