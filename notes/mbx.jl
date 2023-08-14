@@ -103,21 +103,28 @@ function mbx_xlsx_to_df(file)
         isnothing(i) ? size(mat, 2) : i - 1
     end
 
-    df = DataFrame(mat[startrow+1:size(mat, 1), 1:endcol], vec(mat[startrow, 1:endcol]); makeunique=true)
+    nms = vec(mat[startrow, 1:endcol])
+    dups = filter(x-> count(==(x), nms) > 1, nms)
+    if !isempty(dups)
+        @info file unique(dups)
+        ixs = unique(map(x-> findfirst(==(x), nms), nms))
+    else
+        ixs = collect(eachindex(nms))
+    end
+
+
+    df = DataFrame(mat[startrow+1:size(mat, 1), ixs], vec(mat[startrow, ixs]))
 end
 
-dfs = collect((mbx_xlsx_to_df(file) for file in sort(mbx_xlsx_files)))
+# until we can reconcile batches...
+# dfs = collect((mbx_xlsx_to_df(file) for file in sort(mbx_xlsx_files)))
 
-
-#-
-
-
+dfs = collect((mbx_xlsx_to_df(file) for file in sort(mbx_xlsx_files[5:end])))
 
 #-
 
 
 mbx_long = mapreduce(vcat, dfs) do df
-
     rename!(df, first(names(df, r"HMDB_ID_")) => "HMDB_ID_Certainty")
     for n in names(df)
         df[!, n] = fixcol(df[!, n], n)
@@ -170,8 +177,7 @@ using XLSX
 using ThreadsX
 using Chain
 using Arrow
-
-VKCComputing.set_readonly_pat!()
+using Statistics
 
 base = LocalBase()
 
@@ -216,8 +222,84 @@ end) => ["subject", "timepoint", "biospecimen"])
 #-
 
 newmeta = CSV.read("input/ECHO_metabolomics_preselectedinputs.csv", DataFrame)
+fmp_tp = CSV.read("input/fmp_alltp.csv", DataFrame)
+
+transform!(fmp_tp, AsTable(["ageMonths", "assessmentAgeDays", "assessmentAgeMonths", "scanAgeDays", "scanAgeMonths"]) => ByRow(row-> begin
+        am, aad, aam, sad, sam = row
+        calcage = coalesce(aad / 365 * 12 + aam, sad / 365 * 12 + sam)
+        if !ismissing(am)
+            !ismissing(calcage) && am != calcage && @info am
+        end
+
+        return coalesce(am, calcage)
+        end) => "age"
+)
+
 subtp = Set([(row.subject,row.timepoint) for row in eachrow(newmeta)])
 mbx_long = subset(mbx_long, AsTable(["subject", "timepoint"])=> ByRow(nt-> (nt.subject, nt.timepoint) ∈ subtp))
+transform!(mbx_long, AsTable(["Compound_ID", "Metabolite"])=> ByRow(row-> coalesce(row.Metabolite, row.Compound_ID))=> "metabolite")
 
 #-
 
+mbx_wide = unstack(select(mbx_long, "metabolite", "relab", "biospecimen", "subject", "timepoint"), Not(["metabolite", "relab"]), "metabolite", "relab"; combine=mean)
+leftjoin!(mbx_wide, select(fmp_tp, "subject", "timepoint", "ageMonths", "age", "cogScore"); on=["subject", "timepoint"])
+select!(mbx_wide, "subject", "timepoint", "ageMonths", "age", "cogScore", Cols(:))
+
+
+names(mbx_wide, r"trypt"i)
+names(mbx_wide, r"Gamma"i)
+names(mbx_wide, r"acet(ate|ic)"i)
+names(mbx_wide, r"glutam(ate|ic)"i)
+names(mbx_wide, r"quino"i)
+#-
+
+using GLM
+
+lms = DataFrame()
+
+# for met in [
+#     names(mbx_wide, r"trypt"i);
+#     names(mbx_wide, r"Gamma"i);
+#     names(mbx_wide, r"acet(ate|ic)"i);
+#     names(mbx_wide, r"glutam(ate|ic)"i);
+#     names(mbx_wide, r"quino"i)
+#     ]
+let met = "gamma-Aminobutyric acid"
+    indf = subset(select(mbx_wide, "ageMonths", "cogScore", met), "cogScore"=> ByRow(!ismissing))
+
+    
+    over0 = indf[!, met] .> 0
+    prev = sum(over0) / size(indf, 1)
+    ab = collect(indf[!, met] .+ (minimum(indf[over0, met])) / 2) # add half-minimum non-zerovalue
+
+    df = select(indf, "ageMonths", "cogScore"; copycols=false)
+    df.bug = ab
+
+    mod = lm(@formula(bug ~ cogScore + ageMonths), df; dropcollinear=false)
+    ct = DataFrame(coeftable(mod))
+    ct.metabolite .= met
+    ct.kind .= "cogScore"
+    ct.prevalence .= prev
+    # append!(lms, subset!(ct, "Name"=> ByRow(==("cogScore"))))
+    ct
+end
+
+#-
+
+using CairoMakie
+
+#-
+
+fig = Figure(;resolution= (1200, 1200))
+
+ax1 = Axis(fig[1,1]; xlabel = "gamma-Aminobutyric acid", ylabel="cogScore")
+ax2 = Axis(fig[1,2]; xlabel = "Tryptophan", ylabel="cogScore")
+ax3 = Axis(fig[2,1]; xlabel = "Glutamic acid", ylabel="cogScore")
+ax4 = Axis(fig[2,2]; xlabel = "Quinolinic acid", ylabel="cogScore")
+
+scatter!(ax1, mbx_wide."gamma-Aminobutyric acid", mbx_wide.cogScore)
+scatter!(ax2, mbx_wide."Tryptophan", mbx_wide.cogScore)
+scatter!(ax3, mbx_wide."Glutamic acid", mbx_wide.cogScore)
+scatter!(ax4, mbx_wide."Quinolinic acid", mbx_wide.cogScore)
+
+fig
