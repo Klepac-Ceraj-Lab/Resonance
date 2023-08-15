@@ -6,6 +6,16 @@ using VKCComputing
 base = LocalBase()
 newtaxa = CSV.read("input/ECHO_metabolomics_preselectedinputs.csv", DataFrame)
 updated = CSV.read("input/fmp_alltp.csv", DataFrame)
+transform!(updated, AsTable(["ageMonths", "assessmentAgeDays", "assessmentAgeMonths", "scanAgeDays", "scanAgeMonths"]) => ByRow(row-> begin
+        am, aad, aam, sad, sam = row
+        calcage = coalesce(aad / 365 * 12 + aam, sad / 365 * 12 + sam)
+        if !ismissing(am)
+            !ismissing(calcage) && am != calcage && @info am
+        end
+
+        return coalesce(am, calcage)
+        end) => "ageMonths"
+)
 
 function get_batches(base, bsp_id)
     bsp = get(base["Biospecimens"], bsp_id, nothing)
@@ -134,3 +144,87 @@ end
 
 memods."qvalue" = adjust(memods."Pr(>|z|)", BenjaminiHochberg())
 sort!(memods.qvalue)
+
+#-
+
+using MixedModels
+using CategoricalArrays
+using MultipleTesting
+using CairoMakie
+
+
+msel_subs = names(updated, r"^Mullen::.+T$")
+wppsi_subs = names(updated, r"^Wppsi_IV::.+Composite$")
+wisc_subs = names(updated, r"^Wisc_V::.+Composite$")
+
+mseldf = @chain updated begin
+    subset("ageMonths"=> ByRow(!ismissing), AsTable(msel_subs)=> ByRow(row-> !any(ismissing, row)))
+    select("ageMonths", "education", "subject", "timepoint", msel_subs...)
+    leftjoin!(unique(select(newtaxa, Not("ageMonths", "education")), ["subject", "timepoint"]); on = ["subject", "timepoint"])
+    subset!("Bifidobacterium_longum"=> ByRow(!ismissing))
+    sort("timepoint")
+    unique(["subject"])
+    transform("subject"=> categorical=> "subject")
+end
+
+hist(mseldf.ageMonths)
+
+#-
+
+mulms = DataFrame()
+
+for sp in [
+        "Erysipelatoclostridium_ramosum",
+        "Eggerthella_lenta",
+        "Escherichia_coli",
+        "Bifidobacterium_longum",
+        "Veillonella_parvula",
+        "Bifidobacterium_breve",
+        "Klebsiella_variicola",
+        "Enterococcus_faecalis",
+        "Streptococcus_salivarius",
+        "Klebsiella_pneumoniae",
+        "Bifidobacterium_bifidum",
+        "Flavonifractor_plautii",
+        "Ruminococcus_gnavus",
+        "Veillonella_atypica",
+        "Klebsiella_quasipneumoniae",
+        "Gordonibacter_pamelaeae",
+        "Clostridioides_difficile",
+        "Clostridium_innocuum",
+        "Streptococcus_parasanguinis",
+    ]
+    indf = select(mseldf, "ageMonths", "education", "subject", sp)
+
+    
+    over0 = indf[!, sp] .> 0
+    prev = sum(over0) / size(indf, 1)
+    prev < 0.10 && continue
+    ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
+    
+    for scale in msel_subs
+
+        df = select(indf, "ageMonths", "education", "subject"; copycols=false)
+        df.scale = mseldf[!, scale]
+        df.bug = ab
+
+        mod = fit(MixedModel, @formula(bug ~ scale + ageMonths + education + (1|subject)), df)
+        ct = DataFrame(coeftable(mod))
+        ct.species .= sp
+        ct.kind .= scale
+        ct.prevalence .= prev
+        append!(mulms, subset!(ct, "Name"=> ByRow(==("scale"))))
+    end
+end
+
+@chain mulms begin
+    rename!("Pr(>|z|)"=>"pvalue")
+    groupby("kind")
+    transform!("pvalue"=> (pval -> adjust(collect(pval), BenjaminiHochberg()))=> "qvalue")
+    sort!("pvalue")
+end
+
+
+#-
+
+scatter(mseldf."Fusicatenibacter_saccharivorans", mseldf."Mullen::mullen_ExpressivelanguageT"; color=[a for a in mseldf.ageMonths])
