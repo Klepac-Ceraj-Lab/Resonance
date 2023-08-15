@@ -96,6 +96,31 @@ echo_processed_future_data.future_cogscore = parse.(Float64, echo_processed_futu
 CSV.write("ECHO_FutureCogscore_inputs.csv", echo_processed_future_data)
 
 #####
+# Figure with age of collection and age of assessment
+#####
+
+fig = Figure(; resolution = (400,500))
+ax = Axis(
+    fig[1, 1];
+    xlabel = "Timepoint event",
+    xticks = ( [ 1, 2 ] , [ "stool\ncollection", "coognitive\nassessment" ] ),
+    ylabel = "Age (months)",
+    title = "Age distributions for model",
+)
+
+for rr in eachrow(echo_processed_future_data)
+    scatterlines!(ax, [1,2] , [ rr.present_ageMonths, rr.future_ageMonths ]; color = (:black, 0.3))
+end
+
+# boxplot!(ax, [ 1 for _ in eachrow(echo_processed_future_data) ], echo_processed_future_data.present_ageMonths; color = (:blue, 0.5), show_outliers = false )
+# boxplot!(ax, [ 2 for _ in eachrow(echo_processed_future_data) ], echo_processed_future_data.future_ageMonths; color = (:red, 0.5), show_outliers = false )
+
+violin!(ax, [ 1 for _ in eachrow(echo_processed_future_data) ], echo_processed_future_data.present_ageMonths; color = (:blue, 0.5), datalimits = extrema )
+violin!(ax, [ 2 for _ in eachrow(echo_processed_future_data) ], echo_processed_future_data.future_ageMonths; color = (:red, 0.5), datalimits = extrema  )
+
+save("manuscript/assets/presentstool_futurecogscore_agepathdist.png")
+
+#####
 # Applying prevalence filters
 #####
 taxa_prevalence_threshold_lower = 0.10
