@@ -90,7 +90,7 @@ echo_processed_future_data = @chain echo_raw_metadata begin
     innerjoin(rename_ref_table, on = :present_sample => :old_tubeid)
     innerjoin(echo_taxonomic_profiles, on = :new_seqid => :sample_base)
     select!(Not([:present_sample, :file ]))
-    subset(:present_ageMonths => x -> x .<= 18.0)
+    subset(:present_ageMonths => x -> x .<= 18.0) # First experiment was with 18.0 - Kevin asked for 12.0 afterwards - addresses R1!
     subset(:future_ageMonths => x -> 12.0 .<= x)
     sort([:subject, :present_timepoint, :future_timepoint]; rev=true)
     unique(:subject)
@@ -170,7 +170,7 @@ regression_futureCogScores_demoplustaxa = probe_prod_randomforest(
     "regression_futureCogScores_demoplustaxa",
     filtered_echo_processed_future_data,
     identity,
-    collect(8:ncol(filtered_echo_processed_future_data)),
+    collect(6:ncol(filtered_echo_processed_future_data)),
     :future_cogscore;
     n_folds = 3,
     n_replicas = 100,
@@ -195,4 +195,4 @@ report_regression_merits(m) = DataFrames.combine(
 
 report_regression_merits(regression_futureCogScores_demoplustaxa)
 
-weighted_hpimportances(regression_futureCogScores_demoplustaxa)
+weighted_hpimportances(regression_futureCogScores_demoplustaxa)[1:30, :]
