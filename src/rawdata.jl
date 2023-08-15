@@ -33,11 +33,11 @@ function load_raw_metadata(;
 
     fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=["subject"])
 
-    transform!(fmp_alltp, AsTable(["ageMonths", "assessmentAgeDays", "assessmentAgeMonths", "scanAgeDays", "scanAgeMonths"]) => ByRow(row-> begin
-        am, aad, aam, sad, sam = row
+    transform!(fmp_alltp, AsTable(["assessmentAgeDays", "assessmentAgeMonths", "scanAgeDays", "scanAgeMonths"]) => ByRow(row-> begin
+        aad, aam, sad, sam = row
         calcage = coalesce(aad / 365 * 12 + aam, sad / 365 * 12 + sam)
 
-        return coalesce(am, calcage)
+        return calcage
         end) => "ageMonths"
     )
 
