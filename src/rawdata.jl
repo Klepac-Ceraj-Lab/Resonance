@@ -96,9 +96,8 @@ function load_raw_metadata(;
     return fmp_alltp
 end
 
-
 function load_raw_metaphlan()
-    df = DataFrame(file = filter(f-> contains(f, r"FG\d+_S\d+_profile"), readdir(analysisfiles("metaphlan"), join=true)))
+    df = DataFrame(file = filter(f-> contains(f, r"SEQ\d+_S\d+_profile"), readdir(analysisfiles("metaphlan"), join=true)))
     df.sample = map(s-> replace(s, "_profile.tsv"=> ""), basename.(df.file))
     df.sample_base = map(s-> replace(s, r"_S\d+"=>""), df.sample)
 
@@ -108,7 +107,6 @@ function load_raw_metaphlan()
     set!(taxa, select(knead, "sample_uid"=>"sample", AsTable(["final pair1", "final pair2"])=> ByRow(row-> row[1]+row[2]) =>"read_depth"))
     taxa
 end
-
 
 function load_raw_humann(; kind="genefamilies", overwrite=false, names=false, stratified=false, sample_filter=nothing)
     fname = joinpath(scratchfiles("genefunctions"), "$kind.arrow")
