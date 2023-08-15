@@ -173,6 +173,73 @@ hist(mseldf.ageMonths)
 
 mulms = DataFrame()
 
+# for sp in [
+#         "Erysipelatoclostridium_ramosum",
+#         "Eggerthella_lenta",
+#         "Escherichia_coli",
+#         "Bifidobacterium_longum",
+#         "Veillonella_parvula",
+#         "Bifidobacterium_breve",
+#         "Klebsiella_variicola",
+#         "Enterococcus_faecalis",
+#         "Streptococcus_salivarius",
+#         "Klebsiella_pneumoniae",
+#         "Bifidobacterium_bifidum",
+#         "Flavonifractor_plautii",
+#         "Ruminococcus_gnavus",
+#         "Veillonella_atypica",
+#         "Klebsiella_quasipneumoniae",
+#         "Gordonibacter_pamelaeae",
+#         "Clostridioides_difficile",
+#         "Clostridium_innocuum",
+#         "Streptococcus_parasanguinis",
+#     ]
+for sp in names(mseldf, r"^[A-Z][a-z]+_\w+")
+    indf = select(mseldf, "ageMonths", "education", "subject", sp)
+
+    
+    over0 = indf[!, sp] .> 0
+    prev = sum(over0) / size(indf, 1)
+    prev < 0.10 && continue
+    ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
+    
+    for scale in msel_subs
+
+        df = select(indf, "ageMonths", "education", "subject"; copycols=false)
+        df.scale = mseldf[!, scale]
+        count(!ismissing, df.scale) < 20 && continue
+        df.bug = ab
+
+        mod = fit(MixedModel, @formula(bug ~ scale + ageMonths + education + (1|subject)), df)
+        ct = DataFrame(coeftable(mod))
+        ct.species .= sp
+        ct.kind .= scale
+        ct.prevalence .= prev
+        append!(mulms, subset!(ct, "Name"=> ByRow(==("scale"))))
+    end
+end
+
+@chain mulms begin
+    rename!("Pr(>|z|)"=>"pvalue")
+    groupby("kind")
+    transform!("pvalue"=> (pval -> adjust(collect(pval), BenjaminiHochberg()))=> "qvalue")
+    sort!("qvalue")
+end
+
+
+#-
+wiscdf = @chain updated begin
+    subset("ageMonths"=> ByRow(!ismissing), AsTable(wisc_subs)=> ByRow(row-> any(!ismissing, row)))
+    select("ageMonths", "education", "subject", "timepoint", wisc_subs...)
+    leftjoin!(unique(select(newtaxa, Not("ageMonths", "education")), ["subject", "timepoint"]); on = ["subject", "timepoint"])
+    subset!("Bifidobacterium_longum"=> ByRow(!ismissing))
+    sort("timepoint")
+    unique(["subject"])
+    transform("subject"=> categorical=> "subject")
+end
+
+wslms = DataFrame()
+
 for sp in [
         "Erysipelatoclostridium_ramosum",
         "Eggerthella_lenta",
@@ -194,18 +261,20 @@ for sp in [
         "Clostridium_innocuum",
         "Streptococcus_parasanguinis",
     ]
-    indf = select(mseldf, "ageMonths", "education", "subject", sp)
-
+# for sp in names(wiscdf, r"^[A-Z][a-z]+_[a-z0-9]+(_[a-z0-9]+)?$")
+    @info sp
+    indf = select(wiscdf, "ageMonths", "education", "subject", sp)
     
     over0 = indf[!, sp] .> 0
     prev = sum(over0) / size(indf, 1)
     prev < 0.10 && continue
     ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
     
-    for scale in msel_subs
+    for scale in wisc_subs
 
         df = select(indf, "ageMonths", "education", "subject"; copycols=false)
-        df.scale = mseldf[!, scale]
+        df.scale = wiscdf[!, scale]
+        count(!ismissing, df.scale) < 20 && continue
         df.bug = ab
 
         mod = fit(MixedModel, @formula(bug ~ scale + ageMonths + education + (1|subject)), df)
@@ -213,18 +282,15 @@ for sp in [
         ct.species .= sp
         ct.kind .= scale
         ct.prevalence .= prev
-        append!(mulms, subset!(ct, "Name"=> ByRow(==("scale"))))
+        append!(wslms, subset!(ct, "Name"=> ByRow(==("scale"))))
     end
 end
 
-@chain mulms begin
+@chain wslms begin
     rename!("Pr(>|z|)"=>"pvalue")
     groupby("kind")
     transform!("pvalue"=> (pval -> adjust(collect(pval), BenjaminiHochberg()))=> "qvalue")
-    sort!("pvalue")
+    sort!("qvalue")
 end
 
 
-#-
-
-scatter(mseldf."Fusicatenibacter_saccharivorans", mseldf."Mullen::mullen_ExpressivelanguageT"; color=[a for a in mseldf.ageMonths])

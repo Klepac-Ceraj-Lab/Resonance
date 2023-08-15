@@ -2,7 +2,7 @@
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "b2275a39186943204eae497e3997125b7ce147a1"
+project_hash = "4e411c82433b1334fd2a31266c4da2db21f9ba1e"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -1347,6 +1347,12 @@ deps = ["Dictionaries", "Distances", "EcoBase", "MultivariateStats", "ReTest", "
 git-tree-sha1 = "94b0f71f3a081f92827a0ce2e9a020a481f8dea0"
 uuid = "3bd8f0ae-a0f2-5238-a5af-e1b399a4940c"
 version = "0.10.0"
+
+[[deps.MiniLoggers]]
+deps = ["Dates", "Logging", "Markdown"]
+git-tree-sha1 = "9ea59ec3e640c72ac0d6a3deae8a2c2e7066cb5b"
+uuid = "93f3dd0f-005d-4452-894a-a31841fa4078"
+version = "0.5.2"
 
 [[deps.Missings]]
 deps = ["DataAPI"]

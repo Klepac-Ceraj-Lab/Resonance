@@ -33,15 +33,16 @@ function load_raw_metadata(;
 
     fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=["subject"])
 
-    fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
-        if ismissing(row.scanAgeMonths)
-            (row.assessmentAgeDays ./ 365 .* 12) .+ row.assessmentAgeMonths
-        else
-            (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
-        end
-    end
+    transform!(fmp_alltp, AsTable(["ageMonths", "assessmentAgeDays", "assessmentAgeMonths", "scanAgeDays", "scanAgeMonths"]) => ByRow(row-> begin
+        am, aad, aam, sad, sam = row
+        calcage = coalesce(aad / 365 * 12 + aam, sad / 365 * 12 + sam)
+
+        return coalesce(am, calcage)
+        end) => "ageMonths"
+    )
 
     @assert nrow(unique(fmp_alltp, ["subject", "timepoint"])) == nrow(fmp_alltp)
+
 
     DataFrames.transform!(groupby(fmp_alltp, :subject), :mother_HHS_Education => (r->coalesce(r...)) => :hhs)
     fmp_alltp.education = let
