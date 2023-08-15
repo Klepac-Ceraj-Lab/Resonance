@@ -15,6 +15,7 @@ using MLJ
 using CairoMakie
 using DecisionTree
 using JLD2
+using ShapML
 using Resonance
 ml_rng = StableRNG(0)
 
@@ -54,6 +55,12 @@ function get_future_metadata(df)
                 future_cogscore = df.cogScore[row.future]
             ) for row in eachrow(viabilities)])
     return(future_df)
+end
+
+## This is a function that the ShapML.jl package utilized to predict the shapley values
+function predict_function(model, data)
+    data_pred = DataFrame(:y_pred => vec(model(Matrix(data)')))
+    return data_pred
 end
 
 #####

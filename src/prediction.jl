@@ -14,6 +14,7 @@ struct ProbeData
     n_rngs::Int64
     merits::DataFrame
     importances::DataFrame
+    shapley::DataFrame
     saved_predictions::DataFrame
     saved_pertinences::DataFrame
 end
@@ -125,6 +126,7 @@ function probe_prod_randomforest(
     train_cors = Vector{Float64}()
     test_cors = Vector{Float64}()
     importances = DataFrame(:variable => [])
+    shapley = DataFrame(:variable => [])
     saved_predictions = DataFrame(:subject => [])
     saved_pertinences = DataFrame(:subject => [])
 
@@ -181,6 +183,21 @@ function probe_prod_randomforest(
                         model_colname => vcat(repeat([ "train" ], length(train)),repeat([ "test" ], length(test)))
                     )
 
+                    data_shap = ShapML.shap(
+                        explain = X[test, :],
+                        model = rf_machine,
+                        predict_function = ( (model, data) -> DataFrame(:y_pred => MLJ.predict(model, data)) ),
+                        sample_size = 30,
+                        seed = 1
+                    )
+
+                    #Cols are "index", "feature_name", "feature_value", "shap_effect", "shap_effect_sd", "intercept" from @show names(data_shap)
+                    meanShapleyValues = @chain DataFrames.combine(
+                        groupby(data_shap, :feature_name),
+                        :shap_effect => (x -> mean(x)) => :shap_effect ;
+                        renamecols = false
+                    ) begin rename!( :feature_name => :variable, :shap_effect => model_colname) end
+
                     push!(hyperpar_idxes, hp_idx)
                     push!(replica_idxes, rep_idx)
                     push!(fold_idxes, fold_idx)
@@ -191,6 +208,7 @@ function probe_prod_randomforest(
                     push!(test_mapes, test_mape)
                     push!(train_cors, train_cor)
                     push!(test_cors, test_cor)
+                    shapley = outerjoin(shapley, meanShapleyValues, on = :variable)
                     importances = outerjoin(importances, DataFrame(:variable => names(X), model_colname => impurity_importance(rf_machine.fitresult)), on = :variable)
                     saved_predictions = outerjoin(saved_predictions, this_predictions, on = [ :subject => :subject ])
                     saved_pertinences = outerjoin(saved_pertinences, this_pertinences, on = [ :subject => :subject ])

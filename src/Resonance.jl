@@ -94,6 +94,7 @@ using Tables
 using ThreadsX
 using MLJ
 using DecisionTree
+using ShapML
 
 @reexport using BiobakeryUtils
 @reexport using DataFrames
