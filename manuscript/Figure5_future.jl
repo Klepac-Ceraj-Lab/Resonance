@@ -114,6 +114,8 @@ filtered_echo_processed_future_data = filter_prevalences(
     ubound = taxa_prevalence_threshold_upper
 )
 
+filtered_echo_processed_future_data[!,:present_ageMonths], filtered_echo_processed_future_data[!,:sample] = filtered_echo_processed_future_data[!,:sample], filtered_echo_processed_future_data[!,:present_ageMonths]
+rename!(filtered_echo_processed_future_data, [ :present_ageMonths => :sample, :sample => :present_ageMonths ])
 #####
 # Actual model training
 #####
