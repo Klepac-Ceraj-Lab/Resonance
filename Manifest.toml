@@ -2,7 +2,7 @@
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "4e411c82433b1334fd2a31266c4da2db21f9ba1e"
+project_hash = "de9d6324e54483073562e17e0bd1d2bd68827fd8"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
