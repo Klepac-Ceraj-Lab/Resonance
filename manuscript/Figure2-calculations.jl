@@ -178,7 +178,7 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     lmresults = DataFrame()
 
@@ -234,7 +234,7 @@ end
 
 ## Calculate correlations
 
-unimdata = DataFrame(metadata(unirefs))
+unimdata = DataFrame(get(unirefs))
 
 unirefs_00to120 = let filt = get(unirefs, :filter_00to120)
     keepuni = vec(prevalence(unirefs[:, filt]) .> 0)
@@ -261,13 +261,9 @@ relativeabundance!(unirefs_00to120)
 ## Run LMs
 
 let 
-    indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
-    lmresults = DataFrame()
-    i = 0
-    for feat in features(unirefs_18to120)
-        i+=1
-        i % 200 == 0 && @info "Running step $i"
+    lmresults = recduce(vcat, ThreadsX.map(enumerate(features(unirefs_18to120))) do (i, feat)
         ab = vec(abundances(unirefs_18to120[feat, :]))
         # prevalence(ab) > 0.1 || continue
         # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
@@ -285,8 +281,8 @@ let
         )
         ct.species .= string(feat)
         ct.kind .= "unirefs"
-        append!(lmresults, ct)
-    end
+        ct
+    end)
 
     select!(lmresults, Cols(:species, :Name, :))
     rename!(lmresults, "Pr(>|t|)"=>"pvalue");
@@ -296,13 +292,9 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_00to120.csv")
-    lmresults = DataFrame()
-    i = 0
-    for feat in features(unirefs_00to120)
-        i+=1
-        i % 200 == 0 && @info "Running step $i at $(now())"
+    lmresults = recduce(vcat, ThreadsX.map(enumerate(features(unirefs_00to120))) do (i, feat)
         ab = vec(abundances(unirefs_00to120[feat, :]))
         # prevalence(ab) > 0.1 || continue
         # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
@@ -320,8 +312,8 @@ let
         )
         ct.species .= string(feat)
         ct.kind .= "unirefs"
-        append!(lmresults, ct)
-    end
+        ct
+    end)
 
     select!(lmresults, Cols(:species, :Name, :))
     rename!(lmresults, "Pr(>|t|)"=>"pvalue");
@@ -331,13 +323,9 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_00to06))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_00to06))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_00to06.csv")
-    lmresults = DataFrame()
-    i = 0
-    for feat in features(unirefs_00to06)
-        i+=1
-        i % 200 == 0 && @info "Running step $i at $(now())"
+    lmresults = recduce(vcat, ThreadsX.map(enumerate(features(unirefs_00to06))) do (i, feat)
         ab = vec(abundances(unirefs_00to06[feat, :]))
         # prevalence(ab) > 0.1 || continue
         # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
@@ -355,8 +343,8 @@ let
         )
         ct.species .= string(feat)
         ct.kind .= "unirefs"
-        append!(lmresults, ct)
-    end
+        ct
+    end)
 
     select!(lmresults, Cols(:species, :Name, :))
     rename!(lmresults, "Pr(>|t|)"=>"pvalue");
