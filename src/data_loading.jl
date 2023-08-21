@@ -107,6 +107,7 @@ function load(::Metadata)
     #         Bool,                    # filter_00to06
     #         Bool,                    # filter_18to120 
     #     ]        
+        stringtype = String
     )
     DataFrames.select!(subset!(df, "has_concurrent_stool_cog"=> identity), 
         "subject",
@@ -119,7 +120,6 @@ function load(::Metadata)
         r"filter_",
         "seqid"=> "sample",
         "omni",
-        "read_depth",
         r"^Mullen.+Composite$"
     )
 

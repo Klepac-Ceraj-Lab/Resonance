@@ -71,11 +71,11 @@ l, u = quantile(skipmissing(specdf.cogScore), [0.25, 0.75])
 map(s-> ismissing(s) ? missing : s < l ? "lower" : s > u ? "upper" : "middle", specdf.cogScore)
 end; levels=["lower", "middle", "upper"], ordered = true)
 
-non_spec_cols = Cols([
-    "sample", "subject", "timepoint", "ageMonths", "sex", "race", "education",
+non_spec_cols = Cols(
+    "sample", "subject", "seqid", "omni", "timepoint", "ageMonths", "sex", "race", "education",
     "cogScore", "read_depth", "quartile",
-    r"filter_", r"Mullen"
-    ]])
+    r"filter_", r"Mullen", "edfloat"
+    )
     
 braindf = leftjoin(brainmeta, specdf; on="sample")
 
@@ -95,7 +95,7 @@ let
 
     for roi in brain_roi
         @info roi
-        for spc in names(indf, Not([non_spec_cols; brain_roi]))
+        for spc in names(indf, names(specdf, r"^[A-Z][a-z]+_[a-z0-9_]+"))
                 
             over0 = indf[!, spc] .> 0
             sum(over0) / size(indf, 1) > 0.20 || continue
