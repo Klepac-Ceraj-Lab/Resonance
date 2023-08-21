@@ -3,7 +3,7 @@ using CairoMakie
 using Statistics
 using HypothesisTests
 using MultipleTesting
-using KernelDensity
+# using KernelDensity
 using MultivariateStats
 using Distributions
 using CategoricalArrays
@@ -21,13 +21,23 @@ isdir(tablefiles("figure2")) || mkpath(tablefiles("figure2"))
 ## Data Loading
 
 mdata = Resonance.load(Metadata())
+seqs = subset(mdata, "seqid"=> ByRow(!ismissing)) 
+transform!(seqs, "seqid"=> ByRow(String)=> "sample")
 
-species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
 relativeabundance!(species)
-ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
+unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = seqs) # this can take a bit
+ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
+kos = Resonance.load(KOProfiles(); timepoint_metadata = seqs)
 
-unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
-brain = Resonance.load(Neuroimaging(); timepoint_metadata=mdata)
+# metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
+brain = Resonance.load(Neuroimaging(), timepoint_metadata = seqs, samplefield="sample")
+
+
+# @assert all(samplenames(species) .== samplenames(unirefs))
+@assert all(samplenames(species) .== samplenames(ecs) .== samplenames(kos) .== samplenames(unirefs))
 
 brain_roi = [
     "right-lateral-occipital",
@@ -46,7 +56,7 @@ brain_roi = [
     "White-matter"
 ]
 brainmeta = let
-    brainsub = brain[:, startswith.(samplenames(brain), "FG")]
+    brainsub = brain[:, startswith.(samplenames(brain), "SEQ")]
     df = DataFrame(:sample => samplenames(brainsub), (Symbol(reg) => vec(abundances(brainsub[reg, :])) for reg in brain_roi)...)
 end
 
@@ -57,14 +67,15 @@ set!(unirefs, brainmeta)
 specdf = comm2wide(species)
 
 specdf.quartile = categorical(let
-l, u = quantile(specdf.cogScore, [0.25, 0.75])
-map(s-> s < l ? "lower" : s > u ? "upper" : "middle", specdf.cogScore)
+l, u = quantile(skipmissing(specdf.cogScore), [0.25, 0.75])
+map(s-> ismissing(s) ? missing : s < l ? "lower" : s > u ? "upper" : "middle", specdf.cogScore)
 end; levels=["lower", "middle", "upper"], ordered = true)
 
-non_spec_cols = [
-    "sample", "subject", "timepoint", "ageMonths", "sex", "race", "education", "date",
-    "cogScore", "sample_base", "read_depth", "filter_00to120", "filter_00to06", "filter_18to120", "quartile"
-    ]
+non_spec_cols = Cols([
+    "sample", "subject", "timepoint", "ageMonths", "sex", "race", "education",
+    "cogScore", "read_depth", "quartile",
+    r"filter_", r"Mullen"
+    ]])
     
 braindf = leftjoin(brainmeta, specdf; on="sample")
 

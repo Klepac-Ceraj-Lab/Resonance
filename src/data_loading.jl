@@ -117,8 +117,9 @@ function load(::Metadata)
         "race",
         "cogScore",
         r"filter_",
-        "seqid",
+        "seqid"=> "sample",
         "omni",
+        "read_depth",
         r"^Mullen.+Composite$"
     )
 

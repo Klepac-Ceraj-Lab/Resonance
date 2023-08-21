@@ -49,7 +49,9 @@ function read_arrow(filename; featurefunc = taxon, unirefs = false)
         sample = [MicrobiomeSample(replace(line, r"_S\d+" => "")) for line in eachline(IOBuffer(mdt["samples"]))],
         read_depth = map(l-> l=="missing" ? missing : parse(Float64, l), eachline(IOBuffer(mdt["reads"]))),
     )
-    CommunityProfile(mat, fs, mdt.sample)
+    comm = CommunityProfile(mat, fs, mdt.sample)
+    set!(comm, DataFrames.transform(mdt, "sample"=> ByRow(name)=> "sample"))
+    return comm
 end
 
 function comm2wide(cmp::CommunityProfile; feature_filter=identity, sample_filter=identity, feature_func=name)
