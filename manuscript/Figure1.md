@@ -16,16 +16,22 @@ Then, we'll load in the different data sources.
 
 ```julia
 mdata = Resonance.load(Metadata())
+seqs = subset(mdata, "seqid"=> ByRow(!ismissing)) 
+transform!(seqs, "seqid"=> ByRow(String)=> "sample")
 
-taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata) # this can take a bit
-species = filter(t-> taxrank(t) == :species, taxa)
-unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
-ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
-kos = Resonance.load(KOProfiles(); timepoint_metadata = mdata)
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
+unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = seqs) # this can take a bit
+ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
+kos = Resonance.load(KOProfiles(); timepoint_metadata = seqs)
+
 # metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
-brain = Resonance.load(Neuroimaging(), timepoint_metadata = mdata)
+brain = Resonance.load(Neuroimaging(), timepoint_metadata = seqs, samplefield="sample")
 
-@assert all(samplenames(species) .== samplenames(unirefs) .== samplenames(ecs) .== samplenames(kos))
+
+# @assert all(samplenames(species) .== samplenames(unirefs))
+@assert all(samplenames(species) .== samplenames(ecs) .== samplenames(kos) .== samplenames(unirefs))
 ```
 
 Both PERMANOVA and Mantel tests

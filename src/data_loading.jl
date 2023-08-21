@@ -90,23 +90,36 @@ load(ds::Dataset; kwargs...) = throw(MethodError("load has not been implemented 
 
 function load(::Metadata)
     Setup.datadownload(Setup.Timepoints(); inputdir=inputfiles())
-    df = CSV.read(inputfiles("timepoints_metadata.csv"), DataFrame;
-        types = [
-            Int64,                   # subject
-            Int64,                   # timepoint
-            Union{Missing, Float64}, # ageMonths
-            String,                  # sex
-            String,                  # race
-            Union{Missing, String},  # education
-            Union{Missing, Date},    # date
-            Union{Missing, Float64}, # cogScore
-            String,                  # sample
-            String,                  # sample_base
-            Union{Missing, Float64}, # read_depth
-            Bool,                    # filter_00to120 
-            Bool,                    # filter_00to06
-            Bool,                    # filter_18to120 
-        ]        
+    df = CSV.read(inputfiles("complete_filtered_dataset.csv"), DataFrame;
+    #     types = [
+    #         Int64,                   # subject
+    #         Int64,                   # timepoint
+    #         Union{Missing, Float64}, # ageMonths
+    #         String,                  # sex
+    #         String,                  # race
+    #         Union{Missing, String},  # education
+    #         Union{Missing, Date},    # date
+    #         Union{Missing, Float64}, # cogScore
+    #         String,                  # sample
+    #         String,                  # sample_base
+    #         Union{Missing, Float64}, # read_depth
+    #         Bool,                    # filter_00to120 
+    #         Bool,                    # filter_00to06
+    #         Bool,                    # filter_18to120 
+    #     ]        
+    )
+    DataFrames.select!(subset!(df, "has_concurrent_stool_cog"=> identity), 
+        "subject",
+        "timepoint",
+        "ageMonths",
+        "sex",
+        "education",
+        "race",
+        "cogScore",
+        r"filter_",
+        "seqid",
+        "omni",
+        r"^Mullen.+Composite$"
     )
 
     df.sex = categorical(df.sex)
@@ -213,7 +226,7 @@ function load(::ReadCounts; srcdir=analysisfiles("kneaddata"), readcountfile="re
         end
 
         df = select(df, Not(r"hg37"))
-        subset!(df, "Sample"=> ByRow(s-> contains(s, r"^FG\d+")))
+        # subset!(df, "Sample"=> ByRow(s-> contains(s, r"^FG\d+")))
         df.sample_uid = map(s-> replace(s, r"_kneaddata"=>""), df.Sample)
         df.sample = map(s-> replace(s, r"_S\d+"=>""), df.sample_uid)
         select!(df, Cols("sample", "sample_uid", r".+[12]"))

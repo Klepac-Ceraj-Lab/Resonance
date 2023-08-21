@@ -3,11 +3,11 @@ function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false, s
                                     kind == "genefamilies" ? "main" : "regroup"
     )
     stripper = "_$kind" * (names ? "_rename.tsv" : ".tsv")
-    filt = Regex(string(raw"FG\d+_S\d+_", kind))
+    filt = Regex(string(raw"SEQ\d+_S\d+_", kind))
     df = DataFrame(file = filter(f-> contains(f, filt), readdir(root, join=true)))
     df.sample = map(s-> replace(s, stripper => ""), basename.(df.file))
-    isnothing(sample_filter) || subset!(df, "sample"=> ByRow(s-> s in sample_filter))
-    df.sample_base = map(s-> replace(stripper, r"_S\d+"=>""), df.sample)
+    df.seqid = map(s-> replace(s, r"_S\d+$"=> ""), df.sample)
+    isnothing(sample_filter) || subset!(df, AsTable(["sample", "seqid"]) => ByRow(s-> s.sample ∈ sample_filter || s.seqid ∈ sample_filter))
     @debug "Found $(nrow(df)) files"
 
     knead = load(ReadCounts())
@@ -17,12 +17,12 @@ function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false, s
     )
     
     @info "getting features"
-    features = mapreduce(union, eachrow(df)) do row
+    feats = mapreduce(union, eachrow(df)) do row
         fs = CSV.read(row.file, DataFrame; header=["feature", "value"], skipto=2, select=[1])[!,1]
-        stratified || filter!(f->!contains(f, '|'), fs) # skip stratified features
+        stratified || filter!(f->!contains(f, '|'), fs) # skip stratified feats
         Set(fs)
     end
-    featuremap = Dict(f=> i for (i,f) in enumerate(features))
+    featuremap = Dict(f=> i for (i,f) in enumerate(feats))
     
     scratch = scratchfiles("genefunctions")
     isdir(scratch) || mkpath(scratch)
@@ -33,7 +33,7 @@ function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false, s
             @debug "writing $(row.sample)"
 
             sdf = CSV.read(row.file, DataFrame; header=["feature", "value"], skipto=2)
-            stratified || subset!(sdf, "feature"=> ByRow(f-> !contains(f, '|'))) # skip stratified features
+            stratified || subset!(sdf, "feature"=> ByRow(f-> !contains(f, '|'))) # skip stratified feats
             sdf.sample .= row.sample
             sdf.sidx .= rownumber(row)
             sdf.fidx = ThreadsX.map(f-> featuremap[f], sdf.feature)
@@ -41,7 +41,7 @@ function write_gfs_arrow(; kind="genefamilies", names=false, stratified=false, s
             sdf
         end
 
-        Arrow.write(io, tbls; metadata=("features" => join(features, '\n'), 
+        Arrow.write(io, tbls; metadata=("features" => join(feats, '\n'), 
                                         "samples"  => join(df.sample, '\n'),
                                         "files"    => join(df.file, '\n'),
                                         "reads"    => join(df.read_depth, '\n')

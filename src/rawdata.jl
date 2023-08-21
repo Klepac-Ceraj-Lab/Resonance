@@ -99,15 +99,21 @@ function load_raw_metadata(;
 end
 
 
-function load_raw_metaphlan()
-    df = DataFrame(file = filter(f-> contains(f, r"FG\d+_S\d+_profile"), readdir(analysisfiles("metaphlan"), join=true)))
+function load_raw_metaphlan(; samples = nothing)
+    df = DataFrame(file = filter(readdir(analysisfiles("metaphlan"), join=true)) do f
+        fname = String(basename(f))
+        contains(fname, r"SEQ\d+_S\d+_profile") || return false 
+        isnothing(samples) && return true
+        m = match(r"(SEQ\d+)_(S\d+)_", fname)
+        return m[1] ∈ samples || join(m.captures, '_') ∈ samples
+    end)
     df.sample = map(s-> replace(s, "_profile.tsv"=> ""), basename.(df.file))
     df.sample_base = map(s-> replace(s, r"_S\d+"=>""), df.sample)
 
     knead = load(ReadCounts())
     taxa = metaphlan_profiles(df.file; samples = df.sample)
     set!(taxa, df)
-    set!(taxa, select(knead, "sample_uid"=>"sample", AsTable(["final pair1", "final pair2"])=> ByRow(row-> row[1]+row[2]) =>"read_depth"))
+    set!(taxa, select(knead, "sample_uid"=> "sample", AsTable(r"final")=> ByRow(sum) =>"read_depth"))
     taxa
 end
 

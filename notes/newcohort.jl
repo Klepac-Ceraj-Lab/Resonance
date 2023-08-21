@@ -63,8 +63,6 @@ kids00to120 = @chain newmeta begin
     end) => ["filter_future_omni", "filter_future_cog"])
 end
 
-CSV.write("input/complete_filtered_dataset.csv", kids00to120)
-
 @info "Kids < 120 months: size = $(size(kids00to120))"
 @info "Kids < 120 months: n subjects = $(length(unique(kids00to120.subject)))"
 @info "With concurrent stool / cog: n subjects = $(subset(kids00to120, "has_concurrent_stool_cog" => identity).subject |> unique |> length)"
@@ -106,27 +104,21 @@ end
 
 
 
-transform!(AsTable(["ageMonths", "omni", "cogScore"]) => (nt-> begin
-    isfirst = fill(false, length(nt.ageMonths))
-    i = findfirst(i-> !any(ismissing, nt.ageMonths[i], nt.omni[i], nt.cogScore[i]), eachindex(nt.ageMonths))
-    !isnothing(i) && (isfirst[i] = true)
-    isfirst
-end) => "filter_00to120";
-ungroup = false
-)
-transform!(AsTable(["ageMonths", "omni", "cogScore"]) => (nt-> begin
-    isfirst = fill(false, length(nt.ageMonths))
-    i = findfirst(i-> !any(ismissing, nt.ageMonths[i], nt.omni[i], nt.cogScore[i]) && nt.ageMonths[i] < 6, eachindex(nt.ageMonths))
-    !isnothing(i) && (isfirst[i] = true)
-    isfirst
-end) => "filter_00to06";
-ungroup = false
-)
-transform!(AsTable(["ageMonths", "omni", "cogScore"]) => (nt-> begin
-    isfirst = fill(false, length(nt.ageMonths))
-    i = findfirst(i-> !any(ismissing, nt.ageMonths[i], nt.omni[i], nt.cogScore[i]) && nt.ageMonths[i] <= 120, eachindex(nt.ageMonths))
-    !isnothing(i) && (isfirst[i] = true)
-    isfirst
-end) => "filter_18to120"
-)
-    
+#-
+
+using VKCComputing
+
+base = LocalBase()
+
+kids00to120.seqid = map(mdata.omni) do biosp
+   ismissing(biosp) && return biosp
+   brec = get(base["Biospecimens"], String(biosp), nothing)
+   isnothing(brec) && error("$biosp not found in biospecimens")
+   seqrec = [b[:uid] for b in base[brec[:seqprep]] if b[:keep] == 1]
+   length(seqrec) > 1 && @warn seqrec
+   first(seqrec)
+end
+
+
+CSV.write(inputfiles("complete_filtered_dataset.csv"), kids00to120)
+
