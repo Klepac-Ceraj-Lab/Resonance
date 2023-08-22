@@ -21,7 +21,9 @@ using JLD2
 
 ```julia
 mdata = Resonance.load(Metadata())
-taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
+seqs.sample = [s for s in seqs.sample]
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs)
 taxdf = comm2wide(taxa)
 ```
 
@@ -45,9 +47,9 @@ fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_all_18to120.csv"), DataFr
 cors_00to120 = CSV.read(tablefiles("figure2", "lms_unirefs_00to120.csv"), DataFrame)
 cors_00to06 = CSV.read(tablefiles("figure2", "lms_unirefs_00to06.csv"), DataFrame)
 cors_18to120 = CSV.read(tablefiles("figure2", "lms_unirefs_18to120.csv"), DataFrame)
-neuroactive_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to120.species); consolidate=false)
-neuroactive_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to06.species); consolidate=false)
-neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_18to120.species); consolidate=false)
+neuroactive_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to120.feature); consolidate=false)
+neuroactive_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to06.feature); consolidate=false)
+neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_18to120.feature); consolidate=false)
 ```
 
 
@@ -68,16 +70,16 @@ lms_mat = let
         corr_00to06 = cor(taxdf[taxdf.filter_00to06, "cogScore"], taxdf[taxdf.filter_00to06, ft])
         corr_18to120 = cor(taxdf[taxdf.filter_18to120, "cogScore"], taxdf[taxdf.filter_18to120, ft])
         (; feature = ft, 
-           prev_00to120 = only(prevalence(taxa[Regex(ft), mdata.filter_00to120])),
-           meanab_00to120 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_00to120]))),
+           prev_00to120 = only(prevalence(taxa[Regex(ft), seqs.filter_00to120])),
+           meanab_00to120 = mean(filter(>(0), abundances(taxa[Regex(ft), seqs.filter_00to120]))),
            corr_00to120,
            q_00to120,
-           prev_00to06 = only(prevalence(taxa[Regex(ft), mdata.filter_00to06])),
-           meanab_00to06 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_00to06]))),
+           prev_00to06 = only(prevalence(taxa[Regex(ft), seqs.filter_00to06])),
+           meanab_00to06 = mean(filter(>(0), abundances(taxa[Regex(ft), seqs.filter_00to06]))),
            corr_00to06,
            q_00to06, 
-           prev_18to120 = only(prevalence(taxa[Regex(ft), mdata.filter_18to120])),
-           meanab_18to120 = mean(filter(>(0), abundances(taxa[Regex(ft), mdata.filter_18to120]))),
+           prev_18to120 = only(prevalence(taxa[Regex(ft), seqs.filter_18to120])),
+           meanab_18to120 = mean(filter(>(0), abundances(taxa[Regex(ft), seqs.filter_18to120]))),
            corr_18to120,
            q_18to120,
         )
