@@ -120,7 +120,7 @@ function load(::Metadata)
         r"filter_",
         "seqid"=> "sample",
         "omni",
-        r"^Mullen.+Composite$"
+        r"^Mullen.+T$"
     )
 
     df.sex = categorical(df.sex)

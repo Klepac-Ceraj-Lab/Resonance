@@ -136,90 +136,111 @@ for sp in names(taxdf, r"^[A-Z][a-z]+_(sp_(CAG_)?[\d_]+|[a-z]+)")
     append!(memods, subset!(ct, "Name"=> ByRow(==("cogScore"))))
 end
 
-memods."qvalue" = MultipleTesting.adjust(memods."Pr(>|z|)", BenjaminiHochberg())
+
+memods."qvalue" = MultipleTesting.adjust(memods[!, "Pr(>|z|)"], BenjaminiHochberg())
+
 sort!(memods.qvalue)
 
-#-
 
 using MixedModels
 using CategoricalArrays
 using MultipleTesting
 using CairoMakie
+using GLM
 
-
-msel_subs = names(updated, r"^Mullen::.+T$")
-wppsi_subs = names(updated, r"^Wppsi_IV::.+Composite$")
-wisc_subs = names(updated, r"^Wisc_V::.+Composite$")
-
-mseldf = @chain updated begin
-    subset("ageMonths"=> ByRow(!ismissing), AsTable(msel_subs)=> ByRow(row-> !any(ismissing, row)))
-    select("ageMonths", "education", "subject", "timepoint", msel_subs...)
-    leftjoin!(unique(select(newtaxa, Not("ageMonths", "education")), ["subject", "timepoint"]); on = ["subject", "timepoint"])
-    subset!("Bifidobacterium_longum"=> ByRow(!ismissing))
-    sort("timepoint")
-    unique(["subject"])
-    transform("subject"=> categorical=> "subject")
-end
-
-hist(mseldf.ageMonths)
+msel_subs = names(taxdf, r"^Mullen::.+T$")
 
 #-
 
 mulms = DataFrame()
 
-# for sp in [
-#         "Erysipelatoclostridium_ramosum",
-#         "Eggerthella_lenta",
-#         "Escherichia_coli",
-#         "Bifidobacterium_longum",
-#         "Veillonella_parvula",
-#         "Bifidobacterium_breve",
-#         "Klebsiella_variicola",
-#         "Enterococcus_faecalis",
-#         "Streptococcus_salivarius",
-#         "Klebsiella_pneumoniae",
-#         "Bifidobacterium_bifidum",
-#         "Flavonifractor_plautii",
-#         "Ruminococcus_gnavus",
-#         "Veillonella_atypica",
-#         "Klebsiella_quasipneumoniae",
-#         "Gordonibacter_pamelaeae",
-#         "Clostridioides_difficile",
-#         "Clostridium_innocuum",
-#         "Streptococcus_parasanguinis",
-#     ]
-for sp in names(mseldf, r"^[A-Z][a-z]+_\w+")
-    indf = select(mseldf, "ageMonths", "education", "subject", sp)
-
+let indf = subset(taxdf, "filter_00to120"=> identity)
+    for sp in names(indf, r"^[A-Z][a-z]+_\w+")
     
-    over0 = indf[!, sp] .> 0
-    prev = sum(over0) / size(indf, 1)
-    prev < 0.10 && continue
-    ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
+        over0 = indf[!, sp] .> 0
+        prev = sum(over0) / size(indf, 1)
+        prev < 0.10 && continue
+        ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
     
-    for scale in msel_subs
+        for scale in msel_subs
 
-        df = select(indf, "ageMonths", "education", "subject"; copycols=false)
-        df.scale = mseldf[!, scale]
-        count(!ismissing, df.scale) < 20 && continue
-        df.bug = ab
+            df = select(indf, "ageMonths", "education", "subject"; copycols=false)
+            df.scale = indf[!, scale]
+            count(!ismissing, df.scale) < 20 && continue
+            df.bug = ab
 
-        mod = fit(MixedModel, @formula(bug ~ scale + ageMonths + education + (1|subject)), df)
-        ct = DataFrame(coeftable(mod))
-        ct.species .= sp
-        ct.kind .= scale
-        ct.prevalence .= prev
-        append!(mulms, subset!(ct, "Name"=> ByRow(==("scale"))))
+            mod = lm(@formula(bug ~ scale + ageMonths + education), df)
+            ct = DataFrame(coeftable(mod))
+            ct.species .= sp
+            ct.kind .= scale
+            ct.prevalence .= prev
+            ct.filter .= "00to120"
+            append!(mulms, subset!(ct, "Name"=> ByRow(==("scale"))))
+        end
+    end
+end
+
+let indf = subset(taxdf, "filter_00to06"=> identity)
+    for sp in names(indf, r"^[A-Z][a-z]+_\w+")
+    
+        over0 = indf[!, sp] .> 0
+        prev = sum(over0) / size(indf, 1)
+        prev < 0.10 && continue
+        ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
+    
+        for scale in msel_subs
+
+            df = select(indf, "ageMonths", "education", "subject"; copycols=false)
+            df.scale = indf[!, scale]
+            count(!ismissing, df.scale) < 20 && continue
+            df.bug = ab
+
+            mod = lm(@formula(bug ~ scale + ageMonths + education), df)
+            ct = DataFrame(coeftable(mod))
+            ct.species .= sp
+            ct.kind .= scale
+            ct.prevalence .= prev
+            ct.filter .= "00to06"
+            append!(mulms, subset!(ct, "Name"=> ByRow(==("scale"))))
+        end
+    end
+end
+
+
+let indf = subset(taxdf, "filter_18to120"=> identity)
+    for sp in names(indf, r"^[A-Z][a-z]+_\w+")
+    
+        over0 = indf[!, sp] .> 0
+        prev = sum(over0) / size(indf, 1)
+        prev < 0.10 && continue
+        ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
+    
+        for scale in msel_subs
+
+            df = select(indf, "ageMonths", "education", "subject"; copycols=false)
+            df.scale = indf[!, scale]
+            count(!ismissing, df.scale) < 20 && continue
+            df.bug = ab
+
+            mod = lm(@formula(bug ~ scale + ageMonths + education), df)
+            ct = DataFrame(coeftable(mod))
+            ct.species .= sp
+            ct.kind .= scale
+            ct.prevalence .= prev
+            ct.filter .= "18to120"
+            append!(mulms, subset!(ct, "Name"=> ByRow(==("scale"))))
+        end
     end
 end
 
 @chain mulms begin
-    rename!("Pr(>|z|)"=>"pvalue")
-    groupby("kind")
+    rename!("Pr(>|t|)"=>"pvalue")
+    groupby(["kind", "filter"])
     transform!("pvalue"=> (pval -> adjust(collect(pval), BenjaminiHochberg()))=> "qvalue")
     sort!("qvalue")
 end
-
+isdir(tablefiles("newfigures")) || mkdir(tablefiles("newfigures"))
+CSV.write(tablefiles("newfigures", "subscale_lms.csv"), mulms)
 
 #-
 wiscdf = @chain updated begin
