@@ -3,41 +3,34 @@ using Chain
 using VKCComputing
 
 
+mdata = Resonance.load(Metadata())
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
+seqs.sample = [s for s in seqs.sample]
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs)
+relativeabundance!(taxa)
+taxdf = comm2wide(taxa)
+
 base = LocalBase()
-newtaxa = CSV.read("input/ECHO_metabolomics_preselectedinputs.csv", DataFrame)
-updated = CSV.read("input/fmp_alltp.csv", DataFrame)
-transform!(updated, AsTable(["ageMonths", "assessmentAgeDays", "assessmentAgeMonths", "scanAgeDays", "scanAgeMonths"]) => ByRow(row-> begin
-        am, aad, aam, sad, sam = row
-        calcage = coalesce(aad / 365 * 12 + aam, sad / 365 * 12 + sam)
-        if !ismissing(am)
-            !ismissing(calcage) && am != calcage && @info am
-        end
 
-        return coalesce(am, calcage)
-        end) => "ageMonths"
-)
+function get_batches(base, seq_id)
+    seq = get(base["SequencingPrep"], seq_id, nothing)
+    isnothing(seq) && throw(KeyError("SeqPrep id $seq_id doesn't exist in database"))
 
-function get_batches(base, bsp_id)
-    bsp = get(base["Biospecimens"], bsp_id, nothing)
-    isnothing(bsp) && throw(KeyError("Biospecimen id $bsp_id doesn't exist in database"))
-
-    batches = get(bsp, Symbol("sequencing_batch (from seqprep)"), nothing)
+    batches = get(seq, :sequencing_batch, nothing)
     isnothing(batches) && return String[]
     
     return unique([b[:uid] for b in base[batches]])
 end
 
-@assert all(bs-> length(bs) == 1, get_batches.(Ref(base), String.(newtaxa.omni)))
+@assert all(bs-> length(bs) == 1, get_batches.(Ref(base), String.(seqs.sample)))
 
-newtaxa.batch = first.(get_batches.(Ref(base), String.(newtaxa.omni)))
+seqs.batch = first.(get_batches.(Ref(base), String.(seqs.sample)))
 
-b19 = subset(newtaxa, "batch"=> ByRow(==("mgx025")))
-b19 = leftjoin(select(b19, Not(["ageMonths", "cogScore"])), select(updated, "subject", "timepoint", "ageMonths", "cogScore"); on=["subject", "timepoint"])
-
+b19 = subset(seqs, "batch"=> ByRow(==("mgx025")))
+leftjoin!(select!(b19, "subject", "timepoint", "sample"), taxdf; on=["subject", "timepoint", "sample"])
 subset!(b19, AsTable(["ageMonths", "cogScore"])=> ByRow(row-> !any(ismissing, row)))
 
 #-
-
 using GLM
 
 lms = DataFrame()
@@ -87,7 +80,8 @@ using MixedModels
 using CategoricalArrays
 using MultipleTesting
 
-medf = subset(newtaxa, "ageMonths"=> ByRow(a-> !ismissing(a) && a > 18), "cogScore"=> ByRow(!ismissing))
+medf = subset(taxdf, "ageMonths"=> ByRow(a-> !ismissing(a) && a > 18),
+                "cogScore"=> ByRow(!ismissing))
 medf.subject = categorical(medf.subject)
 length(unique(medf.subject))
 
@@ -122,19 +116,19 @@ memods = DataFrame()
 #     "Streptococcus_parasanguinis",
 # ]
 
-for sp in names(medf, r"[A-Z][a-z]+_[a-z]+")
-    indf = select(medf, "ageMonths", "cogScore", "education", "subject", sp)
+for sp in names(taxdf, r"^[A-Z][a-z]+_(sp_(CAG_)?[\d_]+|[a-z]+)")
+    indf = select(medf, "ageMonths", "cogScore", "education", "subject", "read_depth", sp)
 
     
     over0 = indf[!, sp] .> 0
     prev = sum(over0) / size(indf, 1)
     prev < 0.10 && continue
-    ab = asin.(sqrt.(indf[!, sp] ./ sum(indf[!, sp])))
+    ab = asin.(sqrt.(indf[!, sp]))
 
-    df = select(indf, "ageMonths", "cogScore", "education", "subject"; copycols=false)
+    df = select(indf, "ageMonths", "cogScore", "education", "subject", "read_depth"; copycols=false)
     df.bug = ab
 
-    mod = fit(MixedModel, @formula(bug ~ cogScore + ageMonths + education + (1|subject)), df)
+    mod = fit(MixedModel, @formula(bug ~ cogScore + ageMonths + education + read_depth + (1|subject)), df)
     ct = DataFrame(coeftable(mod))
     ct.species .= sp
     ct.kind .= "cogScore"
@@ -142,7 +136,7 @@ for sp in names(medf, r"[A-Z][a-z]+_[a-z]+")
     append!(memods, subset!(ct, "Name"=> ByRow(==("cogScore"))))
 end
 
-memods."qvalue" = adjust(memods."Pr(>|z|)", BenjaminiHochberg())
+memods."qvalue" = MultipleTesting.adjust(memods."Pr(>|z|)", BenjaminiHochberg())
 sort!(memods.qvalue)
 
 #-
