@@ -35,6 +35,7 @@ taxdf = comm2wide(taxa)
 speclms_00to120 = subset(CSV.read(tablefiles("figure2", "lms_species_00to120.csv"), DataFrame), "t"=> ByRow(!isnan))
 speclms_00to06 = subset(CSV.read(tablefiles("figure2", "lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
 speclms_18to120 = subset(CSV.read(tablefiles("figure2", "lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
+subscale_lms = CSV.read(tablefiles("newfigures", "subscale_lms.csv"), DataFrame)
 
 speclms_pa = CSV.read(tablefiles("figure2", "lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
@@ -86,6 +87,114 @@ lms_mat = let
    end)
 end
 ```
+
+```julia
+subscale_mat = let
+    df = @chain subscale_lms begin
+           sort("species")
+           groupby("species")
+           subset("qvalue"=> (q-> any(<(0.2), q)))
+           select("filter", "kind", "species", "qvalue", "t")
+           groupby(["kind", "filter"])
+    end
+    newdf = DataFrame(species = sort(unique(DataFrames.combine(df, "species"=> identity=>"species").species)))
+    for key in keys(df)
+        col = string(replace(key[:kind], "Mullen::mullen_"=>""), "_", key[:filter])
+        leftjoin!(newdf, select(df[key], "species", "qvalue"=> "$(col)_q", "t"=> "$(col)_t"); on = "species")
+    end
+    for col in names(newdf, r"_q$")
+        newdf[!, col] = coalesce.(newdf[!, col], 1.0)
+    end
+    for col in names(newdf, r"_t$")
+        newdf[!, col] = coalesce.(newdf[!, col], 0.0)
+    end
+    newdf 
+end
+
+```
+
+```julia
+fig = Figure(;resolution=(1200,800));
+
+scales = unique(replace.(names(subscale_mat, r"^[A-Z]"), r"_.+"=>""))
+filters = ["00to06", "18to120", "00to120"]
+
+ax1 = Axis(fig[1,1]; xlabel = "subscore", title="0 to 6m", yticks = (range(1.5; stop = size(subscale_mat, 1) + 0.5), subscale_mat.species),
+                    xticks = (range(1.5, length(scales)+0.5), scales),
+                    xticklabelrotation = pi/3)
+ax2 = Axis(fig[1,2]; xlabel = "subscore", title="18 to 120m",
+                    xticks = (range(1.5, length(scales)+0.5), scales),
+                    xticklabelrotation = pi/3)
+ax3 = Axis(fig[1,3]; xlabel = "subscore", title="0 to 120m",
+                    xticks = (range(1.5, length(scales)+0.5), scales),
+                    xticklabelrotation = pi/3)
+
+let
+    clrs = vcat((subscale_mat[:, "$(scale)_00to06_t"] for scale in scales)...)
+    qs = vcat((subscale_mat[:, "$(scale)_00to06_q"] for scale in scales)...)
+    poly!(ax1, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
+        color = clrs, colormap = Reverse(:RdBu))
+
+    annotations!(ax1, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
+        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+        align=(:center, :center))
+end
+let
+    clrs = vcat((subscale_mat[:, "$(scale)_18to120_t"] for scale in scales)...)
+    qs = vcat((subscale_mat[:, "$(scale)_18to120_q"] for scale in scales)...)
+    poly!(ax2, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
+        color = clrs, colormap = Reverse(:RdBu))
+
+    annotations!(ax2, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
+        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+        align=(:center, :center))
+end
+let
+    clrs = vcat((subscale_mat[:, "$(scale)_00to120_t"] for scale in scales)...)
+    qs = vcat((subscale_mat[:, "$(scale)_00to120_q"] for scale in scales)...)
+    poly!(ax3, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
+        color = clrs, colormap = Reverse(:RdBu))
+
+    annotations!(ax3, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
+        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+        align=(:center, :center))
+end
+tightlimits!.([ax1,ax2,ax3])
+fig
+```
+
+```julia
+fig = Figure(;resolution = (1200, 500));
+ax1 = Axis(fig[1,1]; xlabel = "t score", ylabel = "-log(q)", title="0 to 6m")
+ax2 = Axis(fig[1,2]; xlabel = "t score", ylabel = "-log(q)", title="18 to 120m")
+ax3 = Axis(fig[1,3]; xlabel = "t score", ylabel = "-log(q)", title="0 to 120m")
+
+for (i, gdf) in enumerate(groupby(subset(subscale_lms, "filter"=> ByRow(==("00to06"))), "kind"))
+    scheme = ColorSchemes.Paired_10
+    c = [q > 0.2 ? (scheme[i], 0.2) : (scheme[i+1], 1) for q in gdf.qvalue]
+    scatter!(ax1, gdf.t, -1 .* log.(gdf.qvalue); color = c)
+end
+
+for (i, gdf) in enumerate(groupby(subset(subscale_lms, "filter"=> ByRow(==("18to120"))), "kind"))
+    scheme = ColorSchemes.Paired_10
+    c = [q > 0.2 ? (scheme[i], 0.2) : (scheme[i+1], 1) for q in gdf.qvalue]
+    scatter!(ax2, gdf.t, -1 .* log.(gdf.qvalue); color = c)
+end
+
+for (i, gdf) in enumerate(groupby(subset(subscale_lms, "filter"=> ByRow(==("00to120"))), "kind"))
+    scheme = ColorSchemes.Paired_10
+    c = [q > 0.2 ? (scheme[i], 0.2) : (scheme[i+1], 1) for q in gdf.qvalue]
+    scatter!(ax3, gdf.t, -1 .* log.(gdf.qvalue); color = c)
+end
+
+Legend(fig[2, 1:3], [MarkerElement(; marker=:circle, color=ColorSchemes.Paired_10[i*2]) for i in 1:length(unique(subscale_lms.kind))],
+                    [replace(k, "Mullen::mullen_"=>"") for k in unique(subscale_lms.kind)];
+                    orientation=:horizontal,
+                    nbanks = 2)
+
+fig
+```
+  
 
 ## Plotting
 
