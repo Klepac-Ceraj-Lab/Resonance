@@ -36,6 +36,8 @@ speclms_00to120 = subset(CSV.read(tablefiles("figure2", "lms_species_00to120.csv
 speclms_00to06 = subset(CSV.read(tablefiles("figure2", "lms_species_00to06.csv"), DataFrame), "t"=> ByRow(!isnan))
 speclms_18to120 = subset(CSV.read(tablefiles("figure2", "lms_species_18to120.csv"), DataFrame), "t"=> ByRow(!isnan))
 subscale_lms = CSV.read(tablefiles("newfigures", "subscale_lms.csv"), DataFrame)
+subscale_lms.kind[findall(k-> contains(k, "Expressivelan"))] .= "Mullen::mullen_ExpressiveLanguageT"
+
 
 speclms_pa = CSV.read(tablefiles("figure2", "lms_species_18to120_pa.csv"), DataFrame)
 fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
@@ -114,56 +116,6 @@ end
 ```
 
 ```julia
-fig = Figure(;resolution=(1200,800));
-
-scales = unique(replace.(names(subscale_mat, r"^[A-Z]"), r"_.+"=>""))
-filters = ["00to06", "18to120", "00to120"]
-
-ax1 = Axis(fig[1,1]; xlabel = "subscore", title="0 to 6m", yticks = (range(1.5; stop = size(subscale_mat, 1) + 0.5), subscale_mat.species),
-                    xticks = (range(1.5, length(scales)+0.5), scales),
-                    xticklabelrotation = pi/3)
-ax2 = Axis(fig[1,2]; xlabel = "subscore", title="18 to 120m",
-                    xticks = (range(1.5, length(scales)+0.5), scales),
-                    xticklabelrotation = pi/3)
-ax3 = Axis(fig[1,3]; xlabel = "subscore", title="0 to 120m",
-                    xticks = (range(1.5, length(scales)+0.5), scales),
-                    xticklabelrotation = pi/3)
-
-let
-    clrs = vcat((subscale_mat[:, "$(scale)_00to06_t"] for scale in scales)...)
-    qs = vcat((subscale_mat[:, "$(scale)_00to06_q"] for scale in scales)...)
-    poly!(ax1, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
-        color = clrs, colormap = Reverse(:RdBu))
-
-    annotations!(ax1, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
-        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
-        align=(:center, :center))
-end
-let
-    clrs = vcat((subscale_mat[:, "$(scale)_18to120_t"] for scale in scales)...)
-    qs = vcat((subscale_mat[:, "$(scale)_18to120_q"] for scale in scales)...)
-    poly!(ax2, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
-        color = clrs, colormap = Reverse(:RdBu))
-
-    annotations!(ax2, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
-        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
-        align=(:center, :center))
-end
-let
-    clrs = vcat((subscale_mat[:, "$(scale)_00to120_t"] for scale in scales)...)
-    qs = vcat((subscale_mat[:, "$(scale)_00to120_q"] for scale in scales)...)
-    poly!(ax3, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
-        color = clrs, colormap = Reverse(:RdBu))
-
-    annotations!(ax3, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
-        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
-        align=(:center, :center))
-end
-tightlimits!.([ax1,ax2,ax3])
-fig
-```
-
-```julia
 fig = Figure(;resolution = (1200, 500));
 ax1 = Axis(fig[1,1]; xlabel = "t score", ylabel = "-log(q)", title="0 to 6m")
 ax2 = Axis(fig[1,2]; xlabel = "t score", ylabel = "-log(q)", title="18 to 120m")
@@ -204,11 +156,11 @@ figure = Figure(resolution=(1200, 900));
 AB = GridLayout(figure[1,1:3])
 A = GridLayout(AB[1,1:2])
 B = GridLayout(AB[1,3])
-C = GridLayout(figure[2,1:2])
+C = GridLayout(figure[2,1:2]; alignmode=Mixed(; left=0, bottom=0))
 DE = GridLayout(figure[2,3])
 D = GridLayout(DE[1,1])
 E = GridLayout(DE[2,1])
-F = GridLayout(figure[3,1:3], alignmode=Mixed(; left=0))
+F = GridLayout(figure[3,1:3]; alignmode=Mixed(; left=0))
 
 #-
 
@@ -228,7 +180,8 @@ scatter!(aax2, speclms_00to120.coef, -1 .* log2.(speclms_00to120.qvalue);
 
 #-
 
-bax1 = Axis(B[1, 1]; 
+bax1 = Axis(B[1, 1];
+    title = "over 18m",
     yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
     yticklabelsize = 14,
@@ -238,7 +191,7 @@ bax1 = Axis(B[1, 1];
 bax1.xticklabelsvisible = false
 bax1.xticksvisible = false
 
-bax2 = Axis(B[1, 2])
+bax2 = Axis(B[1, 2]; title = "all ages")
 
 bax2.xticklabelsvisible = false
 bax2.xticksvisible = false
@@ -255,7 +208,19 @@ let clrs = [isnan(x) ? 0.0 : x for x in lms_mat[:, "corr_18to120"]]
     
     
     qs = lms_mat[:, "q_18to120"]
-    annotations!(bax1, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(1, i + 0.2) for i in eachindex(lms_mat.feature)];
+    annotations!(bax1, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(1.5, i + 0.2) for i in eachindex(lms_mat.feature)];
+    color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+    align=(:center, :center))
+end
+let clrs = [isnan(x) ? 0.0 : x for x in lms_mat[:, "corr_00to120"]]
+    
+    poly!(bax2, [Rect(1, i, 1, 1) for i in eachindex(lms_mat.feature)]; 
+        color = clrs, colorrange=(-0.3, 0.3),
+        colormap = Reverse(:RdBu))
+    
+    
+    qs = lms_mat[:, "q_00to120"]
+    annotations!(bax2, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(1.5, i + 0.2) for i in eachindex(lms_mat.feature)];
     color = [abs(x) > 0.2 ? :white : :black for x in clrs],
     align=(:center, :center))
 end
@@ -268,23 +233,72 @@ Colorbar(B[1,3];
 
 
 rowgap!(B, Fixed(4))
-```
+
+#-
+
+scales = unique(replace.(names(subscale_mat, r"^[A-Z]"), r"_.+"=> ""))
+scales_names = map(scales) do n
+    m = match(r"([A-Z][a-z]+)([A-Z][a-z]+)T", n)
+    isnothing(m) && error("$n doesn't match")
+    return string(m[1], " ", replace(m[2], "Language"=> "Lang."))
+end
+
+filters = ["00to06", "18to120", "00to120"]
+
+cax1 = Axis(C[1,1]; xlabel = "subscore", title="under 6m", yticks = (range(1.5; stop = size(subscale_mat, 1) + 0.5), subscale_mat.species),
+                    xticks = (range(1.5, length(scales)+0.5), scales_names),
+                    xticklabelrotation = pi/4)
+cax1.xticksvisible = false
+cax1.xticklabelsvisible = false
+
+cax2 = Axis(C[1,2]; xlabel = "subscore", title="18 to 48m",
+                    xticks = (range(1.5, length(scales)+0.5), scales_names),
+                    xticklabelrotation = pi/4)
+cax2.xticksvisible = false
+cax2.xticklabelsvisible = false
+
+cax3 = Axis(C[1,3]; xlabel = "subscore", title="0 to 48m",
+                    xticks = (range(1.5, length(scales)+0.5), scales_names),
+                    xticklabelrotation = pi/4)
+cax3.xticksvisible = false
+cax3.xticklabelsvisible = false
 
 
-```julia
 let
-    gs = "Acetate synthesis II"
-    panel = C
-    ixs = neuroactive_00to06[gs]
-    cs = filter(!isnan, cors_00to06.t[ixs])
-    acs = filter(!isnan, cors_00to06.t[Not(ixs)])
+    clrs = vcat((subscale_mat[:, "$(scale)_00to06_t"] for scale in scales)...)
+    qs = vcat((subscale_mat[:, "$(scale)_00to06_q"] for scale in scales)...)
+    poly!(cax1, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
+        color = clrs, colormap = Reverse(:PuOr))
 
-    (_, cax, _) = Resonance.plot_fsea!(panel, cs, acs;
-        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "")
-    Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
-    rowgap!(panel, 2, Fixed(4))
-    
+    annotations!(cax1, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
+        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+        align=(:center, :center))
+end
+let
+    clrs = vcat((subscale_mat[:, "$(scale)_18to120_t"] for scale in scales)...)
+    qs = vcat((subscale_mat[:, "$(scale)_18to120_q"] for scale in scales)...)
+    poly!(cax2, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
+        color = clrs, colormap = Reverse(:PuOr))
+
+    annotations!(cax2, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
+        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+        align=(:center, :center))
+end
+let
+    clrs = vcat((subscale_mat[:, "$(scale)_00to120_t"] for scale in scales)...)
+    qs = vcat((subscale_mat[:, "$(scale)_00to120_q"] for scale in scales)...)
+    poly!(cax3, [Rect(j, i, 1, 1) for j in eachindex(scales) for i in eachindex(subscale_mat.species)]; 
+        color = clrs, colormap = Reverse(:PuOr))
+
+    annotations!(cax3, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in eachindex(scales) for i in eachindex(subscale_mat.species)];
+        color = [abs(x) > 0.2 ? :white : :black for x in clrs],
+        align=(:center, :center))
+end
+tightlimits!.([cax1,cax2,cax3])
+
+#-
+
+let
     gs = "Propionate degradation I"
     panel = D
     ixs = neuroactive_00to06[gs]
@@ -297,37 +311,22 @@ let
     Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
     
-    gs = "Glutamate synthesis II"
+    gs = "Propionate degradation I"
     panel = E
     ixs = neuroactive_18to120[gs]
     cs = filter(!isnan, cors_18to120.t[ixs])
     acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
-    (_, eax, _) =  Resonance.plot_fsea!(panel, cs, acs;
-        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "", xticks = -0.2:0.1:0.0)
-    Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
-    rowgap!(panel, 2, Fixed(4))
-
-
-    gs = "Propionate degradation I"
-    panel = F
-    ixs = neuroactive_18to120[gs]
-    cs = filter(!isnan, cors_18to120.t[ixs])
-    acs = filter(!isnan, cors_18to120.t[Not(ixs)])
-
-    (_, fax, _) = Resonance.plot_fsea!(panel, cs, acs;
+    (_, eax, _) = Resonance.plot_fsea!(panel, cs, acs;
         label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
         ylabel = "")
     Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
-    linkyaxes!(cax, dax, eax, fax)
+    linkyaxes!(dax, eax)
 end
 
-```
+#-
 
-
-```julia
 let
     genesets = union(subset(fsdf2_00to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
                      subset(fsdf2_00to06, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
@@ -335,7 +334,7 @@ let
     )
   
     df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
-    ax = Axis(G[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+    ax = Axis(F[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="T stat", title="All ages", alignmode=Mixed(; left=-15))
     m = median(filter(x-> !isnan(x) && x < 7, cors_00to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
@@ -356,7 +355,7 @@ let
     ####
 
     df = sort(subset(fsdf2_00to06, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
-    ax = Axis(G[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+    ax = Axis(F[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="T stat", title="Under 6mo")
     hideydecorations!(ax, grid=false)
 
@@ -379,7 +378,7 @@ let
     ####
 
     df = sort(subset(fsdf2_18to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
-    ax = Axis(G[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+    ax = Axis(F[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
                 xlabel="T stat", title="over 18")
     hideydecorations!(ax, grid=false)
     m = median(filter(x-> !isnan(x) && x < 7, cors_18to120.t))
@@ -398,7 +397,7 @@ let
     end
     vlines!(ax, m; linestyle=:dash, color=:darkgray)
 
-    Legend(G[1,4], [MarkerElement(; color = (c, 0.5),
+    Legend(F[1,4], [MarkerElement(; color = (c, 0.5),
                                     marker=:circle,
                                     strokecolor=:gray,
                                     strokewidth=0.5) for c in colors[[1:3..., 5:7...]]],
@@ -407,22 +406,28 @@ let
 end
 
 # rowsize!(figure.layout, 3, Relative(2/5))
-colgap!(G, Fixed(4))
-```
+colgap!(F, Fixed(4))
 
-```julia
+#-
+
 Label(AB[1, 1, TopLeft()], "A",
     fontsize = 26,
     font = "Open Sans Bold",
     padding = (0, 30, 5, 0),
     halign = :right)
-Label(AB[1, 2, TopLeft()], "B",
+Label(AB[1, 3, TopLeft()], "B",
     fontsize = 26,
     font = "Open Sans Bold",
     padding = (0, 150, 5, 0),
     halign = :right)
 
-for (label, layout) in zip(["C", "D", "E", "F"], [C, D, E, F])
+Label(C[1, 1, TopLeft()], "C",
+    fontsize = 26,
+    font = "Open Sans Bold",
+    padding = (0, 230, 5, 0),
+    halign = :right)
+
+for (label, layout) in zip(["D", "E"], [D, E])
     Label(layout[1, 1, TopLeft()], label,
         fontsize = 26,
         font = "Open Sans Bold",
@@ -430,15 +435,17 @@ for (label, layout) in zip(["C", "D", "E", "F"], [C, D, E, F])
         halign = :right)
 end
 
-Label(figure[3, 1, TopLeft()], "G";
+Label(figure[3, 1, TopLeft()], "F";
              fontsize = 26,
              font = "Open Sans Bold",
              padding = (0, 30, 5, 0),
              halign = :right
        )
 
-rowsize!(figure.layout, 1, Relative(2/5))
-colsize!(G, 1, Relative(3/8))
+rowsize!(figure.layout, 1, Relative(1/4))
+rowsize!(figure.layout, 3, Relative(1/4))
+colsize!(AB, 3, Relative(1/4))
+colsize!(F, 1, Relative(2/5))
 figure
 ```
 
