@@ -151,7 +151,7 @@ fig
 ## Plotting
 
 ```julia
-figure = Figure(resolution=(1200, 900));
+figure = Figure(resolution=(1200, 1000));
 
 AB = GridLayout(figure[1,1:3])
 A = GridLayout(AB[1,1:2])
@@ -164,11 +164,11 @@ F = GridLayout(figure[3,1:3]; alignmode=Mixed(; left=0))
 
 #-
 
-aax1 = Axis(A[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.",
+aax1 = Axis(A[1,1]; title = "over 18m", ylabel=L"$-log_2(P)$", xlabel = "coef.",
                 xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
                 limits = ((-1.5e-3, 1.5e-3), nothing),
                 xminorticksvisible=true, xminorticks = IntervalsBetween(3))
-aax2 = Axis(A[1,2]; title = "all ages", ylabel=L"$-log_2(P)$", xlabel = "Coef.",
+aax2 = Axis(A[1,2]; title = "all ages", ylabel=L"$-log_2(P)$", xlabel = "coef.",
                 xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
                 limits = ((-1.5e-3, 1.5e-3), nothing),
                 xminorticksvisible=true, xminorticks = IntervalsBetween(3))
@@ -180,9 +180,16 @@ scatter!(aax2, speclms_00to120.coef, -1 .* log2.(speclms_00to120.qvalue);
 
 #-
 
+bylabs = map(replace.(lms_mat.feature, "_"=> " ")) do lab
+    parts = split(lab, " ")
+    parts[2] == "sp" && (parts[2] = "sp.")
+    lab = rich(join(parts[1:2], " "); font=:italic)
+    length(parts) > 2 ? rich(lab, " ", join(parts[3:end], " "); font=:regular) : lab
+end
+
 bax1 = Axis(B[1, 1];
     title = "over 18m",
-    yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
+    yticks = (1.5:nrow(lms_mat) + 0.5, bylabs),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
     yticklabelsize = 14,
     xticklabelsize = 12
@@ -227,12 +234,12 @@ end
 
 Colorbar(B[1,3];
     colormap=Reverse(:RdBu),
-    label="Correlation",
+    label="correlation",
     limits=(-0.3, 0.3)
 )
 
 
-rowgap!(B, Fixed(4))
+colgap!(B, Fixed(4))
 
 #-
 
@@ -242,27 +249,33 @@ scales_names = map(scales) do n
     isnothing(m) && error("$n doesn't match")
     return string(m[1], " ", replace(m[2], "Language"=> "Lang."))
 end
+cylabs = map(replace.(subscale_mat.species, "_"=> " ")) do lab
+    parts = split(lab, " ")
+    parts[2] == "sp" && (parts[2] = "sp.")
+    lab = rich(join(parts[1:2], " "); font=:italic)
+    length(parts) > 2 ? rich(lab, " ", join(parts[3:end], " "); font=:regular) : lab
+end
 
 filters = ["00to06", "18to120", "00to120"]
 
-cax1 = Axis(C[1,1]; xlabel = "subscore", title="under 6m", yticks = (range(1.5; stop = size(subscale_mat, 1) + 0.5), subscale_mat.species),
-                    xticks = (range(1.5, length(scales)+0.5), scales_names),
-                    xticklabelrotation = pi/4)
-cax1.xticksvisible = false
-cax1.xticklabelsvisible = false
+cax1 = Axis(C[1,1]; xlabel = "subscore", title="under 6m", 
+    yticklabelfont = "TeX Gyre Heros Makie Italic",
+    yticklabelsize = 14,
+    yticks = (range(1.5; stop = size(subscale_mat, 1) + 0.5), cylabs),
+    xticks = (range(1.5, length(scales)+0.5), lowercase.(scales_names)),
+    xticklabelrotation = pi/4)
 
 cax2 = Axis(C[1,2]; xlabel = "subscore", title="18 to 48m",
-                    xticks = (range(1.5, length(scales)+0.5), scales_names),
+                    xticks = (range(1.5, length(scales)+0.5), lowercase.(scales_names)),
                     xticklabelrotation = pi/4)
-cax2.xticksvisible = false
-cax2.xticklabelsvisible = false
+cax2.yticksvisible = false
+cax2.yticklabelsvisible = false
 
 cax3 = Axis(C[1,3]; xlabel = "subscore", title="0 to 48m",
-                    xticks = (range(1.5, length(scales)+0.5), scales_names),
+                    xticks = (range(1.5, length(scales)+0.5), lowercase.(scales_names)),
                     xticklabelrotation = pi/4)
-cax3.xticksvisible = false
-cax3.xticklabelsvisible = false
-
+cax3.yticksvisible = false
+cax3.yticklabelsvisible = false
 
 let
     clrs = vcat((subscale_mat[:, "$(scale)_00to06_t"] for scale in scales)...)
@@ -296,6 +309,12 @@ let
 end
 tightlimits!.([cax1,cax2,cax3])
 
+Colorbar(C[1,4];
+    colormap=Reverse(:PuOr),
+    label="T score",
+    limits=round.(extrema(Matrix(select(subscale_mat, r"_t$"))); digits=1)
+)
+colgap!(C, Fixed(4))
 #-
 
 let
@@ -306,9 +325,9 @@ let
     acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
     (_, dax, _) = Resonance.plot_fsea!(panel, cs, acs;
-        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "", xticks = -0.7:0.2:0.0)
-    Label(panel[3,1], "Under 6m"; tellheight=true, tellwidth=false)
+        label = "Under 6m",
+        xticks = -0.7:0.2:0.0)
+    Label(panel[3,1], replace(lowercase(gs), "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""); tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
     
     gs = "Propionate degradation I"
@@ -318,9 +337,9 @@ let
     acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
     (_, eax, _) = Resonance.plot_fsea!(panel, cs, acs;
-        label = replace(gs, "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""),
-        ylabel = "")
-    Label(panel[3,1], "Over 18m"; tellheight=true, tellwidth=false)
+        label = "Over 18m",
+        )
+    Label(panel[3,1], replace(lowercase(gs), "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""); tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
     linkyaxes!(dax, eax)
 end
@@ -328,37 +347,14 @@ end
 #-
 
 let
-    genesets = union(subset(fsdf2_00to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
-                     subset(fsdf2_00to06, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
-                     subset(fsdf2_18to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset
-    )
+    genesets = union(subset(fsdf2_00to06, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(fsdf2_18to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(fsdf2_00to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset
+               )
   
-    df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
-    ax = Axis(F[1,1]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="T stat", title="All ages", alignmode=Mixed(; left=-15))
-    m = median(filter(x-> !isnan(x) && x < 7, cors_00to120.t))
-    colors = ColorSchemes.colorschemes[:RdBu_7]
-
-    for (i, row) in enumerate(eachrow(df))
-        sign = row.enrichment < 0 ? "neg" : "pos"
-        c = row.qvalue > 0.2 ? :white : 
-            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
-            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
-            sign == "pos" ? colors[1] : colors[7]
-
-        y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_00to120[row.geneset]])
-        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
-        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
-    end
-    vlines!(ax, m; linestyle=:dash, color=:darkgray)
-
-    ####
-
     df = sort(subset(fsdf2_00to06, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
-    ax = Axis(F[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="T stat", title="Under 6mo")
-    hideydecorations!(ax, grid=false)
-
+    ax = Axis(F[1,1]; yticks = (1:nrow(df), replace.(lowercase.(df.geneset), r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="T stat", title="under 6m", alignmode=Mixed(; left=-15))
     m = median(filter(x-> !isnan(x) && x < 7, cors_00to06.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
@@ -378,9 +374,10 @@ let
     ####
 
     df = sort(subset(fsdf2_18to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
-    ax = Axis(F[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
-                xlabel="T stat", title="over 18")
+    ax = Axis(F[1,2]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="T stat", title="over 18m")
     hideydecorations!(ax, grid=false)
+
     m = median(filter(x-> !isnan(x) && x < 7, cors_18to120.t))
     colors = ColorSchemes.colorschemes[:RdBu_7]
 
@@ -392,6 +389,28 @@ let
             sign == "pos" ? colors[1] : colors[7]
 
         y = filter(x-> !isnan(x) && x < 7, cors_18to120.t[neuroactive_18to120[row.geneset]])
+        scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
+        row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
+    end
+    vlines!(ax, m; linestyle=:dash, color=:darkgray)
+
+    ####
+
+    df = sort(subset(fsdf2_00to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
+    ax = Axis(F[1,3]; yticks = (1:nrow(df), replace.(df.geneset, r" \(.+?\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="T stat", title="all ages")
+    hideydecorations!(ax, grid=false)
+    m = median(filter(x-> !isnan(x) && x < 7, cors_00to120.t))
+    colors = ColorSchemes.colorschemes[:RdBu_7]
+
+    for (i, row) in enumerate(eachrow(df))
+        sign = row.enrichment < 0 ? "neg" : "pos"
+        c = row.qvalue > 0.2 ? :white : 
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
+
+        y = filter(x-> !isnan(x) && x < 7, cors_00to120.t[neuroactive_18to120[row.geneset]])
         scatter!(ax, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
         row.qvalue < 0.2 && lines!(ax, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
     end
@@ -424,7 +443,8 @@ Label(AB[1, 3, TopLeft()], "B",
 Label(C[1, 1, TopLeft()], "C",
     fontsize = 26,
     font = "Open Sans Bold",
-    padding = (0, 230, 5, 0),
+    padding = (0, 0, 0, 0),
+    tellwidth = false,
     halign = :right)
 
 for (label, layout) in zip(["D", "E"], [D, E])
@@ -442,13 +462,12 @@ Label(figure[3, 1, TopLeft()], "F";
              halign = :right
        )
 
-rowsize!(figure.layout, 1, Relative(1/4))
-rowsize!(figure.layout, 3, Relative(1/4))
+rowsize!(figure.layout, 1, Relative(1/5))
+rowsize!(figure.layout, 3, Relative(1/5))
 colsize!(AB, 3, Relative(1/4))
 colsize!(F, 1, Relative(2/5))
 figure
 ```
-
 
 ```julia
 save("manuscript/assets/Figure2.png", figure)
