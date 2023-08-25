@@ -199,89 +199,72 @@ fig
 ## Plotting
 
 ```julia
-figure = Figure(resolution=(1200, 900))
+figure = Figure(resolution=(1200, 900));
 
-AB = GridLayout(figure[1,1])
-CDEF = GridLayout(figure[2,1])
-C = GridLayout(CDEF[1, 1])
-D = GridLayout(CDEF[1, 2])
-E = GridLayout(CDEF[1, 3])
-F = GridLayout(CDEF[1, 4])
-G = GridLayout(figure[3,1], alignmode=Mixed(; left=0))
-```
+AB = GridLayout(figure[1,1:3])
+A = GridLayout(AB[1,1:2])
+B = GridLayout(AB[1,3])
+C = GridLayout(figure[2,1:2])
+DE = GridLayout(figure[2,3])
+D = GridLayout(DE[1,1])
+E = GridLayout(DE[2,1])
+F = GridLayout(figure[3,1:3], alignmode=Mixed(; left=0))
 
-```julia
-aax = Axis(AB[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.",
+#-
+
+aax1 = Axis(A[1,1]; title = "over 18mo", ylabel=L"$-log_2(P)$", xlabel = "Coef.",
+                xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
+                limits = ((-1.5e-3, 1.5e-3), nothing),
+                xminorticksvisible=true, xminorticks = IntervalsBetween(3))
+aax2 = Axis(A[1,2]; title = "all ages", ylabel=L"$-log_2(P)$", xlabel = "Coef.",
                 xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
                 limits = ((-1.5e-3, 1.5e-3), nothing),
                 xminorticksvisible=true, xminorticks = IntervalsBetween(3))
 
-scatter!(aax, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
+scatter!(aax1, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
     color = map(q-> q < 0.2 ? ColorSchemes.tableau_10[3] : ColorSchemes.tableau_10[10], speclms_18to120.qvalue))
-```
-```julia
-B = GridLayout(AB[1, 2:3])
+scatter!(aax2, speclms_00to120.coef, -1 .* log2.(speclms_00to120.qvalue);
+    color = map(q-> q < 0.2 ? ColorSchemes.tableau_10[3] : ColorSchemes.tableau_10[10], speclms_00to120.qvalue))
 
-bax1 = let groups = ["0-120m", "0-6m", "18-120m"]
-    Axis(B[1, 1]; xticks = (1.5:length(groups) + 0.5, groups), 
-                  yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
-                  yticklabelfont = "TeX Gyre Heros Makie Italic",
-                  yticklabelsize = 14,
-                  xticklabelsize = 12
-                  )
-end
-bax2 = let groups = ["0-120m", "0-6m", "18-120m"]
-    Axis(B[1, 2]; xticks = (1.5:length(groups) + 0.5, groups), 
-                  xticklabelsize = 12)
-end
+#-
+
+bax1 = Axis(B[1, 1]; 
+    yticks = (1.5:nrow(lms_mat) + 0.5, replace.(lms_mat.feature, "_"=>" ")),
+    yticklabelfont = "TeX Gyre Heros Makie Italic",
+    yticklabelsize = 14,
+    xticklabelsize = 12
+)
+
+bax1.xticklabelsvisible = false
+bax1.xticksvisible = false
+
+bax2 = Axis(B[1, 2])
+
+bax2.xticklabelsvisible = false
+bax2.xticksvisible = false
 bax2.yticklabelsvisible = false
 bax2.yticksvisible = false
-bax3 = let groups = ["0-120m", "0-6m", "18-120m"]
-    Axis(B[1, 3]; xticks = (1.5:length(groups) + 0.5, groups), 
-                  xticklabelsize = 12)
-end
-bax3.yticksvisible = false
-bax3.yticklabelsvisible = false
 
-for ax in (bax1, bax2, bax3)
-    tightlimits!(ax)
-end
+tightlimits!.((bax1, bax2))
 
-let clrs = vcat((lms_mat[:, "prev_$group"] for group in ("00to120", "00to06", "18to120"))...)
-    poly!(bax1, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
-        color = clrs, colormap = :viridis)
-    Colorbar(B[2,1]; colormap=:viridis, colorrange=extrema(clrs),
-                    vertical = false, flipaxis = false,
-                    label="Prevalence",
-                    )
-end
-
-let clrs = log.(vcat((lms_mat[:, "meanab_$group"] for group in ("00to120", "00to06", "18to120"))...))
-    poly!(bax2, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
-        color = clrs, colormap=:batlow)
-    Colorbar(B[2,2]; colormap=:batlow, colorrange=extrema(clrs),
-                    vertical=false, flipaxis=false,
-                    label="Mean abundance (log)",
-                    )
-end
-
-let clrs = [isnan(x) ? 0.0 : x for x in vcat((lms_mat[:, "corr_$group"] for group in ("00to120", "00to06", "18to120"))...)]
+let clrs = [isnan(x) ? 0.0 : x for x in lms_mat[:, "corr_18to120"]]
     
-    poly!(bax3, [Rect(j, i, 1, 1) for j in 1:3 for i in eachindex(lms_mat.feature)]; 
+    poly!(bax1, [Rect(1, i, 1, 1) for i in eachindex(lms_mat.feature)]; 
         color = clrs, colorrange=(-0.3, 0.3),
         colormap = Reverse(:RdBu))
     
     
-    Colorbar(B[2,3]; colormap=Reverse(:RdBu),
-                    vertical = false, flipaxis = false,
-                    label="Correlation",
-                    limits=(-0.3, 0.3))
-
-    qs = vcat((lms_mat[:, "q_$group"] for group in ("00to120", "00to06", "18to120"))...)
-    annotations!(bax3, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(j + 0.5, i + 0.2) for j in 1:3 for i in eachindex(lms_mat.feature)];
+    qs = lms_mat[:, "q_18to120"]
+    annotations!(bax1, map(x-> x < 0.05 ? "**" : x < 0.2 ? "*" : "", qs), [Point2f(1, i + 0.2) for i in eachindex(lms_mat.feature)];
     color = [abs(x) > 0.2 ? :white : :black for x in clrs],
     align=(:center, :center))
 end
+
+Colorbar(B[1,3];
+    colormap=Reverse(:RdBu),
+    label="Correlation",
+    limits=(-0.3, 0.3)
+)
 
 
 rowgap!(B, Fixed(4))
