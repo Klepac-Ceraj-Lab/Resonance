@@ -71,20 +71,20 @@ using `git`, or by selecting the most recent release
 from the [releases page](https://github.com/Klepac-Ceraj-Lab/Resonance/releases).
 Then, run julia, and [activate this project](https://pkgdocs.julialang.org/v1/environments/#Using-someone-else's-project).
 If julia is installed in your system `PATH`,
-you can activate it directly from the command line using `julia --project=.`. 
+you can activate it directly from the command line using `julia --project=@.`. 
 For example, if you downloaded and unpacked the code in your `Documents` directory,
 you can run:
 
 ```
 $ cd Documents/Resonance
 
-$ julia --project=.
+$ julia --project=@.
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
   (_)     | (_) (_)    |
    _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
   | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.8.5 (2023-01-08)
+  | | |_| | | | (_| |  |  Version 1.9.2 (2023-07-05)
  _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
 |__/                   |
 
@@ -100,7 +100,7 @@ and then activate the project from the REPL:
   (_)     | (_) (_)    |
    _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
   | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.8.5 (2023-01-08)
+  | | |_| | | | (_| |  |  Version 1.9.2 (2023-07-05)
  _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
 |__/                   |
 
@@ -119,7 +119,7 @@ run `instantiate` from the `Pkg` REPL
 
 ```
 (Resonance) pkg> instantiate
-  Installed SIMDDualNumbers ────────────────── v0.1.1
+  Installed SIMDDualNumbers ────────────────── v0.1.1                                                     
   Installed StatsFuns ──────────────────────── v1.1.1
   Installed CategoricalDistributions ───────── v0.1.9
   Installed JpegTurbo_jll ──────────────────── v2.1.2+0

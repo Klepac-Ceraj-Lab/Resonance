@@ -2,9 +2,9 @@
 
 
 function load_raw_metadata(;
-    subject_centric_path = datafiles("Subject_centric_120522.xlsx"),
-    sample_centric_path  = datafiles("Sample_centric_120522.xlsx"),
-    timepoint_centric_path = datafiles("Timepoint_centric_120522.xlsx"))
+    subject_centric_path = datafiles("Participant_Centric_081023.xlsx"),
+    sample_centric_path  = datafiles("Sample_Centric_081023.xlsx"),
+    timepoint_centric_path = datafiles("Timepoint_Centric_081023.xlsx"))
 
     samplemeta = @chain airtable_metadata() begin
         groupby(["subject", "timepoint"])
@@ -15,7 +15,8 @@ function load_raw_metadata(;
 
     fmp_samples = @chain DataFrame(XLSX.readtable(sample_centric_path, "Sheet1", infer_eltypes=true)) begin
         rename!(Dict("studyID"=> "subject", "collectionNum"=> "timepoint", "SampleID"=>"sample"))
-        subset!("subject"   => ByRow(s-> s in samplemeta.subject),
+        subset!("sample"    => ByRow(!ismissing),
+                "subject"   => ByRow(s-> !ismissing(s) && s in samplemeta.subject),
                 "timepoint" => ByRow(!ismissing))
     end
 
@@ -32,15 +33,16 @@ function load_raw_metadata(;
 
     fmp_alltp = leftjoin(fmp_timepoint, fmp_subject, on=["subject"])
 
-    fmp_alltp.ageMonths = map(eachrow(fmp_alltp)) do row
-        if ismissing(row.scanAgeMonths)
-            (row.assessmentAgeDays ./ 365 .* 12) .+ row.assessmentAgeMonths
-        else
-            (row.scanAgeDays ./ 365 .* 12) .+ row.scanAgeMonths
-        end
-    end
+    transform!(fmp_alltp, AsTable(["assessmentAgeDays", "assessmentAgeMonths", "scanAgeDays", "scanAgeMonths"]) => ByRow(row-> begin
+        aad, aam, sad, sam = row
+        calcage = coalesce(aad / 365 * 12 + aam, sad / 365 * 12 + sam)
+
+        return calcage
+        end) => "ageMonths"
+    )
 
     @assert nrow(unique(fmp_alltp, ["subject", "timepoint"])) == nrow(fmp_alltp)
+
 
     DataFrames.transform!(groupby(fmp_alltp, :subject), :mother_HHS_Education => (r->coalesce(r...)) => :hhs)
     fmp_alltp.education = let
@@ -97,15 +99,21 @@ function load_raw_metadata(;
 end
 
 
-function load_raw_metaphlan()
-    df = DataFrame(file = filter(f-> contains(f, r"FG\d+_S\d+_profile"), readdir(analysisfiles("metaphlan"), join=true)))
+function load_raw_metaphlan(; samples = nothing)
+    df = DataFrame(file = filter(readdir(analysisfiles("metaphlan"), join=true)) do f
+        fname = String(basename(f))
+        contains(fname, r"SEQ\d+_S\d+_profile") || return false 
+        isnothing(samples) && return true
+        m = match(r"(SEQ\d+)_(S\d+)_", fname)
+        return m[1] ∈ samples || join(m.captures, '_') ∈ samples
+    end)
     df.sample = map(s-> replace(s, "_profile.tsv"=> ""), basename.(df.file))
     df.sample_base = map(s-> replace(s, r"_S\d+"=>""), df.sample)
 
     knead = load(ReadCounts())
     taxa = metaphlan_profiles(df.file; samples = df.sample)
     set!(taxa, df)
-    set!(taxa, select(knead, "sample_uid"=>"sample", AsTable(["final pair1", "final pair2"])=> ByRow(row-> row[1]+row[2]) =>"read_depth"))
+    set!(taxa, select(knead, "sample_uid"=> "sample", AsTable(r"final")=> ByRow(sum) =>"read_depth"))
     taxa
 end
 

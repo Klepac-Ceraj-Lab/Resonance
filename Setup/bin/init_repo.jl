@@ -1,6 +1,6 @@
 using Comonicon
 using Setup
-import Setup: datadownload, Taxa, Timepoints, Neuro, ECs, Unirefs
+import Setup: datadownload, Taxa, Timepoints, Neuro, ECs, Unirefs, KOs
 
 """
 Set up your environment for use with analysis scripts

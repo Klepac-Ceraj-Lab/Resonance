@@ -161,7 +161,7 @@ function plot_fsea(setcors, notcors; label="", ylabel="enrichment", kwargs...)
     fig, ax1, ax2
 end
 
-function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", linecolor=:gray, kwargs...)
+function plot_fsea!(grid, setcors, notcors; title="", ylabel="", linecolor=:gray, kwargs...)
     fullcors = [setcors; notcors]
     ncors = length(fullcors)
 
@@ -176,9 +176,8 @@ function plot_fsea!(grid, setcors, notcors; label="", ylabel="enrichment", linec
     ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks)) .* -1
     
     t = "ES: $(round(enrichment_score(setcors, notcors), digits=3))"
-    !isempty(label) && (t = string(label, " ", t))
 
-    ax1 = Axis(grid[1,1]; title=t, ylabel, kwargs...)
+    ax1 = Axis(grid[1,1]; title, ylabel=isempty(ylabel) ? t : ylabel, kwargs...)
     hidexdecorations!(ax1)
 
     ax2 = Axis(grid[2,1])

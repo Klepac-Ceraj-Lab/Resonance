@@ -1,5 +1,5 @@
 function write_arrow(filename, cmp::CommunityProfile; unirefs = false)
-    df = DataFrame(metadata(cmp))
+    df = DataFrame(get(cmp))
     @debug "filtering profile"
     cmp = cmp[sort(ThreadsX.unique(first(findnz(abundances(cmp))))), :]
     @debug "getting features and samples"
@@ -46,11 +46,12 @@ function read_arrow(filename; featurefunc = taxon, unirefs = false)
     fs = [featurefunc(line) for line in eachline(IOBuffer(mdt["features"]))]
     @info "getting samples"
     mdt = DataFrame(
-        sample = [MicrobiomeSample(line) for line in eachline(IOBuffer(mdt["samples"]))],
+        sample = [MicrobiomeSample(replace(line, r"_S\d+" => "")) for line in eachline(IOBuffer(mdt["samples"]))],
         read_depth = map(l-> l=="missing" ? missing : parse(Float64, l), eachline(IOBuffer(mdt["reads"]))),
     )
-    mdt.sample_base = replace.(name.(mdt.sample), r"_S\d+" => "")
-    CommunityProfile(mat, fs, mdt.sample)
+    comm = CommunityProfile(mat, fs, mdt.sample)
+    set!(comm, DataFrames.transform(mdt, "sample"=> ByRow(name)=> "sample"))
+    return comm
 end
 
 function comm2wide(cmp::CommunityProfile; feature_filter=identity, sample_filter=identity, feature_func=name)

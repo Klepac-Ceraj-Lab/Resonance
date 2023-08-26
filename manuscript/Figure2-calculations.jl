@@ -3,7 +3,7 @@ using CairoMakie
 using Statistics
 using HypothesisTests
 using MultipleTesting
-using KernelDensity
+# using KernelDensity
 using MultivariateStats
 using Distributions
 using CategoricalArrays
@@ -21,13 +21,23 @@ isdir(tablefiles("figure2")) || mkpath(tablefiles("figure2"))
 ## Data Loading
 
 mdata = Resonance.load(Metadata())
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
 
-species = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+seqs.sample = [s for s in seqs.sample]
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
 relativeabundance!(species)
-ecs = Resonance.load(ECProfiles(); timepoint_metadata = mdata)
+unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = seqs) # this can take a bit
+ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
+kos = Resonance.load(KOProfiles(); timepoint_metadata = seqs)
 
-unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = mdata) # this can take a bit
-brain = Resonance.load(Neuroimaging(); timepoint_metadata=mdata)
+# metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
+brain = Resonance.load(Neuroimaging(), timepoint_metadata = seqs, samplefield="sample")
+
+
+# @assert all(samplenames(species) .== samplenames(unirefs))
+@assert all(samplenames(species) .== samplenames(ecs) .== samplenames(kos) .== samplenames(unirefs))
 
 brain_roi = [
     "right-lateral-occipital",
@@ -46,7 +56,7 @@ brain_roi = [
     "White-matter"
 ]
 brainmeta = let
-    brainsub = brain[:, startswith.(samplenames(brain), "FG")]
+    brainsub = brain[:, startswith.(samplenames(brain), "SEQ")]
     df = DataFrame(:sample => samplenames(brainsub), (Symbol(reg) => vec(abundances(brainsub[reg, :])) for reg in brain_roi)...)
 end
 
@@ -57,14 +67,15 @@ set!(unirefs, brainmeta)
 specdf = comm2wide(species)
 
 specdf.quartile = categorical(let
-l, u = quantile(specdf.cogScore, [0.25, 0.75])
-map(s-> s < l ? "lower" : s > u ? "upper" : "middle", specdf.cogScore)
+l, u = quantile(skipmissing(specdf.cogScore), [0.25, 0.75])
+map(s-> ismissing(s) ? missing : s < l ? "lower" : s > u ? "upper" : "middle", specdf.cogScore)
 end; levels=["lower", "middle", "upper"], ordered = true)
 
-non_spec_cols = [
-    "sample", "subject", "timepoint", "ageMonths", "sex", "race", "education", "date",
-    "cogScore", "sample_base", "read_depth", "filter_00to120", "filter_00to06", "filter_18to120", "quartile"
-    ]
+non_spec_cols = Cols(
+    "sample", "subject", "seqid", "omni", "timepoint", "ageMonths", "sex", "race", "education",
+    "cogScore", "read_depth", "quartile",
+    r"filter_", r"Mullen", "edfloat"
+    )
     
 braindf = leftjoin(brainmeta, specdf; on="sample")
 
@@ -84,7 +95,7 @@ let
 
     for roi in brain_roi
         @info roi
-        for spc in names(indf, Not([non_spec_cols; brain_roi]))
+        for spc in names(indf, names(specdf, r"^[A-Z][a-z]+_[a-z0-9_]+"))
                 
             over0 = indf[!, spc] .> 0
             sum(over0) / size(indf, 1) > 0.20 || continue
@@ -167,7 +178,7 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     lmresults = DataFrame()
 
@@ -223,7 +234,7 @@ end
 
 ## Calculate correlations
 
-unimdata = DataFrame(metadata(unirefs))
+unimdata = DataFrame(get(unirefs))
 
 unirefs_00to120 = let filt = get(unirefs, :filter_00to120)
     keepuni = vec(prevalence(unirefs[:, filt]) .> 0)
@@ -250,34 +261,22 @@ relativeabundance!(unirefs_00to120)
 ## Run LMs
 
 let 
-    indf = DataFrame(metadata(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
-    lmresults = DataFrame()
-    i = 0
-    for feat in features(unirefs_18to120)
-        i+=1
-        i % 200 == 0 && @info "Running step $i"
+    lmresults = DataFrame(ThreadsX.map(features(unirefs_18to120)) do feat
         ab = vec(abundances(unirefs_18to120[feat, :]))
         # prevalence(ab) > 0.1 || continue
         # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
-
-        df = select(indf, "ageMonths", "cogScore", "read_depth", "education"; copycols=false)
+        df = indf[!, :]
         df.bug = asin.(sqrt.(ab))
 
         mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        subset!(ct, :Name => ByRow(x->
-            !any(y-> contains(x, y), 
-                ("(Intercept)", "ageMonths", "read_depth", "education")
-                )
-            )
-        )
-        ct.species .= string(feat)
-        ct.kind .= "unirefs"
-        append!(lmresults, ct)
-    end
+        ct = DataFrames.Tables.rowtable(coeftable(mod))[2]
+        @assert ct.Name == "cogScore"
+        return (; ct..., feature = string(feat), kind="unirefs")
+    end)
 
-    select!(lmresults, Cols(:species, :Name, :))
+    select!(lmresults, Cols(:feature, :Name, :))
     rename!(lmresults, "Pr(>|t|)"=>"pvalue");
 
     CSV.write(outfile, lmresults)
@@ -285,34 +284,22 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_00to120.csv")
-    lmresults = DataFrame()
-    i = 0
-    for feat in features(unirefs_00to120)
-        i+=1
-        i % 200 == 0 && @info "Running step $i at $(now())"
+    lmresults = DataFrame(ThreadsX.map(features(unirefs_00to120)) do feat
         ab = vec(abundances(unirefs_00to120[feat, :]))
         # prevalence(ab) > 0.1 || continue
         # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
-
-        df = select(indf, "ageMonths", "cogScore", "read_depth", "education"; copycols=false)
+        df = indf[!, :]
         df.bug = asin.(sqrt.(ab))
 
         mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        subset!(ct, :Name => ByRow(x->
-            !any(y-> contains(x, y), 
-                ("(Intercept)", "ageMonths", "read_depth", "education")
-                )
-            )
-        )
-        ct.species .= string(feat)
-        ct.kind .= "unirefs"
-        append!(lmresults, ct)
-    end
+        ct = DataFrames.Tables.rowtable(coeftable(mod))[2]
+        @assert ct.Name == "cogScore"
+        return (; ct..., feature = string(feat), kind="unirefs")
+    end)
 
-    select!(lmresults, Cols(:species, :Name, :))
+    select!(lmresults, Cols(:feature, :Name, :))
     rename!(lmresults, "Pr(>|t|)"=>"pvalue");
 
     CSV.write(outfile, lmresults)
@@ -320,34 +307,22 @@ let
 end
 
 let 
-    indf = DataFrame(metadata(unirefs_00to06))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
+    indf = DataFrame(get(unirefs_00to06))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
     outfile = tablefiles("figure2", "lms_unirefs_00to06.csv")
-    lmresults = DataFrame()
-    i = 0
-    for feat in features(unirefs_00to06)
-        i+=1
-        i % 200 == 0 && @info "Running step $i at $(now())"
+    lmresults = DataFrame(ThreadsX.map(features(unirefs_00to06)) do feat
         ab = vec(abundances(unirefs_00to06[feat, :]))
         # prevalence(ab) > 0.1 || continue
         # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
-
-        df = select(indf, "ageMonths", "cogScore", "read_depth", "education"; copycols=false)
+        df = indf[!, :]
         df.bug = asin.(sqrt.(ab))
 
         mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        subset!(ct, :Name => ByRow(x->
-            !any(y-> contains(x, y), 
-                ("(Intercept)", "ageMonths", "read_depth", "education")
-                )
-            )
-        )
-        ct.species .= string(feat)
-        ct.kind .= "unirefs"
-        append!(lmresults, ct)
-    end
+        ct = DataFrames.Tables.rowtable(coeftable(mod))[2]
+        @assert ct.Name == "cogScore"
+        return (; ct..., feature = string(feat), kind="unirefs")
+    end)
 
-    select!(lmresults, Cols(:species, :Name, :))
+    select!(lmresults, Cols(:feature, :Name, :))
     rename!(lmresults, "Pr(>|t|)"=>"pvalue");
 
     CSV.write(outfile, lmresults)
@@ -364,7 +339,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     outfile = tablefiles("figure2", "fsea_consolidated_00to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species))
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
         isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
@@ -389,7 +364,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     outfile = tablefiles("figure2", "fsea_all_00to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species); consolidate=false)
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
         isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
@@ -418,7 +393,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
     outfile = tablefiles("figure2", "fsea_consolidated_00to06.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species))
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
         isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
@@ -443,7 +418,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
     outfile = tablefiles("figure2", "fsea_all_00to06.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species); consolidate=false)
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
         isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
@@ -469,7 +444,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     outfile = tablefiles("figure2", "fsea_consolidated_18to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species))
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
         isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
@@ -494,7 +469,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     outfile = tablefiles("figure2", "fsea_all_18to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
     Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.species); consolidate=false)
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
         isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
