@@ -325,7 +325,7 @@ let
     acs = filter(!isnan, cors_00to06.t[Not(ixs)])
 
     (_, dax, _) = Resonance.plot_fsea!(panel, cs, acs;
-        label = "Under 6m",
+        title = "Under 6m",
         xticks = -0.7:0.2:0.0)
     Label(panel[3,1], replace(lowercase(gs), "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""); tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
@@ -337,7 +337,7 @@ let
     acs = filter(!isnan, cors_18to120.t[Not(ixs)])
 
     (_, eax, _) = Resonance.plot_fsea!(panel, cs, acs;
-        label = "Over 18m",
+        title = "Over 18m",
         )
     Label(panel[3,1], replace(lowercase(gs), "degradation"=> "degr.", "synthesis"=> "synth.", " (vitamin K2)"=> ""); tellheight=true, tellwidth=false)
     rowgap!(panel, 2, Fixed(4))
