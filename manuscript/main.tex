@@ -345,17 +345,17 @@ However, even with this categorization, we find increasing variation
 in gut microbiomes in children over 18 months old (Figure 1G).
 We also found that overall variation in microbial species in children over 18 months old
 was significantly associated with variation in cognitive function score
-(Figure 1G, R\textsuperscript{2} = 0.0124, q \textless{} 0.001),
+(Figure 1G, R\textsuperscript{2} = 0.0099, q \textless{} 0.01),
 as was variation in microbial gene functions (R\textsuperscript{2} = 0.0119, q \textless{} 0.001).
 Variation in microbial taxa and genes was not significantly associated with cognitive
 function in children under 6 months, though this may be due to the low
 taxonomic diversity and broad lack of overlap between taxa in infants (Figure 1G).
 As expected, age was significantly associated with microbial beta
-diversity (taxa R\textsuperscript{2} = 0.0215, and  gene functions
+diversity (taxa R\textsuperscript{2} = 0.0207, and  gene functions
 annotated with UniRef90s clusters of 90\% similarity
 \cite{suzekUniRefComprehensiveNonredundant2007} -
-R\textsuperscript{2} = 0.0245, q \textless{} 0.001), and very strongly
-associated with variation in neuroimaging profiles (R\textsuperscript{2} = 0.256, q
+R\textsuperscript{2} = 0.0263, q \textless{} 0.001), and very strongly
+associated with variation in neuroimaging profiles (R\textsuperscript{2} = 0.258, q
 \textless{} 0.001).
 
 Consistent with prior studies, different microbial measurement types
@@ -368,7 +368,8 @@ and KEGG orthologues - KOs
 \cite{kanehisaKEGGResourceDeciphering2004})
 overlapped only slightly with taxonomic profiles in both age
 cohorts, despite being derived from UniRef90 labels. In children over 18
-months, some variation (15.9\%, p \textless{} 0.01) in neuroimaging
+months, some variation (taxa - 20.1\%, p \textless{} 0.01;
+gene functions - 15.9\%, p \textless{} 0.05) in neuroimaging
 overlapped with microbial measures, though this may be due to the
 residual variation due to age in both measures.
 
@@ -378,25 +379,23 @@ To assess whether individual microbial species were associated with
 cognitive function, we fit multivariable linear regression models (LMs)
 \cite{mallickMultivariableAssociationDiscovery2021}
 for the relative abundance of each species that had at least 15\%
-prevalence in a given age group (Figure 2A, N\textsubscript{species} = 92 for 0--120 months, 
-N\textsubscript{species} = 46 for 0--6 months, N\textsubscript{species} = 97 for 18--120 months).
-Only \emph{Blautia wexlerae} was significantly associated (q value = 0.14, $\beta$ = 0.0015) with
+prevalence in a given age group (Figure 2A, N\textsubscript{species} = 116 for 0--120 months, 
+N\textsubscript{species} = 54 for 0--6 months, N\textsubscript{species} = 136 for 18--120 months).
+No species were significantly associated (q \textless{} 0.20) with
 cognitive function in children under 6 months old after adjusting for
-age and maternal education (Figure 2B).
+age and maternal education.
 By contrast, in children over 18 months of age,
-several mirobial species were significantly enriched (q-value
-\textless{} 0.20) in children with higher cognitive function scores,
-including \emph{Gordonibacter pamelaeae},
-\emph{Asaccharobacter celatus} and \emph{Adelcreutzia equolifaciens}
-(also known as \textit{Adlercreutzia equolifaciens} subsp. \textit{celatus}
-and \textit{Adlercreutzia equolifaciens} subsp. \textit{equolifaciens} respectively
+several mirobial species were significantly enriched
+in children with higher cognitive function scores (Figure 2B),
+including \emph{Alistipes obesi},
+\emph{Asaccharobacter celatus} (also known as \textit{Adlercreutzia equolifaciens} subsp. \textit{celatus}
 \cite{maruoAdlercreutziaEquolifaciensGen2008}),
 and SCFA-producing probiotic
 species such as \emph{Eubacterium eligens} and \emph{Faecalibacterium
 prausnitzii}
 \cite{ghoshMediterraneanDietIntervention2020}
-(Figure 2B). \textit{Ruminococcus gnavus} was the only microbial species
-that was significantly negatively associated with cognitive function score (q value = 0.18).
+(Figure 2B). \textit{Sutterella wadsworthensis} was the only microbial species
+that was significantly negatively associated with cognitive function score (q value = 0.165).
 
 \begin{sidewaysfigure}[!htb]
     \centering
@@ -405,18 +404,30 @@ that was significantly negatively associated with cognitive function score (q va
         Taxa and gene functional groups are associated with cognitive function.
         (\textbf{A}) Volcano plot of multivariable linear model results showing the
         relationship between individual taxa and cognitive function score in
-        children over 18 months of age, controlling for age, maternal education,
-        and sequencing depth. Taxa that were significant after FDR correction (q
+        children over 18 months of age (left) or across all ages (right),
+        controlling for age, maternal education, and sequencing depth.
+        Taxa that were significant after FDR correction (q
         \textless{} 0.2) are colored red. (\textbf{B}) For taxa that were significantly
-        associated with cognitive function, heatmaps of prevalence, mean
-        relative abundance, and correlation with cognitive function in different
-        age groups. (\textbf{C-F}) Enrichment plots for selected neuroactive gene sets
-        used in feature set enrichment analysis (FSEA). (\textbf{G}) summary of FSEA
-        results across all samples (left) as well as in the under 6 months
-        (middle) and over 18 months (right) subsets, colored based on the
+        associated with cognitive function,
+        heatmaps of correlation with cognitive function in different age groups.
+        (\textbf{C}) Multivariate linear models showing the relationship
+        between individual taxa and domain-specific skill assessments
+        from the MSEL for children under 6m (left), 18m to 48m (right),
+        or over across all ages (right)
+        controlling for age, maternal education, and sequencing depth.
+        Asterisks in (A) and (C) indicate significance (q \textless{} 0.2)
+        after multiple hypothesis correction.
+        (\textbf{D-E}) Enrichment plots for proprionate degradation I gene set
+        used in feature set enrichment analysis (FSEA) in children under 6m (D)
+        or over 18m (E). (\textbf{G}) summary of FSEA
+        results in children under 6m of age (left)
+        over 18 months (middle) or across all ages (right), colored based on the
         significance of the association. Markers indicate the individual
-        correlation of genes within a gene set, and vertical bars represent the
+        correlation of genes within a gene set,
+        and vertical bars colored bars represent the
         median correlation of that gene set.
+        Vertical dotted lines within each panel represent the median T statistic
+        for all genes in that age group.
     }
     \label{fig:2}
 \end{sidewaysfigure}
