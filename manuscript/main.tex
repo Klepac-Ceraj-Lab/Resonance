@@ -470,17 +470,13 @@ development.
     \begin{center}
     \begin{tabular}{|r|r|r|r|r|r|r|}
       \hline\hline
-      \textbf{Age group} & \multicolumn{2}{c}{\textbf{0 to 120 months}} & \multicolumn{2}{c}{\textbf{0 to 6 months}} & \multicolumn{2}{c}{\textbf{18 to 120 months}} \\ \hline
-      geneset & E.S. & q value & E.S. & q value & E.S. & q value \\\hline
-      Acetate syn. I & -0.122 & 0.555 & -0.194 & \color{blue}{\textbf{0.153}} & 0.127 & 0.602 \\
-      Acetate syn. II & -0.22 & \color{blue}{\textbf{0.066}} & -0.342 & \color{blue}{\textbf{0.02}} & -0.095 & 0.92 \\
-      Acetate syn. III & -0.21 & \color{blue}{\textbf{0.086}} & -0.31 & \color{blue}{\textbf{0.052}} & -0.086 & 0.92 \\
-      Glutamate deg. I & -0.404 & \color{blue}{\textbf{0.18}} & -0.284 & 0.816 & -0.249 & 0.602 \\
-      Glutamate syn. II & 0.095 & 0.602 & -0.134 & 0.98 & 0.242 & \color{red}{\textbf{0.047}} \\
-      Menaquinone syn. I & -0.085 & 0.563 & -0.083 & 0.816 & -0.17 & \color{blue}{\textbf{0.182}} \\
-      Propionate deg. I & -0.461 & \color{blue}{\textbf{0.13}} & -0.542 & \color{blue}{\textbf{0.02}} & -0.674 & \color{blue}{\textbf{0.041}} \\
-      Propionate syn. I & -0.334 & 0.555 & -0.32 & 0.571 & -0.676 & \color{blue}{\textbf{0.023}} \\
-      Tryptophan syn. & 0.057 & 0.974 & -0.072 & 0.816 & 0.119 & \color{red}{\textbf{0.041}} \\\hline\hline
+      \textbf{Age group} & \textbf{under 6m} & \textbf{under 6m} & \textbf{over 18m} & \textbf{over 18m} \\
+      \texttt{geneset} & \texttt{E.S.} & \texttt{q value} & \texttt{E.S.} & \texttt{q value} \\\hline
+      Acetate syn. I & -0.21 & \color{red}{\textbf{0.068}} & 0.123 & 0.403 \\
+      Acetate syn. II & -0.322 & \color{red}{\textbf{0.046}} & 0.113 & 0.866 \\
+      Acetate syn. III & -0.291 & \color{red}{\textbf{0.089}} & 0.109 & 0.866 \\
+      Glutamate syn. II & -0.152 & 0.882 & 0.293 & \color{blue}{\textbf{0.001}} \\
+      Propionate deg. I & -0.639 & \color{red}{\textbf{0.006}} & -0.495 & 0.446 \\\hline\hline
     \end{tabular}
     \caption{\label{tab:fsea}Feature set enrichment analysis on neuroactive microbial gene sets.
     Red and blue text indicates significant (q value \textless 0.2) genesets with a positive or negative
@@ -488,6 +484,7 @@ development.
     \end{center}
 \end{table}
 
+ 
 
 \subsubsection*{Gut microbial taxonomic and functional profiles predict cognitive function}
 
