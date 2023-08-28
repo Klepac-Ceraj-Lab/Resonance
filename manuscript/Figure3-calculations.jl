@@ -406,127 +406,169 @@ function new_randomforest(
         final_saved_pertinences
 )
 
-jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"), regression_currentCogScores_00to06mo_demoplustaxa)
+    return results
+end
+
+# ## 1. Only SES
+# regression_currentCogScores_00to06mo_onlydemo = new_randomforest(
+#     "regression_currentCogScores_00to06mo_onlydemo",
+#     filtered_mdata_taxa_df_00to06,
+#     identity,
+#     [4, 5, 6],
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = onlydemo_tuning_space,
+#     train_rng=ml_rng
+# )
+    
+# jldsave(modelfiles("regression_currentCogScores_00to06mo_onlydemo.jld"); regression_currentCogScores_00to06mo_onlydemo)
+
+# ## 2. Only taxonomic profiles
+# regression_currentCogScores_00to06mo_onlytaxa = new_randomforest(
+#     "regression_currentCogScores_00to06mo_onlytaxa",
+#     filtered_mdata_taxa_df_00to06,
+#     identity,
+#     collect(6:ncol(filtered_mdata_taxa_df_00to06)), # 4 to include age
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = taxa_tuning_space,
+#     train_rng=ml_rng
+# )
+    
+# jldsave(modelfiles("regression_currentCogScores_00to06mo_onlytaxa.jld"); regression_currentCogScores_00to06mo_onlytaxa)
+
+# ## 3. SES + taxonomic profiles
+# regression_currentCogScores_00to06mo_demoplustaxa = new_randomforest(
+#     "regression_currentCogScores_00to06mo_demoplustaxa",
+#     filtered_mdata_taxa_df_00to06,
+#     identity,
+#     collect(4:ncol(filtered_mdata_taxa_df_00to06)),
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = taxa_tuning_space,
+#     train_rng=ml_rng
+# )
+
+# jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"); regression_currentCogScores_00to06mo_demoplustaxa)
 
 ## 4. Only functional profiles
-regression_currentCogScores_00to06mo_onlyecs = probe_prod_randomforest(
-    Resonance.Regression(),
+regression_currentCogScores_00to06mo_onlyecs = new_randomforest(
     "regression_currentCogScores_00to06mo_onlyecs",
     filtered_mdata_ecs_df_00to06,
     identity,
     collect(4:ncol(filtered_mdata_ecs_df_00to06)),
     :cogScore;
     n_folds = 3,
-    n_replicas = 100,
-    n_rngs = 10,
+    n_replicas = 50,
+    n_rngs = 5,
     tuning_space = ecs_tuning_space,
     train_rng=ml_rng
 )
 
-jldsave(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"), regression_currentCogScores_00to06mo_onlyecs)
+jldsave(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"); regression_currentCogScores_00to06mo_onlyecs)
 
 ## 5. SES + functional profiles
-regression_currentCogScores_00to06mo_demoplusecs = probe_prod_randomforest(
-    Resonance.Regression(),
+regression_currentCogScores_00to06mo_demoplusecs = new_randomforest(
     "regression_currentCogScores_00to06mo_demoplusecs",
     filtered_mdata_ecs_df_00to06,
     identity,
     collect(4:ncol(filtered_mdata_ecs_df_00to06)),
     :cogScore;
     n_folds = 3,
-    n_replicas = 100,
-    n_rngs = 10,
+    n_replicas = 50,
+    n_rngs = 5,
     tuning_space = ecs_tuning_space,
     train_rng=ml_rng
 )
 
-jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"), regression_currentCogScores_00to06mo_demoplusecs)
+jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"); regression_currentCogScores_00to06mo_demoplusecs)
 
 #####
 # 18 to 120 months
 #####
 
 # ## 6. Only SES
-regression_currentCogScores_18to120mo_onlydemo = probe_prod_randomforest(
-    Resonance.Regression(),
+regression_currentCogScores_18to120mo_onlydemo = new_randomforest(
     "regression_currentCogScores_18to120mo_onlydemo",
     filtered_mdata_taxa_df_18to120,
     identity,
     [4, 5, 6],
     :cogScore;
     n_folds = 3,
-    n_replicas = 100,
-    n_rngs = 10,
+    n_replicas = 50,
+    n_rngs = 5,
     tuning_space = onlydemo_tuning_space,
     train_rng=ml_rng
 )
     
-jldsave(modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld"), regression_currentCogScores_18to120mo_onlydemo)
+jldsave(modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld"); regression_currentCogScores_18to120mo_onlydemo)
 
 ## 7. Only taxonomic profiles
-regression_currentCogScores_18to120mo_onlytaxa = probe_prod_randomforest(
-    Resonance.Regression(),
+regression_currentCogScores_18to120mo_onlytaxa = new_randomforest(
     "regression_currentCogScores_18to120mo_onlytaxa",
     filtered_mdata_taxa_df_18to120,
     identity,
     collect(6:ncol(filtered_mdata_taxa_df_18to120)),
     :cogScore;
     n_folds = 3,
-    n_replicas = 100,
-    n_rngs = 10,
+    n_replicas = 50,
+    n_rngs = 5,
     tuning_space = taxa_tuning_space,
     train_rng=ml_rng
 )
     
-jldsave(modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld"), regression_currentCogScores_18to120mo_onlytaxa)
+jldsave(modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld"); regression_currentCogScores_18to120mo_onlytaxa)
 
 ## 8. SES + taxonomic profiles
-regression_currentCogScores_18to120mo_demoplustaxa = probe_prod_randomforest(
-    Resonance.Regression(),
+regression_currentCogScores_18to120mo_demoplustaxa = new_randomforest(
     "regression_currentCogScores_18to120mo_demoplustaxa",
     filtered_mdata_taxa_df_18to120,
     identity,
     collect(4:ncol(filtered_mdata_taxa_df_18to120)),
     :cogScore;
     n_folds = 3,
-    n_replicas = 100,
-    n_rngs = 10,
+    n_replicas = 50,
+    n_rngs = 5,
     tuning_space = taxa_tuning_space,
     train_rng=ml_rng
 )
 
-jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"), regression_currentCogScores_18to120mo_demoplustaxa)
+jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"); regression_currentCogScores_18to120mo_demoplustaxa)
 
 ## 9. Only functional profiles
-regression_currentCogScores_18to120mo_onlyecs = probe_prod_randomforest(
-    Resonance.Regression(),
+regression_currentCogScores_18to120mo_onlyecs = new_randomforest(
     "regression_currentCogScores_18to120mo_onlyecs",
     filtered_mdata_ecs_df_18to120,
     identity,
     collect(6:ncol(filtered_mdata_ecs_df_18to120)),
     :cogScore;
     n_folds = 3,
-    n_replicas = 100,
-    n_rngs = 10,
+    n_replicas = 50,
+    n_rngs = 5,
     tuning_space = ecs_tuning_space,
     train_rng=ml_rng
 )
 
-jldsave(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"), regression_currentCogScores_18to120mo_onlyecs)
+jldsave(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"); regression_currentCogScores_18to120mo_onlyecs)
 
 ## 10. SES + functional profiles
-regression_currentCogScores_18to120mo_demoplusecs = probe_prod_randomforest(
-    Resonance.Regression(),
+regression_currentCogScores_18to120mo_demoplusecs = new_randomforest(
     "regression_currentCogScores_18to120mo_demoplusecs",
     filtered_mdata_ecs_df_18to120,
     identity,
     collect(4:ncol(filtered_mdata_ecs_df_18to120)),
     :cogScore;
     n_folds = 3,
-    n_replicas = 100,
-    n_rngs = 10,
+    n_replicas = 50,
+    n_rngs = 5,
     tuning_space = ecs_tuning_space,
     train_rng=ml_rng
 )
 
-jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"), regression_currentCogScores_18to120mo_demoplusecs)
+jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"); regression_currentCogScores_18to120mo_demoplusecs)
