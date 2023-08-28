@@ -185,6 +185,7 @@ figure
 ```
 
 ```julia
+save(figurefiles("Figure3.png"), figure)
 save(figurefiles("Figure3.svg"), figure)
 save("manuscript/assets/Figure3.png", figure)
 ```
