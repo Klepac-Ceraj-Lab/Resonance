@@ -53,7 +53,7 @@ mdata_brain_df = @chain Resonance.comm2wide(brain; feature_func = string) begin
 end
 mdata_brain_df = dropmissing(
     mdata_brain_df[mdata_brain_df.filter_18to120, :],
-
+    
 )
 # TBV = mdata_brain_df."White-matter" .+ mdata_brain_df."Gray-matter" # This is not necessary anymore, because the columns are already TBV normalized on the input.
 
@@ -106,22 +106,22 @@ taxa_tuning_space = (
 # Removed "left-cerebellum-exterior", "right-cerebellum-exterior"; not useful and bad predictions.
 # Removed "left-ventral-DC", "right-ventral-DC". See http://neuromorphometrics.com/Seg/html/segmentation/ventral%20diencephalon.html
 # Combined "superior-temporal", "middle-temporal", "transverse-temporal" and "inferior-temporal" into "temporal"
-mdata_brain_df."left-temporal" = mdata_brain_df."left-superior-temporal" .+ mdata_brain_df."left-middle-temporal" .+ mdata_brain_df."left-transverse-temporal" .+ mdata_brain_df."left-inferior-temporal"
-mdata_brain_df."right-temporal" = mdata_brain_df."right-superior-temporal" .+ mdata_brain_df."right-middle-temporal" .+ mdata_brain_df."right-transverse-temporal" .+ mdata_brain_df."right-inferior-temporal"
+filtered_mdata_taxa_brain_df_18to120."left-temporal" = filtered_mdata_taxa_brain_df_18to120."left-superior-temporal" .+ filtered_mdata_taxa_brain_df_18to120."left-middle-temporal" .+ filtered_mdata_taxa_brain_df_18to120."left-transverse-temporal" .+ filtered_mdata_taxa_brain_df_18to120."left-inferior-temporal"
+filtered_mdata_taxa_brain_df_18to120."right-temporal" = filtered_mdata_taxa_brain_df_18to120."right-superior-temporal" .+ filtered_mdata_taxa_brain_df_18to120."right-middle-temporal" .+ filtered_mdata_taxa_brain_df_18to120."right-transverse-temporal" .+ filtered_mdata_taxa_brain_df_18to120."right-inferior-temporal"
 # Combined "lateral-orbitofrontal" and "medial-orbitofrontal" into "orbitofrontal"
-mdata_brain_df."left-orbitofrontal" = mdata_brain_df."left-lateral-orbitofrontal" .+ mdata_brain_df."left-medial-orbitofrontal"
-mdata_brain_df."right-orbitofrontal" = mdata_brain_df."right-lateral-orbitofrontal" .+ mdata_brain_df."right-medial-orbitofrontal"
+filtered_mdata_taxa_brain_df_18to120."left-orbitofrontal" = filtered_mdata_taxa_brain_df_18to120."left-lateral-orbitofrontal" .+ filtered_mdata_taxa_brain_df_18to120."left-medial-orbitofrontal"
+filtered_mdata_taxa_brain_df_18to120."right-orbitofrontal" = filtered_mdata_taxa_brain_df_18to120."right-lateral-orbitofrontal" .+ filtered_mdata_taxa_brain_df_18to120."right-medial-orbitofrontal"
 # Combined "inferior-parietal" and "superior-parietal" into "parietal"
-mdata_brain_df."left-parietal" = mdata_brain_df."left-inferior-parietal" .+ mdata_brain_df."left-superior-parietal"
-mdata_brain_df."right-parietal" = mdata_brain_df."right-inferior-parietal" .+ mdata_brain_df."right-superior-parietal"
+filtered_mdata_taxa_brain_df_18to120."left-parietal" = filtered_mdata_taxa_brain_df_18to120."left-inferior-parietal" .+ filtered_mdata_taxa_brain_df_18to120."left-superior-parietal"
+filtered_mdata_taxa_brain_df_18to120."right-parietal" = filtered_mdata_taxa_brain_df_18to120."right-inferior-parietal" .+ filtered_mdata_taxa_brain_df_18to120."right-superior-parietal"
 # Combined "caudal-middle-frontal" and "rostral-middle-frontal" into "middle-frontal"
-mdata_brain_df."left-middle-frontal" = mdata_brain_df."left-caudal-middle-frontal" .+ mdata_brain_df."left-rostral-middle-frontal"
-mdata_brain_df."right-middle-frontal" = mdata_brain_df."right-caudal-middle-frontal" .+ mdata_brain_df."right-rostral-middle-frontal"
+filtered_mdata_taxa_brain_df_18to120."left-middle-frontal" = filtered_mdata_taxa_brain_df_18to120."left-caudal-middle-frontal" .+ filtered_mdata_taxa_brain_df_18to120."left-rostral-middle-frontal"
+filtered_mdata_taxa_brain_df_18to120."right-middle-frontal" = filtered_mdata_taxa_brain_df_18to120."right-caudal-middle-frontal" .+ filtered_mdata_taxa_brain_df_18to120."right-rostral-middle-frontal"
 # Combined "caudal-anterior-cingulate" and "ostral-anterior-cingulate" into "anterior-cingulate"
-mdata_brain_df."left-anterior-cingulate" = mdata_brain_df."left-caudal-anterior-cingulate" .+ mdata_brain_df."left-rostral-anterior-cingulate"
-mdata_brain_df."right-anterior-cingulate" = mdata_brain_df."right-caudal-anterior-cingulate" .+ mdata_brain_df."right-rostral-anterior-cingulate"
+filtered_mdata_taxa_brain_df_18to120."left-anterior-cingulate" = filtered_mdata_taxa_brain_df_18to120."left-caudal-anterior-cingulate" .+ filtered_mdata_taxa_brain_df_18to120."left-rostral-anterior-cingulate"
+filtered_mdata_taxa_brain_df_18to120."right-anterior-cingulate" = filtered_mdata_taxa_brain_df_18to120."right-caudal-anterior-cingulate" .+ filtered_mdata_taxa_brain_df_18to120."right-rostral-anterior-cingulate"
 
-include("Figure4-definitions.jl")
+include("manuscript/Figure4-definitions.jl")
 
 # ## 7. Only taxonomic profiles
 
@@ -129,8 +129,8 @@ brain_models = Dict{String, ProbeData}()
 
 for brain_segment in ordered_brain_segments_list
 
-    tmp_df = deepcopy(filtered_mdata_taxa_df_18to120)
-    prediction_df = insertcols!(tmp_df, 1, :target => mdata_brain_df[:, brain_segment])
+    tmp_df = deepcopy(inputs_taxa)
+    prediction_df = insertcols!(tmp_df, 1, :target => filtered_mdata_taxa_brain_df_18to120[:, brain_segment])
     model_name = "regression_"*string(brain_segment)*"_18to120mo_onlytaxa"
 
     push!(
@@ -154,4 +154,4 @@ for brain_segment in ordered_brain_segments_list
 
 end
     
-jldsave(modelfiles("brain_models.jld"), brain_models)
+jldsave(modelfiles("brain_models.jld"); brain_models)
