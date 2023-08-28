@@ -12,6 +12,7 @@ using CairoMakie
 using DecisionTree
 using JLD2
 using Resonance
+using CategoricalArrays
 ml_rng = StableRNG(0)
 
 isdir(tablefiles("figure4")) || mkdir(tablefiles("figure4"))
@@ -20,24 +21,48 @@ isdir(tablefiles("figure4")) || mkdir(tablefiles("figure4"))
 # Loading Data
 #####
 
-## 1. Taxonomic Profiles
-taxa = Resonance.load(TaxonomicProfiles())
-mdata_taxa_df = sort(Resonance.comm2wide(taxa), [ :subject, :timepoint ]);
+## 1. Metadata
+mdata = Resonance.load(Metadata())
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
+transform!(seqs, "sample"=> ByRow(String)=> "sample")
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
+
+## 2. Taxonomic Profiles
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
+mdata_taxa_df = sort(Resonance.comm2wide(species), [ :subject, :timepoint ]);
 
 ## 2. Brain data
 brain = Resonance.load(Neuroimaging())
-mdata_brain_df = sort(Resonance.comm2wide(brain; feature_func = string), [ :subject, :timepoint ]);
-mdata_brain_df = dropmissing(mdata_brain_df[mdata_brain_df.filter_18to120, :])
-TBV = mdata_brain_df."White-matter" .+ mdata_brain_df."Gray-matter"
+mdata_brain_df = @chain Resonance.comm2wide(brain; feature_func = string) begin
+    sort([ :subject, :timepoint ]);
+    select!(Not([
+        "hassample",
+        "subject",
+        "timepoint",
+        "ageMonths",
+        "sex",
+        "education",
+        "cogScore",
+        "race",
+        "omni",
+        "Mullen::mullen_EarlyLearningComposite",
+        "Mullen::mullen_NonVerbalComposite",
+        "Mullen::mullen_VerbalComposite"]
+    ))
+end
+mdata_brain_df = dropmissing(
+    mdata_brain_df[mdata_brain_df.filter_18to120, :],
 
-for col in names(mdata_brain_df)[16:end-2]
-    mdata_brain_df[!, col] = 100 * mdata_brain_df[:, col] ./ TBV
+)
+# TBV = mdata_brain_df."White-matter" .+ mdata_brain_df."Gray-matter" # This is not necessary anymore, because the columns are already TBV normalized on the input.
+
+for col in names(mdata_brain_df)[2:end]
+    mdata_brain_df[!, col] = 100.0 * mdata_brain_df[:, col]
 end
 
 ## Filter taxonomic profile rows to match brain samples from 18 to 20 months
-
-taxa_row_indexes = [ findfirst(mdata_taxa_df.sample .== el) for el in mdata_brain_df.sample ]
-mdata_taxa_df = mdata_taxa_df[taxa_row_indexes, :]
+mdata_taxa_brain_df = innerjoin(mdata_taxa_df, select!(mdata_brain_df, Not([:filter_00to120, :filter_00to06, :filter_18to120, :filter_future_omni, :filter_future_cog])); on = :sample)
 
 #####
 # Applying prevalence filters
@@ -45,16 +70,18 @@ mdata_taxa_df = mdata_taxa_df[taxa_row_indexes, :]
 taxa_prevalence_threshold_lower = 0.10
 taxa_prevalence_threshold_upper = 1.00
 
-filtered_mdata_taxa_df_18to120 = filter_prevalences(
-    dropmissing(mdata_taxa_df[mdata_taxa_df.filter_18to120, :], Not([:race, :read_depth])),
+filtered_mdata_taxa_brain_df_18to120 = filter_prevalences(
+    dropmissing(mdata_taxa_brain_df[mdata_taxa_brain_df.filter_18to120, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
     :cogScore,
     [:subject, :timepoint, :sex, :education, :ageMonths],
-    [:sample, :sample_base, :race, :date, :read_depth, :filter_00to120, :filter_00to06, :filter_18to120];
+    Symbol.(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"]);
     lbound = taxa_prevalence_threshold_lower,
     ubound = taxa_prevalence_threshold_upper
 )[:, 2:end]
 
-CSV.write(tablefiles("figure4", "18to120_brain_taxa.csv"), hcat(filtered_mdata_taxa_df_18to120, mdata_brain_df[:, 16:end-2]))
+CSV.write(tablefiles("figure4", "18to120_brain_taxa.csv"), filtered_mdata_taxa_brain_df_18to120)
+
+inputs_taxa = filtered_mdata_taxa_brain_df_18to120[:, 1:166]
 
 #####
 # Training models
