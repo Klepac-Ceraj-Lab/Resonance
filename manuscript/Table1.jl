@@ -42,8 +42,6 @@ groups = dictionary([
         "Grad/professional school"
     ]
 ])
-    
-
 
 Table1 = DataFrame(
     group = reduce(vcat, [fill(k, length(groups[k])) for k in keys(groups)]),
