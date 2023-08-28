@@ -10,21 +10,21 @@ using Distributed
 addprocs(8)  # 8 procs.
 
 @everywhere begin
-using Chain
-using CSV
-using Statistics
-using Random
-using DataFrames
-using StableRNGs
-using MLJ
-using CairoMakie
-using DecisionTree
-using JLD2
+    using Chain
+    using CSV
+    using Statistics
+    using Random
+    using DataFrames
+    using StableRNGs
+    using MLJ
+    using CairoMakie
+    using DecisionTree
+    using JLD2
     using CategoricalArrays
-using Resonance
+    using Resonance
     using GLM
     using ShapML        
-ml_rng = StableRNG(0)
+    ml_rng = StableRNG(0)
 end
 
 
@@ -188,8 +188,8 @@ function new_randomforest(
         ntrees_range = [ 10 ]
     ),
     train_rng=Random.GLOBAL_RNG
-)
-    
+    )
+
     # ## 1. Subsetting Data and shuffling DataFrame
     prediction_df = data_preparation_fun(original_df)
     input_cols = collect(input_cols[1]:ncol(prediction_df))
@@ -253,7 +253,7 @@ function new_randomforest(
                 train, test = dataset_partitions[fold_idx]
 
                 for rng_idx in 1:n_rngs
-
+    
                     Random.seed!(train_rng, rng_idx-1)
 
                     # rf_model = MLJScikitLearnInterface.RandomForestRegressor(
@@ -270,12 +270,12 @@ function new_randomforest(
                         n_subfeatures = tuning_grid[hp_idx][4],
                         n_trees = tuning_grid[hp_idx][5],
                         rng = train_rng
-)
-    
+                    )
+
                     # rf_model = NearestNeighborModels.KNNRegressor()
 
                     println("RF_model declared")
-
+    
                     rf_machine = machine(rf_model, X[train, :], y[train], cache=false)
                     MLJ.fit!(rf_machine, verbosity=0)
 
@@ -404,7 +404,7 @@ function new_randomforest(
         final_shapley,
         final_saved_predictions,
         final_saved_pertinences
-)
+    )
 
     return results
 end
