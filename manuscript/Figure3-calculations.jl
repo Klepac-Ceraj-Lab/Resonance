@@ -32,20 +32,27 @@ end
 # Loading Data
 #####
 
-## 1. Taxonomic Profiles
-taxa = Resonance.load(TaxonomicProfiles())
-mdata_taxa_df = sort(Resonance.comm2wide(taxa), [ :subject, :timepoint ]);
+## 1. Metadata
+mdata = Resonance.load(Metadata())
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
+transform!(seqs, "sample"=> ByRow(String)=> "sample")
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
 
-## 2. Functional Profiles
-ecs = Resonance.load(ECProfiles())
+## 2. Taxonomic Profiles
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
+mdata_taxa_df = sort(Resonance.comm2wide(species), [ :subject, :timepoint ]);
+
+## 3. Functional Profiles
+ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
 mdata_ecs_df = sort(Resonance.comm2wide(ecs), [ :subject, :timepoint ]);
 
-### 2.1. Hashing EC names with fixed-length alphabetic hashes due to length and special characters; storing text files for remapping.
-oldnames = names(mdata_ecs_df)[15:2414]
-for oldname in names(mdata_ecs_df)[15:2414]
+### 3.1. Hashing EC names with fixed-length alphabetic hashes due to length and special characters; storing text files for remapping.
+oldnames = names(mdata_ecs_df)[20:end]
+for oldname in names(mdata_ecs_df)[20:end]
     rename!(mdata_ecs_df, oldname => randstring(['A':'Z'; 'a':'z'], 12))
 end
-newnames = names(mdata_ecs_df)[15:2414]
+newnames = names(mdata_ecs_df)[20:end]
 open(scratchfiles("longnames.txt"), "w") do io
     for i in oldnames
         println(io, i)
