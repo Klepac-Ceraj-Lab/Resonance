@@ -5,6 +5,11 @@
 #####
 # 0. Loading libraries
 #####
+
+using Distributed
+addprocs(8)  # 8 procs.
+
+@everywhere begin
 using Chain
 using CSV
 using Statistics
@@ -15,8 +20,13 @@ using MLJ
 using CairoMakie
 using DecisionTree
 using JLD2
+    using CategoricalArrays
 using Resonance
+    using GLM
+    using ShapML        
 ml_rng = StableRNG(0)
+end
+
 
 #####
 # Loading Data
