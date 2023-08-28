@@ -20,8 +20,15 @@ ml_rng = StableRNG(0)
 ## Loading the pretrained models
 
 ```julia
+## 1. Metadata
 mdata = Resonance.load(Metadata())
-spec = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
+transform!(seqs, "sample"=> ByRow(String)=> "sample")
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
+
+## 2. Taxonomic Profiles
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
 
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore regression from taxonomic profiles
