@@ -154,19 +154,19 @@ Legend(
 
 ### Plot panel E - Deep dives on taxa
 ```julia
-plot_taxon_deepdive!(E_subfig, 1, spec, :filter_00to06, "Blautia_wexlerae";)
-plot_taxon_deepdive!(E_subfig, 2, spec, :filter_00to06, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(E_subfig, 3, spec, :filter_00to06, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(E_subfig, 4, spec, :filter_00to06, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(E_subfig, 5, spec, :filter_00to06, "Eggerthella_lenta";)
-plot_taxon_deepdive!(E_subfig, 6, spec, :filter_00to06, "Erysipelatoclostridium_ramosum";)
+plot_taxon_deepdive!(E_subfig, 1, species, :filter_00to06, "Blautia_wexlerae";)
+plot_taxon_deepdive!(E_subfig, 2, species, :filter_00to06, "Gordonibacter_pamelaeae";)
+plot_taxon_deepdive!(E_subfig, 3, species, :filter_00to06, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(E_subfig, 4, species, :filter_00to06, "Ruminococcus_gnavus";)
+plot_taxon_deepdive!(E_subfig, 5, species, :filter_00to06, "Eggerthella_lenta";)
+plot_taxon_deepdive!(E_subfig, 6, species, :filter_00to06, "Erysipelatoclostridium_ramosum";)
 
-plot_taxon_deepdive!(F_subfig, 1, spec, :filter_18to120, "Blautia_wexlerae";)
-plot_taxon_deepdive!(F_subfig, 2, spec, :filter_18to120, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(F_subfig, 3, spec, :filter_18to120, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(F_subfig, 4, spec, :filter_18to120, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(F_subfig, 5, spec, :filter_18to120, "Faecalibacterium_prausnitzii";)
-plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Alistipes_finegoldii";)
+plot_taxon_deepdive!(F_subfig, 1, species, :filter_18to120, "Blautia_wexlerae";)
+plot_taxon_deepdive!(F_subfig, 2, species, :filter_18to120, "Gordonibacter_pamelaeae";)
+plot_taxon_deepdive!(F_subfig, 3, species, :filter_18to120, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(F_subfig, 4, species, :filter_18to120, "Ruminococcus_gnavus";)
+plot_taxon_deepdive!(F_subfig, 5, species, :filter_18to120, "Faecalibacterium_prausnitzii";)
+plot_taxon_deepdive!(F_subfig, 6, species, :filter_18to120, "Alistipes_finegoldii";)
 ```
 
 ### Panel labels
