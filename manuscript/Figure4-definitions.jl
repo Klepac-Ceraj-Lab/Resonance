@@ -67,7 +67,7 @@ interesting_segments = [
 symmetric_segment_strings =  replace.(interesting_segments, r"(left|right)-"=>"")
 
 interesting_taxa = [
-    "Adlercreutzia_equolifaciens",
+#    "Adlercreutzia_equolifaciens",
     "Agathobaculum_butyriciproducens",
     "Akkermansia_muciniphila",
     "Alistipes_finegoldii",

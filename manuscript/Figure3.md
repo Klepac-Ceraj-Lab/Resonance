@@ -20,8 +20,15 @@ ml_rng = StableRNG(0)
 ## Loading the pretrained models
 
 ```julia
+## 1. Metadata
 mdata = Resonance.load(Metadata())
-spec = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
+transform!(seqs, "sample"=> ByRow(String)=> "sample")
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
+
+## 2. Taxonomic Profiles
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
 
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore regression from taxonomic profiles
@@ -73,9 +80,10 @@ axB = Axis(
 )
 
 plot_colorset = [(:white, 0.), (ColorSchemes.tableau_10[3], 1.0), (ColorSchemes.tableau_10[1], 0.7), (ColorSchemes.tableau_10[7], 0.4)]
-plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, tablefiles("figure2", "lms_species_00to06.csv"); plot_colorset = plot_colorset, strokewidth=1)
-plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, tablefiles("figure2", "lms_species_18to120.csv");  
-    plot_colorset = plot_colorset, strokewidth=1)
+# plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, tablefiles("figure2", "lms_species_00to06.csv"); plot_colorset = plot_colorset, strokewidth=1)
+# plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, tablefiles("figure2", "lms_species_18to120.csv"); plot_colorset = plot_colorset, strokewidth=1)
+plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/figure2/lms_species_00to06.csv"; plot_colorset = plot_colorset, strokewidth=1) #TODO: change this back to the tablefiles() ref
+plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, "/brewster/kevin/scratch/derived/tables/figure2/lms_species_00to06.csv"; plot_colorset = plot_colorset, strokewidth=1) #TODO: change this back to the tablefiles() ref
 
 Legend(
     AB_subfig[3, 1],
@@ -146,19 +154,19 @@ Legend(
 
 ### Plot panel E - Deep dives on taxa
 ```julia
-plot_taxon_deepdive!(E_subfig, 1, spec, :filter_00to06, "Blautia_wexlerae";)
-plot_taxon_deepdive!(E_subfig, 2, spec, :filter_00to06, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(E_subfig, 3, spec, :filter_00to06, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(E_subfig, 4, spec, :filter_00to06, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(E_subfig, 5, spec, :filter_00to06, "Eggerthella_lenta";)
-plot_taxon_deepdive!(E_subfig, 6, spec, :filter_00to06, "Erysipelatoclostridium_ramosum";)
+plot_taxon_deepdive!(E_subfig, 1, species, :filter_00to06, "Blautia_wexlerae";)
+plot_taxon_deepdive!(E_subfig, 2, species, :filter_00to06, "Gordonibacter_pamelaeae";)
+plot_taxon_deepdive!(E_subfig, 3, species, :filter_00to06, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(E_subfig, 4, species, :filter_00to06, "Ruminococcus_gnavus";)
+plot_taxon_deepdive!(E_subfig, 5, species, :filter_00to06, "Eggerthella_lenta";)
+plot_taxon_deepdive!(E_subfig, 6, species, :filter_00to06, "Erysipelatoclostridium_ramosum";)
 
-plot_taxon_deepdive!(F_subfig, 1, spec, :filter_18to120, "Blautia_wexlerae";)
-plot_taxon_deepdive!(F_subfig, 2, spec, :filter_18to120, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(F_subfig, 3, spec, :filter_18to120, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(F_subfig, 4, spec, :filter_18to120, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(F_subfig, 5, spec, :filter_18to120, "Faecalibacterium_prausnitzii";)
-plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Alistipes_finegoldii";)
+plot_taxon_deepdive!(F_subfig, 1, species, :filter_18to120, "Blautia_wexlerae";)
+plot_taxon_deepdive!(F_subfig, 2, species, :filter_18to120, "Gordonibacter_pamelaeae";)
+plot_taxon_deepdive!(F_subfig, 3, species, :filter_18to120, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(F_subfig, 4, species, :filter_18to120, "Ruminococcus_gnavus";)
+plot_taxon_deepdive!(F_subfig, 5, species, :filter_18to120, "Faecalibacterium_prausnitzii";)
+plot_taxon_deepdive!(F_subfig, 6, species, :filter_18to120, "Alistipes_finegoldii";)
 ```
 
 ### Panel labels
@@ -177,6 +185,7 @@ figure
 ```
 
 ```julia
+save(figurefiles("Figure3.png"), figure)
 save(figurefiles("Figure3.svg"), figure)
 save("manuscript/assets/Figure3.png", figure)
 ```
