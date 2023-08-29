@@ -535,16 +535,16 @@ or in combination with microbial taxonomic profiles (Table 3).
     \begin{tabular}{|r|r|r|r|r|}
       \hline\hline
       \textbf{Subject Ages (months)} & \textbf{Microbial feature} & \textbf{Demo.} & \textbf{Test set RMSE (± C.I.)} & \textbf{Test set correlation (± C.I.)} \\\hline
-      \multirow{5}{*}{0 to 6} & - & + & 13.01 ± 0.05 & -0.14 ± 0.01 \\ \cline{2-5}
-            & \multirow{2}{*}{taxa} & - & 12.66 ± 0.05 & -0.1 ± 0.01 \\ \cline{3-5}
-            &       & + & 12.7 ± 0.05 & -0.12 ± 0.01 \\ \cline{2-5}
-            & \multirow{2}{*}{genes} & - & 12.56 ± 0.05 & -0.01 ± 0.01 \\ \cline{3-5}
-            &       & + & 12.56 ± 0.05 & -0.02 ± 0.01 \\ \cline{1-5}
-      \multirow{5}{*}{18 to 120} & - & + & 16.27 ± 0.04 & 0.506 ± 0.003 \\ \cline{2-5}
-            & \multirow{2}{*}{taxa} & - & 17.66 ± 0.04 & 0.363 ± 0.003 \\ \cline{3-5}
-            &       & + & 17.29 ± 0.04 & 0.429 ± 0.003 \\ \cline{2-5}
-            & \multirow{2}{*}{genes} & - & 18.01 ± 0.04 & 0.303 ± 0.003 \\ \cline{3-5}
-            &       & + & 17.86 ± 0.04 & 0.333 ± 0.004 \\\hline\hline
+      \multirow{5}{*}{0 to 6} & -    & + & 13.37 ± 0.05 & -0.16 ± 0.01 \\ \cline{2-5}
+            & \multirow{2}{*}{taxa}  & - & 12.99 ± 0.04 & -0.11 ± 0.01 \\ \cline{3-5}
+            &                        & + & 13.01 ± 0.04 & -0.13 ± 0.01 \\ \cline{2-5}
+            & \multirow{2}{*}{genes} & - & 12.95 ± 0.04 & -0.05 ± 0.01 \\ \cline{3-5}
+            &                        & + & 12.95 ± 0.04 & -0.05 ± 0.01 \\ \cline{1-5}
+      \multirow{5}{*}{18 to 120} & - & + & 17.06 ± 0.04 & 0.511 ± 0.003 \\ \cline{2-5}
+            & \multirow{2}{*}{taxa}  & - & 18.71 ± 0.04 & 0.347 ± 0.003 \\ \cline{3-5}
+            &                        & + & 18.25 ± 0.04 & 0.429 ± 0.003 \\ \cline{2-5}
+            & \multirow{2}{*}{genes} & - & 18.96 ± 0.04 & 0.299 ± 0.003 \\ \cline{3-5}
+            &                        & + & 18.74 ± 0.04 & 0.341 ± 0.003 \\ \hline\hline
     \end{tabular}
     \caption{\label{tab:rfbench}Benchmark metrics for the cognitive assessment score
     prediction models. Confidence intervals (C.I.) are calculated from the
@@ -553,6 +553,7 @@ or in combination with microbial taxonomic profiles (Table 3).
     Demo. column indicates whether demographic factors such as maternal education, sex and age were included as predictors.}
     \end{center}
 \end{table}
+
 
 As with LMs, RF models for children under 6 months old
 performed poorly (mean test-set correlation -0.12, mean RMSE 12.70),
