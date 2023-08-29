@@ -180,16 +180,9 @@ scatter!(aax2, speclms_00to120.coef, -1 .* log2.(speclms_00to120.qvalue);
 
 #-
 
-bylabs = map(replace.(lms_mat.feature, "_"=> " ")) do lab
-    parts = split(lab, " ")
-    parts[2] == "sp" && (parts[2] = "sp.")
-    lab = rich(join(parts[1:2], " "); font=:italic)
-    length(parts) > 2 ? rich(lab, " ", join(parts[3:end], " "); font=:regular) : lab
-end
-
 bax1 = Axis(B[1, 1];
     title = "over 18m",
-    yticks = (1.5:nrow(lms_mat) + 0.5, bylabs),
+    yticks = (1.5:nrow(lms_mat) + 0.5, format_species_labesl(lms_mat.feature)),
     yticklabelfont = "TeX Gyre Heros Makie Italic",
     yticklabelsize = 14,
     xticklabelsize = 12
@@ -249,13 +242,7 @@ scales_names = map(scales) do n
     isnothing(m) && error("$n doesn't match")
     return string(m[1], " ", replace(m[2], "Language"=> "Lang."))
 end
-cylabs = map(replace.(subscale_mat.species, "_"=> " ")) do lab
-    parts = split(lab, " ")
-    parts[2] == "sp" && (parts[2] = "sp.")
-    lab = rich(join(parts[1:2], " "); font=:italic)
-    length(parts) > 2 ? rich(lab, " ", join(parts[3:end], " "); font=:regular) : lab
-end
-
+cylabs = format_species_labels(subscale_mat.species)
 filters = ["00to06", "18to120", "00to120"]
 
 cax1 = Axis(C[1,1]; xlabel = "subscore", title="under 6m", 

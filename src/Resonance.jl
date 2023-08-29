@@ -31,6 +31,7 @@ export loadings,
        plot_mantel,
        plot_mantel!,
        plot_pcoa!,
+       format_species_labels,
        commonname,
        comm2wide,       
        runlms
