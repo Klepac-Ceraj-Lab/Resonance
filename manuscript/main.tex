@@ -554,6 +554,24 @@ or in combination with microbial taxonomic profiles (Table 3).
     \end{center}
 \end{table}
 
+\begin{table}[!h]
+    \begin{center}
+    \begin{tabular}{|r|r|r|r|r}
+        \hline
+        \textbf{Microbial feature} & \textbf{Demo.} & \textbf{Test set correlation (± C.I.)} & \textbf{Test set Root-mean-square error (± C.I.)} \\\hline
+        - & + & 20.25 ± 0.07 & 0.43 ± 0.0 \\ \cline{1-4}
+        \multirow{2}{*}{taxa} & - & 22.32 ± 0.08 & 0.07 ± 0.0 \\ \cline{2-4}
+            & + & 21.53 ± 0.08 & 0.27 ± 0.0 \\ \cline{1-4}
+        \multirow{2}{*}{genes} & - & 22.21 ± 0.08 & 0.12 ± 0.0 \\ \cline{2-4}
+            & + & 22.08 ± 0.08 & 0.15 ± 0.0 \\\hline\hline
+    \end{tabular}
+    \caption{\label{tab:rfbench}Benchmark metrics for the cognitive assessment score
+    future prediction models. Confidence intervals (C.I.) are calculated from the
+    distribution of metrics from repeated CV at a confidence level of 95.
+    Root mean square error (RMSE) was used to estimate how well the random forest model was able to predict the outcome.
+    Demo. column indicates whether demographic factors such as maternal education, sex and age were included as predictors.}
+    \end{center}
+\end{table}
 
 As with LMs, RF models for children under 6 months old
 performed poorly (mean test-set correlation -0.12, mean RMSE 12.70),
