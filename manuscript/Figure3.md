@@ -73,6 +73,14 @@ regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(
     modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"),
     "regression_currentCogScores_18to120mo_demoplusecs"
 );
+regression_futureCogScores_demoplustaxa = JLD2.load(
+    modelfiles("regression_futureCogScores_demoplustaxa.jld"),
+    "regression_futureCogScores_demoplustaxa"
+);
+regression_futureCogScores_onlytaxa = JLD2.load(
+    modelfiles("regression_futureCogScores_onlytaxa.jld"),
+    "regression_futureCogScores_onlytaxa"
+);
 ```
 
 ## Initializing Figure 3
@@ -121,7 +129,7 @@ Legend(
         MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
     ],
     [
-        "> 60% ranked importance",
+        "> 60% ranked\nimportance",
         "q < 0.2 in LM",
         "Both",
         "None"
@@ -132,7 +140,7 @@ Legend(
 ```
 
 ```julia
-nbars_toplot = 10
+nbars_toplot = 15
 
 joined_importances_00to06 = compute_joined_importances(
     regression_currentCogScores_00to06mo_onlytaxa,
@@ -145,17 +153,33 @@ joined_importances_18to120 = compute_joined_importances(
     imp_fun = weighted_hpimportances
 )
 
+joined_importances_future = compute_joined_importances(
+    regression_futureCogScores_onlytaxa,
+    regression_futureCogScores_demoplustaxa;
+    imp_fun = weighted_hpimportances
+)
+
 axC = Axis(
     CD_subfig[1, 1];
     xlabel = "Relative (normalized) fitness-weighted feature Importance",
     yticks = (reverse(collect(1:nbars_toplot)), format_species_labels(joined_importances_18to120.variable[1:nbars_toplot])),
-    yticklabelfont = "TeX Gyre Heros Makie Italic",
     ylabel = "Feature",
     title = "18 to 120 months",
     # yticklabelrotation= -pi/2
 )
 
 plot_comparativedemo_importance_barplots!(axC, joined_importances_18to120; n_rows = nbars_toplot)
+
+axD = Axis(
+    CD_subfig[1, 2];
+    xlabel = "Relative (normalized) fitness-weighted feature Importance",
+    yticks = (reverse(collect(1:nbars_toplot)), format_species_labels(joined_importances_future.variable[1:nbars_toplot])),
+    ylabel = "Feature",
+    title = "Future",
+    # yticklabelrotation= -pi/2
+)
+
+plot_comparativedemo_importance_barplots!(axD, joined_importances_future; n_rows = nbars_toplot)
 
 Legend(
     CD_subfig[1, 1], [MarkerElement(; marker=:rect, color=:gray), MarkerElement(; marker=:star8, color=:red)], ["Microbiome alone", "Microbiome + demographics"];
@@ -168,19 +192,12 @@ Legend(
 
 ### Plot panel E - Deep dives on taxa
 ```julia
-plot_taxon_deepdive!(E_subfig, 1, species, :filter_00to06, "Blautia_wexlerae";)
-plot_taxon_deepdive!(E_subfig, 2, species, :filter_00to06, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(E_subfig, 3, species, :filter_00to06, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(E_subfig, 4, species, :filter_00to06, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(E_subfig, 5, species, :filter_00to06, "Eggerthella_lenta";)
-plot_taxon_deepdive!(E_subfig, 6, species, :filter_00to06, "Erysipelatoclostridium_ramosum";)
-
-plot_taxon_deepdive!(F_subfig, 1, species, :filter_18to120, "Blautia_wexlerae";)
-plot_taxon_deepdive!(F_subfig, 2, species, :filter_18to120, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(F_subfig, 3, species, :filter_18to120, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(F_subfig, 4, species, :filter_18to120, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(F_subfig, 5, species, :filter_18to120, "Faecalibacterium_prausnitzii";)
-plot_taxon_deepdive!(F_subfig, 6, species, :filter_18to120, "Alistipes_finegoldii";)
+plot_taxon_deepdive!(E_subfig, 1, species, :filter_18to120, "Blautia_wexlerae";)
+plot_taxon_deepdive!(E_subfig, 2, species, :filter_18to120, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(E_subfig, 3, species, :filter_18to120, "Faecalibacterium_prausnitzii";)
+plot_taxon_deepdive!(E_subfig, 4, species, :filter_18to120, "Alistipes_finegoldii";)
+plot_taxon_deepdive!(E_subfig, 5, species, :filter_18to120, "Eubacterium_eligens";)
+plot_taxon_deepdive!(E_subfig, 6, species, :filter_18to120, "Bifidobacterium_longum";)
 ```
 
 ### Panel labels

@@ -391,7 +391,7 @@ function plot_comparative_lmvsrf_scatterplots!(
 end
 
 ## Taxon deepdives
-function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, spec::CommunityProfile, filter_row::Symbol, taxon_to_dive::String;)
+function plot_taxon_deepdive!(figure_layout::GridLayout, spec::CommunityProfile, filter_row::Symbol, taxon_to_dive::String;)
 
     filtered_spec = spec[:, get(spec, filter_row)]
     (lq, uq) = quantile(get(filtered_spec, :cogScore), [0.25, 0.75])
@@ -409,12 +409,11 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, spec::
     g3p = count(!=(0), taxab[uqidx]) / length(uqidx)
 
     ax1 = Axis(
-        figure_layout[1,figure_col];
+        figure_layout[1,1];
         ylabel="relative abundance",#\n$taxon_to_dive",
-        title = replace(taxon_to_dive, "_"=>" "),
-        titlefont = "TeX Gyre Heros Makie Italic")
+        title = format_species_label(taxon_to_dive),
     ax2 = Axis(
-        figure_layout[2,figure_col];
+        figure_layout[2,1];
         xticks = (1:3, ["lower", "mid", "upper"]),
         xlabel="quartile",
         ylabel = "Intra-q\nPrevalence")

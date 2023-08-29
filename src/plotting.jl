@@ -156,15 +156,15 @@ function plot_mantel!(ax, manteldf; commlabels=unique([manteldf.thing1; manteldf
 end
 
 
-function format_species_labels(labs)
-    map(labs) do lab
-        parts = split(lab, "_")
-        length(parts) == 1 && return parts[1]
-        parts[2] == "sp" && (parts[2] = "sp.")
-        lab = rich(join(parts[1:2], " "); font=:italic)
-        length(parts) > 2 ? rich(lab, " ", join(parts[3:end], " "); font=:regular) : lab
-    end
+function format_species_label(lab)
+    parts = split(String(lab), "_")
+    length(parts) == 1 && return parts[1]
+    parts[2] == "sp" && (parts[2] = "sp.")
+    lab = rich(join(parts[1:2], " "); font=:italic)
+    length(parts) > 2 ? rich(lab, " ", join(parts[3:end], " "); font=:regular) : lab
 end
+
+format_species_labels(labs) = format_species_label.(labs)
 
 function plot_fsea(setcors, notcors; label="", ylabel="enrichment", kwargs...)
     fig = Figure()
