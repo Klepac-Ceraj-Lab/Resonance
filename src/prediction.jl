@@ -352,7 +352,7 @@ end
 
 function plot_comparative_lmvsrf_scatterplots!(
     plot_axis::Axis,
-    rf_model::ProbeData,
+    rf_model::Any,
     lm_path::String;
     exclude_from_importances= [ "ageMonths" ],
     cumulative_importance_threshold = 0.6,
