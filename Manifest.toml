@@ -2,7 +2,7 @@
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "de9d6324e54483073562e17e0bd1d2bd68827fd8"
+project_hash = "05e6511b59330a253c05bc84f71fd1218fec097a"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -1877,6 +1877,12 @@ deps = ["ColorTypes", "FixedPointNumbers", "GeometryBasics", "LinearAlgebra", "O
 git-tree-sha1 = "0d15c3e7b2003f4451714f08ffec2b77badc2dc4"
 uuid = "65257c39-d410-5151-9873-9b3e5be5013e"
 version = "0.3.0"
+
+[[deps.ShapML]]
+deps = ["DataFrames", "Distributed", "Random", "Statistics"]
+git-tree-sha1 = "0db184b0d56a440b73bbe0586ab018cf264fa39e"
+uuid = "8523bd24-6f66-414b-9e1e-b02db3916d64"
+version = "0.3.2"
 
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
