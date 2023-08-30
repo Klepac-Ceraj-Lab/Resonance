@@ -574,35 +574,56 @@ or in combination with microbial taxonomic profiles (Table 3).
 \end{table}
 
 As with LMs, RF models for children under 6 months old
-performed poorly (mean test-set correlation -0.12, mean RMSE 12.70),
+performed poorly (mean test-set correlation -0.13, mean RMSE 13.01),
 but RFs were consistently able to learn the relationship between taxa
 and cognitive function scores in children over 18 months of age (mean
-test-set correlation 0.429, mean RMSE 17.29). For both age groups,
-species that were important in RF overlapped with those that were
+test-set correlation 0.429, mean RMSE 18.25).[]
+Species that were important in RF overlapped with those that were
 significant when testing the relationship with LMs (Figure
-3A-B, Table S1A-B); except for \emph{Eubacterium ramulus},
-all taxa that were significant using LMs belonged to a group
-responsible for 60\% of the total importance in RF models
-(Table 3, Figure 3A).
-However, the rank-ordering of LM significance and RF importance
-had substantive differences. For example, in children under 6 months,
-only \emph{B. wexlerae} was significantly associated with cognitive function in LMs, but
-was ranked 20th in importance for RF models. 
-
-Many taxa highly ranked in importance in RF models in both age
-groups, including several that were identified in LMs for children over
-18 months old, including \emph{R. gnavus} (0--6 months, rank = 13;
-18--120 months, rank = 7) and \emph{G. pamelaeae} (0--6 months, rank =
-16; 18--120 months, rank = 20), while others such as \emph{Allistipes
-finegoldii} were age-group specific. A number of taxa that were important in RF models
-were not statistically significant when using LMs after
-multiple hypothesis correction. However, these taxa often had small nominal
-p-values. For example, \emph{Erysipelatoclostridium ramosum} was the
-most important feature in RF models for children under 6 months old and
-had an LM p-value of 0.04. Subject age was consistently ranked highly in
+3A-B, Table S1A-B); Both analysis identified 
+\textit{F. prausnitzii}, % check if we've mentioned these before, or use the full name
+\textit{E. eligens}, 
+\textit{P. excrementihominis}, and
+\textit{Alistipes obesi} as important
+(q \textless 0.2 for LMs, cumulative importance \textless 60\% for RFs)
+but RF models did not identify \textit{Eggerthella} sp. CAG 298
+nor \textit{B. intestinihominis}, and \textit{E. ramulus}
+was just outside our cutoff (64\% cumulative importance).
+RF models also identified an additional 48 species
+that were important for discriminating cognitive function scores
+(Table 3, Figure 3A). Subject age was consistently ranked highly in
 feature importance, which could indicate that decision branches based on
 microbial taxa have increased purity when considering the subject's age
 or that age itself is a useful predictor.
+
+\subsection*{Gut microbial profiles in the first year of life predictict future cogntitive function}
+
+While LMs did not identify any taxa in the 0-6 month range
+that were associated with concurrently measured cognitive function,
+we reasoned that developmental trajectories that begin
+\textit{in utero} may not be immediately altered by
+microbial exposures, such that microbial influences early in life
+may take time to manifest. To test this hypothesis,
+we asked whether RF models trained on taxonomic profiles
+in the first year of life
+could predict \textit{future} cognitive performance (Figure 3B, D).
+Models were consistently able to learn microbial species that are associated
+with cognitive performance at a future visit
+(mean time between visits: XX, %TODO
+mean test set correlation: YY).
+
+Nearly all important taxa in RF models that predicted cognitive function
+in children older than 18 months were also important in
+models that predicted future cognitive function, if they were present (Figure 3B).
+At the same time, many additional species were important for future prediction models
+that were not important in the models measuring concurrent cognitive function.
+In particular, feature importance for future prediction models
+were dominated by two species of \textit{Klebsiella},
+\textit{K. pneumoniae} and \textit{K. varicola} (Figure 3C).
+Many of the other species that ranked highest in feature importance
+were also oportunistic pathogens, or previously reported
+to be linked with disease (eg. \textit{R. gnavus}, \textit{E. coli}).
+
 
 \subsubsection*{Gut microbial taxonomic profiles predict brain structure differences}
 
