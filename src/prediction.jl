@@ -340,13 +340,13 @@ end
 ## Comparing LM and RF
 function attribute_colors(lm_qvalue, rf_cumImp, plot_colorset = [:dodgerblue, :orange, :green, :purple])
     if (lm_qvalue & rf_cumImp)
-        return plot_colorset[4]
-    elseif (!lm_qvalue & rf_cumImp)
         return plot_colorset[3]
+    elseif (!lm_qvalue & rf_cumImp)
+        return plot_colorset[1]
     elseif (lm_qvalue & !rf_cumImp)
         return plot_colorset[2]
     else
-        return plot_colorset[1]
+        return plot_colorset[4]
     end
 end
 
@@ -390,6 +390,47 @@ function plot_comparative_lmvsrf_scatterplots!(
     return plot_axis
 end
 
+function plot_comparative_rfvsrf_scatterplots!(
+    plot_axis::Axis,
+    rf_model::ProbeData,
+    rf_model2::ProbeData;
+    exclude_from_importances= [ "ageMonths" ],
+    cumulative_importance_threshold = 0.6,
+    plot_colorset = [:dodgerblue, :orange, :green, :purple],
+    kwargs...)
+
+    ## 1. calculate the importances and the cumulative sum, excluding the relevant variables
+    rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
+    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(rf_model_importances.weightedImportance[.!(rf_model_importances.variable .∈ Ref(exclude_from_importances))])
+    rf_model_importances[rf_model_importances.variable .∈ Ref(exclude_from_importances), :relativeWeightedImportance] .= 0.0
+    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
+    
+    rf_model2_importances = select(weighted_hpimportances(rf_model2; change_hashnames=false), "variable", "weightedImportance"=> "weightedImportance2")
+    rf_model2_importances.relativeWeightedImportance2 = rf_model2_importances.weightedImportance2 ./ sum(rf_model2_importances.weightedImportance2[.!(rf_model2_importances.variable .∈ Ref(exclude_from_importances))])
+    rf_model2_importances[rf_model2_importances.variable .∈ Ref(exclude_from_importances), :relativeWeightedImportance2] .= 0.0
+    rf_model2_importances.cumulativeWeightedImportance2 = cumsum(rf_model2_importances.relativeWeightedImportance2)
+    
+    ## 3. Join the data
+    plot_comparative_df = dropmissing(outerjoin(rf_model_importances, rf_model2_importances, on = [ :variable ]))
+    
+    ## 4. Attribute color to each point
+    is_over_threshold = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance)
+    is_over_threshold2 = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance2)
+    point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_over_threshold, is_over_threshold2)
+
+    # @show DataFrame(:variable => plot_comparative_df.variable, :color => point_colors) # For Debug
+
+    # 5. Plot scatterplot
+    scatter!(
+        plot_axis,
+        plot_comparative_df.weightedImportance,plot_comparative_df.weightedImportance2,
+        color = point_colors;
+        kwargs...
+    )
+
+    return plot_axis
+end
+
 ## Taxon deepdives
 function plot_taxon_deepdive!(figure_layout::GridLayout, spec::CommunityProfile, filter_row::Symbol, taxon_to_dive::String;)
 
@@ -411,12 +452,13 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, spec::CommunityProfile,
     ax1 = Axis(
         figure_layout[1,1];
         ylabel="relative abundance",#\n$taxon_to_dive",
-        title = format_species_label(taxon_to_dive),
+        title = format_species_label(taxon_to_dive),)
     ax2 = Axis(
         figure_layout[2,1];
         xticks = (1:3, ["lower", "mid", "upper"]),
         xlabel="quartile",
-        ylabel = "Intra-q\nPrevalence")
+        ylabel = "Intra-q Prevalence"
+    )
     ylims!(ax2, [0, 1.0])
 
     boxplot!(ax1, repeat([ 1.0 ], length(g1)), g1, color = (Makie.wong_colors()[1], 0.5), show_notch = false, show_outliers=false)

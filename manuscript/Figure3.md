@@ -90,8 +90,8 @@ figure = Figure(resolution = (1920, 1536));
 
 AB_subfig = GridLayout(figure[1,1], alignmode=Outside())
 CD_subfig = GridLayout(figure[1,2], alignmode=Outside())
-E_subfig = GridLayout(figure[2,1:2], alignmode=Outside())
-F_subfig = GridLayout(figure[3,1:2], alignmode=Outside())
+E_subfig = GridLayout(figure[2,1], alignmode=Outside())
+F_subfig = GridLayout(figure[2,2], alignmode=Outside())
 
 # colsize!(figure.layout, 1, Relative(0.3))
 # colsize!(figure.layout, 2, Relative(0.7))
@@ -108,35 +108,69 @@ axA = Axis(
     AB_subfig[1, 1];
     xlabel = "-log(p) for LM coefficients",
     ylabel = "Relative (normalized) fitness-weighted\nfeature importance from Random Forests (RFs)",
-    title = "18 to 120 months",
+    title = "over 18mo",
 )
-
-plot_colorset = [(:white, 0.), (ColorSchemes.tableau_10[3], 1.0), (ColorSchemes.tableau_10[1], 0.7), (ColorSchemes.tableau_10[7], 0.4)]
+t10 = ColorSchemes.tableau_10
+let plot_colorset = [t10[1], t10[3], t10[7], (:white, 0.)]
 # plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, tablefiles("figure2", "lms_species_00to06.csv"); plot_colorset = plot_colorset, strokewidth=1)
 # plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, tablefiles("figure2", "lms_species_18to120.csv"); plot_colorset = plot_colorset, strokewidth=1)
-plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_18to120mo_onlytaxa,
-    tablefiles("figure2/lms_species_18to120.csv");
-    plot_colorset = plot_colorset, strokewidth=1
-) 
+    plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_18to120mo_onlytaxa,
+        tablefiles("figure2/lms_species_18to120.csv");
+        plot_colorset, strokewidth=1
+    ) 
 
+    Legend(
+        AB_subfig[1, 2],
+        [
+            MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
+        ],
+        [
+            "> 60% ranked\nimportance",
+            "q < 0.2 in LM",
+            "Both",
+            "None"
+        ];
+        tellheight = false,
+        tellwidth = true,
+    )
+end
 
-Legend(
-    AB_subfig[1, 2],
-    [
-        MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
-        MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
-        MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
-        MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
-    ],
-    [
-        "> 60% ranked\nimportance",
-        "q < 0.2 in LM",
-        "Both",
-        "None"
-    ];
-    tellheight = false,
-    tellwidth = true,
+axB = Axis(
+    AB_subfig[2,1];
+    ylabel = "feature importance (over 18mo)",
+    xlabel = "feature importance (future)",
+    title = "future vs concurrent",
 )
+
+let plot_colorset = [t10[1], t10[3], t10[7], (:white, 0.)]
+    Resonance.plot_comparative_rfvsrf_scatterplots!(axA,
+        regression_currentCogScores_18to120mo_onlytaxa,
+        regression_futureCogScores_onlytaxa;
+        plot_colorset, strokewidth=1
+    ) 
+
+    Legend(
+        AB_subfig[1, 2],
+        [
+            MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
+        ],
+        [
+            "over 18mo",
+            "future",
+            "Both",
+            "None"
+        ];
+        tellheight = false,
+        tellwidth = true,
+    )
+end
+
 ```
 
 ```julia
@@ -152,6 +186,13 @@ joined_importances_18to120 = compute_joined_importances(
     regression_currentCogScores_18to120mo_demoplustaxa;
     imp_fun = weighted_hpimportances
 )
+
+joined_importances_future = compute_joined_importances(
+    regression_futureCogScores_onlytaxa,
+    regression_futureCogScores_demoplustaxa;
+    imp_fun = weighted_hpimportances
+)
+
 
 joined_importances_future = compute_joined_importances(
     regression_futureCogScores_onlytaxa,
@@ -192,26 +233,32 @@ Legend(
 
 ### Plot panel E - Deep dives on taxa
 ```julia
-plot_taxon_deepdive!(E_subfig, 1, species, :filter_18to120, "Blautia_wexlerae";)
-plot_taxon_deepdive!(E_subfig, 2, species, :filter_18to120, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(E_subfig, 3, species, :filter_18to120, "Faecalibacterium_prausnitzii";)
-plot_taxon_deepdive!(E_subfig, 4, species, :filter_18to120, "Alistipes_finegoldii";)
-plot_taxon_deepdive!(E_subfig, 5, species, :filter_18to120, "Eubacterium_eligens";)
-plot_taxon_deepdive!(E_subfig, 6, species, :filter_18to120, "Bifidobacterium_longum";)
+e1 = GridLayout(E_subfig[1,1])
+e2 = GridLayout(E_subfig[1,2])
+e3 = GridLayout(E_subfig[2,1])
+e4 = GridLayout(E_subfig[2,2])
+e5 = GridLayout(E_subfig[3,1])
+e6 = GridLayout(E_subfig[3,2])
+plot_taxon_deepdive!(e1, species, :filter_18to120, "Blautia_wexlerae";)
+plot_taxon_deepdive!(e2, species, :filter_18to120, "Bifidobacterium_longum";)
+plot_taxon_deepdive!(e3, species, :filter_18to120, "Faecalibacterium_prausnitzii";)
+plot_taxon_deepdive!(e4, species, :filter_18to120, "Alistipes_finegoldii";)
+plot_taxon_deepdive!(e5, species, :filter_18to120, "Eubacterium_eligens";)
+plot_taxon_deepdive!(e6, species, :filter_18to120, "Bifidobacterium_longum";)
 ```
 
 ### Panel labels
 ```julia
-Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(AB_subfig[2, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(CD_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(CD_subfig[1, 2, TopLeft()], "D", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(E_subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(E_subfig[1, 5, TopLeft()], "F", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
-
-Label(E_subfig[1:2, 1, Left()], "0 to 6 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
-Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+# Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(AB_subfig[2, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(CD_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(CD_subfig[1, 2, TopLeft()], "D", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(E_subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(E_subfig[1, 5, TopLeft()], "F", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# 
+# Label(E_subfig[1:2, 1, Left()], "0 to 6 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+# Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 figure
 ```
 
