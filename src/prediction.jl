@@ -427,19 +427,19 @@ function plot_comparative_rfvsrf_scatterplots!(
     # 5. Plot scatterplot
     scatter!(
         mainax,
-        plot_comparative_df.weightedImportance2, plot_comparative_df.weightedImportance,
+        plot_comparative_df.relativeWeightedImportance2, plot_comparative_df.relativeWeightedImportance,
         color = point_colors;
         kwargs...
     )
-    ydf = subset(complete_df, "weightedImportance2"=> ByRow(ismissing))
-    scatter!(xzax, fill(1.0, nrow(ydf)), ydf.weightedImportance;
+    ydf = subset(complete_df, "relativeWeightedImportance2"=> ByRow(ismissing))
+    scatter!(xzax, fill(1.0, nrow(ydf)), ydf.relativeWeightedImportance;
             color = [ydf[i, :cumulativeWeightedImportance] < cumulative_importance_threshold ? plot_colorset[1] : plot_colorset[4] for i in 1:nrow(ydf)],
             strokecolor = :black,
             strokewidth = 1
     )
     hideydecorations!(yzax)
-    xdf = subset(complete_df, "weightedImportance"=> ByRow(ismissing))
-    scatter!(yzax, xdf.weightedImportance2, fill(1.0, nrow(xdf));
+    xdf = subset(complete_df, "relativeWeightedImportance"=> ByRow(ismissing))
+    scatter!(yzax, xdf.relativeWeightedImportance2, fill(1.0, nrow(xdf));
             color = [xdf[i, :cumulativeWeightedImportance2] < cumulative_importance_threshold ? plot_colorset[2] : plot_colorset[4] for i in 1:nrow(xdf)],
             strokecolor = :black,
             strokewidth = 1

@@ -271,6 +271,7 @@ Label(F_subfig[1, 1, TopLeft()], "F", fontsize = 26, font = :bold, padding = (0,
 # 
 # Label(E_subfig[1:2, 1, Left()], "0 to 6 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
 # Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+colsize!(ABCD_subfig, 1, Relative(1/3))
 figure
 ```
 
