@@ -288,7 +288,7 @@ supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06
 supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
 
 ## 2. Building the Figure
-figure = Figure(resolution = (1200, 1200))
+figure = Figure(resolution = (1200, 1200));
 
 this_barcolor = :lightblue
 this_curvecolor = :orange
