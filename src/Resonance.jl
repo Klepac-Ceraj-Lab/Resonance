@@ -94,7 +94,7 @@ using Random
 using Setup # dev package at `./Setup`
 using SparseArrays
 using Statistics
-using ShapML
+#using ShapML
 using Tables
 using ThreadsX
 using MLJ
