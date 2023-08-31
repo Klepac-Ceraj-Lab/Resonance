@@ -36,42 +36,84 @@ ordered_brain_segments_list = [
     "Brain-stem", "CSF"
 ]
 
+
+# interesting_segments = [ ## OLD LIST
+#     "left-temporal", "right-temporal",
+#     "left-orbitofrontal", "right-orbitofrontal",
+#     "left-parietal", "right-parietal",
+#     "left-middle-frontal", "right-middle-frontal",
+#     "left-anterior-cingulate", "right-anterior-cingulate",
+#     "left-lateral-occipital", "right-lateral-occipital",
+#     "left-thalamus-proper", "right-thalamus-proper",
+#     "left-hippocampus", "right-hippocampus",
+#     "left-amygdala", "right-amygdala",
+#     "left-accumbens-area", "right-accumbens-area",
+#     "left-cuneus", "right-cuneus", 
+#     "left-entorhinal", "right-entorhinal",
+#     "left-fusiform", "right-fusiform",
+#     "left-isthmus-cingulate", "right-isthmus-cingulate",
+#     "left-lingual", "right-lingual",
+#     "left-parahippocampal", "right-parahippocampal",
+#     "left-paracentral", "right-paracentral",
+#     "left-pars-opercularis", "right-pars-opercularis",
+#     "left-pars-orbitalis", "right-pars-orbitalis",
+#     "left-pericalcarine", "right-pericalcarine",
+#     "left-posterior-cingulate", "right-posterior-cingulate",
+#     "left-precentral", "right-precentral",
+#     "left-precuneus", "right-precuneus",
+#     "left-superior-frontal", "right-superior-frontal",
+#     "cerebellar-vermal-lobules-I-V", "cerebellar-vermal-lobules-VI-VII", "cerebellar-vermal-lobules-VIII-X",
+# ]
+
+# From Figures of Merit:
+# postcentral
+# pars-triangularis
+# entorhinal
+# amygdala
+# caudate
+# precuneus
+# thalamus-proper
+# parahippocampal
+# lateral-occipital
+# orbitofrontal
+# fusiform
+# anterior-cingulate
+# pallidum
+# precentral
+# paracentral
+# pericalcarine
+# accumbens-area
+# cuneus
+# cerebellum-white-matter - super loaded on Age
+# lingual
+
 interesting_segments = [
-    "left-temporal", "right-temporal",
+    "left-lingual", "right-lingual",
+    "left-cuneus", "right-cuneus", 
+    "left-accumbens-area", "right-accumbens-area",
+    "left-pericalcarine", "right-pericalcarine",
+    "left-precentral", "right-precentral",
+    "left-paracentral", "right-paracentral",
+    "left-pallidum", "right-pallidum",
+    "left-fusiform", "right-fusiform",
+    "left-amygdala", "right-amygdala",
     "left-orbitofrontal", "right-orbitofrontal",
-    "left-parietal", "right-parietal",
-    "left-middle-frontal", "right-middle-frontal",
     "left-anterior-cingulate", "right-anterior-cingulate",
     "left-lateral-occipital", "right-lateral-occipital",
     "left-thalamus-proper", "right-thalamus-proper",
-    "left-hippocampus", "right-hippocampus",
-    "left-amygdala", "right-amygdala",
-    "left-accumbens-area", "right-accumbens-area",
-    "left-cuneus", "right-cuneus", 
     "left-entorhinal", "right-entorhinal",
-    "left-fusiform", "right-fusiform",
-    "left-isthmus-cingulate", "right-isthmus-cingulate",
-    "left-lingual", "right-lingual",
     "left-parahippocampal", "right-parahippocampal",
-    "left-paracentral", "right-paracentral",
-    "left-pars-opercularis", "right-pars-opercularis",
-    "left-pars-orbitalis", "right-pars-orbitalis",
-    "left-pericalcarine", "right-pericalcarine",
-    "left-posterior-cingulate", "right-posterior-cingulate",
-    "left-precentral", "right-precentral",
-    "left-precuneus", "right-precuneus",
-    "left-superior-frontal", "right-superior-frontal",
-    "cerebellar-vermal-lobules-I-V", "cerebellar-vermal-lobules-VI-VII", "cerebellar-vermal-lobules-VIII-X",
+    "left-precuneus", "right-precuneus"
 ]
 
 symmetric_segment_strings =  replace.(interesting_segments, r"(left|right)-"=>"")
 
 interesting_taxa = [
-#    "Adlercreutzia_equolifaciens",
-    "Agathobaculum_butyriciproducens",
+    # "Adlercreutzia_equolifaciens", # Not present anymore after Chocophlan version update
+    # "Agathobaculum_butyriciproducens", # Removed on revision pruning
     "Akkermansia_muciniphila",
     "Alistipes_finegoldii",
-    "Alistipes_putredinis",
+    # "Alistipes_putredinis", # Removed on revision pruning
     "Anaerostipes_hadrus",
     "Asaccharobacter_celatus",
     "Bacteroides_caccae",
@@ -82,7 +124,7 @@ interesting_taxa = [
     "Bacteroides_vulgatus",
     "Bifidobacterium_longum",
     "Bifidobacterium_pseudocatenulatum",
-    "Blautia_obeum",
+    # "Blautia_obeum", # Removed on revision pruning
     "Blautia_wexlerae",
     "Collinsella_aerofaciens",
     "Coprococcus_comes",
@@ -96,16 +138,16 @@ interesting_taxa = [
     "Faecalibacterium_prausnitzii",
     "Flavonifractor_plautii",
     "Fusicatenibacter_saccharivorans",
-    "Gemmiger_formicilis",
-    "Intestinibacter_bartlettii",
-    "Parabacteroides_distasonis",
+    # "Gemmiger_formicilis", # Removed on revision pruning
+    # "Intestinibacter_bartlettii", # Removed on revision pruning
+    # "Parabacteroides_distasonis", # Removed on revision pruning
     "Parasutterella_excrementihominis",
     "Prevotella_copri",
-    "Roseburia_faecis",
+    # "Roseburia_faecis", # Removed on revision pruning
     "Roseburia_intestinalis",
-    "Roseburia_inulinivorans",
-    "Ruminococcus_bicirculans",
-    "Ruminococcus_gnavus",
+    # "Roseburia_inulinivorans", # Removed on revision pruning
+    # "Ruminococcus_bicirculans", # Removed on revision pruning
+    # "Ruminococcus_gnavus", # Removed on revision pruning
     "Ruminococcus_torques",
     "Streptococcus_salivarius",
     "Streptococcus_thermophilus"
