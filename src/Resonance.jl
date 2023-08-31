@@ -58,6 +58,7 @@ export  # 0. structs/types
         attribute_colors,
         plot_comparative_lmvsrf_scatterplots!,
         plot_taxon_deepdive!,
+        plot_future_deepdive!,
         singlemodel_importances_suppltable,
         plot_importances_pareto!
 

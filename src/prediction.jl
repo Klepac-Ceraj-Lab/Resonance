@@ -391,10 +391,10 @@ function plot_comparative_lmvsrf_scatterplots!(
 end
 
 function plot_comparative_rfvsrf_scatterplots!(
-    plot_axis::Axis,
+    plot_grid::GridLayout,
     rf_model::ProbeData,
     rf_model2::ProbeData;
-    exclude_from_importances= [ "ageMonths" ],
+    exclude_from_importances= [ "ageMonths", "future_ageMonths", "present_ageMonths" ],
     cumulative_importance_threshold = 0.6,
     plot_colorset = [:dodgerblue, :orange, :green, :purple],
     kwargs...)
@@ -411,24 +411,49 @@ function plot_comparative_rfvsrf_scatterplots!(
     rf_model2_importances.cumulativeWeightedImportance2 = cumsum(rf_model2_importances.relativeWeightedImportance2)
     
     ## 3. Join the data
-    plot_comparative_df = dropmissing(outerjoin(rf_model_importances, rf_model2_importances, on = [ :variable ]))
+    complete_df = outerjoin(rf_model_importances, rf_model2_importances, on = [ :variable ])
+    plot_comparative_df = dropmissing(complete_df)
     
     ## 4. Attribute color to each point
     is_over_threshold = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance)
     is_over_threshold2 = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance2)
-    point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_over_threshold, is_over_threshold2)
+    point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_over_threshold2, is_over_threshold)
 
     # @show DataFrame(:variable => plot_comparative_df.variable, :color => point_colors) # For Debug
-
+    xzax = Axis(plot_grid[1,1]; ylabel = "relative importance")
+    yzax = Axis(plot_grid[2,2]; xlabel = "relative importance")
+    mainax = Axis(plot_grid[1,2])
+    hidedecorations!(mainax)
     # 5. Plot scatterplot
     scatter!(
-        plot_axis,
-        plot_comparative_df.weightedImportance,plot_comparative_df.weightedImportance2,
+        mainax,
+        plot_comparative_df.weightedImportance2, plot_comparative_df.weightedImportance,
         color = point_colors;
         kwargs...
     )
+    ydf = subset(complete_df, "weightedImportance2"=> ByRow(ismissing))
+    scatter!(xzax, fill(1.0, nrow(ydf)), ydf.weightedImportance;
+            color = [ydf[i, :cumulativeWeightedImportance] < cumulative_importance_threshold ? plot_colorset[1] : plot_colorset[4] for i in 1:nrow(ydf)],
+            strokecolor = :black,
+            strokewidth = 1
+    )
+    hideydecorations!(yzax)
+    xdf = subset(complete_df, "weightedImportance"=> ByRow(ismissing))
+    scatter!(yzax, xdf.weightedImportance2, fill(1.0, nrow(xdf));
+            color = [xdf[i, :cumulativeWeightedImportance2] < cumulative_importance_threshold ? plot_colorset[2] : plot_colorset[4] for i in 1:nrow(xdf)],
+            strokecolor = :black,
+            strokewidth = 1
+    )
+    hidexdecorations!(xzax)
+    linkyaxes!(mainax, xzax)
+    linkxaxes!(mainax, yzax)
+    colgap!(plot_grid, 1, Fixed(4))
+    rowgap!(plot_grid, 1, Fixed(4))
+    colsize!(plot_grid, 1, Fixed(15))
+    rowsize!(plot_grid, 2, Fixed(15))
 
-    return plot_axis
+
+    return plot_grid
 end
 
 ## Taxon deepdives
@@ -441,6 +466,59 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, spec::CommunityProfile,
     uqidx = findall(x-> x > uq, get(filtered_spec, :cogScore))
 
     taxab = vec(abundances(filtered_spec[Regex(taxon_to_dive), :]))
+    g1 = filter(!=(0), taxab[lqidx])
+    g2 = filter(!=(0), taxab[mqidx])
+    g3 = filter(!=(0), taxab[uqidx])
+
+    g1p = count(!=(0), taxab[lqidx]) / length(lqidx)
+    g2p = count(!=(0), taxab[mqidx]) / length(mqidx)
+    g3p = count(!=(0), taxab[uqidx]) / length(uqidx)
+
+    ax1 = Axis(
+        figure_layout[1,1];
+        ylabel="relative abundance",#\n$taxon_to_dive",
+        title = format_species_label(taxon_to_dive),)
+    ax2 = Axis(
+        figure_layout[2,1];
+        xticks = (1:3, ["lower", "mid", "upper"]),
+        xlabel="quartile",
+        ylabel = "Intra-q Prevalence"
+    )
+    ylims!(ax2, [0, 1.0])
+
+    boxplot!(ax1, repeat([ 1.0 ], length(g1)), g1, color = (Makie.wong_colors()[1], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 2.0 ], length(g2)), g2, color = (Makie.wong_colors()[2], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 3.0 ], length(g3)), g3, color = (Makie.wong_colors()[3], 0.5), show_notch = false, show_outliers=false)    
+    Random.seed!(0)
+    scatter!(ax1, 1 .+ rand(Normal(0, 0.1), length(g1)), g1)
+    Random.seed!(0)
+    scatter!(ax1, 2 .+ rand(Normal(0, 0.1), length(g2)), g2)
+    Random.seed!(0)
+    scatter!(ax1, 3 .+ rand(Normal(0, 0.1), length(g3)), g3)
+    barplot!(ax2, [1,2,3], [g1p, g2p, g3p]; color=Makie.wong_colors()[1:3])
+    
+    hidexdecorations!(ax1; grid=false)
+    rowsize!(figure_layout, 2, Relative(1/3))
+
+    # Code block to align the y axis labels on ax1 and ax2
+    yspace = maximum(tight_yticklabel_spacing!, [ax1, ax2])
+    ax1.yticklabelspace = yspace
+    ax2.yticklabelspace = yspace
+
+    return figure_layout
+end
+
+
+function plot_future_deepdive!(figure_layout::GridLayout, mdata, spec::CommunityProfile, taxon_to_dive::String;)
+    cog = sort(subset(mdata, "filter_future_cog"=> identity), "subject")
+    omni = sort(subset(mdata, "filter_future_omni"=> identity), "subject")
+    @assert cog.subject == omni.subject
+    (lq, uq) = quantile(cog.cogScore, [0.25, 0.75])
+    lqidx = findall(x-> x <= lq, cog.cogScore)
+    mqidx = findall(x-> lq < x <= uq, cog.cogScore)
+    uqidx = findall(x-> x > uq, cog.cogScore)
+
+    taxab = vec(abundances(spec[Regex(taxon_to_dive), [s for s in omni.sample]]))
     g1 = filter(!=(0), taxab[lqidx])
     g2 = filter(!=(0), taxab[mqidx])
     g3 = filter(!=(0), taxab[uqidx])
