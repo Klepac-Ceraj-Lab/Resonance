@@ -42,8 +42,6 @@ groups = dictionary([
         "Grad/professional school"
     ]
 ])
-    
-
 
 Table1 = DataFrame(
     group = reduce(vcat, [fill(k, length(groups[k])) for k in keys(groups)]),
@@ -53,7 +51,7 @@ Table1 = DataFrame(
 Table1.all = let df = mdata; ufilt = df.filter_00to120
     nsub = [length(unique(df.subject))]
     
-    ns = DataFrames.combine(groupby(df, :subject), "timepoint"=> length => "n sample")."n sample"
+    ns = DataFrames.combine(groupby(subset(df, "sample"=> ByRow(!ismissing)), :subject), "timepoint"=> length => "n sample")."n sample"
     ss = [count(==(1), ns), count(==(2), ns), count(>(2), ns)]
     ss = ["$s ($(round(s / length(ns) * 100; digits = 1))%)" for s in ss]
 
@@ -75,7 +73,7 @@ end
 Table1.under6mo = let df = subset(mdata, "ageMonths"=> ByRow(<=(6))); ufilt = df.filter_00to06
     nsub = [length(unique(df.subject))]
     
-    ns = DataFrames.combine(groupby(df, :subject), "timepoint"=> length => "n sample")."n sample"
+    ns = DataFrames.combine(groupby(subset(df, "sample"=> ByRow(!ismissing)), :subject), "timepoint"=> length => "n sample")."n sample"
     ss = [count(==(1), ns), count(==(2), ns), count(>(2), ns)]
     ss = ["$s ($(round(s / length(ns) * 100; digits = 1))%)" for s in ss]
 
@@ -97,7 +95,7 @@ end
 Table1.over18mo = let df = subset(mdata, "ageMonths"=> ByRow(>(18))); ufilt = df.filter_18to120
     nsub = [length(unique(df.subject))]
     
-    ns = DataFrames.combine(groupby(df, :subject), "timepoint"=> length => "n sample")."n sample"
+    ns = DataFrames.combine(groupby(subset(df, "sample"=> ByRow(!ismissing)), :subject), "timepoint"=> length => "n sample")."n sample"
     ss = [count(==(1), ns), count(==(2), ns), count(>(2), ns)]
     ss = ["$s ($(round(s / length(ns) * 100; digits = 1))%)" for s in ss]
 

@@ -14,45 +14,92 @@ using DecisionTree
 using JLD2
 using Resonance
 using Distributions
+using CategoricalArrays
 ml_rng = StableRNG(0)
 ```
 
 ## Loading the pretrained models
 
 ```julia
+## 1. Metadata
 mdata = Resonance.load(Metadata())
-spec = Resonance.load(TaxonomicProfiles(); timepoint_metadata = mdata)
+seqs = subset(mdata, "sample"=> ByRow(!ismissing)) 
+transform!(seqs, "sample"=> ByRow(String)=> "sample")
+seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
+
+## 2. Taxonomic Profiles
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
 
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent cogScore regression from taxonomic profiles
-regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlydemo.jld"), "regression_currentCogScores_00to06mo_onlydemo")
-regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlytaxa.jld"), "regression_currentCogScores_00to06mo_onlytaxa")
-regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"), "regression_currentCogScores_00to06mo_demoplustaxa")
-regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"), "regression_currentCogScores_00to06mo_onlyecs")
-regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"), "regression_currentCogScores_00to06mo_demoplusecs")
-regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld"), "regression_currentCogScores_18to120mo_onlydemo")
-regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld"), "regression_currentCogScores_18to120mo_onlytaxa")
-regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"), "regression_currentCogScores_18to120mo_demoplustaxa")
-regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"), "regression_currentCogScores_18to120mo_onlyecs")
-regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"), "regression_currentCogScores_18to120mo_demoplusecs")
+regression_currentCogScores_00to06mo_onlydemo = JLD2.load(
+    modelfiles("regression_currentCogScores_00to06mo_onlydemo.jld"),
+    "regression_currentCogScores_00to06mo_onlydemo"
+);
+regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentCogScores_00to06mo_onlytaxa.jld"),
+    "regression_currentCogScores_00to06mo_onlytaxa"
+);
+regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(
+    modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"),
+    "regression_currentCogScores_00to06mo_demoplustaxa"
+);
+regression_currentCogScores_00to06mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"),
+    "regression_currentCogScores_00to06mo_onlyecs"
+);
+regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(
+    modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"),
+    "regression_currentCogScores_00to06mo_demoplusecs"
+);
+regression_currentCogScores_18to120mo_onlydemo = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld"),
+    "regression_currentCogScores_18to120mo_onlydemo"
+);
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld"),
+    "regression_currentCogScores_18to120mo_onlytaxa"
+);
+regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"),
+    "regression_currentCogScores_18to120mo_demoplustaxa"
+);
+regression_currentCogScores_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"),
+    "regression_currentCogScores_18to120mo_onlyecs"
+);
+regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"),
+    "regression_currentCogScores_18to120mo_demoplusecs"
+);
+regression_futureCogScores_demoplustaxa = JLD2.load(
+    modelfiles("regression_futureCogScores_demoplustaxa.jld"),
+    "regression_futureCogScores_demoplustaxa"
+);
+regression_futureCogScores_onlytaxa = JLD2.load(
+    modelfiles("regression_futureCogScores_onlytaxa.jld"),
+    "regression_futureCogScores_onlytaxa"
+);
 ```
 
 ## Initializing Figure 3
 
 ```julia
-figure = Figure(resolution = (1920, 1536))
+figure = Figure(resolution = (1920, 1536));
 
-AB_subfig = GridLayout(figure[1,1], alignmode=Outside())
-CD_subfig = GridLayout(figure[1,2], alignmode=Outside())
-E_subfig = GridLayout(figure[2,1:2], alignmode=Outside())
-F_subfig = GridLayout(figure[3,1:2], alignmode=Outside())
+ABCD_subfig = GridLayout(figure[1,1:2]; alignmode=Outside())
+AB_subfig = GridLayout(ABCD_subfig[1,1])
+CD_subfig = GridLayout(ABCD_subfig[1,2])
+E_subfig = GridLayout(figure[2,1], alignmode=Outside())
+F_subfig = GridLayout(figure[2,2], alignmode=Outside())
 
-colsize!(figure.layout, 1, Relative(0.3))
-colsize!(figure.layout, 2, Relative(0.7))
-
-rowsize!(figure.layout, 1, Relative(0.6))
-rowsize!(figure.layout, 2, Relative(0.2))
-rowsize!(figure.layout, 3, Relative(0.2))
+# colsize!(figure.layout, 1, Relative(0.3))
+# colsize!(figure.layout, 2, Relative(0.7))
+# 
+# rowsize!(figure.layout, 1, Relative(0.6))
+# rowsize!(figure.layout, 2, Relative(0.2))
+# rowsize!(figure.layout, 3, Relative(0.2))
 ```
 
 ### Plot panels A and B - Comparative Importances
@@ -61,45 +108,69 @@ rowsize!(figure.layout, 3, Relative(0.2))
 axA = Axis(
     AB_subfig[1, 1];
     xlabel = "-log(p) for LM coefficients",
-    ylabel = "Feature importance from Random Forests (RFs)",
-    title = "0 to 6 months",
+    ylabel = "relative importance",
+    title = "over 18mo",
 )
+t10 = ColorSchemes.tableau_10
+let plot_colorset = [t10[1], t10[3], t10[7], (:white, 0.)]
+# plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, tablefiles("figure2", "lms_species_00to06.csv"); plot_colorset = plot_colorset, strokewidth=1)
+# plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, tablefiles("figure2", "lms_species_18to120.csv"); plot_colorset = plot_colorset, strokewidth=1)
+    plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_18to120mo_onlytaxa,
+        tablefiles("figure2/lms_species_18to120.csv");
+        plot_colorset, strokewidth=1
+    ) 
 
-axB = Axis(
-    AB_subfig[2, 1];
-    xlabel = "-log(p) for LM coefficients",
-    ylabel = "Relative (normalized) fitness-weighted\nfeature importance from Random Forests (RFs)",
-    title = "18 to 120 months",
-)
+    Legend(
+        AB_subfig[1, 2],
+        [
+            MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
+        ],
+        [
+            "> 60% ranked\nimportance",
+            "q < 0.2 in LM",
+            "Both",
+            "None"
+        ];
+        tellheight = false,
+        tellwidth = true,
+    )
+end
 
-plot_colorset = [(:white, 0.), (ColorSchemes.tableau_10[3], 1.0), (ColorSchemes.tableau_10[1], 0.7), (ColorSchemes.tableau_10[7], 0.4)]
-plot_comparative_lmvsrf_scatterplots!(axA, regression_currentCogScores_00to06mo_onlytaxa, tablefiles("figure2", "lms_species_00to06.csv"); plot_colorset = plot_colorset, strokewidth=1)
-plot_comparative_lmvsrf_scatterplots!(axB, regression_currentCogScores_18to120mo_onlytaxa, tablefiles("figure2", "lms_species_18to120.csv");  
-    plot_colorset = plot_colorset, strokewidth=1)
+axB = GridLayout(AB_subfig[2,1])
 
-Legend(
-    AB_subfig[3, 1],
-    [
-        MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
-        MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
-        MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
-        MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
-    ],
-    [
-        "> 60% ranked importance",
-        "q < 0.2 in LM",
-        "Both",
-        "None"
-    ];
-    tellheight = true,
-    tellwidth = false,
-    nbanks = 2,
-    orientation = :horizontal
-)
+let plot_colorset = [t10[1], t10[6], t10[5], (:white, 0.)]
+    Resonance.plot_comparative_rfvsrf_scatterplots!(axB,
+        regression_currentCogScores_18to120mo_onlytaxa,
+        regression_futureCogScores_onlytaxa;
+        plot_colorset, strokewidth=1
+    ) 
+
+    Legend(
+        AB_subfig[2, 2],
+        [
+            MarkerElement(; marker=:circle, color=plot_colorset[1], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[2], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[3], strokewidth=1),
+            MarkerElement(; marker=:circle, color=plot_colorset[4], strokewidth=1),
+        ],
+        [
+            "over 18mo",
+            "future",
+            "Both",
+            "None"
+        ];
+        tellheight = false,
+        tellwidth = true,
+    )
+end
+
 ```
 
 ```julia
-nbars_toplot = 25
+nbars_toplot = 15
 
 joined_importances_00to06 = compute_joined_importances(
     regression_currentCogScores_00to06mo_onlytaxa,
@@ -112,31 +183,43 @@ joined_importances_18to120 = compute_joined_importances(
     imp_fun = weighted_hpimportances
 )
 
-axC = Axis(
-    CD_subfig[1, 1];
-    xlabel = "Relative (normalized) fitness-weighted feature Importance",
-    yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_00to06.variable[1:nbars_toplot], "_"=>" ")),
-    yticklabelfont = "TeX Gyre Heros Makie Italic",
-    ylabel = "Feature",
-    title = "0 to 6 months",
-    # yticklabelrotation= -pi/2
+joined_importances_future = compute_joined_importances(
+    regression_futureCogScores_onlytaxa,
+    regression_futureCogScores_demoplustaxa;
+    imp_fun = weighted_hpimportances
 )
 
-axD = Axis(
-    CD_subfig[1, 2];
-    xlabel = "Relative (normalized) fitness-weighted feature Importance",
-    yticks = (reverse(collect(1:nbars_toplot)), replace.(joined_importances_18to120.variable[1:nbars_toplot], "_"=>" ")),
-    yticklabelfont = "TeX Gyre Heros Makie Italic",
+
+joined_importances_future = compute_joined_importances(
+    regression_futureCogScores_onlytaxa,
+    regression_futureCogScores_demoplustaxa;
+    imp_fun = weighted_hpimportances
+)
+
+axC = Axis(
+    CD_subfig[1, 1];
+    xlabel = "relative importance",
+    yticks = (reverse(collect(1:nbars_toplot)), format_species_labels(joined_importances_18to120.variable[1:nbars_toplot])),
     ylabel = "Feature",
     title = "18 to 120 months",
     # yticklabelrotation= -pi/2
 )
 
-plot_comparativedemo_importance_barplots!(axC, joined_importances_00to06; n_rows = nbars_toplot)
-plot_comparativedemo_importance_barplots!(axD, joined_importances_18to120; n_rows = nbars_toplot)
+plot_comparativedemo_importance_barplots!(axC, joined_importances_18to120; n_rows = nbars_toplot)
+
+axD = Axis(
+    CD_subfig[1, 2];
+    xlabel = "relative importance",
+    yticks = (reverse(collect(1:nbars_toplot)), format_species_labels(joined_importances_future.variable[1:nbars_toplot])),
+    ylabel = "Feature",
+    title = "Future",
+    # yticklabelrotation= -pi/2
+)
+
+plot_comparativedemo_importance_barplots!(axD, joined_importances_future; n_rows = nbars_toplot)
 
 Legend(
-    CD_subfig[1, 2], [MarkerElement(; marker=:rect, color=:gray), MarkerElement(; marker=:star8, color=:red)], ["Microbiome alone", "Microbiome + demographics"];
+    CD_subfig[1, 1], [MarkerElement(; marker=:rect, color=:gray), MarkerElement(; marker=:star8, color=:red)], ["Microbiome alone", "Microbiome + demographics"];
     tellheight = false,
     tellwidth = false,
     margin = (10, 10, 10, 10),
@@ -146,19 +229,24 @@ Legend(
 
 ### Plot panel E - Deep dives on taxa
 ```julia
-plot_taxon_deepdive!(E_subfig, 1, spec, :filter_00to06, "Blautia_wexlerae";)
-plot_taxon_deepdive!(E_subfig, 2, spec, :filter_00to06, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(E_subfig, 3, spec, :filter_00to06, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(E_subfig, 4, spec, :filter_00to06, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(E_subfig, 5, spec, :filter_00to06, "Eggerthella_lenta";)
-plot_taxon_deepdive!(E_subfig, 6, spec, :filter_00to06, "Erysipelatoclostridium_ramosum";)
+e1 = GridLayout(E_subfig[1,1])
+e2 = GridLayout(E_subfig[1,2])
+e3 = GridLayout(E_subfig[2,1])
+e4 = GridLayout(E_subfig[2,2])
+plot_taxon_deepdive!(e1, species, :filter_18to120, "Blautia_wexlerae";)
+plot_taxon_deepdive!(e2, species, :filter_18to120, "Bifidobacterium_pseudocatenulatum";)
+plot_taxon_deepdive!(e3, species, :filter_18to120, "Faecalibacterium_prausnitzii";)
+plot_taxon_deepdive!(e4, species, :filter_18to120, "Eubacterium_eligens";)
 
-plot_taxon_deepdive!(F_subfig, 1, spec, :filter_18to120, "Blautia_wexlerae";)
-plot_taxon_deepdive!(F_subfig, 2, spec, :filter_18to120, "Gordonibacter_pamelaeae";)
-plot_taxon_deepdive!(F_subfig, 3, spec, :filter_18to120, "Bifidobacterium_longum";)
-plot_taxon_deepdive!(F_subfig, 4, spec, :filter_18to120, "Ruminococcus_gnavus";)
-plot_taxon_deepdive!(F_subfig, 5, spec, :filter_18to120, "Faecalibacterium_prausnitzii";)
-plot_taxon_deepdive!(F_subfig, 6, spec, :filter_18to120, "Alistipes_finegoldii";)
+
+f1 = GridLayout(F_subfig[1,1])
+f2 = GridLayout(F_subfig[1,2])
+f3 = GridLayout(F_subfig[2,1])
+f4 = GridLayout(F_subfig[2,2])
+plot_future_deepdive!(f1, mdata, species, "Klebsiella_pneumoniae";)
+plot_future_deepdive!(f2, mdata, species, "Klebsiella_variicola";)
+plot_future_deepdive!(f3, mdata, species, "Ruminococcus_gnavus";)
+plot_future_deepdive!(f4, mdata, species, "Bacteroides_ovatus";)
 ```
 
 ### Panel labels
@@ -168,15 +256,27 @@ Label(AB_subfig[2, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0,
 Label(CD_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
 Label(CD_subfig[1, 2, TopLeft()], "D", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
 Label(E_subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(E_subfig[1, 5, TopLeft()], "F", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
-Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
-
-Label(E_subfig[1:2, 1, Left()], "0 to 6 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
-Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+Label(F_subfig[1, 1, TopLeft()], "F", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# 
+# Label(E_subfig[1:2, 1, Left()], "0 to 6 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+# Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+#figure
+# Label(AB_subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(AB_subfig[2, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(CD_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(CD_subfig[1, 2, TopLeft()], "D", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(E_subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(E_subfig[1, 5, TopLeft()], "F", fontsize = 26,font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# Label(F_subfig[1, 5, TopLeft()], "G", fontsize = 26, font = :bold, padding = (0, 5, 5, 0), halign = :right)
+# 
+# Label(E_subfig[1:2, 1, Left()], "0 to 6 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+# Label(F_subfig[1:2, 1, Left()], "18 to 120 months", fontsize = 20, font = :bold, padding = (0, 80, 0, 0), halign = :center, valign = :center, rotation = pi/2)
+colsize!(ABCD_subfig, 1, Relative(1/3))
 figure
 ```
 
 ```julia
+save(figurefiles("Figure3.png"), figure)
 save(figurefiles("Figure3.svg"), figure)
 save("manuscript/assets/Figure3.png", figure)
 ```
@@ -188,7 +288,7 @@ supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06
 supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
 
 ## 2. Building the Figure
-figure = Figure(resolution = (1200, 1200))
+figure = Figure(resolution = (1200, 1200));
 
 this_barcolor = :lightblue
 this_curvecolor = :orange

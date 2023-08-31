@@ -31,6 +31,8 @@ export loadings,
        plot_mantel,
        plot_mantel!,
        plot_pcoa!,
+       format_species_label,
+       format_species_labels,
        commonname,
        comm2wide,       
        runlms
@@ -56,6 +58,7 @@ export  # 0. structs/types
         attribute_colors,
         plot_comparative_lmvsrf_scatterplots!,
         plot_taxon_deepdive!,
+        plot_future_deepdive!,
         singlemodel_importances_suppltable,
         plot_importances_pareto!
 

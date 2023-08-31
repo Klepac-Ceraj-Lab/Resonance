@@ -14,6 +14,7 @@ struct ProbeData
     n_rngs::Int64
     merits::DataFrame
     importances::DataFrame
+    # shapley::DataFrame
     saved_predictions::DataFrame
     saved_pertinences::DataFrame
 end
@@ -21,6 +22,7 @@ end
 ########################################
 # 1. Preprocessing/Wrangling Functions #
 ########################################
+skipnan(itr) = Iterators.filter(!isnan, itr)
 
 function filter_prevalences(
     mdata_profile_df::DataFrame,
@@ -125,6 +127,7 @@ function probe_prod_randomforest(
     train_cors = Vector{Float64}()
     test_cors = Vector{Float64}()
     importances = DataFrame(:variable => [])
+    shapley = DataFrame(:variable => [])
     saved_predictions = DataFrame(:subject => [])
     saved_pertinences = DataFrame(:subject => [])
 
@@ -181,6 +184,21 @@ function probe_prod_randomforest(
                         model_colname => vcat(repeat([ "train" ], length(train)),repeat([ "test" ], length(test)))
                     )
 
+                    # data_shap = ShapML.shap(
+                    #     explain = X[test, :],
+                    #     model = rf_machine,
+                    #     predict_function = ( (model, data) -> DataFrame(:y_pred => MLJ.predict(model, data)) ),
+                    #     sample_size = 30,
+                    #     seed = 1
+                    # )
+
+                    # #Cols are "index", "feature_name", "feature_value", "shap_effect", "shap_effect_sd", "intercept" from @show names(data_shap)
+                    # meanShapleyValues = @chain DataFrames.combine(
+                    #     groupby(data_shap, :feature_name),
+                    #     :shap_effect => (x -> mean(x)) => :shap_effect ;
+                    #     renamecols = false
+                    # ) begin rename!( :feature_name => :variable, :shap_effect => model_colname) end
+
                     push!(hyperpar_idxes, hp_idx)
                     push!(replica_idxes, rep_idx)
                     push!(fold_idxes, fold_idx)
@@ -191,6 +209,7 @@ function probe_prod_randomforest(
                     push!(test_mapes, test_mape)
                     push!(train_cors, train_cor)
                     push!(test_cors, test_cor)
+                    # shapley = outerjoin(shapley, meanShapleyValues, on = :variable)
                     importances = outerjoin(importances, DataFrame(:variable => names(X), model_colname => impurity_importance(rf_machine.fitresult)), on = :variable)
                     saved_predictions = outerjoin(saved_predictions, this_predictions, on = [ :subject => :subject ])
                     saved_pertinences = outerjoin(saved_pertinences, this_pertinences, on = [ :subject => :subject ])
@@ -223,6 +242,7 @@ function probe_prod_randomforest(
         n_rngs,
         report_df,
         importances,
+        # shapley,
         sort(saved_predictions, :subject),
         sort(saved_pertinences, :subject)
     )
@@ -320,13 +340,13 @@ end
 ## Comparing LM and RF
 function attribute_colors(lm_qvalue, rf_cumImp, plot_colorset = [:dodgerblue, :orange, :green, :purple])
     if (lm_qvalue & rf_cumImp)
-        return plot_colorset[4]
-    elseif (!lm_qvalue & rf_cumImp)
         return plot_colorset[3]
+    elseif (!lm_qvalue & rf_cumImp)
+        return plot_colorset[1]
     elseif (lm_qvalue & !rf_cumImp)
         return plot_colorset[2]
     else
-        return plot_colorset[1]
+        return plot_colorset[4]
     end
 end
 
@@ -370,8 +390,74 @@ function plot_comparative_lmvsrf_scatterplots!(
     return plot_axis
 end
 
+function plot_comparative_rfvsrf_scatterplots!(
+    plot_grid::GridLayout,
+    rf_model::ProbeData,
+    rf_model2::ProbeData;
+    exclude_from_importances= [ "ageMonths", "future_ageMonths", "present_ageMonths" ],
+    cumulative_importance_threshold = 0.6,
+    plot_colorset = [:dodgerblue, :orange, :green, :purple],
+    kwargs...)
+
+    ## 1. calculate the importances and the cumulative sum, excluding the relevant variables
+    rf_model_importances = weighted_hpimportances(rf_model; change_hashnames=false)
+    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(rf_model_importances.weightedImportance[.!(rf_model_importances.variable .∈ Ref(exclude_from_importances))])
+    rf_model_importances[rf_model_importances.variable .∈ Ref(exclude_from_importances), :relativeWeightedImportance] .= 0.0
+    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
+    
+    rf_model2_importances = select(weighted_hpimportances(rf_model2; change_hashnames=false), "variable", "weightedImportance"=> "weightedImportance2")
+    rf_model2_importances.relativeWeightedImportance2 = rf_model2_importances.weightedImportance2 ./ sum(rf_model2_importances.weightedImportance2[.!(rf_model2_importances.variable .∈ Ref(exclude_from_importances))])
+    rf_model2_importances[rf_model2_importances.variable .∈ Ref(exclude_from_importances), :relativeWeightedImportance2] .= 0.0
+    rf_model2_importances.cumulativeWeightedImportance2 = cumsum(rf_model2_importances.relativeWeightedImportance2)
+    
+    ## 3. Join the data
+    complete_df = outerjoin(rf_model_importances, rf_model2_importances, on = [ :variable ])
+    plot_comparative_df = dropmissing(complete_df)
+    
+    ## 4. Attribute color to each point
+    is_over_threshold = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance)
+    is_over_threshold2 = map(ci-> ci <= cumulative_importance_threshold ? true : false, plot_comparative_df.cumulativeWeightedImportance2)
+    point_colors = map((a, b) -> attribute_colors(a, b, plot_colorset), is_over_threshold2, is_over_threshold)
+
+    # @show DataFrame(:variable => plot_comparative_df.variable, :color => point_colors) # For Debug
+    xzax = Axis(plot_grid[1,1]; ylabel = "relative importance")
+    yzax = Axis(plot_grid[2,2]; xlabel = "relative importance")
+    mainax = Axis(plot_grid[1,2])
+    hidedecorations!(mainax)
+    # 5. Plot scatterplot
+    scatter!(
+        mainax,
+        plot_comparative_df.relativeWeightedImportance2, plot_comparative_df.relativeWeightedImportance,
+        color = point_colors;
+        kwargs...
+    )
+    ydf = subset(complete_df, "relativeWeightedImportance2"=> ByRow(ismissing))
+    scatter!(xzax, fill(1.0, nrow(ydf)), ydf.relativeWeightedImportance;
+            color = [ydf[i, :cumulativeWeightedImportance] < cumulative_importance_threshold ? plot_colorset[1] : plot_colorset[4] for i in 1:nrow(ydf)],
+            strokecolor = :black,
+            strokewidth = 1
+    )
+    hideydecorations!(yzax)
+    xdf = subset(complete_df, "relativeWeightedImportance"=> ByRow(ismissing))
+    scatter!(yzax, xdf.relativeWeightedImportance2, fill(1.0, nrow(xdf));
+            color = [xdf[i, :cumulativeWeightedImportance2] < cumulative_importance_threshold ? plot_colorset[2] : plot_colorset[4] for i in 1:nrow(xdf)],
+            strokecolor = :black,
+            strokewidth = 1
+    )
+    hidexdecorations!(xzax)
+    linkyaxes!(mainax, xzax)
+    linkxaxes!(mainax, yzax)
+    colgap!(plot_grid, 1, Fixed(4))
+    rowgap!(plot_grid, 1, Fixed(4))
+    colsize!(plot_grid, 1, Fixed(15))
+    rowsize!(plot_grid, 2, Fixed(15))
+
+
+    return plot_grid
+end
+
 ## Taxon deepdives
-function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, spec::CommunityProfile, filter_row::Symbol, taxon_to_dive::String;)
+function plot_taxon_deepdive!(figure_layout::GridLayout, spec::CommunityProfile, filter_row::Symbol, taxon_to_dive::String;)
 
     filtered_spec = spec[:, get(spec, filter_row)]
     (lq, uq) = quantile(get(filtered_spec, :cogScore), [0.25, 0.75])
@@ -389,15 +475,68 @@ function plot_taxon_deepdive!(figure_layout::GridLayout, figure_col::Int, spec::
     g3p = count(!=(0), taxab[uqidx]) / length(uqidx)
 
     ax1 = Axis(
-        figure_layout[1,figure_col];
+        figure_layout[1,1];
         ylabel="relative abundance",#\n$taxon_to_dive",
-        title = replace(taxon_to_dive, "_"=>" "),
-        titlefont = "TeX Gyre Heros Makie Italic")
+        title = format_species_label(taxon_to_dive),)
     ax2 = Axis(
-        figure_layout[2,figure_col];
+        figure_layout[2,1];
         xticks = (1:3, ["lower", "mid", "upper"]),
         xlabel="quartile",
-        ylabel = "Intra-q\nPrevalence")
+        ylabel = "Intra-q Prevalence"
+    )
+    ylims!(ax2, [0, 1.0])
+
+    boxplot!(ax1, repeat([ 1.0 ], length(g1)), g1, color = (Makie.wong_colors()[1], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 2.0 ], length(g2)), g2, color = (Makie.wong_colors()[2], 0.5), show_notch = false, show_outliers=false)
+    boxplot!(ax1, repeat([ 3.0 ], length(g3)), g3, color = (Makie.wong_colors()[3], 0.5), show_notch = false, show_outliers=false)    
+    Random.seed!(0)
+    scatter!(ax1, 1 .+ rand(Normal(0, 0.1), length(g1)), g1)
+    Random.seed!(0)
+    scatter!(ax1, 2 .+ rand(Normal(0, 0.1), length(g2)), g2)
+    Random.seed!(0)
+    scatter!(ax1, 3 .+ rand(Normal(0, 0.1), length(g3)), g3)
+    barplot!(ax2, [1,2,3], [g1p, g2p, g3p]; color=Makie.wong_colors()[1:3])
+    
+    hidexdecorations!(ax1; grid=false)
+    rowsize!(figure_layout, 2, Relative(1/3))
+
+    # Code block to align the y axis labels on ax1 and ax2
+    yspace = maximum(tight_yticklabel_spacing!, [ax1, ax2])
+    ax1.yticklabelspace = yspace
+    ax2.yticklabelspace = yspace
+
+    return figure_layout
+end
+
+
+function plot_future_deepdive!(figure_layout::GridLayout, mdata, spec::CommunityProfile, taxon_to_dive::String;)
+    cog = sort(subset(mdata, "filter_future_cog"=> identity), "subject")
+    omni = sort(subset(mdata, "filter_future_omni"=> identity), "subject")
+    @assert cog.subject == omni.subject
+    (lq, uq) = quantile(cog.cogScore, [0.25, 0.75])
+    lqidx = findall(x-> x <= lq, cog.cogScore)
+    mqidx = findall(x-> lq < x <= uq, cog.cogScore)
+    uqidx = findall(x-> x > uq, cog.cogScore)
+
+    taxab = vec(abundances(spec[Regex(taxon_to_dive), [s for s in omni.sample]]))
+    g1 = filter(!=(0), taxab[lqidx])
+    g2 = filter(!=(0), taxab[mqidx])
+    g3 = filter(!=(0), taxab[uqidx])
+
+    g1p = count(!=(0), taxab[lqidx]) / length(lqidx)
+    g2p = count(!=(0), taxab[mqidx]) / length(mqidx)
+    g3p = count(!=(0), taxab[uqidx]) / length(uqidx)
+
+    ax1 = Axis(
+        figure_layout[1,1];
+        ylabel="relative abundance",#\n$taxon_to_dive",
+        title = format_species_label(taxon_to_dive),)
+    ax2 = Axis(
+        figure_layout[2,1];
+        xticks = (1:3, ["lower", "mid", "upper"]),
+        xlabel="quartile",
+        ylabel = "Intra-q Prevalence"
+    )
     ylims!(ax2, [0, 1.0])
 
     boxplot!(ax1, repeat([ 1.0 ], length(g1)), g1, color = (Makie.wong_colors()[1], 0.5), show_notch = false, show_outliers=false)

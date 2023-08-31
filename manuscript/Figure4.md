@@ -23,7 +23,7 @@ ml_rng = StableRNG(0)
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
 # concurrent brain regression from taxonomic profiles
 brain_models = JLD2.load(modelfiles("brain_models.jld"))["brain_models"]
-include("Figure4-definitions.jl")
+include("manuscript/Figure4-definitions.jl")
 ```
 
 ### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
@@ -33,7 +33,8 @@ include("Figure4-definitions.jl")
 ```julia
 mean_brain_merits = reduce(
     vcat,
-    [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
+    # [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
+    [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(skipnan(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor)), :Test_Cor => mean(skipnan(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor))) for i in eachindex(ordered_brain_segments_list) ]
 )
 ```
 
