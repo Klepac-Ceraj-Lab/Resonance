@@ -312,6 +312,26 @@ function weighted_hpimportances(m, hp = 1; change_hashnames=false, hashnamestabl
     return mean_importances_df
 end
 
+function weighted_hpshapvalues(m, hp = 1; change_hashnames=false, hashnamestable::Union{Nothing, DataFrame} = nothing)
+    merits = m.merits
+    importances = m.shapley
+    fitnesses = calculate_fitness(merits.Train_Cor, merits.Test_Cor)
+    fitness_subset_idx = findall(merits.Hyperpar_Idx .== hp)
+
+    # Option 1: divide by amount of positive-only fitnesses
+    # mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/sum(fitnesses[fitness_subset_idx] .> 0.0), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
+    # Option 2: divide importances by total number of models
+    mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/length(fitness_subset_idx), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
+    mean_importances_df = sort( DataFrame(:variable => string.(importances[:,1]), :weightedImportance => mean_importances), :weightedImportance; rev=true)
+
+    if change_hashnames
+        newnames = leftjoin(mean_importances_df, hashnamestable, on = :variable => :hashname).longname
+        mean_importances_df.variable = newnames
+    end
+
+    return mean_importances_df
+end
+
 function compute_joined_importances(modelwithoutdemo, modelwithdemo; imp_fun = weighted_hpimportances)
 
     importanceswithoutdemo = imp_fun(modelwithoutdemo)
