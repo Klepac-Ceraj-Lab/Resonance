@@ -11,10 +11,45 @@ using DataFrames.PrettyTables
 
 isdir(tablefiles()) || mkpath(tablefiles())
 
-## 1. Loading the model files
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
-regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("manuscript", "regression_currentCogScores_18to120mo_onlytaxa.jld"))["regression_currentCogScores_18to120mo_onlytaxa"]
+
+# function weighted_hpshapvalues(m, hp = 1; change_hashnames=false, hashnamestable::Union{Nothing, DataFrame} = nothing) ### REMOVED
+#     merits = m.merits
+#     importances = m.shapley
+#     fitnesses = calculate_fitness(merits.Train_Cor, merits.Test_Cor)
+#     fitness_subset_idx = findall(merits.Hyperpar_Idx .== hp)
+#     # Option 1: divide by amount of positive-only fitnesses
+#     # mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/sum(fitnesses[fitness_subset_idx] .> 0.0), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
+#     # Option 2: divide importances by total number of models
+#     mean_importances = map(x -> sum(x .* fitnesses[fitness_subset_idx])/length(fitness_subset_idx), collect(eachrow(Matrix(importances[:, fitness_subset_idx .+ 1]))))
+#     mean_importances_df = sort( DataFrame(:variable => string.(importances[:,1]), :weightedImportance => mean_importances), :weightedImportance; rev=true)
+#     if change_hashnames
+#         newnames = leftjoin(mean_importances_df, hashnamestable, on = :variable => :hashname).longname
+#         mean_importances_df.variable = newnames
+#     end
+#     return mean_importances_df
+# end
+# function singlemodel_shapley_suppltable(rf_model)
+#     rf_model_shapvalues = weighted_hpshapvalues(rf_model; change_hashnames=false)
+#     return rf_model_shapvalues
+# end  ### REMOVED
+
+## 1. Loading the model files
+regression_currentCogScores_00to06mo_onlydemo = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlydemo.jld"))["regression_currentCogScores_00to06mo_onlydemo"]
+regression_currentCogScores_00to06mo_onlytaxa = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlytaxa.jld"))["regression_currentCogScores_00to06mo_onlytaxa"]
+regression_currentCogScores_00to06mo_demoplustaxa = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"))["regression_currentCogScores_00to06mo_demoplustaxa"]
+regression_currentCogScores_00to06mo_onlyecs = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"))["regression_currentCogScores_00to06mo_onlyecs"]
+regression_currentCogScores_00to06mo_demoplusecs = JLD2.load(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"))["regression_currentCogScores_00to06mo_demoplusecs"]
+regression_currentCogScores_18to120mo_onlydemo = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld"))["regression_currentCogScores_18to120mo_onlydemo"]
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld"))["regression_currentCogScores_18to120mo_onlytaxa"]
+regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"))["regression_currentCogScores_18to120mo_demoplustaxa"]
+regression_currentCogScores_18to120mo_onlyecs = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"))["regression_currentCogScores_18to120mo_onlyecs"]
+regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"))["regression_currentCogScores_18to120mo_demoplusecs"]
+regression_currentCogScores_00to120mo_onlydemo = JLD2.load(modelfiles("regression_currentCogScores_00to120mo_onlydemo.jld"))["regression_currentCogScores_00to120mo_onlydemo"]
+regression_currentCogScores_00to120mo_onlytaxa = JLD2.load(modelfiles("regression_currentCogScores_00to120mo_onlytaxa.jld"))["regression_currentCogScores_00to120mo_onlytaxa"]
+regression_currentCogScores_00to120mo_demoplustaxa = JLD2.load(modelfiles("regression_currentCogScores_00to120mo_demoplustaxa.jld"))["regression_currentCogScores_00to120mo_demoplustaxa"]
+regression_currentCogScores_00to120mo_onlyecs = JLD2.load(modelfiles("regression_currentCogScores_00to120mo_onlyecs.jld"))["regression_currentCogScores_00to120mo_onlyecs"]
+regression_currentCogScores_00to120mo_demoplusecs = JLD2.load(modelfiles("regression_currentCogScores_00to120mo_demoplusecs.jld"))["regression_currentCogScores_00to120mo_demoplusecs"]
 
 ## 2. Defining Suppl Table Functions
 function singlemodel_importances_suppltable(rf_model)
@@ -34,25 +69,37 @@ function prettyformat_suppltable!(suptbl)
     return suptbl
 end
 
-## 3. Building the tables
-supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06mo_onlytaxa)
-prettyformat_suppltable!(supptblA)
-CSV.write(joinpath("manuscript", "assets", "TableS1A.csv"), supptblA)
-
-supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
-prettyformat_suppltable!(supptblB)
-CSV.write(joinpath("manuscript", "assets", "TableS1B.csv"), supptblB)
+models_to_report = [
+    regression_currentCogScores_00to06mo_onlydemo,
+    regression_currentCogScores_00to06mo_onlytaxa,
+    regression_currentCogScores_00to06mo_demoplustaxa,
+    regression_currentCogScores_00to06mo_onlyecs,
+    regression_currentCogScores_00to06mo_demoplusecs,
+    regression_currentCogScores_18to120mo_onlydemo,
+    regression_currentCogScores_18to120mo_onlytaxa,
+    regression_currentCogScores_18to120mo_demoplustaxa,
+    regression_currentCogScores_18to120mo_onlyecs,
+    regression_currentCogScores_18to120mo_demoplusecs,
+    regression_currentCogScores_00to120mo_onlydemo,
+    regression_currentCogScores_00to120mo_onlytaxa,
+    regression_currentCogScores_00to120mo_demoplustaxa,
+    regression_currentCogScores_00to120mo_onlyecs,
+    regression_currentCogScores_00to120mo_demoplusecs,    
+]
 
 ## 4. LaTeX outputs
 spec_hl = LatexHighlighter((val, i, j) -> j == 2, ["textit"])
 spec_ft = (val, i, j) -> j == 2 ? replace(val, "_"=> " ") : val
 
-pretty_table(supptblA; highlighters=spec_hl, formatters=spec_ft,
-    header = [ "Rank", "Variable", "Average fitness-weighted importance", "Relative fitness-weighted importance", "Rank-cumulative relative importance " ],
-    backend = Val(:latex)
-)
+for m in models_to_report
 
-pretty_table(supptblB; highlighters=spec_hl, formatters=spec_ft,
-    header = [ "Rank", "Variable", "Average fitness-weighted importance", "Relative fitness-weighted importance", "Rank-cumulative relative importance " ],
-    backend = Val(:latex)
-)
+    supptbl = singlemodel_importances_suppltable(m)
+    prettyformat_suppltable!(supptbl)
+    CSV.write(tablefiles("figure3_merits_importances", "importances_"*m.name*".csv"), supptbl)
+
+    @show latextable = pretty_table(supptbl; highlighters=spec_hl, formatters=spec_ft,
+        header = [ "Rank", "Variable", "Average fitness-weighted importance", "Relative fitness-weighted importance", "Rank-cumulative relative importance " ],
+        backend = Val(:latex) )
+    # write(tablefiles("figure3_merits_importances", "latex_importances_"*m.name*".txt"), latextable) # @Kevin I don't know how to save that.
+
+end
