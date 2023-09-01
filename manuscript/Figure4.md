@@ -64,6 +64,31 @@ regression_currentVisualReceptions_18to120mo_demoplustaxa = JLD2.load(
 regression_currentVisualReceptions_18to120mo_demoplusecs = JLD2.load(
     modelfiles("regression_currentVisualReceptions_18to120mo_demoplusecs.jld")
     )["regression_currentVisualReceptions_18to120mo_demoplusecs"];
+
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld")
+    )["regression_currentCogScores_18to120mo_onlytaxa"];
+regression_currentCogScores_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld")
+    )["regression_currentCogScores_18to120mo_onlyecs"];
+regression_currentExpressiveLanguages_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentExpressiveLanguages_18to120mo_onlytaxa.jld")
+    )["regression_currentExpressiveLanguages_18to120mo_onlytaxa"];
+regression_currentExpressiveLanguages_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentExpressiveLanguages_18to120mo_onlyecs.jld")
+    )["regression_currentExpressiveLanguages_18to120mo_onlyecs"];
+regression_currentGrossMotors_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentGrossMotors_18to120mo_onlytaxa.jld")
+    )["regression_currentGrossMotors_18to120mo_onlytaxa"];
+regression_currentGrossMotors_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentGrossMotors_18to120mo_onlyecs.jld")
+    )["regression_currentGrossMotors_18to120mo_onlyecs"];
+regression_currentVisualReceptions_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentVisualReceptions_18to120mo_onlytaxa.jld")
+    )["regression_currentVisualReceptions_18to120mo_onlytaxa"];
+regression_currentVisualReceptions_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentVisualReceptions_18to120mo_onlyecs.jld")
+    )["regression_currentVisualReceptions_18to120mo_onlyecs"];
 # concurrent brain regression from taxonomic profiles
 brain_models = JLD2.load(modelfiles("brain_models.jld"))["brain_models"]
 ```
@@ -106,18 +131,22 @@ end
 cm = [ColorSchemes.Spectral_10[i] for i in (10,2,4,8)]
 panelA_plot_df = let
     vcat(
-        generate_cols(regression_currentCogScores_18to120mo_onlydemo,               1,  1, cm[1] ),
-        generate_cols(regression_currentCogScores_18to120mo_demoplustaxa,           2,  1, cm[1] ),
-        generate_cols(regression_currentCogScores_18to120mo_demoplusecs,            3,  1, cm[1] ),
-        generate_cols(regression_currentExpressiveLanguages_18to120mo_onlydemo,     1,  2, cm[2] ),
-        generate_cols(regression_currentExpressiveLanguages_18to120mo_demoplustaxa, 2,  2, cm[2] ),
-        generate_cols(regression_currentExpressiveLanguages_18to120mo_demoplusecs,  3,  2, cm[2] ),
-        generate_cols(regression_currentGrossMotors_18to120mo_onlydemo,             1,  3, cm[3] ),
-        generate_cols(regression_currentGrossMotors_18to120mo_demoplustaxa,         2,  3, cm[3] ),
-        generate_cols(regression_currentGrossMotors_18to120mo_demoplusecs,          3,  3, cm[3] ),
-        generate_cols(regression_currentVisualReceptions_18to120mo_onlydemo,        1,  4, cm[4] ),
-        generate_cols(regression_currentVisualReceptions_18to120mo_demoplustaxa,    2,  4, cm[4] ),
-        generate_cols(regression_currentVisualReceptions_18to120mo_demoplusecs,     3,  4, cm[4] ),
+        generate_cols(regression_currentCogScores_18to120mo_demoplustaxa,           3,  1, cm[1] ),
+        generate_cols(regression_currentCogScores_18to120mo_demoplusecs,            4,  1, cm[1] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_demoplustaxa, 3,  2, cm[2] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_demoplusecs,  4,  2, cm[2] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_demoplustaxa,         3,  3, cm[3] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_demoplusecs,          4,  3, cm[3] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_demoplustaxa,    3,  4, cm[4] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_demoplusecs,     4,  4, cm[4] ),
+        generate_cols(regression_currentCogScores_18to120mo_onlytaxa,           1,  1, cm[1] ),
+        generate_cols(regression_currentCogScores_18to120mo_onlyecs,            2,  1, cm[1] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_onlytaxa, 1,  2, cm[2] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_onlyecs,  2,  2, cm[2] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_onlytaxa,         1,  3, cm[3] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_onlyecs,          2,  3, cm[3] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_onlytaxa,    1,  4, cm[4] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_onlyecs,     2,  4, cm[4] ),
     )
 end
 ```
@@ -155,25 +184,21 @@ important_bugs_VisualReception = sort(dropmissing(sidebyside_importances, :Visua
 @show union(important_bugs_composite, important_bugs_ExpressiveLanguage, important_bugs_GrossMotor, important_bugs_VisualReception)
 
 panelB_taxa = [
-    "Faecalibacterium_prausnitzii",
     "Blautia_wexlerae",
     "Eubacterium_eligens",
+    "Faecalibacterium_prausnitzii",
     "Bifidobacterium_pseudocatenulatum",
     "Bifidobacterium_longum",
-    "Parasutterella_excrementihominis",
-    "Veillonella_dispar",
-    "Fusicatenibacter_saccharivorans",
     "Ruminococcus_gnavus",
     "Roseburia_inulinivorans",
     "Flavonifractor_plautii",
     "Roseburia_faecis",
     "Streptococcus_salivarius",
+    "Fusicatenibacter_saccharivorans",
     "Clostridium_symbiosum",
-    "Bacteroides_uniformis",
+    "Subdoligranulum_sp",
     "Clostridium_innocuum",
     "Bacteroides_vulgatus",
-    "Parabacteroides_merdae",
-    "Intestinibacter_bartlettii",
 ]
 
 panelB_taxa_idxer = Dict( [ panelB_taxa[i] => i for i in eachindex(panelB_taxa) ] )
@@ -296,8 +321,6 @@ weighted_noage_importances = weighted_brain_importances[2:end, :]
 figure = Figure(resolution = (1920, 1536));
 
 AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
-A_Subfig = GridLayout(AB_Subfig[1,1])
-B_Subfig = GridLayout(AB_Subfig[1,2])
 CD_Subfig = GridLayout(figure[2,1], alignmode=Outside())
 E_Subfig  = GridLayout(figure[1:2,2], alignmode=Outside())
 
@@ -306,11 +329,11 @@ E_Subfig  = GridLayout(figure[1:2,2], alignmode=Outside())
 #### Plotting Panel A
 ```julia
 axA = Axis(
-    A_Subfig[1, 1];
+    AB_Subfig[1, 1];
     xlabel = "Correlation",
-    yticks = (collect(1:3), ["Only demographics", "demographics and\ntaxonomic profiles", "demographics and\nfunctional profiles (ECs)"]),
+    yticks = (collect(1:4), [rich("taxa"; color=:green),rich("genes"; color=:green), rich("taxa"; color=:blue), rich("genes"; color=:blue)]),
     ylabel = "Model input composition",
-    title = "Average correlation of composite and subscale predictor model",
+    title = "Average correlation of model",
     yticklabelsize=16,
     alignmode=Outside(),
 )
@@ -351,23 +374,21 @@ end
 #### Plotting Panel B
 ```julia
 axB = Axis(
-    B_Subfig[1, 1];
+    AB_Subfig[1, 2];
     ylabel = "Relative weighted Importance",
     xticks = (collect(eachindex(panelB_taxa)), replace.(panelB_taxa, "_"=>" ")),
     xticklabelfont="TeX Gyre Heros Makie Italic",
     xticklabelsize=16,
     xticklabelrotation= pi/4,
     yreversed=false,
-    alignmode = Outside(),
-    title = "Importance of selected taxa on composite and subscores"
+    title = "Importance of selected taxa on MSEL models"
 )
 
-hideydecorations!(axB)
 hidexdecorations!(axB; ticks=false)
 axBticks = let
     bugs = panelB_taxa
     Axis(
-        B_Subfig[2,1];
+        AB_Subfig[2,2];
         xlabel = "Predictor",
         xticks = (collect(1:length(bugs)),
                 format_species_labels(bugs)),
@@ -391,14 +412,22 @@ barplot!(axB,
     color = panelB_plot_df.color
     )
 
-Legend(A_Subfig[2,1],
+Legend(AB_Subfig[2,1],
     [
-        MarkerElement(; marker=:rect, color=cm[1]),
-        MarkerElement(; marker=:rect, color=cm[2]),
-        MarkerElement(; marker=:rect, color=cm[3]),
-        MarkerElement(; marker=:rect, color=cm[4])
+        [   MarkerElement(; marker=:rect, color=cm[1]),
+            MarkerElement(; marker=:rect, color=cm[2]),
+            MarkerElement(; marker=:rect, color=cm[3]),
+            MarkerElement(; marker=:rect, color=cm[4])
+        ],
+        [   MarkerElement(; marker=:circle, color=:green),
+            MarkerElement(; marker=:circle, color=:blue)
+        ]
     ],
-    [ "Composite Score", "Expressive Language", "Gross Motor", "Visual Reception"];
+    [
+        [ "Composite Score", "Expressive Language", "Gross Motor", "Visual Reception"],
+        [ "-", "+" ]
+    ],
+    ["MSEL Subscale", "Demographics"];
     orientation=:horizontal,
     nbanks=2
 )
@@ -521,10 +550,12 @@ for bug in highlight_bugs
     poly!(axE, Point2f[(0, i-0.5), (0, i+0.5), (maximp, i+0.5), (maximp, i-0.5)]; color=hlbugs_color[bug])
 end
 CairoMakie.scatter!(axE, xs, ys .+ rand(Normal(0, 0.1), length(xs));)
-Legend(E_Subfig[1,2], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) for bug in highlight_bugs],
+tightlimits!(axE)
+Legend(E_Subfig[2,1], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) for bug in highlight_bugs],
         replace.(highlight_bugs, "_"=> " ");
-        labelfont="TeX Gyre Heros Makie Italic")
-
+        labelfont="TeX Gyre Heros Makie Italic",
+        tellheight=true, tellwidth=false
+)
 ```
 
 ### Final labeling and layout resizing
@@ -536,17 +567,17 @@ Label(CD_Subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0,
 Label(CD_Subfig[1, 2, TopLeft()], "D", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
 Label(E_Subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
 
-#colsize!(AB_Subfig, 1, Relative(0.4))
-#colsize!(AB_Subfig, 2, Relative(0.6))
-#colsize!(CD_Subfig, 1, Relative(0.2))
-#colsize!(CD_Subfig, 2, Relative(0.8))
-#rowsize!(CD_Subfig, 2, Relative(0.40))
-#axC.alignmode=Mixed(; bottom=-60)
-#axD.alignmode=Mixed(; bottom=-20)
-#rowsize!(figure.layout, 1, Relative(0.35))
-#rowsize!(figure.layout, 2, Relative(0.45))
-#rowsize!(figure.layout, 3, Relative(0.2))
-#colgap!(CD_Subfig, Fixed(5))
+colsize!(figure.layout, 2, Relative(1/4))
+rowsize!(figure.layout, 2, Relative(0.60))
+colsize!(AB_Subfig, 1, Relative(0.4))
+rowsize!(CD_Subfig, 2, Relative(0.4))
+colsize!(CD_Subfig, 1, Relative(0.2))
+rowsize!(CD_Subfig, 2, Relative(0.28))
+axA.alignmode=Mixed(; bottom=-60)
+axB.alignmode=Mixed(; bottom=-20)
+axC.alignmode=Mixed(; bottom=-60)
+axD.alignmode=Mixed(; bottom=-20)
+colgap!(CD_Subfig, Fixed(5))
 figure
 ```
 
