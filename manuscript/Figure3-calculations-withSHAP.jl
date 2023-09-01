@@ -27,7 +27,6 @@ addprocs(8)  # 8 procs.
     ml_rng = StableRNG(0)
 end
 
-
 #####
 # Loading Data
 #####
@@ -100,14 +99,14 @@ filtered_mdata_taxa_df_00to06 = filter_prevalences(
     ubound = taxa_prevalence_threshold_upper
 )
 
-filtered_mdata_ecs_df_00to06 = filter_prevalences(
-    dropmissing(mdata_ecs_df[mdata_ecs_df.filter_00to06, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
-    :cogScore,
-    [:subject, :timepoint, :sex, :education, :ageMonths],
-    Symbol.(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"]);
-    lbound = ecs_prevalence_threshold_lower,
-    ubound = ecs_prevalence_threshold_upper
-)
+# filtered_mdata_ecs_df_00to06 = filter_prevalences(
+#     dropmissing(mdata_ecs_df[mdata_ecs_df.filter_00to06, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
+#     :cogScore,
+#     [:subject, :timepoint, :sex, :education, :ageMonths],
+#     Symbol.(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"]);
+#     lbound = ecs_prevalence_threshold_lower,
+#     ubound = ecs_prevalence_threshold_upper
+# )
 
 filtered_mdata_taxa_df_18to120 = filter_prevalences(
     dropmissing(mdata_taxa_df[mdata_taxa_df.filter_18to120, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
@@ -118,13 +117,22 @@ filtered_mdata_taxa_df_18to120 = filter_prevalences(
     ubound = taxa_prevalence_threshold_upper
 )
 
-filtered_mdata_ecs_df_18to120 = filter_prevalences(
-    dropmissing(mdata_ecs_df[mdata_ecs_df.filter_18to120, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
+# filtered_mdata_ecs_df_18to120 = filter_prevalences(
+#     dropmissing(mdata_ecs_df[mdata_ecs_df.filter_18to120, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
+#     :cogScore,
+#     [:subject, :timepoint, :sex, :education, :ageMonths],
+#     Symbol.(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"]);
+#     lbound = ecs_prevalence_threshold_lower,
+#     ubound = ecs_prevalence_threshold_upper
+# )
+
+filtered_mdata_taxa_df_00to120 = filter_prevalences(
+    dropmissing(mdata_taxa_df[mdata_taxa_df.filter_00to120, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
     :cogScore,
     [:subject, :timepoint, :sex, :education, :ageMonths],
     Symbol.(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"]);
-    lbound = ecs_prevalence_threshold_lower,
-    ubound = ecs_prevalence_threshold_upper
+    lbound = taxa_prevalence_threshold_lower,
+    ubound = taxa_prevalence_threshold_upper
 )
 
 # ## Exports
@@ -135,6 +143,7 @@ CSV.write(tablefiles("figure3", "00to06_taxa.csv"), filtered_mdata_taxa_df_00to0
 CSV.write(tablefiles("figure3", "00to06_ecs.csv"), filtered_mdata_ecs_df_00to06)
 CSV.write(tablefiles("figure3", "18to120_taxa.csv"), filtered_mdata_taxa_df_18to120)
 CSV.write(tablefiles("figure3", "18to120_ecs.csv"), filtered_mdata_ecs_df_18to120)
+CSV.write(tablefiles("figure3", "00to120_taxa.csv"), filtered_mdata_taxa_df_00to120)
 
 #####
 # Training models
@@ -457,37 +466,37 @@ end
 
 # jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplustaxa.jld"); regression_currentCogScores_00to06mo_demoplustaxa)
 
-## 4. Only functional profiles
-regression_currentCogScores_00to06mo_onlyecs = new_randomforest(
-    "regression_currentCogScores_00to06mo_onlyecs",
-    filtered_mdata_ecs_df_00to06,
-    identity,
-    collect(4:ncol(filtered_mdata_ecs_df_00to06)),
-    :cogScore;
-    n_folds = 3,
-    n_replicas = 50,
-    n_rngs = 5,
-    tuning_space = ecs_tuning_space,
-    train_rng=ml_rng
-)
+# ## 4. Only functional profiles
+# regression_currentCogScores_00to06mo_onlyecs = new_randomforest(
+#     "regression_currentCogScores_00to06mo_onlyecs",
+#     filtered_mdata_ecs_df_00to06,
+#     identity,
+#     collect(4:ncol(filtered_mdata_ecs_df_00to06)),
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = ecs_tuning_space,
+#     train_rng=ml_rng
+# )
 
-jldsave(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"); regression_currentCogScores_00to06mo_onlyecs)
+# jldsave(modelfiles("regression_currentCogScores_00to06mo_onlyecs.jld"); regression_currentCogScores_00to06mo_onlyecs)
 
-## 5. SES + functional profiles
-regression_currentCogScores_00to06mo_demoplusecs = new_randomforest(
-    "regression_currentCogScores_00to06mo_demoplusecs",
-    filtered_mdata_ecs_df_00to06,
-    identity,
-    collect(4:ncol(filtered_mdata_ecs_df_00to06)),
-    :cogScore;
-    n_folds = 3,
-    n_replicas = 50,
-    n_rngs = 5,
-    tuning_space = ecs_tuning_space,
-    train_rng=ml_rng
-)
+# ## 5. SES + functional profiles
+# regression_currentCogScores_00to06mo_demoplusecs = new_randomforest(
+#     "regression_currentCogScores_00to06mo_demoplusecs",
+#     filtered_mdata_ecs_df_00to06,
+#     identity,
+#     collect(4:ncol(filtered_mdata_ecs_df_00to06)),
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = ecs_tuning_space,
+#     train_rng=ml_rng
+# )
 
-jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"); regression_currentCogScores_00to06mo_demoplusecs)
+# jldsave(modelfiles("regression_currentCogScores_00to06mo_demoplusecs.jld"); regression_currentCogScores_00to06mo_demoplusecs)
 
 #####
 # 18 to 120 months
@@ -541,34 +550,118 @@ regression_currentCogScores_18to120mo_demoplustaxa = new_randomforest(
 
 jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld"); regression_currentCogScores_18to120mo_demoplustaxa)
 
-## 9. Only functional profiles
-regression_currentCogScores_18to120mo_onlyecs = new_randomforest(
-    "regression_currentCogScores_18to120mo_onlyecs",
-    filtered_mdata_ecs_df_18to120,
+# ## 9. Only functional profiles
+# regression_currentCogScores_18to120mo_onlyecs = new_randomforest(
+#     "regression_currentCogScores_18to120mo_onlyecs",
+#     filtered_mdata_ecs_df_18to120,
+#     identity,
+#     collect(6:ncol(filtered_mdata_ecs_df_18to120)),
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = ecs_tuning_space,
+#     train_rng=ml_rng
+# )
+
+# jldsave(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"); regression_currentCogScores_18to120mo_onlyecs)
+
+# ## 10. SES + functional profiles
+# regression_currentCogScores_18to120mo_demoplusecs = new_randomforest(
+#     "regression_currentCogScores_18to120mo_demoplusecs",
+#     filtered_mdata_ecs_df_18to120,
+#     identity,
+#     collect(4:ncol(filtered_mdata_ecs_df_18to120)),
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = ecs_tuning_space,
+#     train_rng=ml_rng
+# )
+
+# jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"); regression_currentCogScores_18to120mo_demoplusecs)
+
+#####
+# 18 to 120 months
+#####
+
+# ## 6. Only SES
+regression_currentCogScores_00to120mo_onlydemo = new_randomforest(
+    "regression_currentCogScores_00to120mo_onlydemo",
+    filtered_mdata_taxa_df_00to120,
     identity,
-    collect(6:ncol(filtered_mdata_ecs_df_18to120)),
+    [4, 5, 6],
     :cogScore;
     n_folds = 3,
     n_replicas = 50,
     n_rngs = 5,
-    tuning_space = ecs_tuning_space,
+    tuning_space = onlydemo_tuning_space,
     train_rng=ml_rng
 )
+    
+jldsave(modelfiles("regression_currentCogScores_00to120mo_onlydemo.jld"); regression_currentCogScores_00to120mo_onlydemo)
 
-jldsave(modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld"); regression_currentCogScores_18to120mo_onlyecs)
-
-## 10. SES + functional profiles
-regression_currentCogScores_18to120mo_demoplusecs = new_randomforest(
-    "regression_currentCogScores_18to120mo_demoplusecs",
-    filtered_mdata_ecs_df_18to120,
+## 7. Only taxonomic profiles
+regression_currentCogScores_00to120mo_onlytaxa = new_randomforest(
+    "regression_currentCogScores_00to120mo_onlytaxa",
+    filtered_mdata_taxa_df_00to120,
     identity,
-    collect(4:ncol(filtered_mdata_ecs_df_18to120)),
+    collect(6:ncol(filtered_mdata_taxa_df_00to120)),
     :cogScore;
     n_folds = 3,
     n_replicas = 50,
     n_rngs = 5,
-    tuning_space = ecs_tuning_space,
+    tuning_space = taxa_tuning_space,
+    train_rng=ml_rng
+)
+    
+jldsave(modelfiles("regression_currentCogScores_00to120mo_onlytaxa.jld"); regression_currentCogScores_00to120mo_onlytaxa)
+
+## 8. SES + taxonomic profiles
+regression_currentCogScores_00to120mo_demoplustaxa = new_randomforest(
+    "regression_currentCogScores_00to120mo_demoplustaxa",
+    filtered_mdata_taxa_df_00to120,
+    identity,
+    collect(4:ncol(filtered_mdata_taxa_df_00to120)),
+    :cogScore;
+    n_folds = 3,
+    n_replicas = 50,
+    n_rngs = 5,
+    tuning_space = taxa_tuning_space,
     train_rng=ml_rng
 )
 
-jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"); regression_currentCogScores_18to120mo_demoplusecs)
+jldsave(modelfiles("regression_currentCogScores_00to120mo_demoplustaxa.jld"); regression_currentCogScores_00to120mo_demoplustaxa)
+
+# ## 9. Only functional profiles
+# regression_currentCogScores_00to120mo_onlyecs = new_randomforest(
+#     "regression_currentCogScores_00to120mo_onlyecs",
+#     filtered_mdata_ecs_df_00to120,
+#     identity,
+#     collect(6:ncol(filtered_mdata_ecs_df_00to120)),
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = ecs_tuning_space,
+#     train_rng=ml_rng
+# )
+
+# jldsave(modelfiles("regression_currentCogScores_00to120mo_onlyecs.jld"); regression_currentCogScores_00to120mo_onlyecs)
+
+# ## 10. SES + functional profiles
+# regression_currentCogScores_00to120mo_demoplusecs = new_randomforest(
+#     "regression_currentCogScores_00to120mo_demoplusecs",
+#     filtered_mdata_ecs_df_00to120,
+#     identity,
+#     collect(4:ncol(filtered_mdata_ecs_df_00to120)),
+#     :cogScore;
+#     n_folds = 3,
+#     n_replicas = 50,
+#     n_rngs = 5,
+#     tuning_space = ecs_tuning_space,
+#     train_rng=ml_rng
+# )
+
+# jldsave(modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld"); regression_currentCogScores_18to120mo_demoplusecs)

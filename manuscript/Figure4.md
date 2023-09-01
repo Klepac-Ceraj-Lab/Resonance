@@ -15,51 +15,244 @@ using Distributions
 using Clustering, Distances
 using ColorSchemes
 ml_rng = StableRNG(0)
-```
 
-## Loading the pretrained models
-
-```julia
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-# concurrent brain regression from taxonomic profiles
-brain_models = JLD2.load(modelfiles("brain_models.jld"))["brain_models"]
+
 include("manuscript/Figure4-definitions.jl")
 ```
 
-### Plot figure 4 - FULL version without filtering segments or taxa, taxa ordered by mean importance, segments by hclust
+
+## Plot figure 4 panels A and B
+
+#### Loading the pretrained models
+
+```julia
+# Composite cognitive scores and Mullen subscales
+regression_currentCogScores_18to120mo_onlydemo = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlydemo.jld")
+    )["regression_currentCogScores_18to120mo_onlydemo"];
+regression_currentCogScores_18to120mo_demoplustaxa = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_demoplustaxa.jld")
+    )["regression_currentCogScores_18to120mo_demoplustaxa"];
+regression_currentCogScores_18to120mo_demoplusecs = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_demoplusecs.jld")
+    )["regression_currentCogScores_18to120mo_demoplusecs"];
+regression_currentExpressiveLanguages_18to120mo_onlydemo = JLD2.load(
+    modelfiles("regression_currentExpressiveLanguages_18to120mo_onlydemo.jld")
+    )["regression_currentExpressiveLanguages_18to120mo_onlydemo"];
+regression_currentExpressiveLanguages_18to120mo_demoplustaxa = JLD2.load(
+    modelfiles("regression_currentExpressiveLanguages_18to120mo_demoplustaxa.jld")
+    )["regression_currentExpressiveLanguages_18to120mo_demoplustaxa"];
+regression_currentExpressiveLanguages_18to120mo_demoplusecs = JLD2.load(
+    modelfiles("regression_currentExpressiveLanguages_18to120mo_demoplusecs.jld")
+    )["regression_currentExpressiveLanguages_18to120mo_demoplusecs"];
+regression_currentGrossMotors_18to120mo_onlydemo = JLD2.load(
+    modelfiles("regression_currentGrossMotors_18to120mo_onlydemo.jld")
+    )["regression_currentGrossMotors_18to120mo_onlydemo"];
+regression_currentGrossMotors_18to120mo_demoplustaxa = JLD2.load(
+    modelfiles("regression_currentGrossMotors_18to120mo_demoplustaxa.jld")
+    )["regression_currentGrossMotors_18to120mo_demoplustaxa"];
+regression_currentGrossMotors_18to120mo_demoplusecs = JLD2.load(
+    modelfiles("regression_currentGrossMotors_18to120mo_demoplusecs.jld")
+    )["regression_currentGrossMotors_18to120mo_demoplusecs"];
+regression_currentVisualReceptions_18to120mo_onlydemo = JLD2.load(
+    modelfiles("regression_currentVisualReceptions_18to120mo_onlydemo.jld")
+    )["regression_currentVisualReceptions_18to120mo_onlydemo"];
+regression_currentVisualReceptions_18to120mo_demoplustaxa = JLD2.load(
+    modelfiles("regression_currentVisualReceptions_18to120mo_demoplustaxa.jld")
+    )["regression_currentVisualReceptions_18to120mo_demoplustaxa"];
+regression_currentVisualReceptions_18to120mo_demoplusecs = JLD2.load(
+    modelfiles("regression_currentVisualReceptions_18to120mo_demoplusecs.jld")
+    )["regression_currentVisualReceptions_18to120mo_demoplusecs"];
+
+regression_currentCogScores_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlytaxa.jld")
+    )["regression_currentCogScores_18to120mo_onlytaxa"];
+regression_currentCogScores_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentCogScores_18to120mo_onlyecs.jld")
+    )["regression_currentCogScores_18to120mo_onlyecs"];
+regression_currentExpressiveLanguages_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentExpressiveLanguages_18to120mo_onlytaxa.jld")
+    )["regression_currentExpressiveLanguages_18to120mo_onlytaxa"];
+regression_currentExpressiveLanguages_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentExpressiveLanguages_18to120mo_onlyecs.jld")
+    )["regression_currentExpressiveLanguages_18to120mo_onlyecs"];
+regression_currentGrossMotors_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentGrossMotors_18to120mo_onlytaxa.jld")
+    )["regression_currentGrossMotors_18to120mo_onlytaxa"];
+regression_currentGrossMotors_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentGrossMotors_18to120mo_onlyecs.jld")
+    )["regression_currentGrossMotors_18to120mo_onlyecs"];
+regression_currentVisualReceptions_18to120mo_onlytaxa = JLD2.load(
+    modelfiles("regression_currentVisualReceptions_18to120mo_onlytaxa.jld")
+    )["regression_currentVisualReceptions_18to120mo_onlytaxa"];
+regression_currentVisualReceptions_18to120mo_onlyecs = JLD2.load(
+    modelfiles("regression_currentVisualReceptions_18to120mo_onlyecs.jld")
+    )["regression_currentVisualReceptions_18to120mo_onlyecs"];
+# concurrent brain regression from taxonomic profiles
+brain_models = JLD2.load(modelfiles("brain_models.jld"))["brain_models"]
+```
 
 #### Compute the mean figures of merit for the Brain segment regressions
 
 ```julia
 mean_brain_merits = reduce(
     vcat,
-    # [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
-    [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(skipnan(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor)), :Test_Cor => mean(skipnan(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor))) for i in eachindex(ordered_brain_segments_list) ]
+    [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
 )
 ```
 
 #### Compute the mean importances loading of taxa on Brain segment regressions
 
 ```julia
-weighted_brain_importances = reduce(
+weighted_brain_importances = dropmissing(reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
     [ rename!(weighted_hpimportances(j; normalize_importances=false), :weightedImportance => Symbol(split(j.name, '_')[2]))
-      for (i, j) in brain_models ] )
+      for (i, j) in brain_models ] ) )
 
-relative_brain_importances = reduce(
+relative_brain_importances = dropmissing(reduce(
     (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
     [ rename!(weighted_hpimportances(j; normalize_importances=true), :weightedImportance => Symbol(split(j.name, '_')[2]))
-      for (i, j) in brain_models ] )
+      for (i, j) in brain_models ] ))
 ```
 
-#### Filter the merits and importances tables according to the list of interesting segments and taxa
+
+#### Getting a table with figures of merit to plot on Panel A
+
+```julia
+function generate_cols(model_df, xs, grp, color)
+    insertcols(DataFrames.combine(
+        groupby(model_df.merits, :Hyperpar_Idx),
+            "Test_Cor" => (x -> round(mean(x); digits=2))=> "Test_Cor_mean"), 1,
+            "xs"=> xs, "grp"=> grp, "color"=> color
+    )
+
+end 
+cm = [ColorSchemes.Spectral_10[i] for i in (10,2,4,8)]
+panelA_plot_df = let
+    vcat(
+        generate_cols(regression_currentCogScores_18to120mo_demoplustaxa,           3,  1, cm[1] ),
+        generate_cols(regression_currentCogScores_18to120mo_demoplusecs,            4,  1, cm[1] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_demoplustaxa, 3,  2, cm[2] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_demoplusecs,  4,  2, cm[2] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_demoplustaxa,         3,  3, cm[3] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_demoplusecs,          4,  3, cm[3] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_demoplustaxa,    3,  4, cm[4] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_demoplusecs,     4,  4, cm[4] ),
+        generate_cols(regression_currentCogScores_18to120mo_onlytaxa,           1,  1, cm[1] ),
+        generate_cols(regression_currentCogScores_18to120mo_onlyecs,            2,  1, cm[1] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_onlytaxa, 1,  2, cm[2] ),
+        generate_cols(regression_currentExpressiveLanguages_18to120mo_onlyecs,  2,  2, cm[2] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_onlytaxa,         1,  3, cm[3] ),
+        generate_cols(regression_currentGrossMotors_18to120mo_onlyecs,          2,  3, cm[3] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_onlytaxa,    1,  4, cm[4] ),
+        generate_cols(regression_currentVisualReceptions_18to120mo_onlyecs,     2,  4, cm[4] ),
+    )
+end
+```
+
+#### Getting the individual and combined importances, finding the bugs to plot on Panel B
+```julia
+composite_importances = rename(
+    weighted_hpimportances(regression_currentCogScores_18to120mo_demoplustaxa;
+        normalize_importances=true),
+        :weightedImportance => :Composite
+)
+el_importances = rename(
+    weighted_hpimportances(regression_currentExpressiveLanguages_18to120mo_demoplustaxa;
+        normalize_importances=true),
+        :weightedImportance => :ExpressiveLanguage
+)
+gm_importances = rename(
+    weighted_hpimportances(regression_currentGrossMotors_18to120mo_demoplustaxa;
+        normalize_importances=true),
+        :weightedImportance => :GrossMotor
+)
+vr_importances = rename(
+    weighted_hpimportances(regression_currentVisualReceptions_18to120mo_demoplustaxa;
+        normalize_importances=true),
+        :weightedImportance => :VisualReception
+)
+
+sidebyside_importances = reduce( (x, y) -> outerjoin(x, y, on = :variable; makeunique = true), [ composite_importances, el_importances, gm_importances, vr_importances ])
+sidebyside_importances.avg = [ mean(skipmissing(collect(rr))) for rr in eachrow(sidebyside_importances[:, 2:end]) ]
+important_bugs_composite = sort(dropmissing(sidebyside_importances, :Composite), :Composite; rev = true).variable[1:12]
+important_bugs_ExpressiveLanguage = sort(dropmissing(sidebyside_importances, :ExpressiveLanguage), :ExpressiveLanguage; rev = true).variable[1:12]
+important_bugs_GrossMotor = sort(dropmissing(sidebyside_importances, :GrossMotor), :GrossMotor; rev = true).variable[1:12]
+important_bugs_VisualReception = sort(dropmissing(sidebyside_importances, :VisualReception), :VisualReception; rev = true).variable[1:12]
+
+@show union(important_bugs_composite, important_bugs_ExpressiveLanguage, important_bugs_GrossMotor, important_bugs_VisualReception)
+
+panelB_taxa = [
+    "Blautia_wexlerae",
+    "Eubacterium_eligens",
+    "Faecalibacterium_prausnitzii",
+    "Bifidobacterium_pseudocatenulatum",
+    "Bifidobacterium_longum",
+    "Ruminococcus_gnavus",
+    "Roseburia_inulinivorans",
+    "Flavonifractor_plautii",
+    "Roseburia_faecis",
+    "Streptococcus_salivarius",
+    "Fusicatenibacter_saccharivorans",
+    "Clostridium_symbiosum",
+    "Subdoligranulum_sp",
+    "Clostridium_innocuum",
+    "Bacteroides_vulgatus",
+]
+
+panelB_taxa_idxer = Dict( [ panelB_taxa[i] => i for i in eachindex(panelB_taxa) ] )
+```
+
+#### Preparing data to plot on panel B
+```julia
+panelB_plot_df = @chain vcat(
+    insertcols(
+        weighted_hpimportances(
+            regression_currentCogScores_18to120mo_demoplustaxa;
+            normalize_importances=true
+        ), 1, :grp => 1, :color => cm[1]),
+    insertcols(
+        weighted_hpimportances(
+            regression_currentExpressiveLanguages_18to120mo_demoplustaxa;
+            normalize_importances=true
+        ), 1, :grp => 2, :color => cm[2]),
+    insertcols(
+        weighted_hpimportances(
+            regression_currentGrossMotors_18to120mo_demoplustaxa;
+            normalize_importances=true
+        ), 1, :grp => 3, :color => cm[3]),
+    insertcols(
+        weighted_hpimportances(
+            regression_currentVisualReceptions_18to120mo_demoplustaxa;
+            normalize_importances=true
+        ), 1, :grp => 4, :color => cm[4])
+) begin
+    subset(:variable => ( x -> x .∈ Ref(panelB_taxa) ))
+    transform!(:variable => (x -> [ panelB_taxa_idxer[el] for el in x ]) => :xs; renamecols = false)
+end
+```
+#### Filter the merits tables according to the list of interesting segments
 
 ```julia
 interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
 mean_brain_merits = mean_brain_merits[interesting_segments_idxes, :]
+```
 
+#### Using the filtered merits to explore the importances
+```julia
+explore_importances_df = dropmissing(relative_brain_importances[:, vcat(["variable"], mean_brain_merits.variable) ])
+rename!(explore_importances_df, :variable => :predictor)
+explore_importances_df = stack(explore_importances_df, 2:ncol(explore_importances_df))
+subset!(explore_importances_df, :predictor => (x -> x .!= "ageMonths"))
+sort!(explore_importances_df, :value; rev = true)
+@show unique(explore_importances_df.predictor)[1:20]
+```
+
+#### Filter the importances tables according to the list of interesting segments and taxa
+```julia
 interesting_taxa_idxes = relative_brain_importances.variable .∈ Ref(interesting_taxa)
-relative_brain_importances = dropmissing(relative_brain_importances[interesting_taxa_idxes, vcat(["variable"], interesting_segments) ])
+relative_brain_importances = dropmissing(relative_brain_importances[interesting_taxa_idxes, vcat(["variable"], mean_brain_merits.variable) ])
 ```
 
 #### Perform hierarchical clustering
@@ -87,7 +280,7 @@ hclust_symmetric_segment_order = hcl_segments.order
 reorder_segments_df = innerjoin(
     DataFrame(
         :original_segment => interesting_segments,
-        :left_or_unique => vcat(repeat([1, 0], 24), repeat([ 1 ], 3)),
+        :left_or_unique => repeat([1, 0], 16),
         :symmetric_segment => symmetric_segment_strings),
     DataFrame(
         :symmetric_segment => combinedTransposedImportances.symmetricSegment[hclust_symmetric_segment_order],
@@ -122,20 +315,37 @@ weighted_brain_importances = dropmissing(weighted_brain_importances[:, vcat(["va
 weighted_noage_importances = weighted_brain_importances[2:end, :]
 ```
 
-### Plotting
-
-#### Initialize figure
+### Declaring the Figure and its subdivisions
 
 ```julia
-figure = Figure(resolution = (1920, 1536))
-
+figure = Figure(resolution = (1920, 1536));
 
 AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
-# A_subfig = GridLayout(AB_Subfig[1,1])
-# B_subfig = GridLayout(AB_Subfig[1,2])
-C_subfig = GridLayout(figure[2,1], alignmode=Outside())
+CD_Subfig = GridLayout(figure[2,1], alignmode=Outside())
+E_Subfig  = GridLayout(figure[1:2,2], alignmode=Outside())
+
 ```
 
+#### Plotting Panel A
+```julia
+axA = Axis(
+    AB_Subfig[1, 1];
+    xlabel = "Correlation",
+    yticks = (collect(1:4), [rich("taxa"; color=:green),rich("genes"; color=:green), rich("taxa"; color=:blue), rich("genes"; color=:blue)]),
+    ylabel = "Model input composition",
+    title = "Average correlation of model",
+    yticklabelsize=16,
+    alignmode=Outside(),
+)
+
+barplot!(axA,
+    panelA_plot_df.xs,
+    panelA_plot_df.Test_Cor_mean,
+    dodge = panelA_plot_df.grp,
+    color = panelA_plot_df.color,
+    direction = :x
+)
+```
 ```julia
 highlight_bugs = [
     "Anaerostipes_hadrus",
@@ -144,68 +354,44 @@ highlight_bugs = [
     "Eubacterium_eligens",
     "Coprococcus_comes",
     "Ruminococcus_torques",
-    "Adlercreutzia_equolifaciens",
+    "Bifidobacterium_pseudocatenulatum",
     "Asaccharobacter_celatus",
     "Bacteroides_ovatus",
     "Coprococcus_eutactus"
 ]
 
 hlbugs_color = Dict(b=> c for (c,b) in zip(ColorSchemes.Set3_12, highlight_bugs))
-```
-#### Calling the plot functions with the ordered data
-
-```julia
-axA = Axis(
-    AB_Subfig[1, 1];
-    xlabel = "Correlation",
-    yticks = (reverse(collect(1:length(interesting_segments))), mean_brain_merits.variable),
-    ylabel = "Target Variable",
-    xticks = [-0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-    title = "Mean Random Forest regression correlations",
-    yticklabelsize=16,
-    alignmode=Inside(),
-    #yticklabelrotation= -pi/2
-)
-
-tightlimits!(axA, Top())
-tightlimits!(axA, Bottom())
-
-barplot!(
-    axA,
-    reverse(collect(1:length(interesting_segments))),
-    mean_brain_merits.Test_Cor,
-    color = vcat( repeat( [ "blue", "red" ], 24),repeat( [ "purple" ], 3) )[plot_segments_order],
-    direction=:x
-)
-
-Legend(AB_Subfig[2,1],
-    [MarkerElement(; marker=:rect, color=c) for c in ("blue", "red", "purple")],
-    ["Left hemisphere", "Right hemisphere", "non-lateral"];
-)
+@assert length(interesting_segments) % 2 == 0
+@assert all(1:2:length(interesting_segments)) do i
+    m1 = match(r"^(left)-(.+)$", interesting_segments[i])
+    m2 = match(r"^(right)-(.+)$", interesting_segments[i+1])
+    any(isnothing, (m1,m2)) && return false
+    m1[2] == m2[2]
+end
 ```
 
-#### Importance Heatmaps
 
+#### Plotting Panel B
 ```julia
-nbugs_toplot = length(interesting_taxa) # the top 1/3 bugs (out of 129) From intersecting the top mean importances and top max importances
-
 axB = Axis(
     AB_Subfig[1, 2];
-    ylabel = "Target brain segment",
-    xticks = (collect(1:nbugs_toplot), relative_brain_importances.variable[1:nbugs_toplot]),
-    yticks = (collect(1:length(interesting_segments)), names(relative_brain_importances)[2:end]),
-    yticklabelsize=16,
-    yreversed=true,
-    title = "Brain segmentation data variable importances"
+    ylabel = "Relative weighted Importance",
+    xticks = (collect(eachindex(panelB_taxa)), replace.(panelB_taxa, "_"=>" ")),
+    xticklabelfont="TeX Gyre Heros Makie Italic",
+    xticklabelsize=16,
+    xticklabelrotation= pi/4,
+    yreversed=false,
+    title = "Importance of selected taxa on MSEL models"
 )
+
 hidexdecorations!(axB; ticks=false)
 axBticks = let
-    bugs = relative_brain_importances.variable[1:nbugs_toplot]
+    bugs = panelB_taxa
     Axis(
         AB_Subfig[2,2];
         xlabel = "Predictor",
-        xticks = (collect(1:nbugs_toplot),
-                replace.(bugs, "_"=>" ")),
+        xticks = (collect(1:length(bugs)),
+                format_species_labels(bugs)),
         xticklabelsize=16,
         xticklabelrotation= pi/4,
         xticklabelfont="TeX Gyre Heros Makie Italic",
@@ -218,12 +404,35 @@ linkxaxes!(axB, axBticks)
 hidexdecorations!(axBticks; ticklabels=false, label=false)
 hideydecorations!(axBticks)
 hidespines!(axBticks)
-hm = CairoMakie.heatmap!(axB, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
-```
 
-```julia
+barplot!(axB,
+    panelB_plot_df.xs,
+    panelB_plot_df.weightedImportance,
+    dodge = panelB_plot_df.grp,
+    color = panelB_plot_df.color
+    )
+
+Legend(AB_Subfig[2,1],
+    [
+        [   MarkerElement(; marker=:rect, color=cm[1]),
+            MarkerElement(; marker=:rect, color=cm[2]),
+            MarkerElement(; marker=:rect, color=cm[3]),
+            MarkerElement(; marker=:rect, color=cm[4])
+        ],
+        [   MarkerElement(; marker=:circle, color=:green),
+            MarkerElement(; marker=:circle, color=:blue)
+        ]
+    ],
+    [
+        [ "Composite Score", "Expressive Language", "Gross Motor", "Visual Reception"],
+        [ "-", "+" ]
+    ],
+    ["MSEL Subscale", "Demographics"];
+    orientation=:horizontal,
+    nbanks=2
+)
 let
-    bugs = relative_brain_importances.variable[1:nbugs_toplot]
+    bugs = panelB_taxa
 
     for (i, bug) in enumerate(bugs)
         if bug in highlight_bugs
@@ -232,55 +441,149 @@ let
         end
     end
 end
-Colorbar(AB_Subfig[1,3], hm; label= "Relative feature importance", ticks=0:0.01:0.04, minorticksvisible=true)
+```
+
+### Plot figure 4 panels C, d and E
+
+### Plotting
+
+#### Calling the plot functions with the ordered data
+
+```julia
+axC = Axis(
+    CD_Subfig[1, 1];
+    xlabel = "Correlation",
+    yticks = (reverse(collect(1.5:2:length(interesting_segments)+0.5)),
+              replace.(mean_brain_merits.variable[1:2:end], r"(right|left)-"=> "")),
+    ylabel = "Target Variable",
+    xticks = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+    title = "Mean RF correlations",
+    yticklabelsize=16,
+    alignmode=Inside(),
+    #yticklabelrotation= -pi/2
+)
+
+tightlimits!(axC, Top())
+tightlimits!(axC, Bottom())
+
+barplot!(
+    axC,
+    reverse(collect(1:length(interesting_segments))),
+    mean_brain_merits.Test_Cor,
+    color = repeat( [ "blue", "red" ], 16)[plot_segments_order],
+    direction=:x
+)
+
+Legend(CD_Subfig[2,1],
+    [MarkerElement(; marker=:rect, color=c) for c in ("blue", "red")],
+    ["Left hemisphere", "Right hemisphere"];
+)
+```
+
+#### Importance Heatmaps
+
+```julia
+nbugs_toplot = length(interesting_taxa) # the top 1/3 bugs (out of 129) From intersecting the top mean importances and top max importances
+
+axD = Axis(
+    CD_Subfig[1, 2];
+    xticks = (collect(1:nbugs_toplot), relative_brain_importances.variable[1:nbugs_toplot]),
+    yreversed=true,
+    title = "Brain segmentation data variable importances"
+)
+hideydecorations!(axD)
+hidexdecorations!(axD; ticks=false)
+axDticks = let
+    bugs = relative_brain_importances.variable[1:nbugs_toplot]
+    Axis(
+        CD_Subfig[2,2];
+        xlabel = "Predictor",
+        xticks = (collect(1:nbugs_toplot),
+                replace.(bugs, "_"=>" ")),
+        xticklabelsize=16,
+        xticklabelrotation= pi/4,
+        xticklabelfont="TeX Gyre Heros Makie Italic",
+        alignmode=Outside()
+    )
+end
+tightlimits!.([axD, axDticks])
+
+linkxaxes!(axD, axDticks)
+hidexdecorations!(axDticks; ticklabels=false, label=false)
+hideydecorations!(axDticks)
+hidespines!(axDticks)
+hm = CairoMakie.heatmap!(axD, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
+```
+
+```julia
+let
+    bugs = relative_brain_importances.variable[1:nbugs_toplot]
+
+    for (i, bug) in enumerate(bugs)
+        if bug in highlight_bugs
+            poly!(axDticks, Point2f[(i-0.5, 0), (i-0.5, 1), (i+0.5, 1), (i+0.5, 0)];
+                color=hlbugs_color[bug])
+        end
+    end
+end
+Colorbar(CD_Subfig[1,3], hm; label= "Relative feature importance", ticks=0:0.01:0.04, minorticksvisible=true)
 ```
 
 
 ```julia
 idx = sortperm([median(row[2:end]) for row in eachrow(weighted_noage_importances)])
-ys = reduce(vcat, [values(weighted_noage_importances[i, 2:end])...] for i in idx)
-xs = repeat(1:length(idx); inner=ncol(weighted_noage_importances)-1)
+xs = reduce(vcat, [values(weighted_noage_importances[i, 2:end])...] for i in idx)
+ys = repeat(1:length(idx); inner=ncol(weighted_noage_importances)-1)
 
-axC = Axis(
-    C_subfig[1,1];
-    xlabel="Bugs (rank median)",
-    ylabel = "importances",
-    title = "Importances on all brain segments, by taxa")
-
-CairoMakie.xlims!(axC, [0, nrow(weighted_noage_importances)+1])
+axE = Axis(
+    E_Subfig[1,1];
+    ylabel="Bugs (rank median)",
+    xlabel = "importances",
+)
+minidx = 75
+CairoMakie.ylims!(axE, [minidx, nrow(weighted_noage_importances)+1])
 
 maximp = maximum(Matrix(weighted_noage_importances[!, 2:end]))
    
 for bug in highlight_bugs
     i = findfirst(==(bug), weighted_noage_importances.variable[idx])
-    poly!(axC, Point2f[(i-0.5, 0), (i+0.5, 0), (i+0.5, maximp), (i-0.5, maximp)]; color=hlbugs_color[bug])
+    poly!(axE, Point2f[(0, i-0.5), (0, i+0.5), (maximp, i+0.5), (maximp, i-0.5)]; color=hlbugs_color[bug])
 end
-CairoMakie.scatter!(axC, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
-Legend(C_subfig[1,2], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) for bug in highlight_bugs],
+CairoMakie.scatter!(axE, xs, ys .+ rand(Normal(0, 0.1), length(xs));)
+tightlimits!(axE)
+Legend(E_Subfig[2,1], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) for bug in highlight_bugs],
         replace.(highlight_bugs, "_"=> " ");
-        labelfont="TeX Gyre Heros Makie Italic")
-
-Label(AB_Subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, padding = (0, 240, 5, 0), halign = :right)
-Label(AB_Subfig[1, 2, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 200, 5, 0), halign = :right)
-Label(C_subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
+        labelfont="TeX Gyre Heros Makie Italic",
+        tellheight=true, tellwidth=false
+)
 ```
 
-Then resize
+### Final labeling and layout resizing
 
 ```julia
-colsize!(AB_Subfig, 1, Relative(0.2))
-colsize!(AB_Subfig, 2, Relative(0.8))
-rowsize!(AB_Subfig, 2, Relative(0.22))
+Label(A_Subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, halign = :right)
+Label(B_Subfig[1, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
+Label(CD_Subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
+Label(CD_Subfig[1, 2, TopLeft()], "D", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
+Label(E_Subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
+
+colsize!(figure.layout, 2, Relative(1/4))
+rowsize!(figure.layout, 2, Relative(0.60))
+colsize!(AB_Subfig, 1, Relative(0.4))
+rowsize!(CD_Subfig, 2, Relative(0.4))
+colsize!(CD_Subfig, 1, Relative(0.2))
+rowsize!(CD_Subfig, 2, Relative(0.28))
 axA.alignmode=Mixed(; bottom=-60)
 axB.alignmode=Mixed(; bottom=-20)
-rowsize!(figure.layout, 1, Relative(0.75))
-rowsize!(figure.layout, 2, Relative(0.25))
+axC.alignmode=Mixed(; bottom=-60)
+axD.alignmode=Mixed(; bottom=-20)
+colgap!(CD_Subfig, Fixed(5))
 figure
 ```
 
 ```julia
-save(figurefiles("Figure4.svg"), figure)
-save("manuscript/assets/Figure4.png", figure)
+# save(figurefiles("Figure4.svg"), figure)
+save(figurefiles("Figure4.png"), figure)
 ```
 
 ## Supplementary Figures
@@ -365,7 +668,7 @@ let fig = Figure(; resolution=(2000, 500))
     ys = reduce(vcat, [values(importances[i, 2:end])...] for i in idx)
     xs = repeat(1:length(idx); inner=ncol(importances)-1)
     @info length(ys) length(xs)
-    
+
     ax = Axis(fig[1,1]; 
         xlabel="Bugs (rank median)",
         ylabel = "importances",
@@ -373,18 +676,15 @@ let fig = Figure(; resolution=(2000, 500))
         xticklabelrotation = π/4,
         xticklabelfont="TeX Gyre Heros Makie Italic",
         xticklabelsize=10
-
     )
+
     scatter!(ax, xs .+ rand(Normal(0, 0.1), length(xs)), ys;)
     xlims!(ax, 0, nrow(importances)+1)
     save(figurefiles("Supp_Figure6.svg"), fig)
     save("manuscript/assets/Supp_Figure6.png", fig)
     fig
 end
-
 ```
-
-
 
 ### Supplementary Figure 7
 

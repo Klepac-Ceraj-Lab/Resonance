@@ -44,6 +44,7 @@ export  # 0. structs/types
         Regression,
         ProbeData,
         # 1. preprocessing functions
+        skipnan,
         filter_prevalences,
         # 2. training functions
         partitionvec,
@@ -93,6 +94,7 @@ using Random
 using Setup # dev package at `./Setup`
 using SparseArrays
 using Statistics
+#using ShapML
 using Tables
 using ThreadsX
 using MLJ

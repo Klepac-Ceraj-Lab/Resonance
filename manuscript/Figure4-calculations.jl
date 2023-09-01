@@ -46,15 +46,13 @@ mdata_brain_df = @chain Resonance.comm2wide(brain; feature_func = string) begin
         "cogScore",
         "race",
         "omni",
-        "Mullen::mullen_EarlyLearningComposite",
-        "Mullen::mullen_NonVerbalComposite",
-        "Mullen::mullen_VerbalComposite"]
+        "Mullen::mullen_ExpressivelanguageT",
+        "Mullen::mullen_FineMotorT",
+        "Mullen::mullen_GrossMotorT",
+        "Mullen::mullen_ReceptiveLanguageT",
+        "Mullen::mullen_VisualReceptionT"]
     ))
 end
-mdata_brain_df = dropmissing(
-    mdata_brain_df[mdata_brain_df.filter_18to120, :],
-    
-)
 # TBV = mdata_brain_df."White-matter" .+ mdata_brain_df."Gray-matter" # This is not necessary anymore, because the columns are already TBV normalized on the input.
 
 for col in names(mdata_brain_df)[2:end]
@@ -71,17 +69,17 @@ taxa_prevalence_threshold_lower = 0.10
 taxa_prevalence_threshold_upper = 1.00
 
 filtered_mdata_taxa_brain_df_18to120 = filter_prevalences(
-    dropmissing(mdata_taxa_brain_df[mdata_taxa_brain_df.filter_18to120, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"])),
+    dropmissing(mdata_taxa_brain_df[mdata_taxa_brain_df.filter_18to120, :], Not(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_ExpressivelanguageT", "Mullen::mullen_FineMotorT", "Mullen::mullen_GrossMotorT", "Mullen::mullen_ReceptiveLanguageT", "Mullen::mullen_VisualReceptionT"])),
     :cogScore,
     [:subject, :timepoint, :sex, :education, :ageMonths],
-    Symbol.(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_EarlyLearningComposite", "Mullen::mullen_NonVerbalComposite", "Mullen::mullen_VerbalComposite"]);
+    Symbol.(["sample", "read_depth", "edfloat", "race", "filter_00to120", "filter_00to06", "filter_18to120", "filter_future_omni", "filter_future_cog", "omni", "Mullen::mullen_ExpressivelanguageT", "Mullen::mullen_FineMotorT", "Mullen::mullen_GrossMotorT", "Mullen::mullen_ReceptiveLanguageT", "Mullen::mullen_VisualReceptionT"]);
     lbound = taxa_prevalence_threshold_lower,
     ubound = taxa_prevalence_threshold_upper
 )[:, 2:end]
 
 CSV.write(tablefiles("figure4", "18to120_brain_taxa.csv"), filtered_mdata_taxa_brain_df_18to120)
 
-inputs_taxa = filtered_mdata_taxa_brain_df_18to120[:, 1:166]
+inputs_taxa = filtered_mdata_taxa_brain_df_18to120[:, 1:166] # Ends on "Ruminococcus_sp_CAG_177" 
 
 #####
 # Training models
