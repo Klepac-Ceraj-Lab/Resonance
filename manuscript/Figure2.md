@@ -40,12 +40,12 @@ subscale_lms.kind[findall(k-> contains(k, "Expressivelan"))] .= "Mullen::mullen_
 
 
 speclms_pa = CSV.read(tablefiles("figure2", "lms_species_18to120_pa.csv"), DataFrame)
-fsdf_00to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
-fsdf2_00to120 = CSV.read(scratchfiles("figure2", "fsea_all_00to120.csv"), DataFrame)
-fsdf_00to06 = CSV.read(scratchfiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
-fsdf2_00to06 = CSV.read(scratchfiles("figure2", "fsea_all_00to06.csv"), DataFrame)
-fsdf_18to120 = CSV.read(scratchfiles("figure2", "fsea_consolidated_18to120.csv"), DataFrame)
-fsdf2_18to120 = CSV.read(scratchfiles("figure2", "fsea_all_18to120.csv"), DataFrame)
+fsdf_00to120 = CSV.read(tablefiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
+fsdf2_00to120 = CSV.read(tablefiles("figure2", "fsea_all_00to120.csv"), DataFrame)
+fsdf_00to06 = CSV.read(tablefiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
+fsdf2_00to06 = CSV.read(tablefiles("figure2", "fsea_all_00to06.csv"), DataFrame)
+fsdf_18to120 = CSV.read(tablefiles("figure2", "fsea_consolidated_18to120.csv"), DataFrame)
+fsdf2_18to120 = CSV.read(tablefiles("figure2", "fsea_all_18to120.csv"), DataFrame)
 
 cors_00to120 = CSV.read(tablefiles("figure2", "lms_unirefs_00to120.csv"), DataFrame)
 cors_00to06 = CSV.read(tablefiles("figure2", "lms_unirefs_00to06.csv"), DataFrame)
