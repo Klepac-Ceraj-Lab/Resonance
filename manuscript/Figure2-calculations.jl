@@ -84,9 +84,9 @@ ecsdf.quartile = specdf.quartile
 
 ## GLMs
 
-runlms(specdf[specdf.filter_00to120, :], tablefiles("figure2", "lms_species_00to120.csv"), names(specdf, Not(non_spec_cols)))
-runlms(specdf[specdf.filter_18to120, :], tablefiles("figure2", "lms_species_18to120.csv"), names(specdf, Not(non_spec_cols)))
-runlms(specdf[specdf.filter_00to06, :], tablefiles("figure2", "lms_species_00to06.csv"), names(specdf, Not(non_spec_cols)))
+runlms(species[:, get(species, :filter_00to120)], tablefiles("figure2", "lms_species_00to120.csv"))
+runlms(species[:, get(species, :filter_18to120)], tablefiles("figure2", "lms_species_18to120.csv"))
+runlms(species[:, get(species, :filter_00to06)], tablefiles("figure2", "lms_species_00to06.csv"))
 
 let 
     indf = unique(sort(braindf, [:subject, :timepoint]; rev=true), :subject)
@@ -136,46 +136,7 @@ end
 
 #- presence/absence
 
-let
-    indf = specdf[specdf.filter_18to120, :]
-    outfile = tablefiles("figure2", "lms_species_18to120_pa.csv")
-    lmresults = DataFrame()
-
-    for spc in names(indf, Not(non_spec_cols))
-        @info spc
-            
-        0.15 < prevalence(indf[!, spc]) < 1 || continue
-        df = indf[:, ["ageMonths", "cogScore", "quartile", "read_depth", "education"]]
-        df.bug = Int.(indf[!, spc] .> 0)
-
-        
-        mod = glm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df, Binomial(), ProbitLink(); dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        ct.species .= spc
-        ct.kind .= "cogScore"
-        append!(lmresults, ct)
-
-    end
-
-    select!(lmresults, Cols(:species, :Name, :))
-    rename!(lmresults, "Pr(>|z|)"=>"pvalue");
-
-    @chain lmresults begin
-        subset!(:Name => ByRow(x->
-            !any(y-> contains(x, y), 
-                ("(Intercept)", "ageMonths", "read_depth", "education")
-                )
-            )
-        )
-
-        groupby(:kind)
-        transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
-        sort!(:qvalue)
-    end
-
-    CSV.write(outfile, lmresults)
-    lmresults[:, Not(["Lower 95%", "Upper 95%", "kind"])]
-end
+runlms(species[:, get(species, :filter_18to120)], tablefiles("figure2", "lms_species_18to120_pa.csv"); model_kind=:logistic, prevalence_threshold=0.15)
 
 #-
 
@@ -209,54 +170,12 @@ relativeabundance!(unirefs_00to120)
 
 ## Run LMs
 
-Resonance.fsea_lms(unirefs_18to120, DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]],
-                     tablefiles("figure2", "lms_unirefs_18to120.csv"))
-
-let 
-    indf = DataFrame(get(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("figure2", "lms_unirefs_00to120.csv")
-    lmresults = DataFrame(ThreadsX.map(features(unirefs_00to120)) do feat
-        ab = vec(abundances(unirefs_00to120[feat, :]))
-        # prevalence(ab) > 0.1 || continue
-        # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
-        df = indf[!, :]
-        df.bug = asin.(sqrt.(ab))
-
-        mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrames.Tables.rowtable(coeftable(mod))[2]
-        @assert ct.Name == "cogScore"
-        return (; ct..., feature = string(feat), kind="unirefs")
-    end)
-
-    select!(lmresults, Cols(:feature, :Name, :))
-    rename!(lmresults, "Pr(>|t|)"=>"pvalue");
-
-    CSV.write(outfile, lmresults)
-    lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-end
-
-let 
-    indf = DataFrame(get(unirefs_00to06))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("figure2", "lms_unirefs_00to06.csv")
-    lmresults = DataFrame(ThreadsX.map(features(unirefs_00to06)) do feat
-        ab = vec(abundances(unirefs_00to06[feat, :]))
-        # prevalence(ab) > 0.1 || continue
-        # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
-        df = indf[!, :]
-        df.bug = asin.(sqrt.(ab))
-
-        mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrames.Tables.rowtable(coeftable(mod))[2]
-        @assert ct.Name == "cogScore"
-        return (; ct..., feature = string(feat), kind="unirefs")
-    end)
-
-    select!(lmresults, Cols(:feature, :Name, :))
-    rename!(lmresults, "Pr(>|t|)"=>"pvalue");
-
-    CSV.write(outfile, lmresults)
-    lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-end
+runlms(unirefs_00to120, tablefiles("figure2", "lms_unirefs_00to120.csv"), ["ageMonths", "cogScore", "read_depth", "education"];
+    prevalence_threshold = 0.1, model_type=:logistic)
+runlms(unirefs_18to120, tablefiles("figure2", "lms_unirefs_00to120.csv"), ["ageMonths", "cogScore", "read_depth", "education"];
+    prevalence_threshold = 0.1, model_type=:logistic)
+runlms(unirefs_00to06, tablefiles("figure2", "lms_unirefs_00to120.csv"), ["ageMonths", "cogScore", "read_depth", "education"];
+    prevalence_threshold = 0.1, model_type=:logistic)
 
 #-
 
