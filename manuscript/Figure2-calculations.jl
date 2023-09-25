@@ -177,57 +177,6 @@ let
     lmresults[:, Not(["Lower 95%", "Upper 95%", "kind"])]
 end
 
-let 
-    indf = DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
-    lmresults = DataFrame()
-
-    for feat in names(indf, Not(non_spec_cols))
-        @info feat
-            
-        over0 = indf[!, feat] .> 0
-        sum(over0) / size(indf, 1) > 0.20 || continue
-        # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
-
-        df = select(indf, "ageMonths", "cogScore", "quartile", "read_depth", "education"; copycols=false)
-        df.bug = asin.(sqrt.(indf[!, feat]))
-
-        mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        ct.species .= feat
-        ct.kind .= "cogScore"
-        append!(lmresults, ct)
-
-        mod = lm(@formula(bug ~ quartile + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrame(coeftable(mod))
-        subset!(ct, :Name=> ByRow(q-> !contains(q, "middle")))
-        droplevels!(df.quartile)
-        ct.species .= feat
-        ct.kind .= "quartile"
-        append!(lmresults, ct)
-    end
-
-    select!(lmresults, Cols(:species, :Name, :))
-    rename!(lmresults, "Pr(>|t|)"=>"pvalue");
-
-    @chain lmresults begin
-        subset!(:Name => ByRow(x->
-            !any(y-> contains(x, y), 
-                ("(Intercept)", "ageMonths", "read_depth", "education")
-                )
-            )
-        )
-
-        groupby(:kind)
-        transform!(:pvalue => (col-> adjust(collect(col), BenjaminiHochberg())) => :qvalue)
-        sort!(:qvalue)
-    end
-
-    CSV.write(outfile, lmresults)
-    lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-end
-
-
 #-
 
 # ## FSEA
@@ -260,28 +209,8 @@ relativeabundance!(unirefs_00to120)
 
 ## Run LMs
 
-let 
-    indf = DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
-    outfile = tablefiles("figure2", "lms_unirefs_18to120.csv")
-    lmresults = DataFrame(ThreadsX.map(features(unirefs_18to120)) do feat
-        ab = vec(abundances(unirefs_18to120[feat, :]))
-        # prevalence(ab) > 0.1 || continue
-        # ab = collect(indf[!, feat] .+ (minimum(indf[over0, feat])) / 2) # add half-minimum non-zerovalue
-        df = indf[!, :]
-        df.bug = asin.(sqrt.(ab))
-
-        mod = lm(@formula(bug ~ cogScore + ageMonths + read_depth + education), df; dropcollinear=false)
-        ct = DataFrames.Tables.rowtable(coeftable(mod))[2]
-        @assert ct.Name == "cogScore"
-        return (; ct..., feature = string(feat), kind="unirefs")
-    end)
-
-    select!(lmresults, Cols(:feature, :Name, :))
-    rename!(lmresults, "Pr(>|t|)"=>"pvalue");
-
-    CSV.write(outfile, lmresults)
-    lmresults[:, Not(["Lower 95%", "Upper 95%"])]
-end
+Resonance.fsea_lms(unirefs_18to120, DataFrame(get(unirefs_18to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]],
+                     tablefiles("figure2", "lms_unirefs_18to120.csv"))
 
 let 
     indf = DataFrame(get(unirefs_00to120))[:, ["ageMonths", "cogScore", "read_depth", "education"]]
