@@ -188,16 +188,17 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
-        mwu = MannWhitneyUTest(cs, acs)
-        # es = Resonance.enrichment_score(cs, acs) # needs updating - will break
+        # mwu = MannWhitneyUTest(cs, acs)
+        
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
 
     subset!(tmp, :pvalue=> ByRow(!isnan))
@@ -209,20 +210,21 @@ end
 let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     outfile = tablefiles("figure2", "fsea_all_00to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
-    stats = df.t
+    stats = df.stat
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
-        cs = filter(x-> !isnan(x) && x < 7, Ts[ixs]) # Some *very* small coeficients have spuriously large T-stats
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
+        isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
-        acs = filter(x-> !isnan(x) && x < 7, Ts[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
-        mwu = MannWhitneyUTest(cs, acs)
-        # es = Resonance.enrichment_score(cs, acs) # needs updating - will break
+        acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
+        # mwu = MannWhitneyUTest(cs, acs)
+        
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
 
     subset!(tmp, :pvalue=> ByRow(!isnan))

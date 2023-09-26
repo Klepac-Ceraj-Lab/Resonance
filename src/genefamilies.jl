@@ -159,6 +159,6 @@ function fsea_permute(cors, pos; nperm=1000)
         ses = enrichment_score(cors, spos)
         es < 0 ? ses < es : ses > es
     end
-    return lt / nperm
+    return (lt / nperm, es)
 end
         
