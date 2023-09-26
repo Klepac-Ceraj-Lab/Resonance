@@ -17,7 +17,7 @@ function runlms(comm, outfile;
  
         # ab = collect(indf[!, feature] .+ (minimum(indf[over0, feature])) / 2) # add half-minimum non-zerovalue
 
-        df = indf[:, modcols]
+        df = indf[!, modcols]
         if model_kind == :regular
             df.bug = asin.(sqrt.(ab))
             lmod = lm(formula, df; dropcollinear=false)

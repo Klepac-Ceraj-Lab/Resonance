@@ -137,16 +137,28 @@ function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos::AbstractVecto
     return fsea(cors, pos)
 end
 
-function enrichment_score(setcors, notcors)
-    srt = sortperm([setcors; notcors]; rev=true)
+function enrichment_score(cors, pos)
+    srt = sortperm(cors; rev=true)
     ranks = invperm(srt)
-    setranks = Set(ranks[1:length(setcors)])
-    
-    setscore =  1 / length(setcors)
-    notscore = -1 / length(notcors)
-    
+    setranks = ranks[pos]    
+    ng = length(pos)
+
+    setscore =  1 / ng
+    notscore = -1 / (length(cors) - ng)
+
     ys = cumsum(i ∈ setranks ? setscore : notscore for i in eachindex(ranks))
-    
     lower, upper = extrema(ys)
     return abs(lower) > abs(upper) ? lower : upper
 end
+
+function fsea_permute(cors, pos; nperm=1000)
+    es = enrichment_score(cors, pos)
+    ng = length(pos)
+    lt = ThreadsX.count(1:nperm) do _
+        spos = rand(eachindex(cors), ng)
+        ses = enrichment_score(cors, spos)
+        es < 0 ? ses < es : ses > es
+    end
+    return lt / nperm
+end
+        

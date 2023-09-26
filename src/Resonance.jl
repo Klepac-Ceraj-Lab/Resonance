@@ -86,6 +86,7 @@ using Combinatorics
 using Dates
 using Dictionaries
 using GLM
+using HypothesisTests
 using LinearAlgebra
 using MultipleTesting
 using MultivariateStats
