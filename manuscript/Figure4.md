@@ -152,6 +152,13 @@ end
 ```
 
 #### Getting the individual and combined importances, finding the bugs to plot on Panel B
+
+There are 178 variables across the entire feature set for all models.
+Considering the average importances, and exclusing age and education, 17 of them are enough to explain 25% of the average importances.
+Hence, 17 seems to be the most plausible and explainable number of bugs to show on Fig 4B.
+However, we want to be able to show not only very important variables, but also those that are differentially important, and those that match important features of the other analyses as well.
+The block of code below was used to explore those possibilities. The final selection was performed by manual curation to fuel discussion.
+
 ```julia
 composite_importances = rename(
     weighted_hpimportances(regression_currentCogScores_18to120mo_demoplustaxa;
@@ -176,30 +183,72 @@ vr_importances = rename(
 
 sidebyside_importances = reduce( (x, y) -> outerjoin(x, y, on = :variable; makeunique = true), [ composite_importances, el_importances, gm_importances, vr_importances ])
 sidebyside_importances.avg = [ mean(skipmissing(collect(rr))) for rr in eachrow(sidebyside_importances[:, 2:end]) ]
+sidebyside_importances.maxacross = [ maximum(skipmissing(collect(rr))) for rr in eachrow(sidebyside_importances[:, 2:end]) ]
+sidebyside_importances.stdev = [ Statistics.std(skipmissing(collect(rr))) for rr in eachrow(sidebyside_importances[:, 2:end]) ]
+
+## Check the most important bugs, in average.
+@show sort(sidebyside_importances, :avg; rev = true)[1:20, :]
+## From this list: "Anaerostipes_hadrus", "Bacteroides_uniformis" "Bacteroides_vulgatus", "Bifidobacterium_longum", "Bifidobacterium_pseudocatenulatum", 
+## "Blautia_wexlerae", "Eubacterium_eligens", "Eubacterium_sp_CAG_38", "Faecalibacterium_prausnitzii", "Flavonifractor_plautii", 
+## "Fusicatenibacter_saccharivorans", "Intestinibacter_bartlettii", "Parasutterella_excrementihominis", "Roseburia_inulinivorans", "Roseburia_faecis",
+## "Ruminococcus_bromii", "Ruminococcus_gnavus", "Streptococcus_salivarius"
+
+## Check the most important bugs, by maximum value across all models
+@show sort(sidebyside_importances, :maxacross; rev = true)[1:20, :]
+## This list adds the interesting information that "Clostridium_innocuum" and "Clostridium_symbiosum" have very high importance for Gross Motor
+## and "Clostridium_innocuum" is very important for VisualReception
+
+## Check the bugs whose importances deviate the most across models
+@show sort(sidebyside_importances, :stdev; rev = true)[1:20, :]
+## Notable (from other models) players from this list are "Veillonella_parvula", "Parabacteroides_merdae", "Veillonella_dispar" "Asaccharobacter_celatus".
+
 important_bugs_composite = sort(dropmissing(sidebyside_importances, :Composite), :Composite; rev = true).variable[1:12]
 important_bugs_ExpressiveLanguage = sort(dropmissing(sidebyside_importances, :ExpressiveLanguage), :ExpressiveLanguage; rev = true).variable[1:12]
 important_bugs_GrossMotor = sort(dropmissing(sidebyside_importances, :GrossMotor), :GrossMotor; rev = true).variable[1:12]
 important_bugs_VisualReception = sort(dropmissing(sidebyside_importances, :VisualReception), :VisualReception; rev = true).variable[1:12]
 
 @show union(important_bugs_composite, important_bugs_ExpressiveLanguage, important_bugs_GrossMotor, important_bugs_VisualReception)
+## The final list from here is: "Bacteroides_uniformis", "Bacteroides_vulgatus", "Bifidobacterium_longum", "Bifidobacterium_pseudocatenulatum", "Blautia_wexlerae",
+## "Clostridium_innocuum", "Clostridium_symbiosum",  "Eubacterium_eligens",  "Eubacterium_sp_CAG_38", "Faecalibacterium_prausnitzii",
+## "Firmicutes_bacterium_CAG_41", "Flavonifractor_plautii", "Fusicatenibacter_saccharivorans", "Intestinibacter_bartlettii", "Parabacteroides_merdae",
+## "Parasutterella_excrementihominis", "Roseburia_faecis", "Roseburia_inulinivorans", "Ruminococcus_gnavus", "Streptococcus_salivarius",
+## "Subdoligranulum_sp", "Veillonella_dispar", "Veillonella_parvula"
 
 panelB_taxa = [
-    "Blautia_wexlerae",
-    "Eubacterium_eligens",
-    "Faecalibacterium_prausnitzii",
     "Bifidobacterium_pseudocatenulatum",
+    "Faecalibacterium_prausnitzii",
+    "Blautia_wexlerae",
     "Bifidobacterium_longum",
-    "Ruminococcus_gnavus",
-    "Roseburia_inulinivorans",
-    "Flavonifractor_plautii",
     "Roseburia_faecis",
-    "Streptococcus_salivarius",
+    "Eubacterium_eligens",
     "Fusicatenibacter_saccharivorans",
-    "Clostridium_symbiosum",
-    "Subdoligranulum_sp",
-    "Clostridium_innocuum",
+    "Streptococcus_salivarius",
+    "Ruminococcus_gnavus",
+    "Anaerostipes_hadrus",
+    "Intestinibacter_bartlettii",
     "Bacteroides_vulgatus",
+    "Clostridium_innocuum",
+    "Clostridium_symbiosum"
 ]
+
+# Previously...
+# panelB_taxa = [
+#     "Blautia_wexlerae",
+#     "Eubacterium_eligens",
+#     "Faecalibacterium_prausnitzii",
+#     "Bifidobacterium_pseudocatenulatum",
+#     "Bifidobacterium_longum",
+#     "Ruminococcus_gnavus",
+#     "Roseburia_inulinivorans",
+#     "Flavonifractor_plautii",
+#     "Roseburia_faecis",
+#     "Streptococcus_salivarius",
+#     "Fusicatenibacter_saccharivorans",
+#     "Clostridium_symbiosum",
+#     "Subdoligranulum_sp",
+#     "Clostridium_innocuum",
+#     "Bacteroides_vulgatus",
+# ]
 
 panelB_taxa_idxer = Dict( [ panelB_taxa[i] => i for i in eachindex(panelB_taxa) ] )
 ```
@@ -346,6 +395,7 @@ barplot!(axA,
     direction = :x
 )
 ```
+
 ```julia
 highlight_bugs = [
     "Anaerostipes_hadrus",
@@ -370,13 +420,12 @@ hlbugs_color = Dict(b=> c for (c,b) in zip(ColorSchemes.Set3_12, highlight_bugs)
 end
 ```
 
-
 #### Plotting Panel B
 ```julia
 axB = Axis(
     AB_Subfig[1, 2];
     ylabel = "Relative weighted Importance",
-    xticks = (collect(eachindex(panelB_taxa)), replace.(panelB_taxa, "_"=>" ")),
+    xticks = (collect(eachindex(panelB_taxa)), replace.(panelB_taxa, "_"=>"\n")),
     xticklabelfont="TeX Gyre Heros Makie Italic",
     xticklabelsize=16,
     xticklabelrotation= pi/4,
@@ -393,8 +442,9 @@ axBticks = let
         xticks = (collect(1:length(bugs)),
                 format_species_labels(bugs)),
         xticklabelsize=16,
-        xticklabelrotation= pi/4,
+        xticklabelrotation= pi/3,
         xticklabelfont="TeX Gyre Heros Makie Italic",
+        xticklabelpad = 20.0,
         alignmode=Outside()
     )
 end
@@ -412,7 +462,7 @@ barplot!(axB,
     color = panelB_plot_df.color
     )
 
-Legend(AB_Subfig[2,1],
+ableg = Legend(AB_Subfig[2,1],
     [
         [   MarkerElement(; marker=:rect, color=cm[1]),
             MarkerElement(; marker=:rect, color=cm[2]),
@@ -474,7 +524,7 @@ barplot!(
     direction=:x
 )
 
-Legend(CD_Subfig[2,1],
+cdleg = Legend(CD_Subfig[2,1],
     [MarkerElement(; marker=:rect, color=c) for c in ("blue", "red")],
     ["Left hemisphere", "Right hemisphere"];
 )
@@ -561,8 +611,8 @@ Legend(E_Subfig[2,1], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) 
 ### Final labeling and layout resizing
 
 ```julia
-Label(A_Subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, halign = :right)
-Label(B_Subfig[1, 1, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
+Label(AB_Subfig[1, 1, TopLeft()], "A", fontsize = 26,font = :bold, halign = :right)
+Label(AB_Subfig[1, 2, TopLeft()], "B", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
 Label(CD_Subfig[1, 1, TopLeft()], "C", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
 Label(CD_Subfig[1, 2, TopLeft()], "D", fontsize = 26,font = :bold, padding = (0, 10, 5, 0), halign = :right)
 Label(E_Subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 40, 5, 0), halign = :right)
@@ -570,13 +620,18 @@ Label(E_Subfig[1, 1, TopLeft()], "E", fontsize = 26,font = :bold, padding = (0, 
 colsize!(figure.layout, 2, Relative(1/4))
 rowsize!(figure.layout, 2, Relative(0.60))
 colsize!(AB_Subfig, 1, Relative(0.4))
-rowsize!(CD_Subfig, 2, Relative(0.4))
+rowsize!(AB_Subfig, 2, Relative(0.4))
 colsize!(CD_Subfig, 1, Relative(0.2))
 rowsize!(CD_Subfig, 2, Relative(0.28))
-axA.alignmode=Mixed(; bottom=-60)
-axB.alignmode=Mixed(; bottom=-20)
+axA.alignmode=Mixed(; bottom=-100)
+axB.alignmode=Mixed(; bottom=00)
+axBticks.alignmode=Mixed(;bottom = -30, top=-20)
 axC.alignmode=Mixed(; bottom=-60)
 axD.alignmode=Mixed(; bottom=-20)
+ableg.alignmode = Mixed(;top = +25, bottom = -25)
+# ableg.alignmode = Outside()
+cdleg.alignmode = Mixed(;left = -30, right = +30)
+colgap!(AB_Subfig, Fixed(30))
 colgap!(CD_Subfig, Fixed(5))
 figure
 ```

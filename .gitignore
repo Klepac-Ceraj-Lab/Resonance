@@ -12,5 +12,9 @@ figures/*.pdf
 /LocalPreferences.toml
 test/Manifest.toml
 models/*.jld
-manuscript/tex/main.*
-!manuscript/tex/main.tex
+manuscript/main.*
+!manuscript/main.tex
+manuscript/submission.*
+!manuscript/submission.tex
+manuscript/diff.*
+!manuscript/diff.tex
