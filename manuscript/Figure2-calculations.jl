@@ -144,7 +144,6 @@ runlms(species[:, get(species, :filter_18to120)], tablefiles("figure2", "lms_spe
 
 ## Calculate correlations
 
-unimdata = DataFrame(get(unirefs))
 
 unirefs_00to120 = let filt = get(unirefs, :filter_00to120)
     keepuni = vec(prevalence(unirefs[:, filt]) .> 0)
@@ -171,9 +170,9 @@ relativeabundance!(unirefs_00to06)
 
 ## Run LMs
 
-runlms(unirefs_00to120, tablefiles("figure2", "lms_unirefs_00to120.csv"); prevalence_threshold = 0.1, model_kind=:logistic)
-runlms(unirefs_18to120, tablefiles("figure2", "lms_unirefs_00to120.csv"); prevalence_threshold = 0.1, model_kind=:logistic)
-runlms(unirefs_00to06, tablefiles("figure2", "lms_unirefs_00to120.csv"); prevalence_threshold = 0.1, model_kind=:logistic)
+runlms(unirefs_00to120, tablefiles("figure2", "lms_unirefs_00to120.csv"); prevalence_threshold = 0.1)
+runlms(unirefs_18to120, tablefiles("figure2", "lms_unirefs_18to120.csv"); prevalence_threshold = 0.1)
+runlms(unirefs_00to06, tablefiles("figure2", "lms_unirefs_00to06.csv"); prevalence_threshold = 0.1)
 
 #-
 
@@ -233,78 +232,26 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     CSV.write(outfile, tmp)
 end
 
-#-
-
-### Kids Under 6 months
-
-let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
-    outfile = tablefiles("figure2", "fsea_consolidated_00to06.csv")
-    df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
-    Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
-    tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
-        ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-        cs = filter(x-> !isnan(x) && x < 7, Ts[ixs]) # Some *very* small coeficients have spuriously large T-stats
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-        acs = filter(x-> !isnan(x) && x < 7, Ts[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
-        mwu = MannWhitneyUTest(cs, acs)
-        # es = Resonance.enrichment_score(cs, acs) # needs updating - will break
-
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-    end)
-
-    subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-    sort!(tmp, :qvalue)
-    CSV.write(outfile, tmp)
-end
-
-let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
-    outfile = tablefiles("figure2", "fsea_all_00to06.csv")
-    df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
-    Ts = df.t
-    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
-    tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
-        ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-        cs = filter(x-> !isnan(x) && x < 7, Ts[ixs]) # Some *very* small coeficients have spuriously large T-stats
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
-
-        acs = filter(x-> !isnan(x) && x < 7, Ts[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
-        mwu = MannWhitneyUTest(cs, acs)
-        # es = Resonance.enrichment_score(cs, acs) # needs updating - will break
-
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
-    end)
-
-    subset!(tmp, :pvalue=> ByRow(!isnan))
-    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
-    sort!(tmp, :qvalue)
-    CSV.write(outfile, tmp)
-end
-### Kids over 18 months
+### 18 to 120m
 
 let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     outfile = tablefiles("figure2", "fsea_consolidated_18to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
-    Ts = df.t
+    stats = df.stat
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
-        cs = filter(x-> !isnan(x) && x < 7, Ts[ixs]) # Some *very* small coeficients have spuriously large T-stats
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
+        isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
-        acs = filter(x-> !isnan(x) && x < 7, Ts[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
-        mwu = MannWhitneyUTest(cs, acs)
-        # es = Resonance.enrichment_score(cs, acs) # needs updating - will break
+        acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
+        # mwu = MannWhitneyUTest(cs, acs)
+        
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
 
     subset!(tmp, :pvalue=> ByRow(!isnan))
@@ -316,20 +263,21 @@ end
 let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     outfile = tablefiles("figure2", "fsea_all_18to120.csv")
     df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
-    Ts = df.t
+    stats = df.stat
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
-        cs = filter(x-> !isnan(x) && x < 7, Ts[ixs]) # Some *very* small coeficients have spuriously large T-stats
-        isempty(cs) && return (; cortest = "cogScore", geneset = gs, U = NaN, median = NaN, enrichment = NaN, mu = NaN, sigma = NaN, pvalue = NaN)
+        cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
+        isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
-        acs = filter(x-> !isnan(x) && x < 7, Ts[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
-        mwu = MannWhitneyUTest(cs, acs)
-        # es = Resonance.enrichment_score(cs, acs) # needs updating - will break
+        acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
+        # mwu = MannWhitneyUTest(cs, acs)
+        
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
 
-        return (; cortest = "cogScore", geneset = gs, U = mwu.U, median = mwu.median, enrichment = es, mu = mwu.mu, sigma = mwu.sigma, pvalue=pvalue(mwu))
+        return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
 
     subset!(tmp, :pvalue=> ByRow(!isnan))
@@ -337,3 +285,58 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     sort!(tmp, :qvalue)
     CSV.write(outfile, tmp)
 end
+
+### 0 to 6m
+
+let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
+    outfile = tablefiles("figure2", "fsea_consolidated_00to06.csv")
+    df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
+    stats = df.stat
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
+    tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
+        ixs = neuroactive[gs]
+        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+
+        cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
+        isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+
+        acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
+        # mwu = MannWhitneyUTest(cs, acs)
+        
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+
+        return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
+    end)
+
+    subset!(tmp, :pvalue=> ByRow(!isnan))
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    sort!(tmp, :qvalue)
+    CSV.write(outfile, tmp)
+end
+
+let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
+    outfile = tablefiles("figure2", "fsea_all_00to06.csv")
+    df = subset(CSV.read(infile, DataFrame), "pvalue"=> ByRow(!isnan))
+    stats = df.stat
+    neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
+    tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
+        ixs = neuroactive[gs]
+        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+
+        cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
+        isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+
+        acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
+        # mwu = MannWhitneyUTest(cs, acs)
+        
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+
+        return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
+    end)
+
+    subset!(tmp, :pvalue=> ByRow(!isnan))
+    tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
+    sort!(tmp, :qvalue)
+    CSV.write(outfile, tmp)
+end
+
