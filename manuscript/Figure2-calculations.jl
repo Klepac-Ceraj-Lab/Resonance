@@ -316,6 +316,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
     tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outfile, tmp)
+    tmp
 end
 
 let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
@@ -342,5 +343,6 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
     tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outfile, tmp)
+    tmp
 end
 
