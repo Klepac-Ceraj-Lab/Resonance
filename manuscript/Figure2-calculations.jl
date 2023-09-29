@@ -187,7 +187,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+        length(ixs) < 5 && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
         isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
@@ -195,7 +195,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
         acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
         # mwu = MannWhitneyUTest(cs, acs)
         
-        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs); nperm=5000)
 
         return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
@@ -204,6 +204,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outfile, tmp)
+    tmp
 end
 
 let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
@@ -213,7 +214,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+        length(ixs) < 5 && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
         isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
@@ -221,7 +222,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
         acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
         # mwu = MannWhitneyUTest(cs, acs)
         
-        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs); nperm=5000)
 
         return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
@@ -230,6 +231,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to120.csv")
     tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outfile, tmp)
+    tmp
 end
 
 ### 18 to 120m
@@ -241,7 +243,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+        length(ixs) < 5 && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
         isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
@@ -249,7 +251,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
         acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
         # mwu = MannWhitneyUTest(cs, acs)
         
-        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs); nperm=5000)
 
         return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
@@ -258,6 +260,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outfile, tmp)
+    tmp
 end
 
 let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
@@ -267,7 +270,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+        length(ixs) < 5 && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
         isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
@@ -275,7 +278,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
         acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
         # mwu = MannWhitneyUTest(cs, acs)
         
-        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs); nperm=5000)
 
         return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
@@ -284,6 +287,7 @@ let infile = tablefiles("figure2", "lms_unirefs_18to120.csv")
     tmp.qvalue = adjust(tmp.pvalue, BenjaminiHochberg())
     sort!(tmp, :qvalue)
     CSV.write(outfile, tmp)
+    tmp
 end
 
 ### 0 to 6m
@@ -295,7 +299,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature))
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+        length(ixs) < 5 && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
         isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
@@ -303,7 +307,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
         acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
         # mwu = MannWhitneyUTest(cs, acs)
         
-        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs); nperm=5000)
 
         return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
@@ -321,7 +325,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
     neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), df.feature); consolidate=false)
     tmp = DataFrame(ThreadsX.map(collect(keys(neuroactive))) do gs
         ixs = neuroactive[gs]
-        isempty(ixs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
+        length(ixs) < 5 && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
 
         cs = filter(x-> !isnan(x) && x < 7, stats[ixs]) # Some *very* small coeficients have spuriously large T-stats
         isempty(cs) && return (; cortest = "cogScore", geneset = gs, enrichment = NaN, pvalue = NaN)
@@ -329,7 +333,7 @@ let infile = tablefiles("figure2", "lms_unirefs_00to06.csv")
         acs = filter(x-> !isnan(x) && x < 7, stats[Not(ixs)]) # Some *very* small coeficients have spuriously large T-stats
         # mwu = MannWhitneyUTest(cs, acs)
         
-        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs))
+        (pseudop, es) = Resonance.fsea_permute([cs; acs], 1:length(cs); nperm=5000)
 
         return (; cortest = "cogScore", geneset = gs, enrichment = es,  pvalue=pseudop)
     end)
