@@ -527,19 +527,33 @@ or in combination with microbial taxonomic profiles (Table 3).
     \centering
     \includegraphics[width=\textwidth]{assets/Figure3.png}
     \caption{
-        Random forest models predict concurrently measured cognitive function.
+        Random forest models predict both concurrent and future measured cognitive function.
         Comparison of RF predictor importance versus linear models for children
-        between birth and 6 months old (\textbf{A}), and for those older than 18 months
-        (\textbf{B}). Colors represent whether the species belong to the group of
+        over 18 months (\textbf{A}).
+        Colors represent whether the species belong to the group of
         top-important features that account for 60\% of the cumulative
         importance on the RF model, if that species was significant (q
-        \textless{} 0.2) in linear models, both, or neither. Ranked feature
-        importance for taxa in RF models for children between birth and 6 months
-        old (\textbf{C}), and for those older than 18 months (\textbf{D}). Taxa that are important
-        for RF models both for children under 6 months and for those over 18
-        months (\textbf{E}), only for children under 6 months (\textbf{F}), and only for children
-        over 18 months (\textbf{G})
-    }
+        \textless{} 0.2) in linear models, both, or neither.
+        Comparison of RF predictor importance for microbial features
+        between concurrent and future cognitive function measure
+        (\textbf{B}).
+        Colors represent whether the species belong to the group of
+        top-important features that account for 60\% of the cumulative
+        importance on the RF model only for concurrent prediction,
+        only for the future prediction, or for both models.
+        Features absent of one model are shown on the origin-aligned sideplots.
+        Distribution of ages for each microbiome sampling - cognitive assesment dyad (\textbf{C}).
+        Blue violin plot shows distribution of sampling age,
+        while red violin plot shows distribution of asessment age.
+        Black lines connect ages for each individual subject.      
+        Ranked feature importance for taxa in RF models for
+        both concurrent (\textbf{D}) and future (\textbf{E})
+        cognitive function measurement prediction.
+        Red dots indicate how relative importances change (among taxa)
+        when demographics (sex, SES) are arred as covariables.
+        Abundances and prevalences of taxa that are important
+        for RF models both for concurrent (\textbf{E}) and future (\textbf{G}) assesment prediction.
+        }
     \label{fig:3}
 \end{sidewaysfigure}
 
