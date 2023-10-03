@@ -77,12 +77,12 @@ for oldname in names(mdata_ecs_df)[20:end]
     rename!(mdata_ecs_df, oldname => randstring(['A':'Z'; 'a':'z'], 12))
 end
 newnames = names(mdata_ecs_df)[20:end]
-open(scratchfiles("longnames.txt"), "w") do io
+open(scratchfiles("future_longnames.txt"), "w") do io
     for i in oldnames
         println(io, i)
     end
 end
-open(scratchfiles("hashnames.txt"), "w") do io
+open(scratchfiles("future_hashnames.txt"), "w") do io
     for i in newnames
         println(io, i)
     end
