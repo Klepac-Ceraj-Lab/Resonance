@@ -1060,8 +1060,21 @@ Different experiment sets were designed to probe how different
 representations of the gut microbiome (taxonomic profiles, functional
 profiles encoded as ECs) would behave, with and without the addition of
 demographics (sex and maternal education as a proxy of socioeconomic
-status) on participants from different age groups. Age (in months) was
-provided as a covariate for all models (Table S3).
+status) on participants from different age groups.
+
+For the concurrent cognitive assessment score preditions,
+all viable datapoints containing 
+age at data collection, demographics, stool metagenomics and cognitive assessment were employed.
+The cognitive assessments were collected as either composite scores
+(for the experiments in Figure \textbf{3}) or, when available, segregate scores on the
+Mullen Scales of Early Learning ( Figure \textbf{4 A-B}: Expressive Language, Gross Motor and Visual Reception).
+For the concurrent prediction experiments, when multiple viable longitudinal samples were present,
+the single earliest viable datapoint inside the age range of the experiment was considered.
+For the future prediction experiments, every demographics-complete subject
+contributed a single datapoint built from the combination of
+the latest metagenome collected within the stool collection time range and
+the latest future cognitive assessment on the assesment time range.
+Age (in months) was provided as a covariate for all models (Table S3).
 
 Random Forests (RFs)
 \cite{breimanRandomForests2001}
