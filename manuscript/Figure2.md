@@ -27,7 +27,6 @@ taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs)
 taxdf = comm2wide(taxa)
 ```
 
-
 ## Load FSEA
 
 

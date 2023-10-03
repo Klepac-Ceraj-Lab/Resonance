@@ -7,7 +7,7 @@ using Statistics
 using Chain
 using JLD2
 using MLJ
-using DataFrames.PrettyTables
+using DataFrames.PrettyTables: LatexHighlighter, pretty_table
 
 isdir(tablefiles()) || mkpath(tablefiles())
 
@@ -90,14 +90,15 @@ models_to_report = [
 ## 4. LaTeX outputs
 spec_hl = LatexHighlighter((val, i, j) -> j == 2, ["textit"])
 spec_ft = (val, i, j) -> j == 2 ? replace(val, "_"=> " ") : val
+isdir(tablefiles("figure3_merits_importances")) || mkpath(tablefiles("figure3_merits_importances"))
 
 for m in models_to_report
-
+    @info m.name
     supptbl = singlemodel_importances_suppltable(m)
     prettyformat_suppltable!(supptbl)
     CSV.write(tablefiles("figure3_merits_importances", "importances_"*m.name*".csv"), supptbl)
 
-    @show latextable = pretty_table(supptbl; highlighters=spec_hl, formatters=spec_ft,
+    pretty_table(supptbl; highlighters=spec_hl, formatters=spec_ft,
         header = [ "Rank", "Variable", "Average fitness-weighted importance", "Relative fitness-weighted importance", "Rank-cumulative relative importance " ],
         backend = Val(:latex) )
     # write(tablefiles("figure3_merits_importances", "latex_importances_"*m.name*".txt"), latextable) # @Kevin I don't know how to save that.
