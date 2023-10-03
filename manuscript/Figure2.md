@@ -36,7 +36,7 @@ speclms_00to120 = CSV.read(tablefiles("figure2", "lms_species_00to120.csv"), Dat
 speclms_00to06 = CSV.read(tablefiles("figure2", "lms_species_00to06.csv"), DataFrame)
 speclms_18to120 = CSV.read(tablefiles("figure2", "lms_species_18to120.csv"), DataFrame)
 subscale_lms = CSV.read(tablefiles("newfigures", "subscale_lms.csv"), DataFrame)
-subscale_lms.kind[findall(k-> contains(k, "Expressivelan"))] .= "Mullen::mullen_ExpressiveLanguageT"
+subscale_lms.kind[findall(k-> contains(k, "Expressivelan"), subscale_lms.kind)] .= "Mullen::mullen_ExpressiveLanguageT"
 
 
 speclms_pa = CSV.read(tablefiles("figure2", "lms_species_18to120_pa.csv"), DataFrame)
