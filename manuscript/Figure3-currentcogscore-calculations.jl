@@ -47,17 +47,17 @@ ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
 mdata_ecs_df = sort(Resonance.comm2wide(ecs), [ :subject, :timepoint ]);
 
 ### 3.1. Hashing EC names with fixed-length alphabetic hashes due to length and special characters; storing text files for remapping.
-oldnames = names(mdata_ecs_df)[20:end]
-for oldname in names(mdata_ecs_df)[20:end]
+oldnames = names(mdata_ecs_df)[22:end]
+for oldname in names(mdata_ecs_df)[22:end]
     rename!(mdata_ecs_df, oldname => randstring(['A':'Z'; 'a':'z'], 12))
 end
-newnames = names(mdata_ecs_df)[20:end]
-open(scratchfiles("longnames.txt"), "w") do io
+newnames = names(mdata_ecs_df)[22:end]
+open(scratchfiles("currentcomposite_longnames.txt"), "w") do io
     for i in oldnames
         println(io, i)
     end
 end
-open(scratchfiles("hashnames.txt"), "w") do io
+open(scratchfiles("currentcomposite_hashnames.txt"), "w") do io
     for i in newnames
         println(io, i)
     end
