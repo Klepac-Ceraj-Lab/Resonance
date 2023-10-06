@@ -55,6 +55,10 @@ end
 # Loading Data
 #####
 
+## Printing quantiles for paper results
+@show quantile(future_mdata.future_ageMonths .- future_mdata.present_ageMonths, [0.05, 0.5, 0.95])
+@show quantile(mdata_taxa_df.future_ageMonths .- mdata_taxa_df.present_ageMonths, [0.05, 0.5, 0.95])
+
 ## 1. Metadata
 mdata = Resonance.load(Metadata())
 future_mdata = vcat( [ build_future_row(df) for df in groupby(mdata[ mdata.filter_future_omni .| mdata.filter_future_cog, : ], :subject) ]... )
@@ -170,7 +174,7 @@ regression_futureCogScores_onlydemo = probe_prod_randomforest(
     tuning_space = onlydemo_tuning_space,
     train_rng=ml_rng
 )
-    
+
 jldsave(modelfiles("regression_futureCogScores_onlydemo.jld"); regression_futureCogScores_onlydemo)
 
 ## 2. Only taxonomic profiles
