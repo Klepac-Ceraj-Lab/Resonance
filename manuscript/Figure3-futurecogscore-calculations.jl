@@ -55,6 +55,10 @@ end
 # Loading Data
 #####
 
+## Printing quantiles for paper results
+@show quantile(future_mdata.future_ageMonths .- future_mdata.present_ageMonths, [0.05, 0.5, 0.95])
+@show quantile(mdata_taxa_df.future_ageMonths .- mdata_taxa_df.present_ageMonths, [0.05, 0.5, 0.95])
+
 ## 1. Metadata
 mdata = Resonance.load(Metadata())
 future_mdata = vcat( [ build_future_row(df) for df in groupby(mdata[ mdata.filter_future_omni .| mdata.filter_future_cog, : ], :subject) ]... )
@@ -72,17 +76,17 @@ ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
 mdata_ecs_df = sort(Resonance.comm2wide(ecs), [ :subject ]);
 
 ### 3.1. Hashing EC names with fixed-length alphabetic hashes due to length and special characters; storing text files for remapping.
-oldnames = names(mdata_ecs_df)[20:end]
-for oldname in names(mdata_ecs_df)[20:end]
+oldnames = names(mdata_ecs_df)[12:end]
+for oldname in names(mdata_ecs_df)[12:end]
     rename!(mdata_ecs_df, oldname => randstring(['A':'Z'; 'a':'z'], 12))
 end
-newnames = names(mdata_ecs_df)[20:end]
-open(scratchfiles("longnames.txt"), "w") do io
+newnames = names(mdata_ecs_df)[12:end]
+open(scratchfiles("future_longnames.txt"), "w") do io
     for i in oldnames
         println(io, i)
     end
 end
-open(scratchfiles("hashnames.txt"), "w") do io
+open(scratchfiles("future_hashnames.txt"), "w") do io
     for i in newnames
         println(io, i)
     end
@@ -170,7 +174,7 @@ regression_futureCogScores_onlydemo = probe_prod_randomforest(
     tuning_space = onlydemo_tuning_space,
     train_rng=ml_rng
 )
-    
+
 jldsave(modelfiles("regression_futureCogScores_onlydemo.jld"); regression_futureCogScores_onlydemo)
 
 ## 2. Only taxonomic profiles
