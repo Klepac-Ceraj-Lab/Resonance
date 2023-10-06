@@ -485,14 +485,16 @@ development.
 \begin{table}[!h]
     \begin{center}
     \begin{tabular}{|r|r|r|r|r|r|r|}
-      \hline\hline
-      \textbf{Age group} & \textbf{under 6m} & \textbf{under 6m} & \textbf{over 18m} & \textbf{over 18m} \\
-      \texttt{geneset} & \texttt{E.S.} & \texttt{q value} & \texttt{E.S.} & \texttt{q value} \\\hline
-      Acetate syn. I & -0.21 & \color{red}{\textbf{0.068}} & 0.123 & 0.403 \\
-      Acetate syn. II & -0.322 & \color{red}{\textbf{0.046}} & 0.113 & 0.866 \\
-      Acetate syn. III & -0.291 & \color{red}{\textbf{0.089}} & 0.109 & 0.866 \\
-      Glutamate syn. II & -0.152 & 0.882 & 0.293 & \color{blue}{\textbf{0.001}} \\
-      Propionate deg. I & -0.639 & \color{red}{\textbf{0.006}} & -0.495 & 0.446 \\\hline\hline
+        \hline
+        \textbf{Age group}& \multicolumn{2}{c|}{\textbf{0 to 6m}} & \multicolumn{2}{c|}{\textbf{18 to 120m}} \\\hline
+        \texttt{geneset} & \texttt{E.S.} & \texttt{q value} & \texttt{E.S.} & \texttt{q value} \\\hline
+        Acetate syn. I & -0.165 & 0.284 & 0.192 & \color{red}{\textbf{0.145}} \\
+        Acetate syn. II & -0.491 & \color{blue}{\textbf{0.059}} & 0.248 & \color{red}{\textbf{0.15}} \\
+        Acetate syn. III & -0.409 & \color{blue}{\textbf{0.133}} & 0.215 & 0.209 \\
+        Butyrate syn. II & -0.357 & 0.284 & 0.414 & \color{red}{\textbf{0.178}} \\
+        Glutamate syn. II & 0.343 & 0.284 & 0.355 & \color{red}{\textbf{0.023}} \\
+        Propionate deg. I & -0.659 & \color{blue}{\textbf{0.029}} & 0.154 & \color{red}{\textbf{0.178}} \\
+        Tryptophan syn. & 0.143 & 0.284 &  & \\\hline
     \end{tabular}
     \caption{\label{tab:fsea}Feature set enrichment analysis on neuroactive microbial gene sets.
     Red and blue text indicates significant (q value \textless 0.2) genesets with a positive or negative
