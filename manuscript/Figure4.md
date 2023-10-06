@@ -294,6 +294,47 @@ comparison_table(vr_importances, "VisualReception", relative_brain_importances, 
 ## Streptococcus salivarius
 ```
 
+#### Numbers for the Manuscript - Sanity check and reporting
+```julia
+@info "Generating numbers report:\n"*
+    "-----\n"*
+    "Number of samples: $(nrow(brain_models["left-thalamus-proper"].original_df))\n"*
+    "-----\n"*
+    "Left lingual gyrus test-set correlations = $(subset(mean_brain_merits, :variable => x -> x .== "left-lingual").Test_Cor[1])\n"*
+    "Right lingual gyrus test-set correlations = $(subset(mean_brain_merits, :variable => x -> x .== "right-lingual").Test_Cor[1])\n"*
+    "Left lingual gyrus age Importance = $(subset(relative_brain_importances, :variable => x -> x .== "ageMonths")."left-lingual"[1]*100)\n"*
+    "Right lingual gyrus age Importance = $(subset(relative_brain_importances, :variable => x -> x .== "ageMonths")."right-lingual"[1]*100)\n"*
+    "-----\n"*
+    "Left pericalcarine gyrus test-set correlations = $(subset(mean_brain_merits, :variable => x -> x .== "left-pericalcarine").Test_Cor[1])\n"*
+    "Right pericalcarine gyrus test-set correlations = $(subset(mean_brain_merits, :variable => x -> x .== "right-pericalcarine").Test_Cor[1])\n"*
+    "Left pericalcarine gyrus age Importance = $(subset(relative_brain_importances, :variable => x -> x .== "ageMonths")."left-pericalcarine"[1]*100)\n"*
+    "Right pericalcarine gyrus age Importance = $(subset(relative_brain_importances, :variable => x -> x .== "ageMonths")."right-pericalcarine"[1]*100)\n"*
+    "-----\n"*
+    "Left accumbens-area gyrus test-set correlations = $(subset(mean_brain_merits, :variable => x -> x .== "left-accumbens-area").Test_Cor[1])\n"*
+    "Right accumbens-area gyrus test-set correlations = $(subset(mean_brain_merits, :variable => x -> x .== "right-accumbens-area").Test_Cor[1])\n"*
+    "Left accumbens-area gyrus age Importance = $(subset(relative_brain_importances, :variable => x -> x .== "ageMonths")."left-accumbens-area"[1]*100)\n"*
+    "Right accumbens-area gyrus age Importance = $(subset(relative_brain_importances, :variable => x -> x .== "ageMonths")."right-accumbens-area"[1]*100)\n"*
+    "Left accumbens-area gyrus Bacteroides_vulgatus Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Bacteroides_vulgatus")."left-accumbens-area"[1]*100)\n"*
+    "Left accumbens-area gyrus Bacteroides_ovatus Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Bacteroides_ovatus")."left-accumbens-area"[1]*100)\n"*
+    "Left accumbens-area gyrus Bacteroides_uniformis Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Bacteroides_uniformis")."left-accumbens-area"[1]*100)\n"*
+    "-----\n"*
+    ## "In general, for all segments, a consistent number of species between 31 and 45 (median = 37, less than 30\% of the input features) was responsible for half of the cumulative importance"
+    "Minimum number of taxa to account for 50% importance: $(n_species_to_halfimp = minimum(map(x -> sum(cumsum(sort(relative_brain_importances[:, x]; rev=true)) .< 0.5), collect(keys(brain_models)))) .- 1)\n"* # remove age (1)
+    "Median number of taxa to account for 50% importance: $(n_species_to_halfimp = median(map(x -> sum(cumsum(sort(relative_brain_importances[:, x]; rev=true)) .< 0.5), collect(keys(brain_models)))) .- 1)\n"* # remove age (1)
+    "Maximum number of taxa to account for 50% importance: $(n_species_to_halfimp = maximum(map(x -> sum(cumsum(sort(relative_brain_importances[:, x]; rev=true)) .< 0.5), collect(keys(brain_models)))) .- 1)\n" # remove age (1)
+
+    ## List of "first pattern" bugs that account for 10% importance
+    meanImps = sort(DataFrame(:variable => relative_brain_importances.variable, :meanImp => [ mean(collect(ll)) for ll in eachrow(relative_brain_importances[:, 2:end]) ]  ), :meanImp; rev = true)
+    mentioned_taxa = [ "Anaerostipes_hadrus", "Bacteroides_vulgatus", "Bacteroides_ovatus","Fusicatenibacter_saccharivorans", "Ruminococcus_torques", "Eubacterium_rectale", "Coprococcus_comes", "Blautia_wexlerae"]
+
+    @info meanImps[1:20, :]
+    @info "Sum of aforementioned taxa mean importance: $(sum(subset(meanImps, :variable => x -> x .∈ Ref(mentioned_taxa) ).meanImp))"
+    
+    ## Importances for A. hadrus
+    
+```
+
+
 #### Preparing data to plot on panel B
 ```julia
 panelB_plot_df = @chain vcat(
