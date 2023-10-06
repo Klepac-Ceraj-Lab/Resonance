@@ -271,24 +271,26 @@ function comparison_table(scale_imp::DataFrame, colname::String, brain_imp::Data
 end
 
 ## EL and bilateral Thalamus
-comparison_table(el_importances, "ExpressiveLanguage", relative_brain_importances, "left-thalamus-proper")
-comparison_table(el_importances, "ExpressiveLanguage", relative_brain_importances, "left-thalamus-proper")
+comparison_table(el_importances, "ExpressiveLanguage", relative_brain_importances, "left-thalamus-proper"; nrank = 20)
+comparison_table(el_importances, "ExpressiveLanguage", relative_brain_importances, "right-thalamus-proper"; nrank = 20)
 
 ## GM and central opercular cortex
 comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-opercularis"; nrank = 25)
-comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-opercularis")
-comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-orbitalis")
-comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-orbitalis")
-comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-triangularis")
-comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-triangularis")
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-opercularis"; nrank = 25)
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-orbitalis"; nrank = 25)
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-orbitalis"; nrank = 25)
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-triangularis"; nrank = 25)
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-triangularis"; nrank = 25)
 ## Fusicatenibacter_saccharivorans
 
 # Sean's paper; VR associated with occipital lobe white matter and visual cortex, cerebellum, and pulvinar nucleus of the thalamus associated with visual reception47,48
-comparison_table(vr_importances, "VisualReception", relative_brain_importances, "left-thalamus-proper")
-comparison_table(vr_importances, "VisualReception", relative_brain_importances, "right-thalamus-proper")
-comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-I-V")
-comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-VI-VII")
-comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-VIII-X")
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "left-thalamus-proper"; nrank = 30)
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "right-thalamus-proper"; nrank = 30)
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-I-V"; nrank = 30)
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-VI-VII"; nrank = 30)
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-VIII-X"; nrank = 30)
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "left-cerebellum-white-matter"; nrank = 30)
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "right-cerebellum-white-matter"; nrank = 30)
 ## Streptococcus salivarius
 ```
 
