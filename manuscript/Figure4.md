@@ -253,6 +253,45 @@ panelB_taxa = [
 panelB_taxa_idxer = Dict( [ panelB_taxa[i] => i for i in eachindex(panelB_taxa) ] )
 ```
 
+#### Previously-reported connections
+
+We compiled a short list of previously-reported associations between brain subcortical regions and Mullen subscales.
+This chunk of code will help us explore highly important taxa that link those observations.
+
+```julia
+function comparison_table(scale_imp::DataFrame, colname::String, brain_imp::DataFrame, segment::String; nrank = 20)
+    scl = sort(scale_imp, colname; rev = true)
+    scl.scale_rank = 1:nrow(scl)
+    brn = @chain brain_imp begin
+        select(["variable", segment])
+        sort(segment, rev = true)
+        insertcols!( _ , 3, :brain_rank => 1:nrow( _ ))
+    end
+    return subset(innerjoin(scl, brn, on = :variable; makeunique=true), [:scale_rank, :brain_rank] => (x, y) -> (x .< nrank) .& (y .< nrank))
+end
+
+## EL and bilateral Thalamus
+comparison_table(el_importances, "ExpressiveLanguage", relative_brain_importances, "left-thalamus-proper")
+comparison_table(el_importances, "ExpressiveLanguage", relative_brain_importances, "left-thalamus-proper")
+
+## GM and central opercular cortex
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-opercularis"; nrank = 25)
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-opercularis")
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-orbitalis")
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-orbitalis")
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "left-pars-triangularis")
+comparison_table(gm_importances, "GrossMotor", relative_brain_importances, "right-pars-triangularis")
+## Fusicatenibacter_saccharivorans
+
+# Sean's paper; VR associated with occipital lobe white matter and visual cortex, cerebellum, and pulvinar nucleus of the thalamus associated with visual reception47,48
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "left-thalamus-proper")
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "right-thalamus-proper")
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-I-V")
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-VI-VII")
+comparison_table(vr_importances, "VisualReception", relative_brain_importances, "cerebellar-vermal-lobules-VIII-X")
+## Streptococcus salivarius
+```
+
 #### Preparing data to plot on panel B
 ```julia
 panelB_plot_df = @chain vcat(

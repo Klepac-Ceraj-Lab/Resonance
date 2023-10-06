@@ -653,37 +653,61 @@ Many of the other species that ranked highest in feature importance
 were also oportunistic pathogens, or previously reported
 to be linked with disease (eg. \textit{R. gnavus}, \textit{E. coli}).
 
+\subsubsection*{Gut microbial taxa are associated with specific cognitive functions} %TODO: add numbers!
+
+Given that the development of different domains of cognitive function
+(eg gross motor development vs visual perception) may develop at different times
+and be affected by different molecular signals,
+we sought to determine whether the associations of microbial taxa
+with cognitive function are general across all cognitive subdomains,
+or specific.
+To accomplish this, we assessed individual subscales of the  
+Mullen Scales of Early Learning (MSEL - \textit{see Methods}). 
+Taxonomic profiles coupled with demographics exhibited predictive potential towards three probed subscales (Figure 4A), 
+namely Expressive Language (EL; test-set RMSE XXX, test-set correlation YYYY), 
+Gross Motor (GM; test-set RMSE XXX, test-set correlation YYYY) and 
+Visual Reception (VR; test-set RMSE XXX, test-set correlation YYYY).
+Between the subscales, not only the predictability (measured by the test-set figures of merit) is different,
+but also the relative importances of several taxa (Figure 4B).
+Although certain species such as \textit{B. longum}, \textit{F. prausznitzii} 
+have similar relative importance across all subscales, others are substantially different.
+Notably, \textit{Bifidobacterium pseudocatenulatum}, \textit{B. wexlerae} and \textit{E. eligens} are
+substantially more important for the prediction of EL, while
+\textit{R. faecis}, \textit{S. salivarius} and \textit{F. saccharivorans} are
+distinctly predictive of GM, and
+\textit{Clostridium innocuum}, \textit{B. vulgatus} 
+stand out on models targeting VR.
 
 \subsubsection*{Gut microbial taxonomic profiles predict brain structure differences}
 
-If there are causal effects of microbial metabolism on cognitive
+Given that individual microbes could be associated with particular domains
+of cognitive function and not others, if there are causal effects of microbial metabolism on cognitive
 function, they might be reflected in changes in neuroanatomy. We again
 used RF modeling to associate gut taxonomic
 profiles with individual brain regions identified in MRI scans
-(children over 18 months old, N = 121).
+(children over 18 months old, N = 124).
 Some brain regions were more readily
 predicted by RF models trained on microbial taxa (Table 4, Table S2), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
-0.421, Right = 0.434; importance for age, Left = 7.5\%, Right =
+0.444, Right = 0.441; importance for age, Left = 7.5\%, Right =
 8.3\%) and the L/R pericalcarine cortex (mean RF correlations, Left =
-0.200, Right = 0.273; importance for age, Left = 3.6\%, Right = 6.3\%).
+0.267, Right = 0.315; importance for age, Left = 3.6\%, Right = 6.3\%).
 In many cases, however, age was not an important variable in
 high-performing models, such as that for the left accumbens area (mean
-RF correlations = 0.288; relative age importances = 1.2\%).
-
+RF correlations = 0.275; relative age importances = 1.2\%).
 
 \begin{table}[!h]
     \begin{center}
     \begin{tabular}{|r|r|r|}
       \hline\hline
       \textbf{Statistic} & \textbf{MAPE} & \textbf{R} \\\hline
-      Mean & 0.073 & 0.137 \\
-      Standard deviation & 0.028 & 0.137 \\
-      Maximum & 0.206 & 0.605 \\
-      75th percentile & 0.082 & 0.195 \\
-      50th percentile & 0.067 & 0.134 \\
-      25th percentile & 0.057 & 0.062 \\
-      Minimum & 0.035 & -0.147 \\\hline\hline
+      Mean & 0.069 & 0.206 \\
+      Standard deviation & 0.015 & 0.099 \\
+      Maximum & 0.11 & 0.444 \\
+      75th percentile & 0.076 & 0.262 \\
+      50th percentile & 0.066 & 0.206 \\
+      25th percentile & 0.057 & 0.16 \\
+      Minimum & 0.046 & 0.005 \\\hline
     \end{tabular}
     \caption{\label{tab:neuro}Summary statistics for the neuroanatomy prediction benchmarks.
     Mean absolute proportional error (MAPE) and correlation coeficient (R)
