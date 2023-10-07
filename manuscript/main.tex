@@ -17,6 +17,7 @@ style=science
 ]{biblatex}
 
 \addbibresource{zotero.bib}
+\addbibresource{addons.bib}
 
 % Highlighting
 \usepackage{color}
@@ -673,7 +674,7 @@ Although certain species such as \textit{B. longum}, \textit{F. prausznitzii}
 have similar relative importance across all subscales, others are substantially different.
 Notably, \textit{Bifidobacterium pseudocatenulatum}, \textit{B. wexlerae} and \textit{E. eligens} are
 substantially more important for the prediction of EL, while
-\textit{R. faecis}, \textit{S. salivarius} and \textit{F. saccharivorans} are
+\textit{R. faecis}, \textit{Streptococcus salivarius} and \textit{F. saccharivorans} are
 distinctly predictive of GM, and
 \textit{Clostridium innocuum}, \textit{B. vulgatus} 
 stand out on models targeting VR.
@@ -689,12 +690,12 @@ profiles with individual brain regions identified in MRI scans
 Some brain regions were more readily
 predicted by RF models trained on microbial taxa (Table 4, Table S2), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
-0.444, Right = 0.441; importance for age, Left = 7.5\%, Right =
-8.3\%) and the L/R pericalcarine cortex (mean RF correlations, Left =
-0.267, Right = 0.315; importance for age, Left = 3.6\%, Right = 6.3\%).
+0.444, Right = 0.441; importance for age, Left = 6.8\%, Right =
+7.7\%) and the L/R pericalcarine cortex (mean RF correlations, Left =
+0.267, Right = 0.315; importance for age, Left = 3.6\%, Right = 6.2\%).
 In many cases, however, age was not an important variable in
 high-performing models, such as that for the left accumbens area (mean
-RF correlations = 0.275; relative age importances = 1.2\%).
+RF correlations = 0.275; relative age importances = 1.1\%).
 
 \begin{table}[!h]
     \begin{center}
@@ -722,28 +723,34 @@ microbial feature importance, other regions had substantial
 bilateral differences. For example, the left accumbens area
 has one of the highest test-set correlations of our
 brain region models (R = 0.288), as compared to the right which
-had a negative mean test-set correlation (R = -0.041),
+had a negligible test-set correlation (R = 0.005),
 indicating that generalizable models were not identified.
 Feature importance for models of the left accumbens area were dominated
 by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.3\% importance),
-\emph{B. ovatus} (3.7\% importance), and
-\emph{B. uniformis} (2.9\% importance).
+\emph{B. ovatus} (3.2\% importance), and
+\emph{B. uniformis} (2.8\% importance).
 
 While RF models for multiple brain regions had many important microbial taxa,
 others were dominated by a small number of taxa, many of which
 were also identified in LMs and RF models of cognitive function (Figures 2 and 3). 
-In general, for all segments, a consistent number of species between 31 and 45 (median = 37, less than 30\% of the input features)
+In general, for all segments, a consistent number of species between 28 and 42 (median = 38, less than 30\% of the input features)
 was responsible for half of the cumulative importance,
-regardless of model performance (Figure 4A-B, Table S2).
+regardless of model performance (Figure 4C-E, Table S2).
 We observed two major patterns of importance distribution from
 species over the brain segments; some species portrayed high contributions
 to multiple different segments, while others contributed modestly to
 just one or two brain segments. Notable cases of the first pattern
-included seven species - \emph{Anaerostipes hadrus}, \emph{B.
-vulgatus}, \emph{Fusicatenibacter saccharivorans}, \emph{Ruminococcus
-torques}, \emph{Eubacterium rectale}, \emph{Coprococcus comes} and
+included nine species - 
+\emph{Anaerostipes hadrus},
+\emph{B. vulgatus},
+\emph{B. ovatus},
+\emph{Fusicatenibacter saccharivorans},
+\emph{Ruminococcus torques},
+\emph{Eubacterium rectale},
+\emph{Coprococcus comes},
+\emph{Asaccharobacter celatus} and
 \emph{B. wexlerae}, which combined, account for approximately 10\% of the cumulative relative importances,
-computed after fitness-weighting on the reported brain segments (Figure 4A-B).
+computed after fitness-weighting on the reported brain segments (Figure 4D-E).
 
 \begin{sidewaysfigure}[!htb]
     \centering
@@ -765,7 +772,7 @@ computed after fitness-weighting on the reported brain segments (Figure 4A-B).
 
 Among these, \emph{A. hadrus} is the variable with 
 highest average relative importance along all reported 
-(mean = 1.7\%; min = 1.0\%; max = 3.8\%, Figure 4B-C).
+(mean = 1.7\%; min = 1.0\%; max = 3.8\%, Figure 4D-E).
 \emph{B. wexlerae}, which was important in RF models of cognitive function,
 and was the only species to be significantly associated
 with cogntive function in young children using LMs, 
@@ -775,7 +782,7 @@ both the left and right right parahippocampus.
 Another cluster of model importance contained taxa associated with the
 basal forebrain, especially the cingulate and the accumbens. This
 cluster contains \emph{B. ovatus} and \emph{B. uniformis},
-but also \emph{Alistipes finegoldii and Streptococcus salivaris}.
+but also \emph{Alistipes finegoldii and S. salivarius}.
 
 Both \emph{A. equolofaciens} and \emph{A. celatus}, two closely-related
 equol-producing species, are examples of the second contribution
@@ -817,14 +824,7 @@ Further, even in the absence of
 causal impacts of microbial metabolism, identifying risk factors that
 could point to other early interventions would also have value.
 
-While we did not identify any statistical associations between individual species
-and cognitive performance in our youngest subset (0 to 6 months),
-it may be because brain developmental trajectories begin \textit{in utero},
-and microbial influences (that can only begin at birth)
-take additional time to manifest.
-Future studies should attempt to link early-life microbial exposures
-to future cognitive performance or brain development.
-
+--- Start of Guilherme flag for review of section:
 We identified several species in the family Eggerthelaceae that were
 associated with cognitive function, including \emph{G.pamelaeae, A. celatus}
 (formerly regarded a subspecies of \emph{A. equolofaciens}
@@ -851,6 +851,31 @@ medication digoxin \cite{haiserPredictingManipulatingCardiac2013}.
 The metabolic versatility of this clade and the large number of
 species that are associated with cognition make these microbes prime
 targets for further mechanistic studies.
+--- End of Guilherme flag for review of section
+
+While we did not identify any statistical associations between individual species
+and cognitive performance in our youngest subset (0 to 6 months),
+it may be because brain developmental trajectories begin \textit{in utero},
+and microbial influences (that can only begin at birth)
+take additional time to manifest.
+In line with this hypothesis, RF models that were able to learn associations
+between early-life microbiomes and future cognitive function scores (Figure 3).
+The top-ranked species for these models included several 
+taxa that were important for predicting concurrent cognitive assessment scores after 18 months, notably
+pathobiontic \textit{Enterobacteriaceae} such as
+\textit{Escherichia} and \textit{Klebsiella}. 
+Representatives of these genera are known to be early and long-term persistent
+colonizers of infant intestine that can, in some settings,
+promote inflammatory response \cite{popeEnterobacEarlyGut2019}.
+By contrast, several traditionally inflammation-reducing representatives
+of the \textit{Bifidobacterium} genus,
+from the early HMO-metabolizer \textit{B. longum} to the
+later complex carbohydrate relying \textit{B. pseudocatenulatum} \cite{chungBifidoPsudocatenulatum2021},
+commonly associated with weaning to solid food in early age,
+also showed high relative importance.
+The involvement of most important taxa in different aspects of inflammatory response
+resonate with previous findings that associate chronic inflammation with
+changes to neural responses in some types of stimulae, notably visual\cite{xieChronicInfNeuro2019}.
 
 Other bacteria that were associated with both cognitive ability and
 brain structure had also have possible connections to previous studies.
@@ -880,6 +905,24 @@ has been associated with substance use disorder in young adults
 associated with reward control, and in individuals diagnosed with ADHD,
 it has been shown to have a divergent neuromorphology
 \cite{hoogmanSubcorticalBrainVolume2017}.
+
+Our ability to probe individual cognitive subscales provided
+results that also endorse previous findings and provide insight to
+potential gut-microbial connections between cognition and neuroanatomy.
+For example, a longitudinal neurocognitive development study pointed at bilateral
+associations between the thalamus and the EL component of the Mullen scales\cite{chenLongitudinalBrainMullen2023}.
+In line with this finding, we found that taxa such as 
+\textit{B. wexlerae} and \textit{A. hadrus} to be among the top 15\% important predictors
+on both left and right thalamus and the EL subscale.
+Another instance of those findings is a previously reported association between
+the central opercular cortex (COC) and Gross Motor development\cite{jiangBrainNetworkCognition2023}. In this case, we identified that
+butyrate-producing \textit{Fusicatenibacter saccharivorans} is among the 15\% most important predictors
+for both the GM subscale and three bilateral components of the COC
+(left and right pars orbitalis, pars opercularis and pars triangularis).
+Previous results also link to relationships between the caudate and the cerebellum,
+and the Visual Reception score\cite{deoniMyelinationMullenPreprint2022}.
+\textit{S. salivarius} was consistently found among the top 20\% predictors for this subscale, along with
+both sides of the thalamus and cerebellum white matter, along with cerebellar vermal lobules I-X.
 
 As is made apparent by the potentially opposing roles of 
 \textit{B. fragilis} and \textit{B. ovatus},
