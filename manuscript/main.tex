@@ -771,16 +771,19 @@ computed after fitness-weighting on the reported brain segments (Figure 4D-E).
     \centering
     \includegraphics[width=\textwidth]{assets/Figure4.png}
     \caption{
-        Microbial feature importance in predicting brain volumes in children over 18 months of age.
-        (\textbf{A}) Average test-set correlations for prediction of MRI segmentation
+        Microbial feature importance in predicting MSEL subscores and brain volumes in children over 18 months of age.
+        (\textbf{A}) Test set correlations for RF models predicting MSEL subscale scores,
+        with or without demographics included as predictors.
+        (\textbf{B}) Important taxa in models predicting MSEL subscale scores.
+        (\textbf{C}) Average test-set correlations for prediction of MRI segmentation
         data from microbiome and demographics on select segments after repeated
-        cross validation. (\textbf{B}) Heatmap of average individual relative taxa
+        cross validation. (\textbf{D}) Heatmap of average individual relative taxa
         importances on each brain segment. Importances are reported as
         proportions relative to the sum of importances for each model - since
         every model is trained with 132 features, and even distribution of
         importance would be 0.75\% for each feature. Segments and taxa ordered
         by HCA on a select list of species with high ranks on average importances,
-        and their respective highest-load segments (\textbf{C}).
+        and their respective highest-load segments (\textbf{E}).
     }
     \label{fig:4}
 \end{sidewaysfigure}
