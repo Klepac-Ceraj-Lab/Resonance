@@ -22,7 +22,7 @@ tableS2 = mapreduce( vcat, eachindex(ordered_brain_segments_list)) do i
               :Test_MAPE => round(mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE); digits = 4), 
               :Test_Cor => round(mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor); digits = 4))
 end
-tableS2 = subset(tableS2, :variable => x -> x .∈ Ref(interesting_segments) )
+# tableS2 = subset(tableS2, :variable => x -> x .∈ Ref(interesting_segments) ) # Table should show all segments, including the "bad" ones
 tableS2.variable = uppercasefirst.(map(x -> replace(x, "-"=>" "), tableS2.variable))
 
 CSV.write(joinpath("manuscript", "assets", "TableS6.csv"), tableS2)

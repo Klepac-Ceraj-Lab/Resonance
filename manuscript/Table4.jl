@@ -24,7 +24,7 @@ mean_brain_merits = reduce(
     vcat,
     [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_MAPE), :Test_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE), :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
 )
-mean_brain_merits = subset(mean_brain_merits, :variable => x -> x .∈ Ref(interesting_segments) )
+# mean_brain_merits = subset(mean_brain_merits, :variable => x -> x .∈ Ref(interesting_segments) ) # Table should show all segments, including the "bad" ones
 
 ## 3. Building the actual table
 
