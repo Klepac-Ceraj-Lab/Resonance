@@ -331,6 +331,20 @@ comparison_table(vr_importances, "VisualReception", relative_brain_importances, 
     @info "Sum of aforementioned taxa mean importance: $(sum(subset(meanImps, :variable => x -> x .∈ Ref(mentioned_taxa) ).meanImp))"
     
     ## Importances for A. hadrus
+    ahadrus_importances = subset(relative_brain_importances, :variable => x -> x .== "Anaerostipes_hadrus")
+    @info "importances for A. hadrus: MEAN: $(mean(skipmissing(Matrix(ahadrus_importances[:, 2:end])')))"
+    @info "importances for A. hadrus: MEAN: $(minimum(skipmissing(Matrix(ahadrus_importances[:, 2:end])')))"
+    @info "importances for A. hadrus: MEAN: $(maximum(skipmissing(Matrix(ahadrus_importances[:, 2:end])')))"
+
+    @info "Right anterior cingulate Asaccharobacter_celatus Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Asaccharobacter_celatus")."right-anterior-cingulate"[1]*100)\n"
+
+    @info "Left precentral Coprococcus eutactus Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Coprococcus_eutactus")."left-precentral"[1]*100)\n"
+    @info "Left posterior cingulate Coprococcus comes Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Coprococcus_comes")."left-posterior-cingulate"[1]*100)\n"
+    @info "Left pars opercularis Coprococcus comes Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Coprococcus_comes")."left-pars-opercularis"[1]*100)\n"
+    @info "Right pars opercularis Coprococcus comes Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Coprococcus_comes")."right-pars-opercularis"[1]*100)\n"
+    @info "Left precentral Coprococcus comes Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Coprococcus_comes")."left-precentral"[1]*100)\n"
+    @info "Left paracentral Coprococcus comes Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Coprococcus_comes")."left-paracentral"[1]*100)\n"
+    @info "Right paracentral Coprococcus comes Importance = $(subset(relative_brain_importances, :variable => x -> x .== "Coprococcus_comes")."right-paracentral"[1]*100)\n"
 ```
 
 
@@ -410,7 +424,7 @@ hclust_symmetric_segment_order = hcl_segments.order
 reorder_segments_df = innerjoin(
     DataFrame(
         :original_segment => interesting_segments,
-        :left_or_unique => repeat([1, 0], 16),
+        :left_or_unique => repeat([1, 0], 17),
         :symmetric_segment => symmetric_segment_strings),
     DataFrame(
         :symmetric_segment => combinedTransposedImportances.symmetricSegment[hclust_symmetric_segment_order],
@@ -601,7 +615,7 @@ barplot!(
     axC,
     reverse(collect(1:length(interesting_segments))),
     mean_brain_merits.Test_Cor,
-    color = repeat( [ "blue", "red" ], 16)[plot_segments_order],
+    color = repeat( [ "blue", "red" ], 17)[plot_segments_order],
     direction=:x
 )
 
