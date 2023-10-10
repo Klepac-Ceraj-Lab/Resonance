@@ -284,8 +284,8 @@ save("manuscript/assets/Figure3.png", figure)
 # Supplement to Figure 3
 ```julia
 ## 1. Building the supplementary-style tables
-supptblA = singlemodel_importances_suppltable(regression_currentCogScores_00to06mo_onlytaxa)
-supptblB = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
+supptblA = singlemodel_importances_suppltable(regression_currentCogScores_18to120mo_onlytaxa)
+supptblB = singlemodel_importances_suppltable(regression_futureCogScores_onlytaxa)
 
 ## 2. Building the Figure
 figure = Figure(resolution = (1200, 1200));
@@ -293,8 +293,8 @@ figure = Figure(resolution = (1200, 1200));
 this_barcolor = :lightblue
 this_curvecolor = :orange
 
-plot_importances_pareto!(figure[1,1], supptblA, "Pareto Plot - 0 to 6 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
-plot_importances_pareto!(figure[2,1], supptblB[1:70, :], "Pareto Plot - 18 to 120 months"; barcolor = this_barcolor, curvecolor = this_curvecolor)
+plot_importances_pareto!(figure[1,1], supptblA[1:70, :], "Pareto Plot - Concurrent composite score"; barcolor = this_barcolor, curvecolor = this_curvecolor)
+plot_importances_pareto!(figure[2,1], supptblB[1:70, :], "Pareto Plot - Future composite score"; barcolor = this_barcolor, curvecolor = this_curvecolor)
 
 Legend(
     figure[3, 1],
