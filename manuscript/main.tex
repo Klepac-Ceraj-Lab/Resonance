@@ -190,7 +190,7 @@ Actinobacteria, particularly the genus \emph{Bifidobacterium},
 Bacteroidetes, especially \emph{Bacteroides}, and Proteobacteria
 \cite{koenigSuccessionMicrobialConsortia2011}.
 Many of these bacteria have specialized metabolic capabilities
-for digesting human breast milk, such as \emph{Bifidobacterium longum}
+for digesting human milk, such as \emph{Bifidobacterium longum}
 subsp. \textit{infantis} and \emph{Bacteroides fragilis}
 \cite{selaGenomeSequenceBifidobacterium2008}.
 Upon the introduction of solid foods, the gut
@@ -321,7 +321,11 @@ and brain volume profiles was similarly driven largely by subject age (Figure 1E
                                   & College grad             & 95 (24.9\%) & 19 (23.2\%) & 75 (27.1\%) & 30 (28.8\%) \\ \cline{2-6}
                                   & Grad/professional school & 126 (33.1\%) & 16 (19.5\%) & 106 (38.3\%) & 23 (22.1\%) \\ \hline\hline
     \end{tabular}
-    \caption{\label{tab:demo}Subject demographics of the ECHO RESONANCE cohort.}
+    \caption{\label{tab:demo}Subject demographics of the ECHO RESONANCE cohort.
+            "All" refers to the entire cohort.
+            "Under 6 months", "Over 18 months", and "Future" refer specifically
+            to samples that were used included in the respective subgroup analyses.
+    }
 \end{table}
 
 
@@ -434,16 +438,16 @@ that was significantly negatively associated with cognitive function score (q va
     \label{fig:2}
 \end{sidewaysfigure}
 
-Each of the cognitive assessments (MSEL, WPPSI, WISC)
+Cognitive assessments (MSEL, WPPSI, WISC)
 are composites of multiple subscales that assess different cognitive domains.
-While the composite scores are broadly analagous accross ages,
+While the composite scores are broadly analagous accross ages and test modality,
 the subscales assessed in each test are different.
-In order to assess whether microbial taxa were associated with
+To assess whether microbial taxa were associated with
 the development of specific cognitive domains,
 we fit multivariate linear models for each species present in at least 10\%
 of samples for children under 6 months, 18 to 48 months, or all ages
 with a concurrent MSEL score (Figure 2C).
-Several of the taxa that were associated with composite scores (Figure 2B)
+Several taxa associated with composite scores (Figure 2B)
 were also associated with one or more subscores, including
 \textit{F. prausnitzii} and \textit{A. obesi}.
 Interestingly, while no taxa were significantly associated
@@ -626,9 +630,10 @@ significant when testing the relationship with LMs (Figure
 \textit{E. eligens}, % E. eligens was mentioned before, ~ line 395
 \textit{Parasutterella excrementihominis}, and % Not mentioned before
 \textit{A. obesi} as important % A. obesi was mentioned before, ~ lines 120, 390
-(q \textless 0.2 for LMs, cumulative importance \textless 60\% for RFs)
-but RF models did not identify \textit{Eggerthella} sp. CAG 298
-nor \textit{B. intestinihominis}, and \textit{E. ramulus}
+(q \textless 0.2 for LMs, cumulative importance \textless 60\% for RFs).
+Other taxa that were significant in LMs were not identified by RF models
+including \textit{Eggerthella} sp. CAG 298,
+and \textit{B. intestinihominis}. \textit{E. ramulus}
 was just outside our cutoff (64\% cumulative importance).
 RF models also identified an additional 48 species
 that were important for discriminating cognitive function scores
@@ -637,7 +642,7 @@ feature importance, which could indicate that decision branches based on
 microbial taxa have increased purity when considering the subject's age
 or that age itself is a useful predictor.
 
-\subsection*{Gut microbial profiles in the first year of life predictict future cogntitive function}
+\subsection*{Gut microbial profiles in the first year of life predict future cogntitive function}
 
 While LMs did not identify any taxa in the 0-6 month range
 that were associated with concurrently measured cognitive function,
@@ -668,17 +673,17 @@ to be linked with disease (eg. \textit{R. gnavus}, \textit{E. coli}).
 \subsubsection*{Gut microbial taxa are associated with specific cognitive functions} %TODO: add numbers!
 
 Given that the development of different domains of cognitive function
-(eg gross motor development vs visual perception) may develop at different times
+(e.g., gross motor development vs visual perception) may develop at different times
 and be affected by different molecular signals,
 we sought to determine whether the associations of microbial taxa
-with cognitive function are general across all cognitive subdomains,
-or specific.
+with cognitive function are general across all cognitive subdomains.
 To accomplish this, we assessed individual subscales of the  
-Mullen Scales of Early Learning (MSEL - \textit{see Methods}). 
-Taxonomic profiles coupled with demographics exhibited predictive potential towards three probed subscales (Figure 4A), 
-namely Expressive Language (EL; test-set RMSE XXX, test-set correlation YYYY), 
-Gross Motor (GM; test-set RMSE XXX, test-set correlation YYYY) and 
-Visual Reception (VR; test-set RMSE XXX, test-set correlation YYYY).
+Mullen Scales of Early Learning (MSEL, birth to 36 months - \textit{see Methods}). 
+Taxonomic profiles coupled with demographics exhibited predictive potential towards three
+of five probed subscales (Figure 4A), 
+namely Expressive Language (EL; test-set RMSE \hl{XXX}, test-set correlation \hl{YYYY}), 
+Gross Motor (GM; test-set RMSE \hl{XXX}, test-set correlation \hl{YYYY}) and 
+Visual Reception (VR; test-set RMSE \hl{XXX}, test-set correlation \hl{YYYY}).
 Between the subscales, not only the predictability (measured by the test-set figures of merit) is different,
 but also the relative importances of several taxa (Figure 4B).
 Although certain species such as \textit{B. longum}, \textit{F. prausznitzii} 
@@ -734,8 +739,7 @@ microbial feature importance, other regions had substantial
 bilateral differences. For example, the left accumbens area
 has one of the highest test-set correlations of our
 brain region models (R = 0.288), as compared to the right which
-had a negligible test-set correlation (R = 0.005),
-indicating that generalizable models were not identified.
+had a negligible test-set correlation (R = 0.005).
 Feature importance for models of the left accumbens area were dominated
 by three species of \emph{Bacteroides}, \emph{B. vulgatus} (3.3\% importance),
 \emph{B. ovatus} (3.2\% importance), and
