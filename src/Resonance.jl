@@ -61,7 +61,9 @@ export  # 0. structs/types
         plot_taxon_deepdive!,
         plot_future_deepdive!,
         singlemodel_importances_suppltable,
-        plot_importances_pareto!
+        plot_importances_pareto!,
+        prettyformat_suppltable!,
+        singlemodel_importances_suppltable
 
 # Percentiles
 export  AgeBracketPercentiles,

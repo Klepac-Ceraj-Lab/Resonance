@@ -331,7 +331,6 @@ comparison_table(vr_importances, "VisualReception", relative_brain_importances, 
     @info "Sum of aforementioned taxa mean importance: $(sum(subset(meanImps, :variable => x -> x .∈ Ref(mentioned_taxa) ).meanImp))"
     
     ## Importances for A. hadrus
-    
 ```
 
 
@@ -673,7 +672,6 @@ axE = Axis(
     xlabel = "importances",
 )
 minidx = 75
-CairoMakie.ylims!(axE, [minidx, nrow(weighted_noage_importances)+1])
 
 maximp = maximum(Matrix(weighted_noage_importances[!, 2:end]))
    
@@ -682,7 +680,12 @@ for bug in highlight_bugs
     poly!(axE, Point2f[(0, i-0.5), (0, i+0.5), (maximp, i+0.5), (maximp, i-0.5)]; color=hlbugs_color[bug])
 end
 CairoMakie.scatter!(axE, xs, ys .+ rand(Normal(0, 0.1), length(xs));)
-tightlimits!(axE)
+
+tightlimits!(axE, Top())
+tightlimits!(axE, Bottom())
+tightlimits!(axE, Left())
+CairoMakie.ylims!(axE, [minidx, nrow(weighted_noage_importances)+1])
+
 Legend(E_Subfig[2,1], [MarkerElement(; marker=:rect, color = hlbugs_color[bug]) for bug in highlight_bugs],
         replace.(highlight_bugs, "_"=> " ");
         labelfont="TeX Gyre Heros Makie Italic",
@@ -719,7 +722,7 @@ figure
 ```
 
 ```julia
-# save(figurefiles("Figure4.svg"), figure)
+save(figurefiles("Figure4.svg"), figure)
 save(figurefiles("Figure4.png"), figure)
 ```
 
