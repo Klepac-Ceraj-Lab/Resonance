@@ -1,5 +1,5 @@
 #####
-# Supplementary Table 2. Summary statistics for the neuroanatomy prediction benchmarks
+# Supplementary Table 6. Summary statistics for the neuroanatomy prediction benchmarks
 #####
 using Resonance
 using CategoricalArrays
@@ -25,7 +25,7 @@ end
 tableS2 = subset(tableS2, :variable => x -> x .∈ Ref(interesting_segments) )
 tableS2.variable = uppercasefirst.(map(x -> replace(x, "-"=>" "), tableS2.variable))
 
-CSV.write(joinpath("manuscript", "assets", "TableS2.csv"), tableS2)
+CSV.write(joinpath("manuscript", "assets", "TableS6.csv"), tableS2)
 
 pretty_table(tableS2;
     header = [ "Segment", "Mean absolute proportional error (MAPE)", "Correlation coefficient (R)" ],

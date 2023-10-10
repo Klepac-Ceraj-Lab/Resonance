@@ -1,5 +1,5 @@
 #####
-# Supplementary Table S1A-B. List of most important taxa for Random Forest models on the (A) 00-06 and (B) 18-120 months age bracket, MICROBIOME ONLY, ordered by relative weighted importance rank
+# Supplementary Table S1 thourgh S5. List of most important taxa for Random Forest models, MICROBIOME ONLY, ordered by relative weighted importance rank
 #####
 using Resonance
 using CategoricalArrays
