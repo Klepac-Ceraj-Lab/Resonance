@@ -331,7 +331,6 @@ comparison_table(vr_importances, "VisualReception", relative_brain_importances, 
     @info "Sum of aforementioned taxa mean importance: $(sum(subset(meanImps, :variable => x -> x .∈ Ref(mentioned_taxa) ).meanImp))"
     
     ## Importances for A. hadrus
-    
 ```
 
 
