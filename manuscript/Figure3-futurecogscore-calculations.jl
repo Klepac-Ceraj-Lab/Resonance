@@ -55,10 +55,6 @@ end
 # Loading Data
 #####
 
-## Printing quantiles for paper results
-@show quantile(future_mdata.future_ageMonths .- future_mdata.present_ageMonths, [0.05, 0.5, 0.95])
-@show quantile(mdata_taxa_df.future_ageMonths .- mdata_taxa_df.present_ageMonths, [0.05, 0.5, 0.95])
-
 ## 1. Metadata
 mdata = Resonance.load(Metadata())
 future_mdata = vcat( [ build_future_row(df) for df in groupby(mdata[ mdata.filter_future_omni .| mdata.filter_future_cog, : ], :subject) ]... )
@@ -70,6 +66,10 @@ seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.educ
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
 species = filter(f-> taxrank(f) == :species, taxa)
 mdata_taxa_df = sort(Resonance.comm2wide(species), [ :subject ]);
+
+## Printing quantiles for paper results
+@show quantile(future_mdata.future_ageMonths .- future_mdata.present_ageMonths, [0.05, 0.5, 0.95])
+@show quantile(mdata_taxa_df.future_ageMonths .- mdata_taxa_df.present_ageMonths, [0.05, 0.5, 0.95])
 
 ## 3. Functional Profiles
 ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
