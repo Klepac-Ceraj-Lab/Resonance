@@ -115,3 +115,18 @@ for m in models_to_report
     # write(tablefiles("figure3_merits_importances", "latex_importances_"*m.name*".txt"), latextable) # @Kevin I don't know how to save that.
 
 end
+
+# 4. LaTeX outputs
+spec_hl = LatexHighlighter((val, i, j) -> j == 2, ["textit"])
+spec_ft = (val, i, j) -> j == 2 ? replace(val, "_"=> " ") : val
+
+for m in filter(f-> contains(f, r"TableS\d+\.csv"), readdir("manuscript/assets"; join=true))
+    @info m
+    supptbl = CSV.read(m, DataFrame)
+
+    pretty_table(supptbl; highlighters=spec_hl, formatters=spec_ft,
+        show_subheader=false,
+        backend = Val(:latex) )
+    # write(tablefiles("figure3_merits_importances", "latex_importances_"*m.name*".txt"), latextable) # @Kevin I don't know how to save that.
+
+end
