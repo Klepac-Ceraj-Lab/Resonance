@@ -1,72 +1,160 @@
-variable,Test_MAPE,Test_Cor
-Left temporal,0.0405,0.1278
-Right temporal,0.0393,0.0683
-Left orbitofrontal,0.0554,0.1862
-Right orbitofrontal,0.0614,0.1325
-Left parietal,0.0352,0.1767
-Right parietal,0.0451,-0.1471
-Left middle frontal,0.0521,-0.0002
-Right middle frontal,0.0385,0.0829
-Left anterior cingulate,0.0685,0.0917
-Right anterior cingulate,0.0739,0.2447
-Left lateral occipital,0.0622,0.2237
-Right lateral occipital,0.0544,0.2208
-Left cerebellum white matter,0.0667,0.4132
-Right cerebellum white matter,0.0698,0.4344
-Left thalamus proper,0.0534,0.1696
-Right thalamus proper,0.0499,0.1616
-Left caudate,0.099,0.0287
-Right caudate,0.083,-0.01
-Left putamen,0.0592,0.1541
-Right putamen,0.0658,0.0107
-Left pallidum,0.0641,0.2967
-Right pallidum,0.0613,0.2644
-Left hippocampus,0.0541,0.0749
-Right hippocampus,0.0593,-0.0937
-Left amygdala,0.0632,0.2879
-Right amygdala,0.0704,0.1787
-Left accumbens area,0.0941,0.2877
-Right accumbens area,0.1024,-0.0406
-Left basal forebrain,0.2059,0.1544
-Right basal forebrain,0.1169,0.1234
-Left cuneus,0.0816,0.2345
-Right cuneus,0.075,0.0647
-Left entorhinal,0.0798,0.1904
-Right entorhinal,0.0822,0.0993
-Left fusiform,0.0572,0.3331
-Right fusiform,0.053,0.2482
-Left isthmus cingulate,0.0774,-0.0409
-Right isthmus cingulate,0.0854,0.0735
-Left lingual,0.0688,0.4212
-Right lingual,0.0719,0.4336
-Left parahippocampal,0.0576,0.1535
-Right parahippocampal,0.0602,0.1341
-Left paracentral,0.0781,0.1309
-Right paracentral,0.084,0.0231
-Left pars opercularis,0.057,0.1464
-Right pars opercularis,0.0595,0.0301
-Left pars orbitalis,0.0821,0.0032
-Right pars orbitalis,0.1118,0.0235
-Left pars triangularis,0.0633,0.1743
-Right pars triangularis,0.0762,0.0434
-Left pericalcarine,0.1105,0.1997
-Right pericalcarine,0.0885,0.2729
-Left postcentral,0.0516,0.1681
-Right postcentral,0.0595,0.1349
-Left posterior cingulate,0.1338,0.1365
-Right posterior cingulate,0.1394,0.0628
-Left precentral,0.0654,0.2478
-Right precentral,0.0463,0.0656
-Left precuneus,0.0561,0.1443
-Right precuneus,0.0685,0.1499
-Left superior frontal,0.0398,0.1008
-Right superior frontal,0.0436,-0.0961
-Left supramarginal,0.0668,0.0611
-Right supramarginal,0.0682,-0.0008
-Left insula,0.0571,-0.119
-Right insula,0.0562,0.0771
-Cerebellar vermal lobules I V,0.0846,0.1562
-Cerebellar vermal lobules VI VII,0.0813,0.006
-Cerebellar vermal lobules VIII X,0.0825,0.0781
-Brain stem,0.0766,0.6047
-CSF,0.1624,0.0713
+rank,variable,weightedImportance,relativeWeightedImportance,cumulativeWeightedImportance
+1,Bifidobacterium_pseudocatenulatum,0.0082,3.55 %,3.55 %
+2,ageMonths,0.00765,3.31 %,6.87 %
+3,Blautia_wexlerae,0.0061,2.64 %,9.51 %
+4,Eubacterium_eligens,0.00502,2.18 %,11.68 %
+5,Faecalibacterium_prausnitzii,0.00499,2.16 %,13.85 %
+6,Bifidobacterium_longum,0.00402,1.74 %,15.59 %
+7,Ruminococcus_gnavus,0.00352,1.52 %,17.11 %
+8,Fusicatenibacter_saccharivorans,0.00324,1.41 %,18.52 %
+9,Roseburia_inulinivorans,0.0031,1.34 %,19.86 %
+10,Flavonifractor_plautii,0.00309,1.34 %,21.2 %
+11,Intestinibacter_bartlettii,0.00302,1.31 %,22.51 %
+12,Anaerostipes_hadrus,0.00293,1.27 %,23.78 %
+13,Streptococcus_salivarius,0.00291,1.26 %,25.03 %
+14,Parasutterella_excrementihominis,0.00286,1.24 %,26.27 %
+15,Veillonella_parvula,0.00283,1.23 %,27.5 %
+16,Bilophila_wadsworthia,0.0027,1.17 %,28.67 %
+17,Eggerthella_lenta,0.00269,1.17 %,29.84 %
+18,Veillonella_dispar,0.00258,1.12 %,30.95 %
+19,Roseburia_intestinalis,0.00256,1.11 %,32.06 %
+20,Eubacterium_rectale,0.00255,1.1 %,33.16 %
+21,Bacteroides_uniformis,0.00253,1.09 %,34.26 %
+22,Bacteroides_fragilis,0.00252,1.09 %,35.35 %
+23,Streptococcus_thermophilus,0.00251,1.09 %,36.44 %
+24,Bacteroides_vulgatus,0.00249,1.08 %,37.52 %
+25,Roseburia_faecis,0.00248,1.08 %,38.59 %
+26,Blautia_sp_CAG_52,0.00244,1.06 %,39.65 %
+27,Parabacteroides_distasonis,0.00239,1.03 %,40.68 %
+28,Ruminococcus_bromii,0.00232,1.0 %,41.69 %
+29,Roseburia_hominis,0.00231,1.0 %,42.69 %
+30,Clostridium_sp_CAG_58,0.0023,1.0 %,43.69 %
+31,Intestinimonas_butyriciproducens,0.00224,0.97 %,44.66 %
+32,Bacteroides_ovatus,0.00216,0.93 %,45.59 %
+33,Veillonella_atypica,0.00213,0.92 %,46.51 %
+34,Erysipelatoclostridium_ramosum,0.00212,0.92 %,47.43 %
+35,Alistipes_shahii,0.00212,0.92 %,48.35 %
+36,Barnesiella_intestinihominis,0.00209,0.91 %,49.26 %
+37,Clostridium_symbiosum,0.00208,0.9 %,50.16 %
+38,Ruthenibacterium_lactatiformans,0.00207,0.9 %,51.05 %
+39,Collinsella_aerofaciens,0.00201,0.87 %,51.92 %
+40,Firmicutes_bacterium_CAG_41,0.002,0.87 %,52.79 %
+41,Bacteroides_xylanisolvens,0.00194,0.84 %,53.63 %
+42,Hungatella_hathewayi,0.00194,0.84 %,54.47 %
+43,Firmicutes_bacterium_AF16_15,0.00191,0.83 %,55.29 %
+44,Anaerotruncus_colihominis,0.0019,0.82 %,56.12 %
+45,Clostridium_bolteae,0.00189,0.82 %,56.94 %
+46,Haemophilus_parainfluenzae,0.00185,0.8 %,57.74 %
+47,Bacteroides_caccae,0.00184,0.8 %,58.54 %
+48,Alistipes_putredinis,0.00181,0.79 %,59.32 %
+49,Agathobaculum_butyriciproducens,0.00181,0.78 %,60.11 %
+50,Streptococcus_parasanguinis,0.00179,0.78 %,60.88 %
+51,Blautia_obeum,0.00176,0.76 %,61.64 %
+52,Eubacterium_hallii,0.00175,0.76 %,62.4 %
+53,Parabacteroides_merdae,0.00175,0.76 %,63.16 %
+54,Sutterella_wadsworthensis,0.00174,0.76 %,63.92 %
+55,Eubacterium_sp_CAG_38,0.00173,0.75 %,64.67 %
+56,Alistipes_finegoldii,0.0017,0.74 %,65.4 %
+57,Escherichia_coli,0.00169,0.73 %,66.14 %
+58,Sellimonas_intestinalis,0.00168,0.73 %,66.86 %
+59,Bacteroides_thetaiotaomicron,0.00167,0.72 %,67.59 %
+60,Ruminococcus_torques,0.00166,0.72 %,68.3 %
+61,Ruminococcus_lactaris,0.00162,0.7 %,69.01 %
+62,Ruminococcaceae_bacterium_KLE1738,0.00159,0.69 %,69.7 %
+63,Firmicutes_bacterium_CAG_114,0.00158,0.68 %,70.38 %
+64,Clostridium_innocuum,0.00156,0.68 %,71.06 %
+65,Clostridium_clostridioforme,0.00156,0.68 %,71.73 %
+66,Megamonas_funiformis,0.00155,0.67 %,72.4 %
+67,Asaccharobacter_celatus,0.00152,0.66 %,73.06 %
+68,Subdoligranulum_sp,0.00151,0.66 %,73.72 %
+69,Dialister_invisus,0.0015,0.65 %,74.37 %
+70,Clostridium_sp_AM22_11AC,0.00148,0.64 %,75.01 %
+71,Dorea_longicatena,0.00147,0.64 %,75.65 %
+72,Bifidobacterium_bifidum,0.00147,0.64 %,76.29 %
+73,Lachnospira_pectinoschiza,0.0014,0.61 %,76.89 %
+74,Ruminococcus_sp_CAG_254,0.00139,0.6 %,77.5 %
+75,Dorea_formicigenerans,0.00138,0.6 %,78.09 %
+76,Blautia_sp_CAG_257,0.00137,0.6 %,78.69 %
+77,Bifidobacterium_breve,0.00133,0.58 %,79.27 %
+78,Eubacterium_siraeum,0.00133,0.58 %,79.84 %
+79,Akkermansia_muciniphila,0.0013,0.56 %,80.41 %
+80,Bifidobacterium_adolescentis,0.0013,0.56 %,80.97 %
+81,Anaerostipes_caccae,0.00124,0.54 %,81.51 %
+82,Clostridium_sp_CAG_122,0.00124,0.54 %,82.04 %
+83,Clostridium_sp_CAG_75,0.00122,0.53 %,82.57 %
+84,Eubacterium_sp_CAG_180,0.00122,0.53 %,83.1 %
+85,Firmicutes_bacterium_CAG_56,0.00121,0.52 %,83.62 %
+86,Ruminococcus_bicirculans,0.00119,0.52 %,84.14 %
+87,Odoribacter_splanchnicus,0.00112,0.49 %,84.62 %
+88,Clostridium_lavalense,0.00108,0.47 %,85.09 %
+89,Clostridium_sp_CAG_12237_41,0.00107,0.46 %,85.56 %
+90,Alistipes_obesi,0.00107,0.46 %,86.02 %
+91,Clostridium_spiroforme,0.00103,0.45 %,86.46 %
+92,Bacteroides_stercoris,0.00096,0.42 %,86.88 %
+93,Tyzzerella_nexilis,0.00094,0.41 %,87.29 %
+94,Clostridium_leptum,0.00094,0.41 %,87.69 %
+95,Eggerthella_sp_CAG_298,0.00091,0.39 %,88.09 %
+96,Eisenbergiella_massiliensis,0.00088,0.38 %,88.47 %
+97,Subdoligranulum_sp_APC924_74,0.00085,0.37 %,88.84 %
+98,Clostridium_citroniae,0.00085,0.37 %,89.21 %
+99,Bacteroides_dorei,0.00084,0.37 %,89.57 %
+100,Eubacterium_sp_CAG_252,0.00082,0.36 %,89.93 %
+101,Turicibacter_sanguinis,0.00079,0.34 %,90.27 %
+102,Gemmiger_formicilis,0.00078,0.34 %,90.61 %
+103,Phascolarctobacterium_faecium,0.00076,0.33 %,90.94 %
+104,Lachnospiraceae_bacterium_OF09_33XD,0.00075,0.32 %,91.26 %
+105,Coprococcus_comes,0.00074,0.32 %,91.59 %
+106,Eubacterium_ramulus,0.00073,0.32 %,91.9 %
+107,Prevotella_copri,0.00069,0.3 %,92.2 %
+108,Holdemania_filiformis,0.00064,0.28 %,92.48 %
+109,Bacteroides_massiliensis,0.00064,0.28 %,92.76 %
+110,Firmicutes_bacterium_CAG_83,0.00061,0.26 %,93.02 %
+111,Dielma_fastidiosa,0.0006,0.26 %,93.28 %
+112,Coprobacillus_cateniformis,0.00059,0.26 %,93.54 %
+113,Monoglobus_pectinilyticus,0.00058,0.25 %,93.79 %
+114,Clostridiales_bacterium_KLE1615,0.00057,0.25 %,94.03 %
+115,Eubacterium_sp_36_13,0.00057,0.25 %,94.28 %
+116,Clostridium_aldenense,0.00054,0.23 %,94.52 %
+117,Clostridium_sp_AF36_4,0.00053,0.23 %,94.75 %
+118,Oscillibacter_sp_57_20,0.00052,0.23 %,94.97 %
+119,Firmicutes_bacterium_CAG_65_45_313,0.00052,0.22 %,95.2 %
+120,Coprococcus_catus,0.0005,0.22 %,95.42 %
+121,Roseburia_sp_CAG_100,0.00049,0.21 %,95.63 %
+122,Veillonella_sp_DORA_A_3_16_22,0.00047,0.2 %,95.83 %
+123,Coprococcus_eutactus,0.00043,0.19 %,96.02 %
+124,Gordonibacter_pamelaeae,0.00043,0.18 %,96.2 %
+125,Eubacterium_ventriosum,0.00042,0.18 %,96.39 %
+126,Lactococcus_lactis,0.00041,0.18 %,96.56 %
+127,Firmicutes_bacterium_CAG_103,0.0004,0.17 %,96.74 %
+128,Clostridium_scindens,0.0004,0.17 %,96.91 %
+129,Clostridium_disporicum,0.00039,0.17 %,97.08 %
+130,Blautia_producta,0.00037,0.16 %,97.24 %
+131,Bacteroides_finegoldii,0.00036,0.16 %,97.39 %
+132,Roseburia_sp_CAG_10041_57,0.00036,0.15 %,97.55 %
+133,Eisenbergiella_tayi,0.00035,0.15 %,97.7 %
+134,Bacteroides_faecis,0.00032,0.14 %,97.84 %
+135,Proteobacteria_bacterium_CAG_139,0.00032,0.14 %,97.98 %
+136,Clostridium_sp_CAG_221,0.00032,0.14 %,98.12 %
+137,Firmicutes_bacterium_CAG_129,0.00031,0.13 %,98.25 %
+138,Clostridium_asparagiforme,0.00028,0.12 %,98.37 %
+139,Holdemanella_biformis,0.00027,0.12 %,98.49 %
+140,Clostridium_sp_CAG_299,0.00026,0.11 %,98.6 %
+141,Ruminococcus_callidus,0.00026,0.11 %,98.71 %
+142,Haemophilus_sp_HMSC71H05,0.00025,0.11 %,98.82 %
+143,Tyzzerella_sp,0.00024,0.11 %,98.93 %
+144,Lawsonibacter_asaccharolyticus,0.00024,0.1 %,99.03 %
+145,Butyricimonas_synergistica,0.00024,0.1 %,99.13 %
+146,Bacteroides_cellulosilyticus,0.00023,0.1 %,99.23 %
+147,Eubacterium_sp_CAG_192,0.00022,0.09 %,99.33 %
+148,Dorea_sp_CAG_317,0.00021,0.09 %,99.42 %
+149,Firmicutes_bacterium_CAG_145,0.0002,0.09 %,99.5 %
+150,Eubacterium_sp_CAG_115,0.00018,0.08 %,99.58 %
+151,Romboutsia_ilealis,0.00016,0.07 %,99.65 %
+152,Clostridium_sp_CAG_217,0.00015,0.07 %,99.71 %
+153,Firmicutes_bacterium_CAG_137,0.00012,0.05 %,99.77 %
+154,Firmicutes_bacterium_CAG_124,0.00012,0.05 %,99.82 %
+155,Bacteroides_intestinalis,0.00011,0.05 %,99.86 %
+156,Eubacterium_sp_CAG_161,0.00011,0.05 %,99.91 %
+157,Alistipes_indistinctus,9.0e-5,0.04 %,99.95 %
+158,Oscillibacter_sp_CAG_241,6.0e-5,0.03 %,99.98 %
+159,Blautia_sp,5.0e-5,0.02 %,100.0 %
