@@ -467,7 +467,6 @@ figure = Figure(resolution = (1920, 1536));
 AB_Subfig = GridLayout(figure[1,1], alignmode=Outside()) 
 CD_Subfig = GridLayout(figure[2,1], alignmode=Outside())
 E_Subfig  = GridLayout(figure[1:2,2], alignmode=Outside())
-
 ```
 
 #### Plotting Panel A
@@ -729,15 +728,15 @@ axC.alignmode=Mixed(; bottom=-60)
 axD.alignmode=Mixed(; bottom=-20)
 ableg.alignmode = Mixed(;top = +25, bottom = -25)
 # ableg.alignmode = Outside()
-cdleg.alignmode = Mixed(;left = -30, right = +30)
+cdleg.alignmode = Mixed(;left = -30, right = +30, top = -30 , bottom = +30)
 colgap!(AB_Subfig, Fixed(30))
 colgap!(CD_Subfig, Fixed(5))
 figure
 ```
 
 ```julia
-save(figurefiles("Figure4.svg"), figure)
-save(figurefiles("Figure4.png"), figure)
+save("manuscript/assets/Figure4.png", figure)
+save("manuscript/assets/Figure4.svg", figure)
 ```
 
 ## Supplementary Figures
