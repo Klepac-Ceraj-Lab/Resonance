@@ -120,9 +120,9 @@ overall cognitive function and with differences in the size of
 multiple brain regions.
 Using a combination of multivariate linear and machine learning (ML) models,
 we showed that many species,
-including \emph{Alistipes obesi} and \emph{Blautia wexlerae}, were % check RF models for direction of B. wex
+including \emph{Alistipes obesi} and \emph{Blautia wexlerae}, were
 associated with higher cognitive function, while some
-species such as \emph{Ruminococcus gnavus} were more commonly found in % check RF models for direction of R. gnav
+species such as \emph{Ruminococcus gnavus} were more commonly found in
 children with low cognitive scores after controlling for sociodemographic factors.
 Microbial genes for enzymes involved in the metabolism of
 neuroactive compounds, particularly short-chain fatty acids such as
@@ -130,11 +130,14 @@ acetate and propionate, were also associated with cognitive function.
 In addition, ML models were able to use microbial taxa to predict the
 volume of brain regions, and many taxa that were identified
 as important in predicting cognitive function also dominated the
-feature importance metric for individual brain regions.
-For example, \emph{B. wexlerae} % is this still true?
+feature importance metric for individual brain regions,
+and for specific subscales of cognitive function.
+For example, \emph{B. wexlerae}
 was the most important species in models predicting the size of the parahippocampal region
-in both the left and right hemispheres, while several species from
-the phylum \textit{Bacteroidetes}, including GABA-producing % is this still true?
+in both the left and right hemispheres
+and was among the top predictors of gross motor and expressive language performance.
+Several species from
+the phylum \textit{Bacteroidetes}, including GABA-producing
 \emph{B. ovatus}, were important for predicting
 the size of the left accumbens area, but not the right. These
 findings provide potential biomarkers of neurocognition and brain development
@@ -185,7 +188,7 @@ birthed vaginally), caregivers, food (breast milk or formula),
 and other environmental sources
 \cite{backhedDynamicsStabilizationHuman2015,bokulichAntibioticsBirthMode2016}.
 The early microbiome is characterized by low microbial
-diversity, rapid succession and evolution, and domination by
+diversity, rapid succession and evolution, and is dominated by
 Actinobacteria, particularly the genus \emph{Bifidobacterium},
 Bacteroidetes, especially \emph{Bacteroides}, and Proteobacteria
 \cite{koenigSuccessionMicrobialConsortia2011}.
@@ -352,7 +355,7 @@ in gut microbiomes in children over 18 months old (Figure 1G).
 We also found that overall variation in microbial species in children over 18 months old
 was significantly associated with variation in cognitive function score
 (Figure 1G, R\textsuperscript{2} = 0.0099, q \textless{} 0.01),
-as was variation in microbial gene functions (R\textsuperscript{2} = 0.0119, q \textless{} 0.001).
+as was variation in microbial gene functions (R\textsuperscript{2} = 0.0115, q \textless{} 0.001).
 Variation in microbial taxa and genes was not significantly associated with cognitive
 function in children under 6 months, though this may be due to the low
 taxonomic diversity and broad lack of overlap between taxa in infants (Figure 1G).
@@ -360,7 +363,7 @@ As expected, age was significantly associated with microbial beta
 diversity (taxa R\textsuperscript{2} = 0.0207, and  gene functions
 annotated with UniRef90s clusters of 90\% similarity
 \cite{suzekUniRefComprehensiveNonredundant2007} -
-R\textsuperscript{2} = 0.0263, q \textless{} 0.001), and very strongly
+R\textsuperscript{2} = 0.0258, q \textless{} 0.001), and very strongly
 associated with variation in neuroimaging (MRI) profiles (R\textsuperscript{2} = 0.258, q
 \textless{} 0.001).
 
@@ -418,7 +421,7 @@ that was significantly negatively associated with cognitive function score (q va
         heatmaps of correlation with cognitive function in different age groups.
         (\textbf{C}) Multivariate linear models showing the relationship
         between individual taxa and domain-specific skill assessments
-        from the MSEL for children under 6m (left), 18m to 48m (right),
+        from the MSEL for children under 6m (left), 18m to 36m (right),
         or over across all ages (right)
         controlling for age, maternal education, and sequencing depth.
         Asterisks in (A) and (C) indicate significance (q \textless{} 0.2)
@@ -445,7 +448,7 @@ the subscales assessed in each test are different.
 To assess whether microbial taxa were associated with
 the development of specific cognitive domains,
 we fit multivariate linear models for each species present in at least 10\%
-of samples for children under 6 months, 18 to 48 months, or all ages
+of samples for children under 6 months, 18 to 36 months, or all ages
 with a concurrent MSEL score (Figure 2C).
 Several taxa associated with composite scores (Figure 2B)
 were also associated with one or more subscores, including
@@ -476,7 +479,7 @@ were significantly depleted in children with higher cognitive ability
 scores in children under 6m (Table 2; propionate degradation I,
 enrichment score (E.S.) = -0.66, corrected p-value (q)
 = 0.029), as were genes for synthesizing the 2 carbon SCFA acetate
-(acetate synthesis II, E.S. = -0.409, q = 0.059; acetate synthesis
+(acetate synthesis II, E.S. = -0.491, q = 0.059; acetate synthesis
 III, E.S. = -0.409, q = 0.133).
 Interstingly, in children over 18m,
 these metabolic associations were reversed, with both acetate synthesis
@@ -489,8 +492,8 @@ as was synthesis of the 4-carbon SCFA butyrate
 (butyrate synthesis II, E.S. = 0.414, q = 0.178).
 Synthesis of the amino acid
 glutamate was also significantly enriched in children with
-higher cognitive function scores in this age group (glutamate synthesis II, E.S. = 0.154, 
-q = 0.178). Taken together, these results suggest that
+higher cognitive function scores in this age group (glutamate synthesis II, E.S. = 0.355, 
+q = 0.023). Taken together, these results suggest that
 microbial metabolic activity, particularly the metabolism (synthesis and
 degradation) of neuroactive compounds may have effects on cognitive
 development.
@@ -633,10 +636,10 @@ microbial exposures, such that microbial influences early in life
 may take time to manifest. To test this hypothesis,
 we asked whether RF models trained on taxonomic profiles
 in the first year of life
-could predict \textit{future} cognitive performance (Figure 3B, D).
+could predict \textit{future} cognitive performance measured (Figure 3B, D).
 Models were consistently able to learn microbial species that are associated
 with cognitive performance at a future visit
-(mean time between visits: 21.5 months [sd = 9.9 months] (Figure 3C),
+(mean time between visits: 21.5 months, S.D. = 9.9 months; Figure 3C,
 mean test set correlation: 0.27).
 
 \begin{table}[!h]
@@ -678,22 +681,22 @@ and be affected by different molecular signals,
 we sought to determine whether the associations of microbial taxa
 with cognitive function are general across all cognitive subdomains.
 To accomplish this, we assessed individual subscales of the  
-Mullen Scales of Early Learning (MSEL, birth to 36 months - \textit{see Methods}). 
+MSEL (birth to 36 months - \textit{see Methods}). 
 Taxonomic profiles coupled with demographics exhibited predictive potential towards three
-of five probed subscales (Figure 4A, Table 4), 
-namely Expressive Language ( test-set RMSE 12.05, test-set correlation 0.368), 
-Gross Motor (test-set RMSE 11.07, test-set correlation 0.137) and 
-Visual Reception (test-set RMSE 15.2, test-set correlation 0.333).
+of five probed subscales (Figure 4A, Table 5), 
+namely expressive language ( test-set RMSE 12.05, test-set correlation 0.368), 
+gross motor (test-set RMSE 11.07, test-set correlation 0.137) and 
+visual reception (test-set RMSE 15.2, test-set correlation 0.333).
 Between the subscales, not only the predictability (measured by the test-set figures of merit) is different,
 but also the relative importances of several taxa (Figure 4B).
 Although certain species such as \textit{B. longum}, \textit{F. prausznitzii} 
 have similar relative importance across all subscales, others are substantially different (Tables S2-S4).
 Notably, \textit{Bifidobacterium pseudocatenulatum}, \textit{B. wexlerae} and \textit{E. eligens} are
-substantially more important for the prediction of EL, while
-\textit{R. faecis}, \textit{Streptococcus salivarius} and \textit{F. saccharivorans} are
-distinctly predictive of GM, and
+substantially more important for the prediction of expressive language, while
+\textit{R. faecis}, \textit{Streptococcus salivarius} and \textit{Fusicatenibacter saccharivorans} are
+distinctly predictive of gross motor, and
 \textit{Clostridium innocuum}, \textit{B. vulgatus} 
-stand out on models targeting visual reception.
+stand out on models targeting visual reception (Supplenmentary Tables S2-4).
 
 \begin{table}[!h]
     \begin{center}
@@ -789,11 +792,11 @@ included nine species -
 \emph{Anaerostipes hadrus},
 \emph{B. vulgatus},
 \emph{B. ovatus},
-\emph{Fusicatenibacter saccharivorans},
+\emph{F. saccharivorans},
 \emph{Ruminococcus torques},
 \emph{Eubacterium rectale},
 \emph{Coprococcus comes},
-\emph{Asaccharobacter celatus} and
+\emph{A. celatus} and
 \emph{B. wexlerae}, which combined, account for approximately 10\% of the cumulative relative importances,
 computed after fitness-weighting on the reported brain segments (Figure 4D-E).
 
@@ -819,11 +822,9 @@ computed after fitness-weighting on the reported brain segments (Figure 4D-E).
 \end{sidewaysfigure}
 
 Among these, \emph{A. hadrus} is the variable with 
-highest average relative importance along all reported 
+highest average relative importance along all reported models
 (mean = 1.4\%; min = 0.8\%; max = 3.6\%, Figure 4D-E).
-\emph{B. wexlerae}, which was important in RF models of cognitive function,
-and was the only species to be significantly associated
-with cogntive function in young children using LMs, 
+\emph{B. wexlerae}, which was important in RF models of cognitive function, 
 was also important in models of the entorhinal, fusiform and lingual areas
 and had the highest importance in models predicting the size of
 both the left and right right parahippocampus.
@@ -925,7 +926,7 @@ commonly associated with weaning to solid food in early age,
 also showed high relative importance.
 The involvement of most important taxa in different aspects of inflammatory response
 resonate with previous findings that associate chronic inflammation with
-changes to neural responses in some types of stimulae, notably visual\cite{xieChronicInfNeuro2019}.
+changes to neural responses in some types of stimulae \cite{xieChronicInfNeuro2019}.
 
 Other bacteria that were associated with both cognitive ability and
 brain structure had also have possible connections to previous studies.
@@ -964,14 +965,15 @@ associations between the thalamus and the expressive language
 component of the Mullen scales \cite{chenLongitudinalBrainMullen2023}.
 In line with this finding, we found that taxa such as 
 \textit{B. wexlerae} and \textit{A. hadrus} to be among the top 15\% important predictors
-on both left and right thalamus and the EL subscale.
+on both left and right thalamus and the expressive language subscale.
 Another example of those findings is a previously reported association between
-the central opercular cortex (COC) and gross motor development \cite{jiangBrainNetworkCognition2023}. In this case, we identified that
-butyrate-producing \textit{Fusicatenibacter saccharivorans} is among the 15\% most important predictors
+the central opercular cortex (COC) and gross motor development \cite{jiangBrainNetworkCognition2023}.
+In this case, we identified that
+butyrate-producing \textit{F. saccharivorans} is among the 15\% most important predictors
 for both the gross motor subscale and three bilateral components of the COC
 (left and right pars orbitalis, pars opercularis and pars triangularis).
 Previous results also link to relationships between the caudate and the cerebellum,
-and the Visual Reception score \cite{deoniMyelinationMullenPreprint2022}.
+and the visual reception score \cite{deoniMyelinationMullenPreprint2022}.
 \textit{S. salivarius} was consistently found among the top 20\% predictors for this subscale, along with
 both sides of the thalamus and cerebellum white matter, along with cerebellar vermal lobules I-X.
 
@@ -1097,8 +1099,8 @@ analyses, subject genetics, broad environmental exposure data
 rich demographic, socioeconomic, family and medical history information.
 
 As a study of neurotypical development, mothers and their children
-were devoid of major risk factors for abnormal or atypical development.
-These included preterm birth (\textless 37 weeks gestation) low birth weight (\textless 1500g),
+exclusion criteria included major risk factors for abnormal or atypical development,
+i.e., preterm birth (\textless 37 weeks gestation) low birth weight (\textless 1500g),
 \textit{in utero} exposure to alcohol, cigarette or illicit substance exposure;
 abnormalities on fetal ultrasound; non-singleton or complicated pregnancy,
 including preeclampsia, high blood pressure, or gestational diabetes;
@@ -1111,8 +1113,8 @@ In addition to screening at
 the time of enrollment, on-going screening for worrisome behaviors using
 validated tools was performed to identify at-risk children and remove
 them from subsequent analysis.
-For this study, 361 typically-developing children between the
-ages of 2.8 months and 10 years old (median age 2 years, 2 months) were
+For this study, 381 typically-developing children between the
+ages of 40 days and 10 years (median age 2 years, 2 months) were
 selected for analysis based on having provided at least one stool sample
 in the same week as being evaluated using one of the cogntitive ability
 assessments (MSEL, WPPSI, WISC-V).
@@ -1162,12 +1164,12 @@ generating 400 million raw reads and 120 Gb of sequence per plate.
 
 Shotgun metagenomic sequences were analyzed using the bioBakery suite of
 computational tools \cite{beghiniIntegratingTaxonomicFunctional2021}.
-First, KneadData (v0.7.7) was used to perform quality
+First, KneadData (v0.10.0) was used to perform quality
 control of raw sequence reads, such as read trimming and removal of
-reads matching a human genome reference. Next, MetaPhlAn (v3.0.7, using
-database mpa\_v30\_CHOCOPhlAn\_201901) was used to generate taxonomic
+reads matching a human genome reference. Next, MetaPhlAn (v3.1.0, using
+database mpa\_v31\_CHOCOPhlAn\_201901) was used to generate taxonomic
 profiles by aligning reads to a reference database of marker genes.
-Finally, HUMAnN (v3.0.0a4) was used to functionally profile the
+Finally, HUMAnN (v3.6.0) was used to functionally profile the
 metagenomes.
 
 \subsubsection*{Machine learning for cognitive development}
@@ -1185,7 +1187,7 @@ all viable datapoints containing
 age at data collection, demographics, stool metagenomics and cognitive assessment were employed.
 The cognitive assessments were collected as either composite scores
 (for the experiments in Figure 3) or, when available, subscores on the
-Mullen Scales of Early Learning (Figure 4 A-B: Expressive Language, Gross Motor and Visual Reception).
+Mullen Scales of Early Learning (Figure 4 A-B: expressive language, gross motor and visual reception).
 For the concurrent prediction experiments, when multiple viable longitudinal samples were present,
 the single earliest viable datapoint inside the age range of the experiment was considered.
 For the future prediction experiments, every demographics-complete subject
