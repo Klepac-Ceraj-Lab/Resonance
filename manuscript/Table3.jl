@@ -171,6 +171,6 @@ table3 = DataFrame(
 CSV.write(tablefiles("Table3.csv"), table3)
 
 pretty_table(table3;
-    header = [ "Subject Ages (months)", "Microbial feature", "Demo.", "Test set correlation (± C.I.)", "Test set Root-mean-square error (± C.I.)" ],
+    header = [ "Subject Ages (months)", "Microbial feature", "Demo.", "Test set Root-mean-square error (± C.I.)", "Test set correlation (± C.I.)" ],
     backend = Val(:latex)
 )

@@ -1,5 +1,5 @@
 #####
-# Table 4. Summary statistics for the neuroanatomy prediction benchmarks
+# Table 3. Benchmark metrics for the cognitive assessment score prediction models. Confidence intervals are calculated from the distribution of metrics from repeated CV at a confidence level of 95%
 #####
 
 using Resonance
@@ -13,30 +13,74 @@ using DataFrames.PrettyTables
 isdir(tablefiles()) || mkpath(tablefiles())
 
 ## 1. Loading the model files
-
+RandomForestClassifier = MLJ.@load RandomForestClassifier pkg=DecisionTree
 RandomForestRegressor = MLJ.@load RandomForestRegressor pkg=DecisionTree
-# concurrent brain volumes regression from taxonomic profiles
-brain_models = JLD2.load(modelfiles("brain_models.jld"))["brain_models"]
-include("manuscript/Figure4-definitions.jl")
-
+# concurrent cogScore reression from taxonomic profiles
+regression_futureCogScores_onlydemo = JLD2.load(modelfiles("regression_futureCogScores_onlydemo.jld"))["regression_futureCogScores_onlydemo"]
+regression_futureCogScores_onlytaxa = JLD2.load(modelfiles("regression_futureCogScores_onlytaxa.jld"))["regression_futureCogScores_onlytaxa"]
+regression_futureCogScores_demoplustaxa = JLD2.load(modelfiles("regression_futureCogScores_demoplustaxa.jld"))["regression_futureCogScores_demoplustaxa"]
+regression_futureCogScores_onlyecs = JLD2.load(modelfiles("regression_futureCogScores_onlyecs.jld"))["regression_futureCogScores_onlyecs"]
+regression_futureCogScores_demoplusecs = JLD2.load(modelfiles("regression_futureCogScores_demoplusecs.jld"))["regression_futureCogScores_demoplusecs"]
 ## 2. Calculating the Figures of Merit
-mean_brain_merits = reduce(
-    vcat,
-    [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_MAPE), :Test_MAPE => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_MAPE), :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
+
+conf_interval(vv, critical_z=1.96) = critical_z * std(vv) / sqrt(length(vv))
+
+prod_summary_table = vcat(
+    DataFrames.combine(
+        groupby(regression_futureCogScores_onlydemo.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "future_onlydemo") => :model
+    ),
+    DataFrames.combine(
+        groupby(regression_futureCogScores_onlytaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "future_onlytaxa") => :model
+    ),
+    DataFrames.combine(
+        groupby(regression_futureCogScores_demoplustaxa.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "future_demoplustaxa") => :model
+    ),
+    DataFrames.combine(
+        groupby(regression_futureCogScores_onlyecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "future_onlyecs") => :model
+    ),
+    DataFrames.combine(
+        groupby(regression_futureCogScores_demoplusecs.merits, :Hyperpar_Idx),
+        :Test_RMSE => (x -> round(mean(x); digits = 2)) => :Test_RMSE_mean,
+        :Test_RMSE => (x -> round(conf_interval(x); digits = 2)) => :Test_RMSE_CI,
+        :Test_Cor => (x -> round(mean(x); digits = 2)) => :Test_Cor_mean,
+        :Test_Cor => (x -> round(conf_interval(x); digits = 2)) => :Test_Cor_CI,
+        :Hyperpar_Idx=> (x-> "future_demoplusecs") => :model
+    )
 )
-mean_brain_merits = subset(mean_brain_merits, :variable => x -> x .∈ Ref(interesting_segments) )
 
 ## 3. Building the actual table
 
 table4 = DataFrame(
-    :statisic => [ "Mean", "Standard deviation", "Maximum", "75th percentile", "50th percentile", "25th percentile", "Minimum" ],
-    :test_MAPE => [ round(f(mean_brain_merits.Test_MAPE);digits=3) for f in [ mean, std, maximum, x -> quantile(x, 0.75), x -> quantile(x, 0.50), x -> quantile(x, 0.25), minimum ] ],
-    :test_Cor => [ round(f(mean_brain_merits.Test_Cor);digits=3) for f in [ mean, std, maximum, x -> quantile(x, 0.75), x -> quantile(x, 0.50), x -> quantile(x, 0.25), minimum ] ]
+    :subject_ages => repeat([ "future" ], 5),
+    :microbial_feature => [ "-", "taxa", "taxa", "genes", "genes" ],
+    :demo_provided => [ "+", "-", "+", "-", "+" ],
+    :test_rmse => [ string(i)*" ± "*string(j) for (i,j) in zip(prod_summary_table.Test_RMSE_mean, prod_summary_table.Test_RMSE_CI) ],
+    :test_cor => [ string(i)*" ± "*string(j) for (i,j) in zip(prod_summary_table.Test_Cor_mean, prod_summary_table.Test_Cor_CI) ]
 )
 
 CSV.write(tablefiles("Table4.csv"), table4)
 
 pretty_table(table4;
-    header = [ "Statistic", "Mean absolute proportional error (MAPE)", "Correlation coefficient (R)" ],
+    header = [ "Subject Ages (months)", "Microbial feature", "Demo.", "Test set Root-mean-square error (± C.I.)",  "Test set correlation (± C.I.)" ],
     backend = Val(:latex)
 )
