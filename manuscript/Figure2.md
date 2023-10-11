@@ -252,13 +252,13 @@ cax1 = Axis(C[1,1]; xlabel = "subscore", title="under 6m",
     xticks = (range(1.5, length(scales)+0.5), lowercase.(scales_names)),
     xticklabelrotation = pi/4)
 
-cax2 = Axis(C[1,2]; xlabel = "subscore", title="18 to 48m",
+cax2 = Axis(C[1,2]; xlabel = "subscore", title="18 to 36m",
                     xticks = (range(1.5, length(scales)+0.5), lowercase.(scales_names)),
                     xticklabelrotation = pi/4)
 cax2.yticksvisible = false
 cax2.yticklabelsvisible = false
 
-cax3 = Axis(C[1,3]; xlabel = "subscore", title="0 to 48m",
+cax3 = Axis(C[1,3]; xlabel = "subscore", title="0 to 36m",
                     xticks = (range(1.5, length(scales)+0.5), lowercase.(scales_names)),
                     xticklabelrotation = pi/4)
 cax3.yticksvisible = false
