@@ -1,7 +1,7 @@
 \documentclass{article}
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL manuscript/submission.tex   Fri Oct  6 11:44:27 2023
-%DIF ADD manuscript/main.tex         Wed Oct 11 12:41:32 2023
+%DIF ADD manuscript/main.tex         Wed Oct 11 15:59:58 2023
 
 \usepackage[letterpaper, margin=1in]{geometry}
 
@@ -354,7 +354,8 @@ and brain volume profiles was similarly driven largely by subject age (Figure 1E
 
 \begin{sidewaysfigure}[!h]
     \centering
-    \includegraphics[width=0.9\textwidth]{assets/Figure1.png}
+    \DIFaddbegin \small
+    \DIFaddend \includegraphics[width=0.9\textwidth]{assets/Figure1.png}
     \caption{
         \label{fig:1} Study design and overview. (\textbf{A}) Stool samples,
         cognitive assessments and neuroimaging were collected from participants
@@ -497,8 +498,11 @@ that was significantly negatively associated with cognitive function score (q va
 
 \begin{sidewaysfigure}[!htb]
     \centering
-    \includegraphics[width=\textwidth]{assets/Figure2.png}
-    \caption{
+    \DIFdelbegin %DIFDELCMD < \includegraphics[width=\textwidth]{assets/Figure2.png}
+%DIFDELCMD <     %%%
+\DIFdelend \DIFaddbegin \small
+    \includegraphics[width=0.9\textwidth]{assets/Figure2.png}
+    \DIFaddend \caption{
         Taxa and gene functional groups are associated with cognitive function.
         (\textbf{A}) Volcano plot of multivariable linear model results showing the
         relationship between individual taxa and cognitive function score in
@@ -547,7 +551,7 @@ Several taxa associated with composite scores (Figure 2B)
 were also associated with one or more subscores, including
 }\textit{\DIFadd{F. prausnitzii}} \DIFadd{and }\textit{\DIFadd{A. obesi}}\DIFadd{.
 Interestingly, while no taxa were significantly associated
-with composite scores in chilren under 6 months old,
+with composite scores in children under 6 months old,
 two species from the genus }\textit{\DIFadd{Streptococcus}}
 \DIFadd{(}\textit{\DIFadd{S. peroris}} \DIFadd{and }\textit{\DIFadd{S. mitis}}\DIFadd{), as well as
 }\textit{\DIFadd{Bacteroides fragilis}}\DIFadd{, were positively associated
@@ -627,7 +631,6 @@ development.
 \end{table}
 
 
-
 \subsubsection*{Gut microbial taxonomic and functional profiles predict \DIFaddbegin \DIFadd{concurrently measured }\DIFaddend cognitive function}
 
 FSEA relies on understanding functional relationships between individual
@@ -652,8 +655,11 @@ or in combination with microbial taxonomic profiles (Table 3).
 
 \begin{sidewaysfigure}[!htb]
     \centering
-    \includegraphics[width=\textwidth]{assets/Figure3.png}
-    \caption{
+    \DIFdelbegin %DIFDELCMD < \includegraphics[width=\textwidth]{assets/Figure3.png}
+%DIFDELCMD <     %%%
+\DIFdelend \DIFaddbegin \small
+    \includegraphics[width=0.9\textwidth]{assets/Figure3.png}
+    \DIFaddend \caption{
         Random forest models predict \DIFdelbegin \DIFdel{concurrently }\DIFdelend \DIFaddbegin \DIFadd{both concurrent and future }\DIFaddend measured cognitive function.
         Comparison of RF predictor importance versus linear models for children
         \DIFdelbegin \DIFdel{between birth and 6 }\DIFdelend \DIFaddbegin \DIFadd{over 18 }\DIFaddend months \DIFdelbegin \DIFdel{old }\DIFdelend (\textbf{A})\DIFdelbegin \DIFdel{, and for those older than 18 months
@@ -837,8 +843,8 @@ of five probed subscales (Figure 4A, Table 5),
 namely expressive language ( test-set RMSE 12.05, test-set correlation 0.368), 
 gross motor (test-set RMSE 11.07, test-set correlation 0.137) and 
 visual reception (test-set RMSE 15.2, test-set correlation 0.333).
-Between the subscales, not only the predictability (measured by the test-set figures of merit) is different,
-but also the relative importances of several taxa (Figure 4B).
+Between the subscales, both the predictability (measured by the test-set figures of merit)
+and the relative importances of several taxa (Figure 4B) is variable.
 Although certain species such as }\textit{\DIFadd{B. longum}}\DIFadd{, }\textit{\DIFadd{F. prausznitzii}} 
 \DIFadd{have similar relative importance across all subscales, others are substantially different (Tables S2-S4).
 Notably, }\textit{\DIFadd{Bifidobacterium pseudocatenulatum}}\DIFadd{, }\textit{\DIFadd{B. wexlerae}} \DIFadd{and }\textit{\DIFadd{E. eligens}} \DIFadd{are
@@ -888,7 +894,7 @@ used RF modeling to associate gut taxonomic
 profiles with individual brain regions identified in MRI scans
 (children over 18 months old, N = \DIFdelbegin \DIFdel{121}\DIFdelend \DIFaddbegin \DIFadd{124}\DIFaddend ).
 Some brain regions were more readily
-predicted by RF models trained on microbial taxa (Table \DIFdelbegin \DIFdel{4}\DIFdelend \DIFaddbegin \DIFadd{5}\DIFaddend , Table S2), in particular those that were highly correlated with age.
+predicted by RF models trained on microbial taxa (Table \DIFdelbegin \DIFdel{4, Table S2}\DIFdelend \DIFaddbegin \DIFadd{5, Table S6}\DIFaddend ), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
 \DIFdelbegin \DIFdel{0.421}\DIFdelend \DIFaddbegin \DIFadd{0.444}\DIFaddend , Right = \DIFdelbegin \DIFdel{0.434}\DIFdelend \DIFaddbegin \DIFadd{0.441}\DIFaddend ; importance for age, Left = \DIFdelbegin \DIFdel{7.5}\DIFdelend \DIFaddbegin \DIFadd{6.8}\DIFaddend \%, Right =
 \DIFdelbegin \DIFdel{8.3}\DIFdelend \DIFaddbegin \DIFadd{7.7}\DIFaddend \%) and the L/R pericalcarine cortex (mean RF correlations, Left =
@@ -956,8 +962,11 @@ computed after fitness-weighting on the reported brain segments (Figure \DIFdelb
 
 \begin{sidewaysfigure}[!htb]
     \centering
-    \includegraphics[width=\textwidth]{assets/Figure4.png}
-    \caption{
+    \DIFdelbegin %DIFDELCMD < \includegraphics[width=\textwidth]{assets/Figure4.png}
+%DIFDELCMD <     %%%
+\DIFdelend \DIFaddbegin \small
+    \includegraphics[width=0.9\textwidth]{assets/Figure4.png}
+    \DIFaddend \caption{
         Microbial feature importance in predicting \DIFaddbegin \DIFadd{MSEL subscores and }\DIFaddend brain volumes in children over 18 months of age.
         (\textbf{A}) \DIFaddbegin \DIFadd{Test set correlations for RF models predicting MSEL subscale scores,
         with or without demographics included as predictors.
@@ -1077,7 +1086,7 @@ In line with this hypothesis, RF models that were able to learn associations
 between early-life microbiomes and future cognitive function scores (Figure 3).
 The top-ranked species for these models included several 
 taxa that were important for predicting concurrent cognitive assessment scores after 18 months, notably
-pathobiontic }\textit{\DIFadd{Enterobacteriaceae}} \DIFadd{such as
+pathobionts in the family }\textit{\DIFadd{Enterobacteriaceae}} \DIFadd{such as
 }\textit{\DIFadd{Escherichia}} \DIFadd{and }\textit{\DIFadd{Klebsiella}}\DIFadd{. 
 Representatives of these genera are known to be early and long-term persistent
 colonizers of infant intestine that can, in some settings,
