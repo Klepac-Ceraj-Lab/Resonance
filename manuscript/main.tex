@@ -655,10 +655,10 @@ microbial exposures, such that microbial influences early in life
 may take time to manifest. To test this hypothesis,
 we asked whether RF models trained on taxonomic profiles
 in the first year of life
-could predict \textit{future} cognitive performance (Figure 3B, D).
+could predict \textit{future} cognitive performance measured (Figure 3B, D).
 Models were consistently able to learn microbial species that are associated
 with cognitive performance at a future visit
-(mean time between visits: 21.5 months [sd = 9.9 months] (Figure 3C),
+(mean time between visits: 21.5 months, S.D. = 9.9 months; Figure 3C,
 mean test set correlation: 0.27).
 
 Nearly all important taxa in RF models that predicted cognitive function
@@ -673,7 +673,7 @@ Many of the other species that ranked highest in feature importance
 were also oportunistic pathogens, or previously reported
 to be linked with disease (eg. \textit{R. gnavus}, \textit{E. coli}).
 
-\subsubsection*{Gut microbial taxa are associated with specific cognitive functions} %TODO: add numbers!
+\subsubsection*{Gut microbial taxa are associated with specific cognitive functions}
 
 Given that the development of different domains of cognitive function
 (e.g., gross motor development vs visual perception) may develop at different times
@@ -681,22 +681,22 @@ and be affected by different molecular signals,
 we sought to determine whether the associations of microbial taxa
 with cognitive function are general across all cognitive subdomains.
 To accomplish this, we assessed individual subscales of the  
-Mullen Scales of Early Learning (MSEL, birth to 36 months - \textit{see Methods}). 
+MSEL (birth to 36 months - \textit{see Methods}). 
 Taxonomic profiles coupled with demographics exhibited predictive potential towards three
 of five probed subscales (Figure 4A), 
-namely Expressive Language ( test-set RMSE 12.05, test-set correlation 0.368), 
-Gross Motor (test-set RMSE 11.07, test-set correlation 0.137) and 
-Visual Reception (test-set RMSE 15.2, test-set correlation 0.333).
+namely expressive language ( test-set RMSE 12.05, test-set correlation 0.368), 
+gross motor (test-set RMSE 11.07, test-set correlation 0.137) and 
+visual reception (test-set RMSE 15.2, test-set correlation 0.333).
 Between the subscales, not only the predictability (measured by the test-set figures of merit) is different,
 but also the relative importances of several taxa (Figure 4B).
 Although certain species such as \textit{B. longum}, \textit{F. prausznitzii} 
 have similar relative importance across all subscales, others are substantially different.
 Notably, \textit{Bifidobacterium pseudocatenulatum}, \textit{B. wexlerae} and \textit{E. eligens} are
-substantially more important for the prediction of EL, while
-\textit{R. faecis}, \textit{Streptococcus salivarius} and \textit{F. saccharivorans} are
-distinctly predictive of GM, and
+substantially more important for the prediction of expressive language, while
+\textit{R. faecis}, \textit{Streptococcus salivarius} and \textit{Fusicatenibacter saccharivorans} are
+distinctly predictive of gross motor, and
 \textit{Clostridium innocuum}, \textit{B. vulgatus} 
-stand out on models targeting visual reception.
+stand out on models targeting visual reception (Supplenmentary Tables S2-4).
 
 \subsubsection*{Gut microbial taxonomic profiles predict brain structure differences}
 
@@ -762,11 +762,11 @@ included nine species -
 \emph{Anaerostipes hadrus},
 \emph{B. vulgatus},
 \emph{B. ovatus},
-\emph{Fusicatenibacter saccharivorans},
+\emph{F. saccharivorans},
 \emph{Ruminococcus torques},
 \emph{Eubacterium rectale},
 \emph{Coprococcus comes},
-\emph{Asaccharobacter celatus} and
+\emph{A. celatus} and
 \emph{B. wexlerae}, which combined, account for approximately 10\% of the cumulative relative importances,
 computed after fitness-weighting on the reported brain segments (Figure 4D-E).
 
@@ -794,9 +794,7 @@ computed after fitness-weighting on the reported brain segments (Figure 4D-E).
 Among these, \emph{A. hadrus} is the variable with 
 highest average relative importance along all reported 
 (mean = 1.4\%; min = 0.8\%; max = 3.6\%, Figure 4D-E).
-\emph{B. wexlerae}, which was important in RF models of cognitive function,
-and was the only species to be significantly associated
-with cogntive function in young children using LMs, 
+\emph{B. wexlerae}, which was important in RF models of cognitive function, 
 was also important in models of the entorhinal, fusiform and lingual areas
 and had the highest importance in models predicting the size of
 both the left and right right parahippocampus.
