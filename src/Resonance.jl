@@ -62,8 +62,7 @@ export  # 0. structs/types
         plot_future_deepdive!,
         singlemodel_importances_suppltable,
         plot_importances_pareto!,
-        prettyformat_suppltable!,
-        singlemodel_importances_suppltable
+        prettyformat_suppltable!
 
 # Percentiles
 export  AgeBracketPercentiles,

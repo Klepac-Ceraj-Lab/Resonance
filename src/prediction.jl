@@ -641,13 +641,6 @@ function plot_importances_pareto!(
     return figpos
 end
 
-function singlemodel_importances_suppltable(rf_model)
-    rf_model_importances = weighted_hpimportances(rf_model; normalize_importances=false, change_hashnames=false)
-    rf_model_importances.relativeWeightedImportance = rf_model_importances.weightedImportance ./ sum(skipmissing(rf_model_importances.weightedImportance))
-    rf_model_importances.cumulativeWeightedImportance = cumsum(rf_model_importances.relativeWeightedImportance)
-    return rf_model_importances
-end
-
 function prettyformat_suppltable!(suptbl)
     suptbl = @chain suptbl begin
         insertcols!(1, :rank => 1:nrow(suptbl))

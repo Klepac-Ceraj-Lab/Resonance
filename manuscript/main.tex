@@ -582,7 +582,7 @@ or in combination with microbial taxonomic profiles (Table 3).
     \begin{center}
     \begin{tabular}{|r|r|r|r|r|}
       \hline\hline
-      \textbf{Subject Ages (months)} & \textbf{Microbial feature} & \textbf{Demo.} &  \textbf{Test set correlation (± C.I.)} & \textbf{Test set RMSE (± C.I.)} \\\hline
+      \textbf{Subject Ages (months)} & \textbf{Microbial feature} & \textbf{Demo.} &  \textbf{Test set RMSE (± C.I.)} & \textbf{Test set correlation (± C.I.)} \\\hline
       \multirow{5}{*}{0 to 6} & -    & + & 13.37 ± 0.05 & -0.16 ± 0.01 \\ \cline{2-5}
             & \multirow{2}{*}{taxa}  & - & 12.99 ± 0.04 & -0.11 ± 0.01 \\ \cline{3-5}
             &                        & + & 13.01 ± 0.04 & -0.13 ± 0.01 \\ \cline{2-5}
@@ -596,25 +596,6 @@ or in combination with microbial taxonomic profiles (Table 3).
     \end{tabular}
     \caption{\label{tab:rfbench}Benchmark metrics for the cognitive assessment score
     prediction models. Confidence intervals (C.I.) are calculated from the
-    distribution of metrics from repeated CV at a confidence level of 95.
-    Root mean square error (RMSE) was used to estimate how well the random forest model was able to predict the outcome.
-    Demo. column indicates whether demographic factors such as maternal education, sex and age were included as predictors.}
-    \end{center}
-\end{table}
-
-\begin{table}[!h]
-    \begin{center}
-    \begin{tabular}{|r|r|r|r|r}
-        \hline
-        \textbf{Microbial feature} & \textbf{Demo.} & \textbf{Test set correlation (± C.I.)} & \textbf{Test set Root-mean-square error (± C.I.)} \\\hline
-        - & + & 20.25 ± 0.07 & 0.43 ± 0.0 \\ \cline{1-4}
-        \multirow{2}{*}{taxa} & - & 22.32 ± 0.08 & 0.07 ± 0.0 \\ \cline{2-4}
-            & + & 21.53 ± 0.08 & 0.27 ± 0.0 \\ \cline{1-4}
-        \multirow{2}{*}{genes} & - & 22.21 ± 0.08 & 0.12 ± 0.0 \\ \cline{2-4}
-            & + & 22.08 ± 0.08 & 0.15 ± 0.0 \\\hline\hline
-    \end{tabular}
-    \caption{\label{tab:rfbench2}Benchmark metrics for the cognitive assessment score
-    future prediction models. Confidence intervals (C.I.) are calculated from the
     distribution of metrics from repeated CV at a confidence level of 95.
     Root mean square error (RMSE) was used to estimate how well the random forest model was able to predict the outcome.
     Demo. column indicates whether demographic factors such as maternal education, sex and age were included as predictors.}
@@ -661,9 +642,28 @@ with cognitive performance at a future visit
 (mean time between visits: 21.5 months, S.D. = 9.9 months; Figure 3C,
 mean test set correlation: 0.27).
 
+\begin{table}[!h]
+    \begin{center}
+    \begin{tabular}{|r|r|r|r|r}
+        \hline
+        \textbf{Microbial feature} & \textbf{Demo.} &  \textbf{Test set Root-mean-square-error (± C.I.)} & \textbf{Test set correlation (± C.I.)} \\\hline
+        - & + & 20.25 ± 0.07 & 0.43 ± 0.0 \\ \cline{1-4}
+        \multirow{2}{*}{taxa} & - & 22.32 ± 0.08 & 0.07 ± 0.0 \\ \cline{2-4}
+            & + & 21.53 ± 0.08 & 0.27 ± 0.0 \\ \cline{1-4}
+        \multirow{2}{*}{genes} & - & 22.21 ± 0.08 & 0.12 ± 0.0 \\ \cline{2-4}
+            & + & 22.08 ± 0.08 & 0.15 ± 0.0 \\\hline\hline
+    \end{tabular}
+    \caption{\label{tab:rfbench2}Benchmark metrics for the cognitive assessment score
+    future prediction models. Confidence intervals (C.I.) are calculated from the
+    distribution of metrics from repeated CV at a confidence level of 95.
+    Root mean square error (RMSE) was used to estimate how well the random forest model was able to predict the outcome.
+    Demo. column indicates whether demographic factors such as maternal education, sex and age were included as predictors.}
+    \end{center}
+\end{table}
+
 Nearly all important taxa in RF models that predicted cognitive function
 in children older than 18 months were also important in
-models that predicted future cognitive function, if they were present (Figure 3B).
+models that predicted future cognitive function, if they were present (Figure 3B, Table S5).
 At the same time, many additional species were important for future prediction models
 that were not important in the models measuring concurrent cognitive function.
 In particular, feature importance for future prediction models
@@ -683,20 +683,50 @@ with cognitive function are general across all cognitive subdomains.
 To accomplish this, we assessed individual subscales of the  
 MSEL (birth to 36 months - \textit{see Methods}). 
 Taxonomic profiles coupled with demographics exhibited predictive potential towards three
-of five probed subscales (Figure 4A), 
+of five probed subscales (Figure 4A, Table 5), 
 namely expressive language ( test-set RMSE 12.05, test-set correlation 0.368), 
 gross motor (test-set RMSE 11.07, test-set correlation 0.137) and 
 visual reception (test-set RMSE 15.2, test-set correlation 0.333).
 Between the subscales, not only the predictability (measured by the test-set figures of merit) is different,
 but also the relative importances of several taxa (Figure 4B).
 Although certain species such as \textit{B. longum}, \textit{F. prausznitzii} 
-have similar relative importance across all subscales, others are substantially different.
+have similar relative importance across all subscales, others are substantially different (Tables S2-S4).
 Notably, \textit{Bifidobacterium pseudocatenulatum}, \textit{B. wexlerae} and \textit{E. eligens} are
 substantially more important for the prediction of expressive language, while
 \textit{R. faecis}, \textit{Streptococcus salivarius} and \textit{Fusicatenibacter saccharivorans} are
 distinctly predictive of gross motor, and
 \textit{Clostridium innocuum}, \textit{B. vulgatus} 
 stand out on models targeting visual reception (Supplenmentary Tables S2-4).
+
+\begin{table}[!h]
+    \begin{center}
+        \begin{tabular}{|r|r|r|r|r|}
+        \hline
+        \textbf{Target Mullen scale} & \textbf{Microbial feature} & \textbf{Demo.} & \textbf{Test set RMSE (± C.I.)} & \textbf{Test set correlation (± C.I.)} \\\hline
+        \multirow{5}{*}{Expressive Language} & - & + & 11.17 ± 0.04 & 0.48 ± 0.0 \\ \cline{2-5}
+            & \multirow{2}{*}{taxa}  & - & 12.37 ± 0.04 & 0.25 ± 0.0 \\ \cline{3-5}
+            &                        & + & 12.05 ± 0.04 & 0.37 ± 0.0 \\ \cline{2-5}
+            & \multirow{2}{*}{genes} & - & 12.59 ± 0.04 & 0.15 ± 0.0 \\ \cline{3-5}
+            &                        & + & 12.46 ± 0.04 & 0.21 ± 0.0 \\ \cline{1-5}
+        \multirow{5}{*}{Gross Motor} & - & + & 10.53 ± 0.04 & 0.346 ± 0.006 \\ \cline{2-5}
+            & \multirow{2}{*}{taxa}  & - & 11.08 ± 0.04 & 0.134 ± 0.006 \\ \cline{3-5}
+            &                        & + & 11.07 ± 0.04 & 0.137 ± 0.006 \\ \cline{2-5}
+            & \multirow{2}{*}{genes} & - & 10.98 ± 0.04 & 0.197 ± 0.005 \\ \cline{3-5}
+            &                        & + & 10.98 ± 0.04 & 0.197 ± 0.005 \\ \hline
+        \multirow{5}{*}{Visual reception} & - & + & 14.13 ± 0.04 & 0.462 ± 0.003 \\ \cline{2-5}
+            & \multirow{2}{*}{taxa}  & - & 15.49 ± 0.04 & 0.245 ± 0.004 \\ \cline{3-5}
+            &                        & + & 15.2 ± 0.04 & 0.333 ± 0.004 \\ \cline{2-5}
+            & \multirow{2}{*}{genes} & - & 15.97 ± 0.04 & 0.067 ± 0.004 \\ \cline{3-5}
+            &                        & + & 15.84 ± 0.04 & 0.118 ± 0.005 \\ \hline\hline
+        \end{tabular}
+        \caption{\label{tab:subscalebenchmark}Benchmark metrics for the Mullen subscales prediction models.
+        Confidence intervals (C.I.) are calculated from the
+        distribution of metrics from repeated CV at a confidence level of 95.
+        Root mean square error (RMSE) was used to estimate how well the random forest model was able to predict the outcome.
+        Demo. column indicates whether demographic factors such as maternal education, sex and age were included as predictors.
+        Age range, in all cases, was 18-120 months.}
+    \end{center}
+\end{table}
 
 \subsubsection*{Gut microbial taxonomic profiles predict brain structure differences}
 
@@ -707,7 +737,7 @@ used RF modeling to associate gut taxonomic
 profiles with individual brain regions identified in MRI scans
 (children over 18 months old, N = 124).
 Some brain regions were more readily
-predicted by RF models trained on microbial taxa (Table 4, Table S2), in particular those that were highly correlated with age.
+predicted by RF models trained on microbial taxa (Table 5, Table S2), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
 0.444, Right = 0.441; importance for age, Left = 6.8\%, Right =
 7.7\%) and the L/R pericalcarine cortex (mean RF correlations, Left =
