@@ -99,6 +99,7 @@ interesting_segments = [
     "left-amygdala", "right-amygdala",
     "left-orbitofrontal", "right-orbitofrontal",
     "left-anterior-cingulate", "right-anterior-cingulate",
+    "left-posterior-cingulate", "right-posterior-cingulate",
     "left-lateral-occipital", "right-lateral-occipital",
     "left-thalamus-proper", "right-thalamus-proper",
     "left-entorhinal", "right-entorhinal",
