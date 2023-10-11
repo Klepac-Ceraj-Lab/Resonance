@@ -1069,8 +1069,8 @@ analyses, subject genetics, broad environmental exposure data
 rich demographic, socioeconomic, family and medical history information.
 
 As a study of neurotypical development, mothers and their children
-were devoid of major risk factors for abnormal or atypical development.
-These included preterm birth (\textless 37 weeks gestation) low birth weight (\textless 1500g),
+exclusion criteria included major risk factors for abnormal or atypical development,
+i.e., preterm birth (\textless 37 weeks gestation) low birth weight (\textless 1500g),
 \textit{in utero} exposure to alcohol, cigarette or illicit substance exposure;
 abnormalities on fetal ultrasound; non-singleton or complicated pregnancy,
 including preeclampsia, high blood pressure, or gestational diabetes;
@@ -1083,8 +1083,8 @@ In addition to screening at
 the time of enrollment, on-going screening for worrisome behaviors using
 validated tools was performed to identify at-risk children and remove
 them from subsequent analysis.
-For this study, 361 typically-developing children between the
-ages of 2.8 months and 10 years old (median age 2 years, 2 months) were
+For this study, 381 typically-developing children between the
+ages of 40 days and 10 years (median age 2 years, 2 months) were
 selected for analysis based on having provided at least one stool sample
 in the same week as being evaluated using one of the cogntitive ability
 assessments (MSEL, WPPSI, WISC-V).
@@ -1134,12 +1134,12 @@ generating 400 million raw reads and 120 Gb of sequence per plate.
 
 Shotgun metagenomic sequences were analyzed using the bioBakery suite of
 computational tools \cite{beghiniIntegratingTaxonomicFunctional2021}.
-First, KneadData (v0.7.7) was used to perform quality
+First, KneadData (v0.10.0) was used to perform quality
 control of raw sequence reads, such as read trimming and removal of
-reads matching a human genome reference. Next, MetaPhlAn (v3.0.7, using
-database mpa\_v30\_CHOCOPhlAn\_201901) was used to generate taxonomic
+reads matching a human genome reference. Next, MetaPhlAn (v3.1.0, using
+database mpa\_v31\_CHOCOPhlAn\_201901) was used to generate taxonomic
 profiles by aligning reads to a reference database of marker genes.
-Finally, HUMAnN (v3.0.0a4) was used to functionally profile the
+Finally, HUMAnN (v3.6.0) was used to functionally profile the
 metagenomes.
 
 \subsubsection*{Machine learning for cognitive development}
@@ -1157,7 +1157,7 @@ all viable datapoints containing
 age at data collection, demographics, stool metagenomics and cognitive assessment were employed.
 The cognitive assessments were collected as either composite scores
 (for the experiments in Figure 3) or, when available, subscores on the
-Mullen Scales of Early Learning (Figure 4 A-B: Expressive Language, Gross Motor and Visual Reception).
+Mullen Scales of Early Learning (Figure 4 A-B: expressive language, gross motor and visual reception).
 For the concurrent prediction experiments, when multiple viable longitudinal samples were present,
 the single earliest viable datapoint inside the age range of the experiment was considered.
 For the future prediction experiments, every demographics-complete subject
