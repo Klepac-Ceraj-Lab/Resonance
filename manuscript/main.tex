@@ -8,6 +8,7 @@
 %\usepackage[none]{hyphenat} % use only if there is a problem
 % Use Unicode characters
 \usepackage[utf8]{inputenc}
+\usepackage{enumitem}
 
 \usepackage{scicite}
 % Clean citations with biblatex
@@ -1266,7 +1267,19 @@ and their volume calculated by summing the number of image voxels within each \c
 Brain region volumes used in RF models were normalized to total brain volume
 (the sum of white and gray matter).
 
-\subsubsection*{Data and code availability}
+
+\section*{References}
+
+\printbibliography[heading=none]
+
+\section*{Acknowledgements}
+% https://www.science.org/content/page/science-advances-information-authors#acknowledgments
+
+We thank Libusha Kelly (Albert Einstein School of Medicine) and Daphne Koinis Mitchell (Brown University)
+for helpful feedback on the manuscript. The research team also thanks the participants and families
+of the participants who generously shared their time and samples for this project.
+
+\subsubsection*{Data and materials availability}
 
 All data needed to evaluate the conclusions in the paper
 are present in the paper and/or the Supplementary Materials.
@@ -1282,32 +1295,30 @@ Information for replicating the package environment
 as well as code for data analysis and figure generation, as well as scripts for automated
 download of input files are available on GitHub \cite{kevin_bonham_2023_7647510}.
 
-\section*{References}
-
-\printbibliography[heading=none]
-
-\section*{Acknowledgements}
-% https://www.science.org/content/page/science-advances-information-authors#acknowledgments
-
+\subsubsection*{Funding}
 This research was funded by NIH UG3 OD023313 and Wellcome LEAP 1kD.
-The authors declare that they have no competing interests.
-We thank Libusha Kelly (Albert Einstein School of Medicine) and Daphne Koinis Mitchell (Brown University)
-for helpful feedback on the manuscript. The research team also thanks the participants and families
-of the participants who generously shared their time and samples for this project.
 
+\subsubsection*{Competing Interests}
+The authors declare that they have no competing interests.
+
+\subsubsection*{Author contributions}
 % https://credit.niso.org/
 
-KSB, VKC, CH, and SD were responsible for conceptualization,
-methodology and project administration.
-VKC, SD, and VD were responsible for funding aqusition.
-KSB, SHM, MB, FB, RCL, and JB contributed to data curation.
-Formal analyses were conducted by KSB, GFB, and MB.
-Investigation was performed by KSB, GFB, SHM, EW, FB, RCL, and MB.
-Resources were provided by SHM, EW, FB, RCL, JB, CH, and MB.
-Software and data visualizations were produced by KSB and GFB.
-KSB, MB, SD, VD, and VKC were responsible for supervision.
-Validation was performed by KSB, SHM, JB, and MB.
-KSB and GFB wrote the initial draft, 
-and review and editing were provided by SD, CH, and VKC.
+\begin{itemize}[noitemsep]
+    \item Conceptualization: KSB, VKC, CH, and SD
+    \item Methodology: KSB, VKC, CH, and SD
+    \item Project administraion: KSB, VKC, CH, and SD
+    \item Funding acquisition: VKC, SD, and VD
+    \item Data curation: KSB, GFB, SHM, MB, FB, RCL, and JB
+    \item Formal analyses: KSB, GFB, and MB
+    \item Investigation: KSB, GFB, SHM, EW, FB, RCL, and MB
+    \item Resources: SHM, EW, FB, RCL, JB, CH, and MB
+    \item Software and data visualizations: KSB and GFB
+    \item Supervision: KSB, MB, SD, VD, and VKC 
+    \item Validation: KSB, SHM, JB, and MB
+    \item Initial draft: KSB and GFB
+    \item Revision and editing: KSB, GFB, SD, CH, and VKC
+\end{itemize}
+
 
 \end{document}
