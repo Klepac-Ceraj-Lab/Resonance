@@ -1,4 +1,7 @@
 \documentclass{article}
+%DIF LATEXDIFF DIFFERENCE FILE
+%DIF DEL submission.tex   Fri Oct  6 11:44:27 2023
+%DIF ADD main.tex         Thu Oct 19 13:39:56 2023
 
 \usepackage[letterpaper, margin=1in]{geometry}
 
@@ -8,17 +11,27 @@
 %\usepackage[none]{hyphenat} % use only if there is a problem
 % Use Unicode characters
 \usepackage[utf8]{inputenc}
-\usepackage{enumitem}
+%DIF 11a11
+\usepackage{enumitem} %DIF > 
+%DIF -------
 
 \usepackage{scicite}
 % Clean citations with biblatex
 \usepackage[
 backend=biber,
-style=numeric,
-maxbibnames=50
+%DIF 16c17-18
+%DIF < style=science
+%DIF -------
+style=numeric, %DIF > 
+maxbibnames=50 %DIF > 
+%DIF -------
 ]{biblatex}
 
-\addbibresource{citations.bib}
+%DIF 19c21
+%DIF < \addbibresource{zotero.bib}
+%DIF -------
+\addbibresource{citations.bib} %DIF > 
+%DIF -------
 
 % Highlighting
 \usepackage{color}
@@ -223,14 +236,18 @@ and may lead to the future development of targets for early detection and early
 intervention.
 \end{abstract}
 
-% Teaser
-% This one-sentence summary provides a snapshot of your research for
-% non-specialist readers and will be used to promote your article if accepted for publication.
-% These should complement rather than repeat the title. 
+%DIF <  Teaser
+%DIF <  This one-sentence summary provides a snapshot of your research for
+%DIF <  non-specialist readers and will be used to promote your article if accepted for publication.
+%DIF <  These should complement rather than repeat the title. 
+\DIFaddbegin \subsection*{\DIFadd{Teaser}}
+\DIFaddend 
 
-% The microorganisms that colonize the gut of humans can influence
-% health and disease in numerous
-
+%DIF <  The microorganisms that colonize the gut of humans can influence
+%DIF <  health and disease in numerous
+\DIFaddbegin \DIFadd{The complex community of microorganisms living in the gastrointestinal tract of infants and children
+may affect how their brains develop.
+}\DIFaddend 
 
 \section*{Introduction}
 
@@ -342,11 +359,12 @@ due to the unique age-range and psychometric properties measured by each
 (i.e., the MSEL for children under 4 years of age, The WPPSI-3 for 3-6 year-olds,
 and the WISC-V for children older than 6), but were normalized to a common scale (Figure 1B),
 As expected, the greatest differences in microbial taxa were observed across
-child age (Figure 1C-D, PCoA axis 1), with older children primarily
+child age (Figure  \DIFaddbegin \DIFadd{1B, E; }\DIFaddend PCoA axis 1), with older children primarily
 stratified into Bacteroidetes-dominant, Firmicutes-dominant, or
 high-abundance \emph{Prevotella copri} (Figure S2).
 Overall subject-to-subject variation in gut microbial genes
-and brain volume profiles was similarly driven largely by subject age (Figure 1E-F).
+and brain volume profiles was similarly driven largely by subject age (Figure  \DIFaddbegin \DIFadd{1C, F}\DIFaddend ).
+
 
 \begin{table}[!h]
     \centering
@@ -375,13 +393,12 @@ and brain volume profiles was similarly driven largely by subject age (Figure 1E
                                   & College grad             & 95 (24.9\%) & 19 (23.2\%) & 75 (27.1\%) & 30 (28.8\%) \\ \cline{2-6}
                                   & Grad/professional school & 126 (33.1\%) & 16 (19.5\%) & 106 (38.3\%) & 23 (22.1\%) \\ \hline\hline
     \end{tabular}
-    \caption{\label{tab:demo}Subject demographics of the ECHO RESONANCE cohort.
+    \caption{\label{tab:demo}\textbf{Subjects in the ECHO RESONANCE cohort come from a diverse cross-section of Rhode Island families.}
             "All" refers to the entire cohort.
             "Under 6 months", "Over 18 months", and "Future" refer specifically
             to samples that were used included in the respective subgroup analyses.
     }
 \end{table}
-
 
 
 As several prior studies have demonstrated associations between specific gut taxa
@@ -534,7 +551,7 @@ development.
     pseudomedian.}
     \end{center}
 \end{table}
- 
+
 
 \subsubsection*{Gut microbial taxonomic and functional profiles predict \DIFaddbegin \DIFadd{concurrently measured }\DIFaddend cognitive function}
 
@@ -604,30 +621,31 @@ and }\textit{\DIFadd{B. intestinihominis}}\DIFadd{. }\textit{\DIFadd{E. ramulus}
 \DIFadd{was just outside our cutoff (64\% cumulative importance). %DIF >  Flag - 64%?
 RF models also identified an additional 48 species
 that were important for discriminating cognitive function scores
-}\DIFaddend (Table 3, Figure 3A).  \DIFaddbegin \DIFadd{Subject age was consistently ranked highly in
+}\DIFaddend (Table 3, Figure  \DIFaddbegin \DIFadd{3A-B, E). Subject age was consistently ranked highly in
 feature importance, which could indicate that decision branches based on
 microbial taxa have increased purity when considering the subject's age
 or that age itself is a useful predictor.
-}
+}\DIFaddend 
 
-\subsubsection*{\DIFadd{Gut microbial profiles in the first year of life predict future cogntitive function}}
+ \DIFaddbegin \subsubsection*{\DIFadd{Gut microbial profiles in the first year of life predict future cogntitive function}}
 
-\DIFadd{While LMs did not identify any taxa in }\DIFaddend the  \DIFaddbegin \DIFadd{0-6 month range
-that were associated with concurrently measured cognitive function,
-we reasoned that developmental trajectories that begin
+\DIFadd{While LMs did not identify any taxa in the 0-6 month range
+that were associated with concurrently measured cognitive function}\DIFaddend ,
+ \DIFaddbegin \DIFadd{we reasoned that developmental trajectories that begin
 }\textit{\DIFadd{in utero}} \DIFadd{may not be immediately altered by
 microbial exposures, such that microbial influences early in life
 may take time to manifest. To test this hypothesis,
 we asked whether RF models trained on taxonomic profiles
 in the first year of life
-could predict }\textit{\DIFadd{future}} \DIFadd{cognitive performance measured (Figure 3B, D; Table 4).
+could predict }\textit{\DIFadd{future}} \DIFadd{cognitive performance measured at least 6 months
+after the stool sample was collected (Figure 3C-D, F; Table 4).
 Models were consistently able to learn microbial species that are associated
 with cognitive performance at a future visit
-(mean time between visits: 21.5 months, S.D. = 9.9 months; Figure 3C,
+(mean time between visits: 21.5 months, S.D. }\DIFaddend =  \DIFaddbegin \DIFadd{9.9 months; Figure 3G,
 mean test set correlation: 0.27).
-}\DIFaddend 
+}
 
- \DIFaddbegin \begin{table}[!h]
+\begin{table}[!h]
     \begin{center}
     \begin{tabular}{|r|r|r|r|r}
         \hline
@@ -647,13 +665,13 @@ mean test set correlation: 0.27).
 \end{table}
 
 \DIFadd{Nearly all important taxa in RF models that predicted cognitive function
-in children older than }\DIFaddend 18  \DIFaddbegin \DIFadd{months were also important in
-models that predicted future cognitive function, if they were present (Figure 3B, Table S5).
+in children older than 18 months were also important in
+models that predicted future cognitive function, if they were present (Figure 3B-C, Table S5).
 At the same time, many additional species were important for future prediction models
 that were not important in the models measuring concurrent cognitive function.
 In particular, feature importance for future prediction models
-were dominated by two species of }\textit{\DIFadd{Klebsiella}}\DIFaddend ,
- \DIFaddbegin \textit{\DIFadd{K. pneumoniae}} \DIFadd{and }\textit{\DIFadd{K. varicola}} \DIFadd{(Figure 3D, E).
+were dominated by two species of }\textit{\DIFadd{Klebsiella}}\DIFadd{,
+}\textit{\DIFadd{K. pneumoniae}} \DIFadd{and }\textit{\DIFadd{K. varicola}} \DIFadd{(Figure 3C, F).
 Many of the other species that ranked highest }\DIFaddend in  feature importance
 \DIFaddbegin \DIFadd{were also oportunistic pathogens, or previously reported
 to be linked with disease (eg. }\textit{\DIFadd{R. gnavus}}\DIFaddend ,  \DIFaddbegin \textit{\DIFadd{E. coli}}\DIFadd{).
@@ -1268,8 +1286,10 @@ of the participants who generously shared their time and samples for this projec
 are present in the paper and/or the Supplementary Materials.
 Taxonomic and functional microbial profiles, as well as subject
 demographics necessary for statistical analyses and machine learning are
-available on the Open Science Framework
-\cite{bonhamECHORESONANCEMicrobiome2022}.
+available on the  \DIFaddbegin \DIFadd{Data Dryad
+\mbox{%DIFAUXCMD
+\cite{bonhamDataDryad2023}}\hskip0pt%DIFAUXCMD
+}\DIFaddend .
 Data processing, generation of summary statistics, and
 generation of plots was performed using the julia programming language
 and 3rd party packages
@@ -1314,7 +1334,7 @@ and archived on Zenodo }\DIFaddend \cite{kevin_bonham_2023_7647510}.
     \small
     %DIF >  \includegraphics[width=0.9\textwidth]{assets/Figure1.png}
     \caption{
-        \label{fig:1} \textbf{\DIFaddFL{The RESONANCE cohort is a diverse cohort with longitudinal sampling.}} \DIFaddFL{(}\textbf{\DIFaddFL{A}}\DIFaddFL{) Stool samples,
+        \label{fig:1} \textbf{\DIFaddFL{The RESONANCE cohort is a diverse cohort with accelerated longitudinal sampling.}} \DIFaddFL{(}\textbf{\DIFaddFL{A}}\DIFaddFL{) Stool samples,
         cognitive assessments and neuroimaging were collected from participants
         at different ages throughout the first years of life.
         (}\textbf{\DIFaddFL{B}}\DIFaddFL{) Cognitive function scores are assessed by
@@ -1415,8 +1435,8 @@ and archived on Zenodo }\DIFaddend \cite{kevin_bonham_2023_7647510}.
     \small
     %DIF >  \includegraphics[width=0.9\textwidth]{assets/Figure4.png}
     \caption{
-        \textbf{\DIFaddFL{Microbial features can train RF models to predict MSEL subscores and brain volumes in children over 18 months of age}}\DIFaddFL{.
-        (}\textbf{\DIFaddFL{A}}\DIFaddFL{) Test set correlations for RF models predicting MSEL subscale scores,
+        \textbf{\DIFaddFL{Coupled importance of microbes in neuroanatomy and subscores are consistent with known subcortical associations with cognition.}}
+        \DIFaddFL{(}\textbf{\DIFaddFL{A}}\DIFaddFL{) Test set correlations for RF models predicting MSEL subscale scores,
         with or without demographics included as predictors.
         (}\textbf{\DIFaddFL{B}}\DIFaddFL{) Important taxa in models predicting MSEL subscale scores.
         (}\textbf{\DIFaddFL{C}}\DIFaddFL{) Average test-set correlations for prediction of MRI segmentation
