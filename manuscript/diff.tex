@@ -1,7 +1,7 @@
 \documentclass{article}
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL submission.tex   Fri Oct  6 11:44:27 2023
-%DIF ADD main.tex         Thu Oct 19 13:39:56 2023
+%DIF ADD main.tex         Fri Oct 20 10:16:49 2023
 
 \usepackage[letterpaper, margin=1in]{geometry}
 
@@ -195,45 +195,20 @@ maxbibnames=50 %DIF >
 \maketitle 
 
 \begin{abstract}
-The gastrointestinal tract, its resident microorganisms, and the central
-nervous system are connected by biochemical signaling, also known as the
-"microbiome-gut-brain-axis." Both the human brain and the gut microbiome
-have critical developmental windows in the first years of life,
-raising the possibility that their development is co-occurring and
-likely co-dependent. Emerging evidence implicates gut microorganisms and
-microbiota composition in cognitive outcomes and neurodevelopmental
-disorders (e.g., autism and anxiety), but the influence of gut microbial
-metabolism on typical neurodevelopment has not been explored in detail.
-We investigated the relationship of the microbiome with the neuroanatomy
-and cognitive function of  \DIFaddbegin \DIFadd{381 }\DIFaddend healthy children, demonstrating that
-differences in gut microbial taxa and gene functions are associated with
-overall cognitive function and with differences in the size of
-multiple brain regions.
-Using a combination of multivariate linear and machine learning (ML) models,
-we showed that many species,
-including \emph{ \DIFaddbegin \DIFadd{Alistipes obesi}\DIFaddend } and \emph{Blautia wexlerae}, were
- associated with higher cognitive function, while some
-species such as \emph{Ruminococcus gnavus} were more commonly found in
-children with low cognitive scores after controlling for sociodemographic factors.
-Microbial genes for enzymes involved in the metabolism of
-neuroactive compounds, particularly short-chain fatty acids such as
-acetate and propionate, were also associated with cognitive function.
-In addition, ML models were able to use microbial taxa to predict the
-volume of brain regions, and many taxa that were identified
-as important in predicting cognitive function also dominated the
-feature importance metric for individual brain regions\DIFaddbegin \DIFadd{,
-and for specific subscales of cognitive function}\DIFaddend .
-For example, \emph{B. wexlerae}
-was the most important species in models predicting the size of the parahippocampal region
-in both the left and right hemispheres
- \DIFaddbegin \DIFadd{and was among the top predictors of gross motor and expressive language performance.
-Several }\DIFaddend species from
-the phylum \textit{Bacteroidetes}, including GABA-producing
-\emph{B. ovatus}, were important for predicting
-the size of the left accumbens area, but not the right. These
-findings provide potential biomarkers of neurocognition and brain development
-and may lead to the future development of targets for early detection and early
-intervention.
+     Emerging evidence implicates gut  \DIFaddbegin \DIFadd{microbial metabolism in neurodevelopmental disorders,
+    but its influence }\DIFaddend on typical neurodevelopment has not been explored in detail.
+    We investigated the relationship  \DIFaddbegin \DIFadd{between the microbiome and neuroanatomy and cognition of 381 }\DIFaddend healthy children,
+    demonstrating that differences in  microbial taxa and  \DIFaddbegin \DIFadd{genes }\DIFaddend are associated
+    with overall cognitive function and  the size of  brain regions.
+    Using a combination of  \DIFaddbegin \DIFadd{statistical }\DIFaddend and machine learning (ML) models,
+    we showed that  \DIFaddbegin \DIFadd{species including }\textit{\DIFadd{Alistipes obesi}}\DIFadd{, }\textit{\DIFadd{Blautia wexlerae}}\DIFadd{, }\DIFaddend and  \DIFaddbegin \textit{\DIFadd{Ruminococcus gnavus}}
+    \DIFadd{were enriched or depleted }\DIFaddend in children with  \DIFaddbegin \DIFadd{higher cognitive function scores.
+    Microbial metabolism of }\DIFaddend short-chain fatty acids  \DIFaddbegin \DIFadd{was }\DIFaddend also associated with cognitive function.
+    In addition, ML models were able to  predict the volume of brain regions  \DIFaddbegin \DIFadd{from microbial profiles,
+    and }\DIFaddend taxa that were  important in predicting cognitive function
+     \DIFaddbegin \DIFadd{were also important for predicting }\DIFaddend individual brain regions  \DIFaddbegin \DIFadd{and specific subscales of cognitive function}\DIFaddend .
+    These findings provide potential biomarkers of  \DIFaddbegin \DIFadd{neurocognitive }\DIFaddend development
+    and may  \DIFaddbegin \DIFadd{enable }\DIFaddend development of targets for early detection and  intervention.
 \end{abstract}
 
 %DIF <  Teaser
@@ -245,7 +220,7 @@ intervention.
 
 %DIF <  The microorganisms that colonize the gut of humans can influence
 %DIF <  health and disease in numerous
-\DIFaddbegin \DIFadd{The complex community of microorganisms living in the gastrointestinal tract of infants and children
+\DIFaddbegin \DIFadd{The complex community of microorganisms living in the guts of infants and children
 may affect how their brains develop.
 }\DIFaddend 
 
@@ -348,7 +323,7 @@ performance and brain structure.
 
 We investigated the co-development of the brain and microbiome in
  \DIFaddbegin \DIFadd{381 }\DIFaddend healthy and neurotypically-developing children ( \DIFaddbegin \DIFadd{172 }\DIFaddend female) between  \DIFaddbegin \DIFadd{40 }\DIFaddend days and 10 years of age
-(Table 1,  Figure 1A, Figure S1)
+( \DIFaddbegin \DIFadd{table }\DIFaddend 1,  \DIFaddbegin \DIFadd{fig. }\DIFaddend 1A,  \DIFaddbegin \DIFadd{fig. }\DIFaddend S1)
 using a variety of orthogonal microbial and neurocognitive measures.
 These included shotgun metagenomic sequencing,
 age-appropriate cognitive and behavioral assessments
@@ -357,14 +332,13 @@ and neuroimaging measures of cortical and sub-cortical morphology.
 Different assessment instruments were used depending on the child's age
 due to the unique age-range and psychometric properties measured by each
 (i.e., the MSEL for children under 4 years of age, The WPPSI-3 for 3-6 year-olds,
-and the WISC-V for children older than 6), but were normalized to a common scale (Figure 1B),
+and the WISC-V for children older than 6), but were normalized to a common scale ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 1B),
 As expected, the greatest differences in microbial taxa were observed across
-child age (Figure  \DIFaddbegin \DIFadd{1B, E; }\DIFaddend PCoA axis 1), with older children primarily
+child age ( \DIFaddbegin \DIFadd{fig. 1B, E; }\DIFaddend PCoA axis 1), with older children primarily
 stratified into Bacteroidetes-dominant, Firmicutes-dominant, or
-high-abundance \emph{Prevotella copri} (Figure S2).
+high-abundance \emph{Prevotella copri} ( \DIFaddbegin \DIFadd{fig. }\DIFaddend S2).
 Overall subject-to-subject variation in gut microbial genes
-and brain volume profiles was similarly driven largely by subject age (Figure  \DIFaddbegin \DIFadd{1C, F}\DIFaddend ).
-
+and brain volume profiles was similarly driven largely by subject age ( \DIFaddbegin \DIFadd{fig. 1C, F}\DIFaddend ).
 
 \begin{table}[!h]
     \centering
@@ -419,14 +393,14 @@ and the relatively wide range of ages when over which infant transition from mil
 we separately considered ages that are generally pre-transition (prior to 6 months of age old)
 and those that are generally post-transition (over 18 months of age).
 However, even with this categorization, we find increasing variation
-in gut microbiomes in children over 18 months old (Figure 1G).
+in gut microbiomes in children over 18 months old ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 1G).
 We also found that overall variation in microbial species in children over 18 months old
 was significantly associated with variation in cognitive function score
-(Figure 1G, R\textsuperscript{2} =  \DIFaddbegin \DIFadd{0.0099}\DIFaddend , q \textless{}  \DIFaddbegin \DIFadd{0.01}\DIFaddend ),
+( \DIFaddbegin \DIFadd{fig. }\DIFaddend 1G, R\textsuperscript{2} =  \DIFaddbegin \DIFadd{0.0099}\DIFaddend , q \textless{}  \DIFaddbegin \DIFadd{0.01}\DIFaddend ),
 as was variation in microbial gene functions (R\textsuperscript{2} =  \DIFaddbegin \DIFadd{0.0115}\DIFaddend , q \textless{} 0.001).
 Variation in microbial taxa and genes was not significantly associated with cognitive
 function in children under 6 months, though this may be due to the low
-taxonomic diversity and broad lack of overlap between taxa in infants (Figure 1G).
+taxonomic diversity and broad lack of overlap between taxa in infants ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 1G).
 As expected, age was significantly associated with microbial beta
 diversity (taxa R\textsuperscript{2} =  \DIFaddbegin \DIFadd{0.0207}\DIFaddend , and  gene functions
 annotated with UniRef90s clusters of 90\% similarity
@@ -438,7 +412,7 @@ associated with variation in neuroimaging \DIFaddbegin \DIFadd{(MRI) }\DIFaddend
 Consistent with prior studies, different microbial measurement types
 captured overlapping variation, with species profiles and gene function
 profiles, both generated from metagenomic sequences, being tightly coupled
-(Figure 1H, p \textless{} 0.001). Other functional
+( \DIFaddbegin \DIFadd{fig. }\DIFaddend 1H, p \textless{} 0.001). Other functional
 groupings (Enzyme commission level4 - ECs
 \cite{bairochENZYMEDatabase20002000},
 and KEGG orthologues - KOs
@@ -456,14 +430,14 @@ To assess whether individual microbial species were associated with
 cognitive function, we fit multivariable linear regression models (LMs)
 \cite{mallickMultivariableAssociationDiscovery2021}
 for the relative abundance of each species that had at least 15\%
-prevalence in a given age group (Figure 2A, N\textsubscript{species} =  \DIFaddbegin \DIFadd{116 }\DIFaddend for 0--120 months, 
+prevalence in a given age group ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 2A, N\textsubscript{species} =  \DIFaddbegin \DIFadd{116 }\DIFaddend for 0--120 months, 
 N\textsubscript{species} =  \DIFaddbegin \DIFadd{54 }\DIFaddend for 0--6 months, N\textsubscript{species} =  \DIFaddbegin \DIFadd{136 }\DIFaddend for 18--120 months).
  \DIFaddbegin \DIFadd{No species were }\DIFaddend significantly associated (q  \DIFaddbegin \DIFadd{\textless{} 0.20}\DIFaddend ) with
 cognitive function in children under 6 months old after adjusting for
 age and maternal education .
 By contrast, in children over 18 months of age,
 several mirobial species were significantly enriched
- in children with higher cognitive function scores  \DIFaddbegin \DIFadd{(Figure 2B),
+ in children with higher cognitive function scores  \DIFaddbegin \DIFadd{(fig. 2B),
 including }\DIFaddend \emph{ \DIFaddbegin \DIFadd{Alistipes obesi}\DIFaddend },
 \emph{Asaccharobacter celatus}  (also known as \textit{Adlercreutzia equolifaciens} subsp. \textit{celatus}
  \cite{maruoAdlercreutziaEquolifaciensGen2008}),
@@ -471,7 +445,7 @@ and SCFA-producing probiotic
 species such as \emph{Eubacterium eligens} and \emph{Faecalibacterium
 prausnitzii}
 \cite{ghoshMediterraneanDietIntervention2020}
-(Figure 2B). \textit{ \DIFaddbegin \DIFadd{Sutterella wadsworthensis}\DIFaddend } was the only microbial species
+( \DIFaddbegin \DIFadd{fig. }\DIFaddend 2B). \textit{ \DIFaddbegin \DIFadd{Sutterella wadsworthensis}\DIFaddend } was the only microbial species
 that was significantly negatively associated with cognitive function score (q value =  \DIFaddbegin \DIFadd{0.165}\DIFaddend ).
 
 
@@ -483,8 +457,8 @@ To assess whether microbial taxa were associated with
 the development of specific cognitive domains,
 we fit multivariate linear models for each species present in at least 10\%
 of samples for children under 6 months, 18 to 36 months, or all ages
-with a concurrent MSEL score (Figure 2C).
-Several taxa associated with composite scores (Figure 2B)
+with a concurrent MSEL score (fig. 2C).
+Several taxa associated with composite scores (fig. 2B)
 were also associated with one or more subscores, including
 }\textit{\DIFadd{F. prausnitzii}} \DIFadd{and }\textit{\DIFadd{A. obesi}}\DIFadd{.
 Interestingly, while no taxa were significantly associated
@@ -506,12 +480,12 @@ grouped by functional activity would be associated with cognition. To
 test this, we performed feature set enrichment analysis (FSEA) on groups
 of genes with neuroactive potential
 \cite{valles-colomerNeuroactivePotentialHuman2019}
-and concurrent cognitive ability score (Table 2, Figure  \DIFaddbegin \DIFadd{2D-F}\DIFaddend ) and found that
+and concurrent cognitive ability score ( \DIFaddbegin \DIFadd{table }\DIFaddend 2,  \DIFaddbegin \DIFadd{fig. 2D-F}\DIFaddend ) and found that
 several metabolic pathways were either significantly enriched or depleted in
 children with higher cognitive ability scores.
  For example, genes for degrading the 3-carbon SCFA, propionate,
 were significantly depleted in children with higher cognitive ability
-scores  \DIFaddbegin \DIFadd{in children under 6m }\DIFaddend (Table 2; propionate degradation I,
+scores  \DIFaddbegin \DIFadd{in children under 6m (table }\DIFaddend 2; propionate degradation I,
  enrichment score (E.S.) =  \DIFaddbegin \DIFadd{-0.66}\DIFaddend , corrected p-value (q)
 =  \DIFaddbegin \DIFadd{0.029), as were genes for synthesizing the 2 carbon SCFA acetate
 (acetate synthesis II, }\DIFaddend E.S. =  \DIFaddbegin \DIFadd{-0.491}\DIFaddend , q =  \DIFaddbegin \DIFadd{0.059; acetate synthesis
@@ -551,7 +525,7 @@ development.
     pseudomedian.}
     \end{center}
 \end{table}
-
+ 
 
 \subsubsection*{Gut microbial taxonomic and functional profiles predict \DIFaddbegin \DIFadd{concurrently measured }\DIFaddend cognitive function}
 
@@ -573,7 +547,7 @@ development, may partially reflect socioeconomic and demographic
 factors, we assessed the performance of RF regressors where maternal
 education (here used as a proxy of socioeconomic status (SES)),
 sex, and age were included as possible predictors, either alone
-or in combination with microbial taxonomic profiles (Table 3).
+or in combination with microbial taxonomic profiles ( \DIFaddbegin \DIFadd{table }\DIFaddend 3).
 
 
 
@@ -608,8 +582,8 @@ but RFs were consistently able to learn the relationship between taxa
 and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE  \DIFaddbegin \DIFadd{18.25).
 Species }\DIFaddend that were important in RF overlapped with those that were
-significant when testing the relationship with LMs (Figure
-3A-B, Table S1A-B);  \DIFaddbegin \DIFadd{Both analysis identified 
+significant when testing the relationship with LMs ( \DIFaddbegin \DIFadd{fig.
+}\DIFaddend 3A-B,  \DIFaddbegin \DIFadd{table }\DIFaddend S1A-B);  \DIFaddbegin \DIFadd{Both analysis identified 
 }\textit{\DIFadd{F. prausnitzii}}\DIFadd{, %DIF >  F. prausz was mentioned before, ~ line 395
 }\textit{\DIFadd{E. eligens}}\DIFadd{, %DIF >  E. eligens was mentioned before, ~ line 395
 }\textit{\DIFadd{Parasutterella excrementihominis}}\DIFadd{, and %DIF >  Not mentioned before
@@ -621,7 +595,7 @@ and }\textit{\DIFadd{B. intestinihominis}}\DIFadd{. }\textit{\DIFadd{E. ramulus}
 \DIFadd{was just outside our cutoff (64\% cumulative importance). %DIF >  Flag - 64%?
 RF models also identified an additional 48 species
 that were important for discriminating cognitive function scores
-}\DIFaddend (Table 3, Figure  \DIFaddbegin \DIFadd{3A-B, E). Subject age was consistently ranked highly in
+(table }\DIFaddend 3,  \DIFaddbegin \DIFadd{fig. 3A-B, E). Subject age was consistently ranked highly in
 feature importance, which could indicate that decision branches based on
 microbial taxa have increased purity when considering the subject's age
 or that age itself is a useful predictor.
@@ -638,10 +612,10 @@ may take time to manifest. To test this hypothesis,
 we asked whether RF models trained on taxonomic profiles
 in the first year of life
 could predict }\textit{\DIFadd{future}} \DIFadd{cognitive performance measured at least 6 months
-after the stool sample was collected (Figure 3C-D, F; Table 4).
+after the stool sample was collected (fig. 3C-D, F; table 4).
 Models were consistently able to learn microbial species that are associated
 with cognitive performance at a future visit
-(mean time between visits: 21.5 months, S.D. }\DIFaddend =  \DIFaddbegin \DIFadd{9.9 months; Figure 3G,
+(mean time between visits: 21.5 months, S.D. }\DIFaddend =  \DIFaddbegin \DIFadd{9.9 months; fig. 3G,
 mean test set correlation: 0.27).
 }
 
@@ -666,12 +640,12 @@ mean test set correlation: 0.27).
 
 \DIFadd{Nearly all important taxa in RF models that predicted cognitive function
 in children older than 18 months were also important in
-models that predicted future cognitive function, if they were present (Figure 3B-C, Table S5).
+models that predicted future cognitive function, if they were present (fig. 3B-C, table S5).
 At the same time, many additional species were important for future prediction models
 that were not important in the models measuring concurrent cognitive function.
 In particular, feature importance for future prediction models
 were dominated by two species of }\textit{\DIFadd{Klebsiella}}\DIFadd{,
-}\textit{\DIFadd{K. pneumoniae}} \DIFadd{and }\textit{\DIFadd{K. varicola}} \DIFadd{(Figure 3C, F).
+}\textit{\DIFadd{K. pneumoniae}} \DIFadd{and }\textit{\DIFadd{K. varicola}} \DIFadd{(fig. 3C, F).
 Many of the other species that ranked highest }\DIFaddend in  feature importance
 \DIFaddbegin \DIFadd{were also oportunistic pathogens, or previously reported
 to be linked with disease (eg. }\textit{\DIFadd{R. gnavus}}\DIFaddend ,  \DIFaddbegin \textit{\DIFadd{E. coli}}\DIFadd{).
@@ -687,20 +661,20 @@ with cognitive function are general across all cognitive subdomains.
 To accomplish this, we assessed individual subscales of the  
 MSEL (birth to 36 months - }\textit{\DIFadd{see Methods}}\DIFadd{). 
 Taxonomic profiles coupled with demographics exhibited predictive potential towards three
-of five probed subscales (Figure 4A, Table 5), 
+of five probed subscales (fig. 4A, table 5), 
 namely expressive language ( test-set RMSE 12.05, test-set correlation 0.368), 
 gross motor (test-set RMSE 11.07, test-set correlation 0.137) and 
 visual reception (test-set RMSE 15.2, test-set correlation 0.333).
 Between the subscales, both the predictability (measured by the test-set figures of merit)
-and the relative importances of several taxa (Figure 4B) is variable.
+and the relative importances of several taxa (fig. 4B) is variable.
 Although certain species such as }\textit{\DIFadd{B. longum}}\DIFadd{, }\textit{\DIFadd{F. prausznitzii}} 
-\DIFadd{have similar relative importance across all subscales, others are substantially different (Tables S2-S4).
+\DIFadd{have similar relative importance across all subscales, others are substantially different (tables S2-S4).
 Notably, }\textit{\DIFadd{Bifidobacterium pseudocatenulatum}}\DIFadd{, }\textit{\DIFadd{B. wexlerae}} \DIFadd{and }\textit{\DIFadd{E. eligens}} \DIFadd{are
 substantially more important for the prediction of expressive language, while
 }\textit{\DIFadd{R. faecis}}\DIFadd{, }\textit{\DIFadd{Streptococcus salivarius}} \DIFadd{and }\textit{\DIFadd{Fusicatenibacter saccharivorans}} \DIFadd{are
 distinctly predictive of gross motor, and
 }\textit{\DIFadd{Clostridium innocuum}}\DIFadd{, }\textit{\DIFadd{B. vulgatus}} 
-\DIFadd{stand out on models targeting visual reception (Supplenmentary Tables S2-4).
+\DIFadd{stand out on models targeting visual reception (tables S2-4).
 }
 
 \begin{table}[!h]
@@ -743,7 +717,7 @@ used RF modeling to associate gut taxonomic
 profiles with individual brain regions identified in MRI scans
 (children over 18 months old, N =  \DIFaddbegin \DIFadd{124}\DIFaddend ).
 Some brain regions were more readily
-predicted by RF models trained on microbial taxa ( \DIFaddbegin \DIFadd{Tables 5, 6, and S6}\DIFaddend ), in particular those that were highly correlated with age.
+predicted by RF models trained on microbial taxa ( \DIFaddbegin \DIFadd{tables 5, 6, and S6}\DIFaddend ), in particular those that were highly correlated with age.
 These included the L/R lingual gyrus (mean RF correlations, Left =
  \DIFaddbegin \DIFadd{0.444}\DIFaddend , Right =  \DIFaddbegin \DIFadd{0.441}\DIFaddend ; importance for age, Left =  \DIFaddbegin \DIFadd{6.8}\DIFaddend \%, Right =
  \DIFaddbegin \DIFadd{7.7}\DIFaddend \%) and the L/R pericalcarine cortex (mean RF correlations, Left =
@@ -768,7 +742,7 @@ RF correlations =  \DIFaddbegin \DIFadd{0.275}\DIFaddend ; relative age importan
     \caption{\label{tab:neuro}   \DIFaddbeginFL \textbf{\DIFaddFL{RF models on microbial taxa predicting brain regions have generally good performance.}}
     \DIFaddendFL Mean absolute proportional error (MAPE) and correlation coeficient (R)
     of test-set preditions are reported accross models for all brain regions.
-    Complete list of values can be found on Table  \DIFaddbeginFL \DIFaddFL{S6}\DIFaddendFL .}
+    Complete list of values can be found on  \DIFaddbeginFL \DIFaddFL{table S6}\DIFaddendFL .}
     \end{center}
 \end{table}
 
@@ -789,7 +763,7 @@ others were dominated by a small number of taxa, many of which
 were also identified in LMs and RF models of cognitive function (Figures 2 and 3). 
 In general, for all segments, a consistent number of species between  \DIFaddbegin \DIFadd{28 and 42 }\DIFaddend (median =  \DIFaddbegin \DIFadd{38}\DIFaddend , less than 30\% of the input features)
 was responsible for half of the cumulative importance,
-regardless of model performance (Figure  \DIFaddbegin \DIFadd{4C-E}\DIFaddend , Table S2).
+regardless of model performance ( \DIFaddbegin \DIFadd{fig. 4C-E, table }\DIFaddend S2).
 We observed two major patterns of importance distribution from
 species over the brain segments; some species portrayed high contributions
 to multiple different segments, while others contributed modestly to
@@ -804,11 +778,11 @@ included  \DIFaddbegin \DIFadd{nine }\DIFaddend species -
 \emph{Coprococcus comes}\DIFaddbegin \DIFadd{,
 }\emph{\DIFadd{A. celatus}} \DIFaddend and
 \emph{B. wexlerae}, which combined, account for approximately 10\% of the cumulative relative importances,
-computed after fitness-weighting on the reported brain segments (Figure  \DIFaddbegin \DIFadd{4D-E}\DIFaddend ).
+computed after fitness-weighting on the reported brain segments ( \DIFaddbegin \DIFadd{fig. 4D-E}\DIFaddend ).
 
  Among these, \emph{A. hadrus} is the variable with 
 highest average relative importance along all reported \DIFaddbegin \DIFadd{models
-}\DIFaddend (mean =  \DIFaddbegin \DIFadd{1.4}\DIFaddend \%; min =  \DIFaddbegin \DIFadd{0.8}\DIFaddend \%; max =  \DIFaddbegin \DIFadd{3.6}\DIFaddend \%, Figure  \DIFaddbegin \DIFadd{4D-E}\DIFaddend ).
+}\DIFaddend (mean =  \DIFaddbegin \DIFadd{1.4}\DIFaddend \%; min =  \DIFaddbegin \DIFadd{0.8}\DIFaddend \%; max =  \DIFaddbegin \DIFadd{3.6\%, fig. 4D-E}\DIFaddend ).
 \emph{B. wexlerae}, which was important in RF models of cognitive function, 
  \DIFaddbegin \DIFadd{was }\DIFaddend also important in models of the entorhinal, fusiform and lingual areas
 and had the highest importance in models predicting the size of
@@ -895,7 +869,7 @@ We hypothesize that this may be because brain developmental trajectories
 begin }\textit{\DIFadd{in utero}}\DIFadd{, and microbial influences (that can only begin at birth)
 take additional time to manifest.
 In line with this hypothesis, RF models that were able to learn associations
-between early-life microbiomes and future cognitive function scores (Figure 3).
+between early-life microbiomes and future cognitive function scores (fig. 3).
 The top-ranked species for these models included several 
 taxa that were important for predicting concurrent cognitive assessment scores after 18 months, notably
 pathobionts in the family }\textit{\DIFadd{Enterobacteriaceae}} \DIFadd{such as
@@ -994,14 +968,14 @@ several of the taxa that were positively associated with cognitive
 function in this study, including \emph{B. wexlerae}, \emph{D.
 longicatena}, \emph{R. faecis}, and \emph{A. finegoldii} are
 Clostridiales, as is \emph{R. gnavus}, which we found was negatively
-associated with cognitive function (Figure 2A-B). This kind of
+associated with cognitive function ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 2A-B). This kind of
 species-level resolution is typically not possible with amplicon
 sequencing.
 
 In addition to improved species-level resolution, shotgun metagenomic
 sequencing also enables gene-functional insight. We showed that
 genes for the metabolism of SCFAs, both their degradation and synthesis,
-are associated with cognitive function scores (Figure 2). 
+are associated with cognitive function scores ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 2). 
 SCFAs are produced by anaerobic fermentation of dietary fiber
 and have been linked with immune system regulation as well as directly
 with brain function \cite{dalileRoleShortchainFatty2019}.
@@ -1043,7 +1017,7 @@ of lockdowns. In our subject set for this study, these effects are more
 pronounced in some age groups due to the period when active recruitment for
 the study was occurring
 \cite{blackwellYouthWellbeingCOVID192022,deoniImpactCOVID19Pandemic2021}
-(Figure S3).
+( \DIFaddbegin \DIFadd{fig. }\DIFaddend S3).
 
 This analysis allowed us to establish links between microbial taxa and
 their functional potential with cognition and brain structure. 
@@ -1186,15 +1160,15 @@ status) on participants from different age groups.
 all viable datapoints containing 
 age at data collection, demographics, stool metagenomics and cognitive assessment were employed.
 The cognitive assessments were collected as either composite scores
-(for the experiments in Figure 3) or, when available, subscores on the
-Mullen Scales of Early Learning (Figure 4 A-B: expressive language, gross motor and visual reception).
+(for the experiments in fig. 3) or, when available, subscores on the
+Mullen Scales of Early Learning (fig. 4 A-B: expressive language, gross motor and visual reception).
 For the concurrent prediction experiments, when multiple viable longitudinal samples were present,
 the single earliest viable datapoint inside the age range of the experiment was considered.
 For the future prediction experiments, every demographics-complete subject
 contributed a single datapoint built from the combination of
 the latest metagenome collected within the stool collection time range and
 the latest future cognitive assessment on the assesment time range.
-}\DIFaddend Age (in months) was provided as a covariate for all models (Table S3).
+}\DIFaddend Age (in months) was provided as a covariate for all models ( \DIFaddbegin \DIFadd{table }\DIFaddend S3).
 
 Random Forests (RFs)
 \cite{breimanRandomForests2001}
