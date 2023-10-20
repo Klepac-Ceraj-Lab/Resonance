@@ -1,7 +1,7 @@
 \documentclass{article}
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL submission.tex   Fri Oct  6 11:44:27 2023
-%DIF ADD main.tex         Fri Oct 20 10:16:49 2023
+%DIF ADD main.tex         Fri Oct 20 14:47:22 2023
 
 \usepackage[letterpaper, margin=1in]{geometry}
 
@@ -200,11 +200,11 @@ maxbibnames=50 %DIF >
     We investigated the relationship  \DIFaddbegin \DIFadd{between the microbiome and neuroanatomy and cognition of 381 }\DIFaddend healthy children,
     demonstrating that differences in  microbial taxa and  \DIFaddbegin \DIFadd{genes }\DIFaddend are associated
     with overall cognitive function and  the size of  brain regions.
-    Using a combination of  \DIFaddbegin \DIFadd{statistical }\DIFaddend and machine learning models,
+    Using a combination of  \DIFaddbegin \DIFadd{statistical }\DIFaddend and machine learning  models,
     we showed that  \DIFaddbegin \DIFadd{species including }\textit{\DIFadd{Alistipes obesi}}\DIFadd{, }\textit{\DIFadd{Blautia wexlerae}}\DIFadd{, }\DIFaddend and  \DIFaddbegin \textit{\DIFadd{Ruminococcus gnavus}}
     \DIFadd{were enriched or depleted }\DIFaddend in children with  \DIFaddbegin \DIFadd{higher cognitive function scores.
     Microbial metabolism of }\DIFaddend short-chain fatty acids  \DIFaddbegin \DIFadd{was }\DIFaddend also associated with cognitive function.
-    In addition, machine learning models were able to  predict the volume of brain regions  \DIFaddbegin \DIFadd{from microbial profiles,
+    In addition,  \DIFaddbegin \DIFadd{machine }\DIFaddend models were able to  predict the volume of brain regions  \DIFaddbegin \DIFadd{from microbial profiles,
     and }\DIFaddend taxa that were  important in predicting cognitive function
      \DIFaddbegin \DIFadd{were also important for predicting }\DIFaddend individual brain regions  \DIFaddbegin \DIFadd{and specific subscales of cognitive function}\DIFaddend .
     These findings provide potential biomarkers of  \DIFaddbegin \DIFadd{neurocognitive }\DIFaddend development
@@ -215,16 +215,21 @@ maxbibnames=50 %DIF >
 %DIF <  This one-sentence summary provides a snapshot of your research for
 %DIF <  non-specialist readers and will be used to promote your article if accepted for publication.
 %DIF <  These should complement rather than repeat the title. 
-\DIFaddbegin \subsection*{\DIFadd{Teaser}}
+\DIFaddbegin \subsubsection*{\DIFadd{Short title}}
 \DIFaddend 
 
 %DIF <  The microorganisms that colonize the gut of humans can influence
 %DIF <  health and disease in numerous
-\DIFaddbegin \DIFadd{The complex community of microorganisms living in the guts of infants and children
-may affect how their brains develop.
+\DIFaddbegin \DIFadd{Gut microbes are linked to child neurocognition
 }\DIFaddend 
 
-\section*{Introduction}
+\DIFaddbegin \subsubsection*{\DIFadd{Teaser}}
+
+\DIFadd{The complex community of microorganisms living in the guts of infants and children
+may affect how their brains develop.
+}
+
+\DIFaddend \section*{Introduction}
 
 The gut and the brain are intimately linked. Signals from the brain
 reach the gut through the autonomic nervous system and the endocrine
@@ -332,7 +337,7 @@ and neuroimaging measures of cortical and sub-cortical morphology.
 Different assessment instruments were used depending on the child's age
 due to the unique age-range and psychometric properties measured by each
 (i.e., the MSEL for children under 4 years of age, The WPPSI-3 for 3-6 year-olds,
-and the WISC-V for children older than 6), but were normalized to a common scale ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 1D),
+and the WISC-V for children older than 6), but were normalized to a common scale ( \DIFaddbegin \DIFadd{fig. 1D}\DIFaddend ),
 As expected, the greatest differences in microbial taxa were observed across
 child age ( \DIFaddbegin \DIFadd{fig. 1B, E; }\DIFaddend PCoA axis 1), with older children primarily
 stratified into Bacteroidetes-dominant, Firmicutes-dominant, or
@@ -525,7 +530,8 @@ development.
     pseudomedian.}
     \end{center}
 \end{table}
- 
+
+
 
 \subsubsection*{Gut microbial taxonomic and functional profiles predict \DIFaddbegin \DIFadd{concurrently measured }\DIFaddend cognitive function}
 
@@ -583,7 +589,7 @@ and cognitive function scores in children over 18 months of age (mean
 test-set correlation 0.429, mean RMSE  \DIFaddbegin \DIFadd{18.25).
 Species }\DIFaddend that were important in RF overlapped with those that were
 significant when testing the relationship with LMs ( \DIFaddbegin \DIFadd{fig.
-}\DIFaddend 3A,  \DIFaddbegin \DIFadd{table }\DIFaddend S1);  \DIFaddbegin \DIFadd{Both analysis identified 
+3A, table S1); Both analysis identified 
 }\textit{\DIFadd{F. prausnitzii}}\DIFadd{, %DIF >  F. prausz was mentioned before, ~ line 395
 }\textit{\DIFadd{E. eligens}}\DIFadd{, %DIF >  E. eligens was mentioned before, ~ line 395
 }\textit{\DIFadd{Parasutterella excrementihominis}}\DIFadd{, and %DIF >  Not mentioned before
@@ -968,7 +974,7 @@ several of the taxa that were positively associated with cognitive
 function in this study, including \emph{B. wexlerae}, \emph{D.
 longicatena}, \emph{R. faecis}, and \emph{A. finegoldii} are
 Clostridiales, as is \emph{R. gnavus}, which we found was negatively
-associated with cognitive function ( \DIFaddbegin \DIFadd{fig. }\DIFaddend 3C, F). This kind of
+associated with cognitive function ( \DIFaddbegin \DIFadd{fig. 3C, F}\DIFaddend ). This kind of
 species-level resolution is typically not possible with amplicon
 sequencing.
 
@@ -1241,48 +1247,23 @@ Brain region volumes used in RF models were normalized to total brain volume
 (the sum of white and gray matter).
 
 
- \DIFaddbegin \section*{\DIFadd{References}}
-\DIFaddend 
+ \section*{References}
 
-\DIFaddbegin \printbibliography[heading=none]
+\printbibliography[heading=none]
 
-\section*{\DIFadd{Acknowledgements}}
-%DIF >  https://www.science.org/content/page/science-advances-information-authors#acknowledgments
+\section*{Acknowledgements}
+% https://www.science.org/content/page/science-advances-information-authors#acknowledgments
 
-\DIFadd{We thank Libusha Kelly (Albert Einstein School of Medicine) and Daphne Koinis Mitchell (Brown University)
+ We thank Libusha Kelly (Albert Einstein School of Medicine) and Daphne Koinis Mitchell (Brown University)
 for helpful feedback on the manuscript. The research team also thanks the participants and families
 of the participants who generously shared their time and samples for this project.
+
+\DIFaddbegin \section*{\DIFadd{Funding}}
+\DIFadd{This research was funded by NIH UG3 OD023313 and Wellcome LEAP 1kD.
 }
 
-\subsubsection*{\DIFadd{Data and materials availability}}
 
-\DIFaddend All data needed to evaluate the conclusions in the paper
-are present in the paper and/or the Supplementary Materials.
-Taxonomic and functional microbial profiles, as well as subject
-demographics necessary for statistical analyses and machine learning are
-available on the  \DIFaddbegin \DIFadd{Data Dryad
-\mbox{%DIFAUXCMD
-\cite{bonhamDataDryad2023}}\hskip0pt%DIFAUXCMD
-}\DIFaddend .
-Data processing, generation of summary statistics, and
-generation of plots was performed using the julia programming language
-and 3rd party packages
- \DIFaddbegin \DIFadd{\mbox{%DIFAUXCMD
-\cite{bezansonJuliaFreshApproach2017,bonhamMicrobiomeJlBiobakeryUtils2021,danischMakieJlFlexible2021,blaomMLJJuliaPackage2020,ben_sadeghi_2022_7359268,dahua_lin_2023_7695673,douglas_bates_2023_7734970}}\hskip0pt%DIFAUXCMD
-}\DIFaddend .
-Information for replicating the package environment
-as well as code for data analysis and figure generation, as well as scripts for automated
-download of input files are available on GitHub \DIFaddbegin \DIFadd{at https://github.com/KlepacCerajLab/Resonance,
-and archived on Zenodo }\DIFaddend \cite{kevin_bonham_2023_7647510}.
-
- \DIFaddbegin \subsubsection*{\DIFadd{Funding}}
-\DIFaddend This research was funded by NIH UG3 OD023313 and Wellcome LEAP 1kD.
-\DIFaddbegin 
-
-\subsubsection*{\DIFadd{Competing Interests}}
-\DIFaddend The authors declare that they have no competing interests.
-
-\DIFaddbegin \subsubsection*{\DIFadd{Author contributions}}
+\section*{\DIFadd{Author contributions}}
 \DIFaddend % https://credit.niso.org/
 
 \DIFaddbegin \begin{itemize}[noitemsep]
@@ -1301,7 +1282,34 @@ and archived on Zenodo }\DIFaddend \cite{kevin_bonham_2023_7647510}.
      \DIFaddbegin \item \DIFadd{Revision and editing: KSB, GFB, }\DIFaddend SD, CH, and VKC
  \DIFaddbegin \end{itemize}
 
-\subsection*{\DIFadd{Figures}}
+
+\section*{\DIFadd{Competing Interests}}
+\DIFadd{The authors declare that they have no competing interests.
+}\section*{\DIFadd{Figures}}
+
+\section*{\DIFadd{Data and materials availability}}
+
+\DIFadd{All data needed to evaluate the conclusions in the paper
+are present in the paper and/or the Supplementary Materials.
+Taxonomic and functional microbial profiles, as well as subject
+demographics necessary for statistical analyses and machine learning are
+available on the Data Dryad
+\mbox{%DIFAUXCMD
+\cite{bonhamDataDryad2023}}\hskip0pt%DIFAUXCMD
+.
+Data processing, generation of summary statistics, and
+generation of plots was performed using the julia programming language
+and 3rd party packages
+\mbox{%DIFAUXCMD
+\cite{bezansonJuliaFreshApproach2017,bonhamMicrobiomeJlBiobakeryUtils2021,danischMakieJlFlexible2021,blaomMLJJuliaPackage2020,ben_sadeghi_2022_7359268,dahua_lin_2023_7695673,douglas_bates_2023_7734970}}\hskip0pt%DIFAUXCMD
+.
+Information for replicating the package environment
+as well as code for data analysis and figure generation, as well as scripts for automated
+download of input files are available on GitHub at https://github.com/KlepacCerajLab/Resonance,
+and archived on Zenodo \mbox{%DIFAUXCMD
+\cite{kevin_bonham_2023_7647510}}\hskip0pt%DIFAUXCMD
+.
+}
 
 \begin{figure}[!h]
     \centering
