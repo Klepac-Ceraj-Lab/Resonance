@@ -15,7 +15,7 @@
 \usepackage[
 backend=biber,
 style=numeric,
-maxbibnames=50
+maxbibnames=100
 ]{biblatex}
 
 \addbibresource{citations.bib}
@@ -76,21 +76,24 @@ maxbibnames=50
         Elizabeth Weisse,$^{3}$
         Fatoumata Barry,$^{2}$
         Rosa Cano Lorente,$^{2}$
-        The RESONANCE Consortium$^{\ast}$,
-        Curtis Huttenhower,$^{4}$
+        The RESONANCE Consortium$^{1\dagger}$,
+        Curtis Huttenhower,$^{4-7}$
         Muriel Bruchhage,$^{3}$
         Viren D'Sa,$^{2}$
         Sean Deoni,$^{2}$
-        Vanja Klepac-Ceraj$^{1\dagger}$
+        Vanja Klepac-Ceraj$^{\ast}$
     }
 \\
 \normalsize{$^{1}$Department of Biological Sciences, Wellesley College, Wellesley, MA, USA}\\
 \normalsize{$^{2}$Rhode Island Hospital, Providence, RI, USA}\\
 \normalsize{$^{3}$Department of Psychology, University of Stavenger, Stavanger, Norway}\\
 \normalsize{$^{4}$Department of Biostatistics, Harvard T.H. Chan School of Public Health, Boston, MA, USA}\\
+\normalsize{$^{5}$Department of Immunology and Infectious Diseases, Harvard T.H. Chan School of Public Health, Boston, MA, USA}\\
+\normalsize{$^{6}$Harvard Chan Microbiome in Public Health Center, Harvard T.H. Chan School of Public Health, Boston, MA, USA}\\
+\normalsize{$^{7}$Associate Member, Broad Institute of MIT and Harvard}\\
 \\
-\normalsize{$^\ast$The RESONANCE consortium collaborators and affiliations are listed in the supplementary materials.}\\
-\normalsize{$^\dagger$To whom correspondence should be addressed; E-mail:  vklepacc@wellesley.edu.}
+\normalsize{$^\dagger$The RESONANCE consortium authors and collaborators and affiliations are listed in the supplementary materials.}\\
+\normalsize{$^\ast$To whom correspondence should be addressed; E-mail:  vklepacc@wellesley.edu.}\\
 }
 
 % Include the date command, but leave its argument blank.
@@ -1033,6 +1036,11 @@ database mpa\_v31\_CHOCOPhlAn\_201901) was used to generate taxonomic
 profiles by aligning reads to a reference database of marker genes.
 Finally, HUMAnN (v3.6.0) was used to functionally profile the
 metagenomes.
+Statistical analyses, including linear regression
+and feature set enrichment analysis were performed
+using the julia programming language and third-party packages
+\cite{bezansonJuliaFreshApproach2017,bonhamMicrobiomeJlBiobakeryUtils2021,danischMakieJlFlexible2021,blaomMLJJuliaPackage2020,ben_sadeghi_2022_7359268,dahua_lin_2023_7695673,douglas_bates_2023_7734970}.
+
 
 \subsubsection*{Machine learning for cognitive development}
 
@@ -1101,6 +1109,7 @@ to generate the values in Figures 3-4.
 \end{equation}
 
 
+
 \subsubsection*{MRI / segmentation}
 
 T1-weighted anatomical MRI data were acquired using a 3-Dimensional MP-RAGE sequence
@@ -1161,6 +1170,8 @@ This research was funded by NIH UG3 OD023313 and Wellcome LEAP 1kD.
     \item Revision and editing: KSB, GFB, SD, CH, and VKC
 \end{itemize}
 
+Members of the RESONANCE consortium also contributed to
+project planning, conceptualization, and funding acquisition.
 
 \section*{Competing Interests}
 The authors declare that they have no competing interests.
@@ -1176,11 +1187,10 @@ available on the Data Dryad
 \cite{bonhamDataDryad2023}.
 Data processing, generation of summary statistics, and
 generation of plots was performed using the julia programming language
-and 3rd party packages
-\cite{bezansonJuliaFreshApproach2017,bonhamMicrobiomeJlBiobakeryUtils2021,danischMakieJlFlexible2021,blaomMLJJuliaPackage2020,ben_sadeghi_2022_7359268,dahua_lin_2023_7695673,douglas_bates_2023_7734970}.
+and 3rd party packages (see Materials and Methods).
 Information for replicating the package environment
 as well as code for data analysis and figure generation, as well as scripts for automated
-download of input files are available on GitHub at https://github.com/KlepacCerajLab/Resonance,
+download of input files are available on GitHub at https://github.com/Klepac-Ceraj-Lab/Resonance,
 and archived on Zenodo \cite{kevin_bonham_2023_7647510}.
 
 \begin{figure}[!h]
