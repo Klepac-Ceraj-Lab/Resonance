@@ -8,8 +8,7 @@ using CategoricalArrays
 #-
 
 mdata = Resonance.load(Metadata())
-seqs = subset(mdata, "seqid"=> ByRow(!ismissing)) 
-transform!(seqs, "seqid"=> ByRow(String)=> "sample")
+seqs = subset(mdata, "sample"=> ByRow(!ismissing))
 
 seqs.edfloat = map(x-> ismissing(x) ? missing : Float64(levelcode(x)), seqs.education)
 taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
