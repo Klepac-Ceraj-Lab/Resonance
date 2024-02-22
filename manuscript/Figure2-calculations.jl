@@ -29,7 +29,7 @@ taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can
 species = filter(f-> taxrank(f) == :species, taxa)
 relativeabundance!(species)
 unirefs = Resonance.load(UnirefProfiles(); timepoint_metadata = seqs) # this can take a bit
-ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
+#ecs = Resonance.load(ECProfiles(); timepoint_metadata = seqs)
 kos = Resonance.load(KOProfiles(); timepoint_metadata = seqs)
 
 # metabolites = Resonance.load(MetabolicProfiles(); timepoint_metadata = mdata)
