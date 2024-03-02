@@ -31,13 +31,37 @@ taxdf = comm2wide(taxa)
 #-
 
 
+spedm = CSV.read(tablefiles("figure1", "spedm.csv"), DataFrame) |> Matrix
+
+taxa = Resonance.load(TaxonomicProfiles(); timepoint_metadata = seqs) # this can take a bit
+species = filter(f-> taxrank(f) == :species, taxa)
+divr = shannon(species) |> vec
+
+spepco = fit(MDS, spedm; distances=true)
+#-
+C = Figure(;resolution=(600,500))
+
+Ca = Axis(C[1,1]; ylabel= "Age (months)", xlabel = mdsaxis(spepco, 1), 
+                  yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2),
+                  alignmode = Mixed(; left=-15))
+sc1 = scatter!(Ca, Resonance.loadings(spepco, 1), get(species, :ageMonths);
+        color = divr, colormap=:plasma)
+hlines!(Ca, [6, 18]; linestyle=:dash, color=:darkgray)
+Colorbar(C[1, 2], sc1; label="Shannon Diversity", flipaxis=true)
+
+save("/home/kevin/Downloads/resonance-species-pco-age.png", C)
 
 #-
-
-fig = Figure(; resolution=(400,660))
+using Colors
+fig = Figure(; resolution=(600,600))
 
 ax = Axis(fig[1,1]; xlabel="Age (months)", ylabel="Subject")
-cs = [:darkorange4, :dodgerblue, :slateblue3, :gray70]
+cs = [
+    RGB(((26,122,229) ./ 255)...),
+    RGB(((186,147,223) ./ 255)...),
+    RGB(((159,30,111) ./ 255)...),
+    colorant"gray70"
+]
 
 for sub in keys(gdf)
     y = Float64(ys[sub.subject])
@@ -54,8 +78,8 @@ for sub in keys(gdf)
     lines!(ax, [extrema(ages)...], fill(y, 2); color=:gray70, linestyle=:dash, linewidth=1)
 end
 tightlimits!(ax)
-Legend(fig[2,1], [MarkerElement(; color=c, marker=:circle) for c in cs], ["Stool", "Cog", "Both", "Neither"];
-    orientation=:horizontal, tellwidth=false, tellheight=true)
+Legend(fig[1,2], [MarkerElement(; color=c, marker=:circle) for c in cs], ["Stool", "Cog", "Both", "Neither"];
+    tellwidth=true, tellheight=false)
 save("/home/kevin/Downloads/resonance-age-vs-subject.png", fig)
 fig
 
@@ -135,6 +159,32 @@ lms_mat = let
         )
    end)
 end
+
+#-
+speclms_00to120 = CSV.read(tablefiles("figure2", "lms_species_00to120.csv"), DataFrame)
+speclms_00to06 = CSV.read(tablefiles("figure2", "lms_species_00to06.csv"), DataFrame)
+speclms_18to120 = CSV.read(tablefiles("figure2", "lms_species_18to120.csv"), DataFrame)
+
+#-
+
+A = Figure(; resolution=(900, 500))
+
+aax1 = Axis(A[1,1]; title = "over 18m", ylabel=L"$-log_2(P)$", xlabel = "coef.",
+                xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
+                limits = ((-1.5e-3, 1.5e-3), nothing),
+                xminorticksvisible=true, xminorticks = IntervalsBetween(3))
+aax2 = Axis(A[1,2]; title = "all ages", ylabel=L"$-log_2(P)$", xlabel = "coef.",
+                xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
+                limits = ((-1.5e-3, 1.5e-3), nothing),
+                xminorticksvisible=true, xminorticks = IntervalsBetween(3))
+
+scatter!(aax1, speclms_18to120.coef, -1 .* log2.(speclms_18to120.qvalue);
+    color = map(q-> q < 0.2 ? ColorSchemes.tableau_10[3] : ColorSchemes.tableau_10[10], speclms_18to120.qvalue))
+scatter!(aax2, speclms_00to120.coef, -1 .* log2.(speclms_00to120.qvalue);
+    color = map(q-> q < 0.2 ? ColorSchemes.tableau_10[3] : ColorSchemes.tableau_10[10], speclms_00to120.qvalue))
+
+save("/home/kevin/Downloads/resonance-spec-lms.svg", A)
+#-
 
 subscale_mat = let
     df = @chain subscale_lms begin
@@ -1012,5 +1062,108 @@ vlines!(ax, [median(lms_unirefs_18to120[!, "stat"])]; color=:black, linestyle=:d
 vlines!(ax, lms_unirefs_18to120[neuroactive["Propionate synthesis"], "stat"]; color=:dodgerblue, linewidth=2)
 save("/home/kevin/Downloads/resonance-fsea.png", current_figure())
 save("/home/kevin/Downloads/resonance-fsea.svg", current_figure())
+
+#-
+
+fsdf_00to120 = CSV.read(tablefiles("figure2", "fsea_consolidated_00to120.csv"), DataFrame)
+fsdf2_00to120 = CSV.read(tablefiles("figure2", "fsea_all_00to120.csv"), DataFrame)
+fsdf_00to06 = CSV.read(tablefiles("figure2", "fsea_consolidated_00to06.csv"), DataFrame)
+fsdf2_00to06 = CSV.read(tablefiles("figure2", "fsea_all_00to06.csv"), DataFrame)
+fsdf_18to120 = CSV.read(tablefiles("figure2", "fsea_consolidated_18to120.csv"), DataFrame)
+fsdf2_18to120 = CSV.read(tablefiles("figure2", "fsea_all_18to120.csv"), DataFrame)
+
+cors_00to120 = CSV.read(tablefiles("figure2", "lms_unirefs_00to120.csv"), DataFrame)
+cors_00to06 = CSV.read(tablefiles("figure2", "lms_unirefs_00to06.csv"), DataFrame)
+cors_18to120 = CSV.read(tablefiles("figure2", "lms_unirefs_18to120.csv"), DataFrame)
+neuroactive_00to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to120.feature); consolidate=false)
+neuroactive_00to06 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_00to06.feature); consolidate=false)
+neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), cors_18to120.feature); consolidate=false)
+
+#-
+
+F = Figure(; resolution=(700,300))
+
+let
+    genesets = union(subset(fsdf2_00to06, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+                     subset(fsdf2_18to120, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
+               )
+    gsidx = Dict(gs=> i for (i, gs) in enumerate(genesets))
+  
+    df = sort(subset(fsdf2_00to06, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
+    ax1 = Axis(F[1,1]; yticks = (1:length(genesets), replace.(lowercase.(genesets), r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="T stat", title="under 6m", alignmode=Mixed(; left=-15))
+    m = median(filter(x-> !isnan(x) && x < 7, cors_00to06.stat))
+    colors = ColorSchemes.colorschemes[:RdBu_7]
+
+    for gs in genesets
+        i = gsidx[gs]
+        rowi = findfirst(==(gs), df.geneset)
+        if isnothing(rowi)
+            row = (; enrichment=0.0, qvalue=1.0, geneset=gs)
+        else
+            row = df[rowi,:]
+        end 
+        sign = row.enrichment < 0 ? "neg" : "pos"
+        c = row.qvalue > 0.2 ? :white : 
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
+
+        y = filter(x-> !isnan(x) && x < 7, cors_00to06.stat[neuroactive_00to06[row.geneset]])
+        scatter!(ax1, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
+        row.qvalue < 0.2 && lines!(ax1, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
+    end
+    vlines!(ax1, m; linestyle=:dash, color=:darkgray)
+
+    ####
+
+    df = sort(subset(fsdf2_18to120, "geneset"=> ByRow(gs-> gs in genesets), "cortest"=>ByRow(==("cogScore"))), :geneset; rev=true)
+    ax2 = Axis(F[1,2]; yticks = (1:length(genesets), replace.(genesets, r" \(.+\)" => "", "synthesis"=>"syn.", "degradation"=>"deg.")), 
+                xlabel="T stat", title="over 18m")
+    hideydecorations!(ax2, grid=false)
+
+    m = median(filter(x-> !isnan(x) && x < 7, cors_18to120.stat))
+    colors = ColorSchemes.colorschemes[:RdBu_7]
+
+    for gs in genesets
+        i = gsidx[gs]
+        rowi = findfirst(==(gs), df.geneset)
+        if isnothing(rowi)
+            row = (; enrichment=0.0, qvalue=1.0, geneset=gs)
+        else
+            row = df[rowi, :] 
+        end
+        sign = row.enrichment < 0 ? "neg" : "pos"
+        c = row.qvalue > 0.2 ? :white : 
+            row.qvalue > 0.05 ? (sign == "pos" ? colors[3] : colors[5]) :
+            row.qvalue > 0.01 ? (sign == "pos" ? colors[2] : colors[6]) :
+            sign == "pos" ? colors[1] : colors[7]
+
+        y = filter(x-> !isnan(x) && x < 7, cors_18to120.stat[neuroactive_18to120[row.geneset]])
+        scatter!(ax2, y, rand(Normal(0, 0.1), length(y)) .+ i; color=(c,0.5), strokecolor=:gray, strokewidth=0.5)
+        row.qvalue < 0.2 && lines!(ax2, fill(median(y), 2), [i-0.4, i+0.4]; color = c in colors[1:3] ? colors[1] : c in colors[5:7] ? colors[7] : :white , linewidth=2)
+    end
+    vlines!(ax2, m; linestyle=:dash, color=:darkgray)
+
+    ####
+
+    linkyaxes!(ax1,ax2)
+
+    Legend(F[1,3], [MarkerElement(; color = (c, 0.5),
+                                    marker=:circle,
+                                    strokecolor=:gray,
+                                    strokewidth=0.5) for c in colors[[1:3..., 5:7...]]],
+                   ["(+) q < 0.01", "(+) q < 0.05", "(+) q < 0.2", 
+                    "(-) q < 0.20", "(-) q < 0.05", "(-) p < 0.01"])
+end
+
+# rowsize!(figure.layout, 3, Relative(2/5))
+colgap!(F.layout, Fixed(4))
+colsize!(F.layout, 1, Relative(0.48))
+save("/home/kevin/Downloads/resonance-fseas-2F.svg", F)
+
+#-
+
+include("manuscript/Figure4-definitions.jl")
 
 
