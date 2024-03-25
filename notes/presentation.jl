@@ -39,7 +39,7 @@ divr = shannon(species) |> vec
 
 spepco = fit(MDS, spedm; distances=true)
 #-
-C = Figure(;resolution=(600,500))
+C = Figure(;size=g(600,500))
 
 Ca = Axis(C[1,1]; ylabel= "Age (months)", xlabel = mdsaxis(spepco, 1), 
                   yminorticksvisible = true, yticks=0:24:120, yminorticks = IntervalsBetween(2),
@@ -53,7 +53,7 @@ save("/home/kevin/Downloads/resonance-species-pco-age.png", C)
 
 #-
 using Colors
-fig = Figure(; resolution=(600,600))
+fig = Figure(; size=(600,600))
 
 ax = Axis(fig[1,1]; xlabel="Age (months)", ylabel="Subject")
 cs = [
@@ -86,7 +86,7 @@ fig
 
 #-
 
-B = Figure(; resolution=(700, 350))
+B = Figure(; size=g(700, 350))
 
 bax1 = Axis(B[1,1]; xlabel = "Age (months)", ylabel = "cogScore", xticks=(4:4:24), limits=((2,24), nothing))
 bax2 = Axis(B[1,2]; xlabel = "Age (years)", xticks = (4:2:12), limits=((2,nothing), nothing))
@@ -167,7 +167,7 @@ speclms_18to120 = CSV.read(tablefiles("figure2", "lms_species_18to120.csv"), Dat
 
 #-
 
-A = Figure(; resolution=(900, 500))
+A = Figure(; size=g(900, 500))
 
 aax1 = Axis(A[1,1]; title = "over 18m", ylabel=L"$-log_2(P)$", xlabel = "coef.",
                 xticks = ([-1.5e-3, 0.0, 1.5e-3], ["-1.5e-3", "0.0", "1.5e-3"]),
@@ -210,7 +210,7 @@ end
 
 #-
 
-fig = Figure(;resolution = (1200, 500));
+fig = Figure(;size = (1200, 500));
 ax1 = Axis(fig[1,1]; xlabel = "t score", ylabel = "-log(q)", title="0 to 6m")
 ax2 = Axis(fig[1,2]; xlabel = "t score", ylabel = "-log(q)", title="18 to 120m")
 ax3 = Axis(fig[1,3]; xlabel = "t score", ylabel = "-log(q)", title="0 to 120m")
@@ -243,7 +243,7 @@ fig
 #-
 
 
-figure = Figure(resolution=(900, 500));
+figure = Figure(size=g(900, 500));
 
 A = GridLayout(figure[1,1:2])
 B = GridLayout(figure[1,3])
@@ -320,7 +320,7 @@ save("/home/kevin/Downloads/resonance-lms.png", figure)
 figure
 #-
 
-C = Figure(; resolution=(1200, 600))
+C = Figure(; size=g(1200, 600))
 
 scales = unique(replace.(names(subscale_mat, r"^[A-Z]"), r"_.+"=> ""))
 scales_names = map(scales) do n
@@ -448,7 +448,7 @@ regression_futureCogScores_onlytaxa = JLD2.load(
 #-
 
 
-AB_subfig = Figure(resolution = (800, 400));
+AB_subfig = Figure(size = (800, 400));
 axA = Axis(
     AB_subfig[1, 1];
     xlabel = "-log(p) for LM coefficients",
@@ -546,7 +546,7 @@ joined_importances_future = compute_joined_importances(
 
 nbars_toplot = 10
 
-CD_subfig = Figure(resolution = (1200, 600));
+CD_subfig = Figure(size = (1200, 600));
 
 axC = Axis(
     CD_subfig[1, 1];
@@ -572,7 +572,7 @@ save("/home/kevin/Downloads/resonance-importance-18to120.png", CD_subfig)
 
 #-
 
-fig = Figure(; resolution=(1100,700))
+fig = Figure(; size=g(1100,700))
 
 axB = Axis(fig[1,2])
 
@@ -887,7 +887,7 @@ weighted_noage_importances = weighted_brain_importances[2:end, :]
 
 ## -
 
-AB_Subfig = Figure(; resolution=(1100, 700))
+AB_Subfig = Figure(; size=g(1100, 700))
 axA = Axis(
     AB_Subfig[1, 1];
     xlabel = "Correlation",
@@ -950,7 +950,7 @@ save("/home/kevin/Downloads/resonance-rf-subscales.png", AB_Subfig)
 
 
 #-
-CD_Subfig = Figure(; resolution=(1100, 700), alignmode=Outside())
+CD_Subfig = Figure(; size=g(1100, 700), alignmode=Outside())
 
 axC = Axis(
     CD_Subfig[1, 1];
@@ -1028,7 +1028,7 @@ kos = Resonance.load(KOProfiles(); timepoint_metadata = seqs)
 ur_unmapped = abundances(relativeabundance(unirefs)[["UNMAPPED"], :])
 ko_unmapped = abundances(relativeabundance(kos)[["UNMAPPED", "UNGROUPED"],:])
 #-
-let fig = Figure(; resolution=(1100, 700))
+let fig = Figure(; size=g(1100, 700))
     ax1 = Axis(fig[1,1]; xticks=(1:2, ["unirefs", "kos"]), ylabel="N features")
     ax2 = Axis(fig[1,2]; xticks=(1:2, ["unirefs", "kos"]), ylabel="% classified")
     (nu, nk) = nfeatures(unirefs), nfeatures(kos)
@@ -1054,7 +1054,7 @@ neuroactive = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>""), lms_
 
 #-
 
-fig = Figure(; resolution=(1100, 700))
+fig = Figure(; size=g(1100, 700))
 ax = Axis(fig[1,1]; xlabel="Z statistic", ylabel="count")
 hist!(ax, lms_unirefs_18to120.stat; color=:gray)
 vlines!(ax, [median(lms_unirefs_18to120[!, "stat"])]; color=:black, linestyle=:dash, linewidth=5)
@@ -1081,7 +1081,7 @@ neuroactive_18to120 = Resonance.getneuroactive(map(f-> replace(f, "UniRef90_"=>"
 
 #-
 
-F = Figure(; resolution=(700,300))
+F = Figure(; size=g(700,300))
 
 let
     genesets = union(subset(fsdf2_00to06, "qvalue"=> ByRow(<(0.2)), "cortest"=> ByRow(==("cogScore"))).geneset,
@@ -1166,4 +1166,166 @@ save("/home/kevin/Downloads/resonance-fseas-2F.svg", F)
 
 include("manuscript/Figure4-definitions.jl")
 
+#-
 
+brain_models = JLD2.load(modelfiles("brain_models.jld"))["brain_models"]
+
+mean_brain_merits = reduce(
+    vcat,
+    [ DataFrame(:variable => ordered_brain_segments_list[i], :Train_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Train_Cor), :Test_Cor => mean(brain_models[ordered_brain_segments_list[i]].merits.Test_Cor)) for i in eachindex(ordered_brain_segments_list) ]
+)
+
+weighted_brain_importances = dropmissing(reduce(
+    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+    [ rename!(weighted_hpimportances(j; normalize_importances=false), :weightedImportance => Symbol(split(j.name, '_')[2]))
+      for (i, j) in brain_models ] ) )
+
+relative_brain_importances = dropmissing(reduce(
+    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+    [ rename!(weighted_hpimportances(j; normalize_importances=true), :weightedImportance => Symbol(split(j.name, '_')[2]))
+      for (i, j) in brain_models ] ))
+
+#-
+
+
+interesting_segments_idxes = mean_brain_merits.variable .∈ Ref(interesting_segments)
+mean_brain_merits = mean_brain_merits[interesting_segments_idxes, :]
+
+explore_importances_df = dropmissing(relative_brain_importances[:, vcat(["variable"], mean_brain_merits.variable) ])
+rename!(explore_importances_df, :variable => :predictor)
+explore_importances_df = stack(explore_importances_df, 2:ncol(explore_importances_df))
+subset!(explore_importances_df, :predictor => (x -> x .!= "ageMonths"))
+sort!(explore_importances_df, :value; rev = true)
+@show unique(explore_importances_df.predictor)[1:20]
+
+interesting_taxa_idxes = relative_brain_importances.variable .∈ Ref(interesting_taxa)
+relative_brain_importances = dropmissing(relative_brain_importances[interesting_taxa_idxes, vcat(["variable"], mean_brain_merits.variable) ])
+
+## Transpose the matrix to add information about the symmetric segments
+transposedImportances = permutedims(relative_brain_importances, :variable)
+insertcols!(transposedImportances, 1, :symmetricSegment => symmetric_segment_strings)
+## Combine left and right of symmetric segments
+combinedTransposedImportances = DataFrames.combine(
+    groupby(transposedImportances, :symmetricSegment),
+    Symbol.(names(transposedImportances))[3:end] .=> mean .=> Symbol.(names(transposedImportances))[3:end]
+)
+## Perform the actual HCA and store the order
+dist_taxa = pairwise(Euclidean(), Matrix(combinedTransposedImportances[:, 2:end]); dims=2)
+dist_segments = pairwise(Euclidean(), Matrix(combinedTransposedImportances[:, 2:end]); dims=1)
+hcl_taxa = hclust(dist_taxa; linkage=:average, branchorder=:optimal)
+hcl_segments = hclust(dist_segments; linkage=:average, branchorder=:optimal)
+hclust_taxa_order = hcl_taxa.order
+hclust_symmetric_segment_order = hcl_segments.order
+reorder_segments_df = innerjoin(
+    DataFrame(
+        :original_segment => interesting_segments,
+        :left_or_unique => repeat([1, 0], 17),
+        :symmetric_segment => symmetric_segment_strings),
+    DataFrame(
+        :symmetric_segment => combinedTransposedImportances.symmetricSegment[hclust_symmetric_segment_order],
+        :symmetric_order => hclust_symmetric_segment_order,
+        :original_order => collect(1:length(combinedTransposedImportances.symmetricSegment[hclust_symmetric_segment_order]))),
+    on = :symmetric_segment
+)
+insertcols!(reorder_segments_df, 1, :plot_order => collect(1:nrow(reorder_segments_df)))
+sort!(reorder_segments_df, [:original_order, :left_or_unique])
+
+plot_segments_order = reorder_segments_df.plot_order
+
+mean_brain_merits = mean_brain_merits[plot_segments_order, :]
+relative_brain_importances = relative_brain_importances[hclust_taxa_order, vcat( [ 1 ], (plot_segments_order .+ 1))]
+#relative_brain_importances = relative_brain_importances[sortperm(map(mean, eachrow(relative_brain_importances[:, 2:end])); rev=true), vcat( [ 1 ], (plot_segments_order .+ 1))]
+
+weighted_brain_importances = reduce(
+    (x, y) -> outerjoin(x, y, on = :variable, makeunique=true),
+        [ rename!(weighted_hpimportances(j; normalize_importances=true), 
+                :weightedImportance => Symbol(split(j.name, '_')[2])) for (i, j) in brain_models ]
+)
+
+weighted_brain_importances = dropmissing(weighted_brain_importances[:, vcat(["variable"], interesting_segments) ])
+weighted_noage_importances = weighted_brain_importances[2:end, :]
+#-
+
+CD_Subfig = Figure(; size=(1200,600), alignmode=Outside())
+
+axC = Axis(
+    CD_Subfig[1, 1];
+    xlabel = "Correlation",
+    yticks = (reverse(collect(1.5:2:length(interesting_segments)+0.5)),
+              replace.(mean_brain_merits.variable[1:2:end], r"(right|left)-"=> "")),
+    ylabel = "Target Variable",
+    xticks = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+    title = "Mean RF correlations",
+    yticklabelsize=16,
+    alignmode=Inside(),
+    #yticklabelrotation= -pi/2
+)
+
+tightlimits!(axC, Top())
+tightlimits!(axC, Bottom())
+
+barplot!(
+    axC,
+    reverse(collect(1:length(interesting_segments))),
+    mean_brain_merits.Test_Cor,
+    color = repeat( [ "blue", "red" ], 17)[plot_segments_order],
+    direction=:x
+)
+
+Colorbar(CD_Subfig[1,3], hm; label= "Relative feature importance", ticks=0:0.01:0.04, minorticksvisible=true)
+
+nbugs_toplot = length(interesting_taxa) # the top 1/3 bugs (out of 129) From intersecting the top mean importances and top max importances
+
+axD = Axis(
+    CD_Subfig[1, 2];
+    xticks = (collect(1:nbugs_toplot),
+              rich.(replace.(relative_brain_importances.variable[1:nbugs_toplot], "_"=> " "); font=:italic)),
+    xticklabelrotation=π/4,
+    yreversed=true,
+    title = "Brain segmentation data variable importances"
+)
+hideydecorations!(axD)
+
+tightlimits!.([axD, axDticks])
+
+linkxaxes!(axD, axDticks)
+hidexdecorations!(axDticks; ticklabels=false, label=false)
+hideydecorations!(axDticks)
+hidespines!(axDticks)
+hm = CairoMakie.heatmap!(axD, Matrix(relative_brain_importances[1:nbugs_toplot, 2:end]), yflip=true)
+colsize!(CD_Subfig.layout, 1, Relative(1/4))
+
+save("/home/kevin/Downloads/brain_heatmap.png", CD_Subfig)
+
+#-
+
+C_Subfig = Figure(; size=(1200,600), alignmode=Outside())
+
+axC = Axis(
+    C_Subfig[1, 1];
+    ylabel = "Mean test-set correlation",
+    xticks = (1:17,
+              reverse(replace.(mean_brain_merits.variable[1:2:end], r"(right|left)-"=> ""))),
+    xlabel = "Target Variable",
+    yticks = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+    alignmode=Inside(),
+    xticklabelrotation= π/4
+)
+
+tightlimits!(axC, Top())
+tightlimits!(axC, Bottom())
+
+barplot!(
+    axC,
+    reverse(repeat(1:17; inner=2)),
+    mean_brain_merits.Test_Cor,
+    dodge = repeat(1:2; outer=17),
+    color = repeat( [ "red", "blue" ], 17),
+)
+
+cdleg = Legend(C_Subfig[1,2],
+    [MarkerElement(; marker=:rect, color=c) for c in ("blue", "red")],
+    ["Left hemisphere", "Right hemisphere"];
+)
+
+save("/home/kevin/Downloads/brain_segrf.png", C_Subfig)
